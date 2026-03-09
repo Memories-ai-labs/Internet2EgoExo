@@ -1,10 +1,10 @@
 """Tests for deterministic tool-call policy."""
 
-from video_sourcing_agent.agent.tool_policy import (
+from video_searching_agent.agent.tool_policy import (
     apply_tool_call_policy,
     build_video_search_input,
 )
-from video_sourcing_agent.models.query import MetricType, ParsedQuery, QueryType
+from video_searching_agent.models.query import MetricType, ParsedQuery, QueryType
 
 
 def test_apply_tool_call_policy_forces_video_search_first_step_for_discovery():

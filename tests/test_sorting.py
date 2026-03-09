@@ -2,8 +2,8 @@
 
 from datetime import datetime
 
-from video_sourcing_agent.models.video import Platform, Video, VideoMetrics
-from video_sourcing_agent.tools.sorting import sort_videos_by_popularity
+from video_searching_agent.models.video import Platform, Video, VideoMetrics
+from video_searching_agent.tools.sorting import sort_videos_by_popularity
 
 
 def create_video(

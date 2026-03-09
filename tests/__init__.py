@@ -1,1 +1,1 @@
-"""Test suite for video sourcing agent."""
+"""Test suite for video searching agent."""

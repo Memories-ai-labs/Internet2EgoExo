@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 import pytest
 
-from video_sourcing_agent.integrations import openclaw_runner
+from video_searching_agent.integrations import openclaw_runner
 
 
 def _parse_ndjson(text: str) -> list[dict[str, object]]:
@@ -470,7 +470,7 @@ async def test_three_message_fast_run_emits_two_messages(monkeypatch: pytest.Mon
 
     # Fake monotonic times keep elapsed below the 10s gate.
     with patch(
-        "video_sourcing_agent.integrations.openclaw_runner.monotonic_now",
+        "video_searching_agent.integrations.openclaw_runner.monotonic_now",
         side_effect=_monotonic_sequence([
             100.0,
             100.5,
@@ -508,7 +508,7 @@ async def test_three_message_slow_run_emits_multiple_progress_updates(
 
     # Gate crossings should produce multiple throttled progress events.
     with patch(
-        "video_sourcing_agent.integrations.openclaw_runner.monotonic_now",
+        "video_searching_agent.integrations.openclaw_runner.monotonic_now",
         side_effect=_monotonic_sequence([
             10.0,
             12.0,
@@ -561,7 +561,7 @@ async def test_three_message_progress_updates_are_throttled(monkeypatch: pytest.
     err = StringIO()
 
     with patch(
-        "video_sourcing_agent.integrations.openclaw_runner.monotonic_now",
+        "video_searching_agent.integrations.openclaw_runner.monotonic_now",
         side_effect=_monotonic_sequence([
             10.0,
             20.2,
@@ -598,7 +598,7 @@ async def test_three_message_long_complete_without_intermediate_events(
     err = StringIO()
 
     with patch(
-        "video_sourcing_agent.integrations.openclaw_runner.monotonic_now",
+        "video_searching_agent.integrations.openclaw_runner.monotonic_now",
         side_effect=_monotonic_sequence([
             10.0,
             20.5,
@@ -649,7 +649,7 @@ async def test_three_message_emits_heartbeat_while_stream_is_idle(
 
     monkeypatch.setattr(openclaw_runner, "poll_stream_event", fake_poll_stream_event)
     with patch(
-        "video_sourcing_agent.integrations.openclaw_runner.monotonic_now",
+        "video_searching_agent.integrations.openclaw_runner.monotonic_now",
         side_effect=_monotonic_sequence([
             100.0,
             111.0,
@@ -707,7 +707,7 @@ async def test_three_message_clarification_is_terminal(monkeypatch: pytest.Monke
     err = StringIO()
 
     with patch(
-        "video_sourcing_agent.integrations.openclaw_runner.monotonic_now",
+        "video_searching_agent.integrations.openclaw_runner.monotonic_now",
         side_effect=_monotonic_sequence([
             50.0,
             53.0,
@@ -741,7 +741,7 @@ async def test_three_message_error_is_nonzero(monkeypatch: pytest.MonkeyPatch):
     out = StringIO()
     err = StringIO()
     with patch(
-        "video_sourcing_agent.integrations.openclaw_runner.monotonic_now",
+        "video_searching_agent.integrations.openclaw_runner.monotonic_now",
         side_effect=_monotonic_sequence([
             1.0,
             2.0,
@@ -770,7 +770,7 @@ async def test_three_message_missing_terminal_emits_runner_error(monkeypatch: py
     out = StringIO()
     err = StringIO()
     with patch(
-        "video_sourcing_agent.integrations.openclaw_runner.monotonic_now",
+        "video_searching_agent.integrations.openclaw_runner.monotonic_now",
         side_effect=_monotonic_sequence([
             20.0,
             21.0,

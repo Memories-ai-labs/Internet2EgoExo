@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from googleapiclient.errors import HttpError
 
-from video_sourcing_agent.tools.youtube import YouTubeChannelTool, YouTubeSearchTool
+from video_searching_agent.tools.youtube import YouTubeChannelTool, YouTubeSearchTool
 
 
 class TestYouTubeSearchTool:
@@ -37,7 +37,7 @@ class TestYouTubeSearchTool:
 
     def test_health_check_without_api_key(self):
         """Test health check fails without API key."""
-        with patch("video_sourcing_agent.tools.youtube.get_settings") as mock_settings:
+        with patch("video_searching_agent.tools.youtube.get_settings") as mock_settings:
             mock_settings.return_value.youtube_api_key = None
             tool = YouTubeSearchTool(api_key=None)
             is_healthy, error = tool.health_check()
@@ -189,7 +189,7 @@ class TestYouTubeChannelTool:
 
     def test_health_check_without_api_key(self):
         """Test health check fails without API key."""
-        with patch("video_sourcing_agent.tools.youtube.get_settings") as mock_settings:
+        with patch("video_searching_agent.tools.youtube.get_settings") as mock_settings:
             mock_settings.return_value.youtube_api_key = None
             tool = YouTubeChannelTool(api_key=None)
             is_healthy, error = tool.health_check()

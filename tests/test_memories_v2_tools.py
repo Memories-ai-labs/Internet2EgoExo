@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from video_sourcing_agent.tools.memories_v2 import (
+from video_searching_agent.tools.memories_v2 import (
     SocialMediaMAITranscriptTool,
     SocialMediaMetadataTool,
     SocialMediaTranscriptTool,
@@ -60,7 +60,7 @@ class TestSocialMediaMetadataTool:
         """Test execute fails with unsupported platform."""
         tool = SocialMediaMetadataTool()
         with patch.object(tool, "_client", None):
-            with patch("video_sourcing_agent.tools.memories_v2.MemoriesV2Client") as mock_client_cls:
+            with patch("video_searching_agent.tools.memories_v2.MemoriesV2Client") as mock_client_cls:
                 mock_client = MagicMock()
                 mock_client.detect_platform.return_value = None
                 mock_client_cls.return_value = mock_client
@@ -742,9 +742,9 @@ class TestMemoriesV2ToolRegistration:
 
     def test_v2_tools_registered(self):
         """Test that all Memories.ai v2 tools are registered in the agent."""
-        from video_sourcing_agent.agent.core import VideoSourcingAgent
+        from video_searching_agent.agent.core import VideoSearchingAgent
 
-        with patch("video_sourcing_agent.agent.core.get_settings") as mock_settings:
+        with patch("video_searching_agent.agent.core.get_settings") as mock_settings:
             mock_settings.return_value = MagicMock(
                 google_api_key="test",
                 youtube_api_key="test",
@@ -756,7 +756,7 @@ class TestMemoriesV2ToolRegistration:
                 max_agent_steps=10,
             )
 
-            agent = VideoSourcingAgent()
+            agent = VideoSearchingAgent()
             tool_names = agent.tools.list_tools()
 
             assert "social_media_metadata" in tool_names
@@ -766,9 +766,9 @@ class TestMemoriesV2ToolRegistration:
 
     def test_v1_tools_not_registered(self):
         """Test that removed Memories.ai v1 tools are not registered."""
-        from video_sourcing_agent.agent.core import VideoSourcingAgent
+        from video_searching_agent.agent.core import VideoSearchingAgent
 
-        with patch("video_sourcing_agent.agent.core.get_settings") as mock_settings:
+        with patch("video_searching_agent.agent.core.get_settings") as mock_settings:
             mock_settings.return_value = MagicMock(
                 google_api_key="test",
                 youtube_api_key="test",
@@ -781,7 +781,7 @@ class TestMemoriesV2ToolRegistration:
                 api_timeout_seconds=30,
             )
 
-            agent = VideoSourcingAgent()
+            agent = VideoSearchingAgent()
             tool_names = agent.tools.list_tools()
 
             assert "memories_upload_video" not in tool_names
@@ -795,8 +795,8 @@ class TestMemoriesV2ToolRegistration:
 
     def test_streaming_wrapper_registers_same_v2_tools(self):
         """Streaming wrapper should expose the same v2 analysis tools."""
-        from video_sourcing_agent.tools.registry import ToolRegistry
-        from video_sourcing_agent.web.streaming.agent_stream import StreamingAgentWrapper
+        from video_searching_agent.tools.registry import ToolRegistry
+        from video_searching_agent.web.streaming.agent_stream import StreamingAgentWrapper
 
         wrapper = StreamingAgentWrapper.__new__(StreamingAgentWrapper)
         wrapper.tools = ToolRegistry()
@@ -818,7 +818,7 @@ class TestMemoriesV2ToolCostTracking:
 
     def test_metadata_tool_cost(self):
         """Test that metadata tool cost is tracked correctly."""
-        from video_sourcing_agent.config.pricing import get_pricing
+        from video_searching_agent.config.pricing import get_pricing
 
         pricing = get_pricing()
         cost = pricing.tools.get_tool_cost("social_media_metadata")
@@ -826,7 +826,7 @@ class TestMemoriesV2ToolCostTracking:
 
     def test_transcript_tool_cost(self):
         """Test that transcript tool cost is tracked correctly."""
-        from video_sourcing_agent.config.pricing import get_pricing
+        from video_searching_agent.config.pricing import get_pricing
 
         pricing = get_pricing()
         cost = pricing.tools.get_tool_cost("social_media_transcript")
@@ -834,7 +834,7 @@ class TestMemoriesV2ToolCostTracking:
 
     def test_vlm_tool_cost(self):
         """Test that VLM tool cost is tracked."""
-        from video_sourcing_agent.config.pricing import get_pricing
+        from video_searching_agent.config.pricing import get_pricing
 
         pricing = get_pricing()
         cost = pricing.tools.get_tool_cost("vlm_video_analysis")
@@ -842,7 +842,7 @@ class TestMemoriesV2ToolCostTracking:
 
     def test_mai_transcript_tool_cost(self):
         """Test that MAI transcript tool cost is tracked."""
-        from video_sourcing_agent.config.pricing import get_pricing
+        from video_searching_agent.config.pricing import get_pricing
 
         pricing = get_pricing()
         cost = pricing.tools.get_tool_cost("social_media_mai_transcript")
@@ -850,7 +850,7 @@ class TestMemoriesV2ToolCostTracking:
 
     def test_removed_v1_tool_names_default_to_zero(self):
         """Removed v1 tool names should resolve to unknown-tool default cost."""
-        from video_sourcing_agent.config.pricing import get_pricing
+        from video_searching_agent.config.pricing import get_pricing
 
         pricing = get_pricing()
         assert pricing.tools.get_tool_cost("memories_upload_video") == 0.0
@@ -860,7 +860,7 @@ class TestMemoriesV2ToolCostTracking:
 
     def test_youtube_channel_info_quota_mapping(self):
         """youtube_channel_info should map to channel quota."""
-        from video_sourcing_agent.config.pricing import get_pricing
+        from video_searching_agent.config.pricing import get_pricing
 
         pricing = get_pricing()
         assert pricing.tools.get_youtube_quota("youtube_channel_info") == 1

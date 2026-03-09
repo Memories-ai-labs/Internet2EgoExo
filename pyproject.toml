@@ -1,7 +1,7 @@
 [project]
-name = "video-sourcing-agent"
+name = "video-searching-agent"
 version = "0.1.0"
-description = "AI-powered video sourcing agent that searches and analyzes videos across multiple platforms"
+description = "AI-powered video searching agent that searches and analyzes videos across multiple platforms"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -36,7 +36,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/video_sourcing_agent"]
+packages = ["src/video_searching_agent"]
 
 [tool.ruff]
 line-length = 100

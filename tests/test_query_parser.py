@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from video_sourcing_agent.router.query_parser import QueryParser
+from video_searching_agent.router.query_parser import QueryParser
 
 
 class StubGemini:

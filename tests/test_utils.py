@@ -2,8 +2,8 @@
 
 from datetime import datetime
 
-from video_sourcing_agent.tools.base import ToolResult
-from video_sourcing_agent.utils import (
+from video_searching_agent.tools.base import ToolResult
+from video_searching_agent.utils import (
     get_current_date_iso,
     get_current_year,
     get_date_context,

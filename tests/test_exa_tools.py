@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from video_sourcing_agent.models.video import Platform
-from video_sourcing_agent.tools.exa import (
+from video_searching_agent.models.video import Platform
+from video_searching_agent.tools.exa import (
     ExaContentTool,
     ExaResearchTool,
     ExaSearchTool,
@@ -506,7 +506,7 @@ class TestExaToolFallbacks:
         - Twitter has exa fallback
         - Exa tools have internal fallbacks
         """
-        from video_sourcing_agent.tools.retry import TOOL_FALLBACKS
+        from video_searching_agent.tools.retry import TOOL_FALLBACKS
 
         # Twitter still has exa fallback
         assert "exa_search" in TOOL_FALLBACKS.get("twitter_search", [])
@@ -518,13 +518,13 @@ class TestExaToolFallbacks:
 
     def test_exa_similar_falls_back_to_search(self):
         """Test that exa_find_similar falls back to exa_search."""
-        from video_sourcing_agent.tools.retry import TOOL_FALLBACKS
+        from video_searching_agent.tools.retry import TOOL_FALLBACKS
 
         assert "exa_search" in TOOL_FALLBACKS.get("exa_find_similar", [])
 
     def test_exa_research_falls_back_to_search(self):
         """Test that exa_research falls back to exa_search."""
-        from video_sourcing_agent.tools.retry import TOOL_FALLBACKS
+        from video_searching_agent.tools.retry import TOOL_FALLBACKS
 
         assert "exa_search" in TOOL_FALLBACKS.get("exa_research", [])
 
@@ -535,10 +535,10 @@ class TestExaToolRegistration:
     def test_exa_tools_registered(self):
         """Test that all Exa tools are registered in the agent."""
         # Import here to avoid circular imports during test collection
-        from video_sourcing_agent.agent.core import VideoSourcingAgent
+        from video_searching_agent.agent.core import VideoSearchingAgent
 
         # Note: This test requires mocking settings to avoid requiring API keys
-        with patch("video_sourcing_agent.agent.core.get_settings") as mock_settings:
+        with patch("video_searching_agent.agent.core.get_settings") as mock_settings:
             mock_settings.return_value = MagicMock(
                 google_api_key="test",
                 youtube_api_key="test",
@@ -547,7 +547,7 @@ class TestExaToolRegistration:
                 max_agent_steps=10,
             )
 
-            agent = VideoSourcingAgent()
+            agent = VideoSearchingAgent()
             tool_names = agent.tools.list_tools()
 
             assert "exa_search" in tool_names
@@ -557,9 +557,9 @@ class TestExaToolRegistration:
 
     def test_web_search_not_registered(self):
         """Test that old web_search tool is not registered."""
-        from video_sourcing_agent.agent.core import VideoSourcingAgent
+        from video_searching_agent.agent.core import VideoSearchingAgent
 
-        with patch("video_sourcing_agent.agent.core.get_settings") as mock_settings:
+        with patch("video_searching_agent.agent.core.get_settings") as mock_settings:
             mock_settings.return_value = MagicMock(
                 google_api_key="test",
                 youtube_api_key="test",
@@ -568,14 +568,14 @@ class TestExaToolRegistration:
                 max_agent_steps=10,
             )
 
-            agent = VideoSourcingAgent()
+            agent = VideoSearchingAgent()
             tool_names = agent.tools.list_tools()
 
             assert "web_search" not in tool_names
 
     def test_create_default_registry_uses_exa_tools(self):
         """Test create_default_registry registers Exa tools and no legacy web_search."""
-        from video_sourcing_agent.tools.registry import create_default_registry
+        from video_searching_agent.tools.registry import create_default_registry
 
         registry = create_default_registry()
         tool_names = registry.list_tools()

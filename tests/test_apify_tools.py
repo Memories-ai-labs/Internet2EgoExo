@@ -5,16 +5,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from video_sourcing_agent.api.apify_client import ApifyClient
-from video_sourcing_agent.models.video import Platform
-from video_sourcing_agent.tools.exa import extract_platform_urls
-from video_sourcing_agent.tools.instagram_apify import (
+from video_searching_agent.api.apify_client import ApifyClient
+from video_searching_agent.models.video import Platform
+from video_searching_agent.tools.exa import extract_platform_urls
+from video_searching_agent.tools.instagram_apify import (
     InstagramApifyCreatorTool,
     InstagramApifySearchTool,
 )
-from video_sourcing_agent.tools.tiktok_apify import TikTokApifyCreatorTool, TikTokApifySearchTool
-from video_sourcing_agent.tools.twitter_apify import TwitterApifyProfileTool, TwitterApifySearchTool
-from video_sourcing_agent.tools.video_search import VideoSearchTool
+from video_searching_agent.tools.tiktok_apify import TikTokApifyCreatorTool, TikTokApifySearchTool
+from video_searching_agent.tools.twitter_apify import TwitterApifyProfileTool, TwitterApifySearchTool
+from video_searching_agent.tools.video_search import VideoSearchTool
 
 
 class TestApifyClient:

@@ -2,37 +2,37 @@
 set -e
 
 # Configuration
-VM_NAME="video-sourcing-api"
+VM_NAME="video-searching-api"
 ZONE="us-central1-a"
 GCLOUD="source ~/google-cloud-sdk/path.zsh.inc && gcloud"
 
-echo "🚀 Deploying Video Sourcing Agent..."
+echo "🚀 Deploying Video Searching Agent..."
 
 # Step 1: Create tarball
 echo "📦 Creating tarball..."
 tar --exclude='.venv' --exclude='.git' --exclude='__pycache__' \
     --exclude='*.pyc' --exclude='.env' --exclude='.mypy_cache' \
     --exclude='.pytest_cache' --exclude='.ruff_cache' \
-    -czf /tmp/video-sourcing-agent.tar.gz .
+    -czf /tmp/video-searching-agent.tar.gz .
 
 # Step 2: Copy to VM
 echo "📤 Copying to VM..."
-eval "$GCLOUD compute scp /tmp/video-sourcing-agent.tar.gz $VM_NAME:~ --zone=$ZONE"
+eval "$GCLOUD compute scp /tmp/video-searching-agent.tar.gz $VM_NAME:~ --zone=$ZONE"
 
 # Step 3: Deploy on VM
 echo "🔨 Building and deploying on VM..."
 eval "$GCLOUD compute ssh $VM_NAME --zone=$ZONE --command='
     cd ~/app &&
-    tar -xzf ~/video-sourcing-agent.tar.gz &&
+    tar -xzf ~/video-searching-agent.tar.gz &&
     sudo docker stop video-api 2>/dev/null || true &&
     sudo docker rm video-api 2>/dev/null || true &&
-    sudo docker build -t video-sourcing-agent . &&
+    sudo docker build -t video-searching-agent . &&
     sudo docker run -d \
         --name video-api \
         --restart=unless-stopped \
         -p 80:8000 \
         --env-file .env \
-        video-sourcing-agent
+        video-searching-agent
 '"
 
 # Step 4: Health check

@@ -9,10 +9,10 @@ from typing import Any
 
 import pytest
 
-from video_sourcing_agent.agent.core import VideoSourcingAgent
-from video_sourcing_agent.models.query import ParsedQuery, TimeFrame
-from video_sourcing_agent.tools.base import ToolResult
-from video_sourcing_agent.web.streaming.agent_stream import StreamingAgentWrapper
+from video_searching_agent.agent.core import VideoSearchingAgent
+from video_searching_agent.models.query import ParsedQuery, TimeFrame
+from video_searching_agent.tools.base import ToolResult
+from video_searching_agent.web.streaming.agent_stream import StreamingAgentWrapper
 
 
 class _SingleToolGemini:
@@ -93,7 +93,7 @@ def _build_wrapper(
         tool_execution_concurrency=4,
     )
     monkeypatch.setattr(
-        "video_sourcing_agent.web.streaming.agent_stream.get_settings",
+        "video_searching_agent.web.streaming.agent_stream.get_settings",
         lambda: settings,
     )
     monkeypatch.setattr(StreamingAgentWrapper, "_register_tools", lambda self, _: None)
@@ -200,10 +200,10 @@ async def test_parallel_tool_calls_emit_ordered_prefix_before_completion(
 async def test_core_agent_parallel_tool_calls_preserve_order(monkeypatch: pytest.MonkeyPatch):
     """Core agent should parallelize same-turn tool calls while preserving ordering."""
     settings = SimpleNamespace(max_agent_steps=3, tool_execution_concurrency=4)
-    monkeypatch.setattr("video_sourcing_agent.agent.core.get_settings", lambda: settings)
-    monkeypatch.setattr(VideoSourcingAgent, "_register_tools", lambda self, _: None)
+    monkeypatch.setattr("video_searching_agent.agent.core.get_settings", lambda: settings)
+    monkeypatch.setattr(VideoSearchingAgent, "_register_tools", lambda self, _: None)
 
-    agent = VideoSourcingAgent(enable_clarification=False)
+    agent = VideoSearchingAgent(enable_clarification=False)
     agent.gemini = _TwoToolGemini()
     agent.query_parser = SimpleNamespace(
         parse=lambda query: asyncio.sleep(
@@ -236,10 +236,10 @@ async def test_core_agent_cancels_pending_parallel_tasks_on_cancellation(
 ):
     """Core agent should cancel in-flight same-turn tool tasks when cancelled."""
     settings = SimpleNamespace(max_agent_steps=3, tool_execution_concurrency=4)
-    monkeypatch.setattr("video_sourcing_agent.agent.core.get_settings", lambda: settings)
-    monkeypatch.setattr(VideoSourcingAgent, "_register_tools", lambda self, _: None)
+    monkeypatch.setattr("video_searching_agent.agent.core.get_settings", lambda: settings)
+    monkeypatch.setattr(VideoSearchingAgent, "_register_tools", lambda self, _: None)
 
-    agent = VideoSourcingAgent(enable_clarification=False)
+    agent = VideoSearchingAgent(enable_clarification=False)
     started = 0
     all_started = asyncio.Event()
     blocker = asyncio.Event()
@@ -265,7 +265,7 @@ async def test_core_agent_cancels_pending_parallel_tasks_on_cancellation(
         return task
 
     monkeypatch.setattr(
-        "video_sourcing_agent.agent.core.asyncio.create_task",
+        "video_searching_agent.agent.core.asyncio.create_task",
         tracking_create_task,
     )
 
@@ -333,7 +333,7 @@ async def test_streaming_wrapper_cancels_pending_parallel_tasks_on_cancellation(
         return task
 
     monkeypatch.setattr(
-        "video_sourcing_agent.web.streaming.agent_stream.asyncio.create_task",
+        "video_searching_agent.web.streaming.agent_stream.asyncio.create_task",
         tracking_create_task,
     )
 

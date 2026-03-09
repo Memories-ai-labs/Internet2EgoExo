@@ -5,9 +5,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from video_sourcing_agent.web.app import create_app
-from video_sourcing_agent.web.middleware.rate_limit import TokenBucket
-from video_sourcing_agent.web.schemas.events import (
+from video_searching_agent.web.app import create_app
+from video_searching_agent.web.middleware.rate_limit import TokenBucket
+from video_searching_agent.web.schemas.events import (
     ClarificationEvent,
     CompleteEvent,
     ErrorEvent,
@@ -16,7 +16,7 @@ from video_sourcing_agent.web.schemas.events import (
     ToolCallEvent,
     ToolResultEvent,
 )
-from video_sourcing_agent.web.schemas.requests import QueryRequest
+from video_searching_agent.web.schemas.requests import QueryRequest
 
 
 class TestSSEEvents:
@@ -147,7 +147,7 @@ class TestTokenBucket:
 class TestHealthEndpoint:
     """Test health check endpoint."""
 
-    @patch("video_sourcing_agent.web.routers.health.get_agent")
+    @patch("video_searching_agent.web.routers.health.get_agent")
     def test_health_check(self, mock_get_agent):
         # Mock the agent
         mock_agent = MagicMock()
@@ -175,7 +175,7 @@ class TestAuthMiddleware:
 
     def test_health_no_auth_required(self):
         """Health endpoint should work without auth."""
-        with patch("video_sourcing_agent.web.routers.health.get_agent") as mock_get_agent:
+        with patch("video_searching_agent.web.routers.health.get_agent") as mock_get_agent:
             mock_agent = MagicMock()
             mock_agent.get_tool_health.return_value = {}
             mock_get_agent.return_value = mock_agent
@@ -189,21 +189,21 @@ class TestAuthMiddleware:
     def test_query_requires_auth_when_configured(self):
         """Query endpoint should require auth when API keys are configured."""
         # Patch where it's used, not where it's defined
-        with patch("video_sourcing_agent.web.middleware.auth.get_settings") as mock_settings:
+        with patch("video_searching_agent.web.middleware.auth.get_settings") as mock_settings:
             mock_settings_instance = MagicMock()
             mock_settings_instance.api_keys = "valid-key-1,valid-key-2"
             mock_settings_instance.api_key_header = "X-API-Key"
             mock_settings.return_value = mock_settings_instance
 
             # Also need to patch app creation settings
-            with patch("video_sourcing_agent.web.app.get_settings") as mock_app_settings:
+            with patch("video_searching_agent.web.app.get_settings") as mock_app_settings:
                 mock_app_settings_instance = MagicMock()
                 mock_app_settings_instance.cors_origins = "*"
                 mock_app_settings_instance.api_debug = True
                 mock_app_settings.return_value = mock_app_settings_instance
 
                 # And rate limit settings
-                rl_patch = "video_sourcing_agent.web.middleware.rate_limit.get_settings"
+                rl_patch = "video_searching_agent.web.middleware.rate_limit.get_settings"
                 with patch(rl_patch) as mock_rl:
                     mock_rl_instance = MagicMock()
                     mock_rl_instance.rate_limit_enabled = False
@@ -306,7 +306,7 @@ class TestMalformedRequests:
 
     def test_missing_query_field(self):
         """Request missing query field should fail."""
-        with patch("video_sourcing_agent.web.routers.health.get_agent") as mock_get_agent:
+        with patch("video_searching_agent.web.routers.health.get_agent") as mock_get_agent:
             mock_agent = MagicMock()
             mock_agent.get_tool_health.return_value = {}
             mock_get_agent.return_value = mock_agent
@@ -322,7 +322,7 @@ class TestMalformedRequests:
 
     def test_invalid_json(self):
         """Invalid JSON should fail gracefully."""
-        with patch("video_sourcing_agent.web.routers.health.get_agent") as mock_get_agent:
+        with patch("video_searching_agent.web.routers.health.get_agent") as mock_get_agent:
             mock_agent = MagicMock()
             mock_agent.get_tool_health.return_value = {}
             mock_get_agent.return_value = mock_agent
@@ -339,7 +339,7 @@ class TestMalformedRequests:
 
     def test_wrong_content_type(self):
         """Request with wrong content type should fail."""
-        with patch("video_sourcing_agent.web.routers.health.get_agent") as mock_get_agent:
+        with patch("video_searching_agent.web.routers.health.get_agent") as mock_get_agent:
             mock_agent = MagicMock()
             mock_agent.get_tool_health.return_value = {}
             mock_get_agent.return_value = mock_agent
@@ -374,7 +374,7 @@ class TestRateLimitingBehavior:
 
     def test_exempt_paths_not_limited(self):
         """Exempt paths should bypass rate limiting."""
-        with patch("video_sourcing_agent.web.routers.health.get_agent") as mock_get_agent:
+        with patch("video_searching_agent.web.routers.health.get_agent") as mock_get_agent:
             mock_agent = MagicMock()
             mock_agent.get_tool_health.return_value = {}
             mock_get_agent.return_value = mock_agent

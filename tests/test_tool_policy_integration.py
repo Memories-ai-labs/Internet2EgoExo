@@ -8,10 +8,10 @@ from typing import Any
 
 import pytest
 
-from video_sourcing_agent.agent.core import VideoSourcingAgent
-from video_sourcing_agent.models.query import ParsedQuery, QueryType, TimeFrame
-from video_sourcing_agent.tools.base import ToolResult
-from video_sourcing_agent.web.streaming.agent_stream import StreamingAgentWrapper
+from video_searching_agent.agent.core import VideoSearchingAgent
+from video_searching_agent.models.query import ParsedQuery, QueryType, TimeFrame
+from video_searching_agent.tools.base import ToolResult
+from video_searching_agent.web.streaming.agent_stream import StreamingAgentWrapper
 
 
 class _DeepToolGemini:
@@ -147,7 +147,7 @@ async def test_stream_wrapper_rewrites_discovery_deep_tool_to_video_search(
         tool_execution_concurrency=4,
     )
     monkeypatch.setattr(
-        "video_sourcing_agent.web.streaming.agent_stream.get_settings",
+        "video_searching_agent.web.streaming.agent_stream.get_settings",
         lambda: settings,
     )
     monkeypatch.setattr(StreamingAgentWrapper, "_register_tools", lambda self, _: None)
@@ -196,7 +196,7 @@ async def test_stream_wrapper_allows_deep_tool_for_explicit_url_analysis_phrase(
         tool_execution_concurrency=4,
     )
     monkeypatch.setattr(
-        "video_sourcing_agent.web.streaming.agent_stream.get_settings",
+        "video_searching_agent.web.streaming.agent_stream.get_settings",
         lambda: settings,
     )
     monkeypatch.setattr(StreamingAgentWrapper, "_register_tools", lambda self, _: None)
@@ -248,7 +248,7 @@ async def test_stream_wrapper_blocks_deep_tool_for_non_video_url_analysis_phrase
         tool_execution_concurrency=4,
     )
     monkeypatch.setattr(
-        "video_sourcing_agent.web.streaming.agent_stream.get_settings",
+        "video_searching_agent.web.streaming.agent_stream.get_settings",
         lambda: settings,
     )
     monkeypatch.setattr(StreamingAgentWrapper, "_register_tools", lambda self, _: None)
@@ -300,7 +300,7 @@ async def test_stream_wrapper_preserves_metadata_tool_for_url_specific_query(
         tool_execution_concurrency=4,
     )
     monkeypatch.setattr(
-        "video_sourcing_agent.web.streaming.agent_stream.get_settings",
+        "video_searching_agent.web.streaming.agent_stream.get_settings",
         lambda: settings,
     )
     monkeypatch.setattr(StreamingAgentWrapper, "_register_tools", lambda self, _: None)
@@ -346,10 +346,10 @@ async def test_core_agent_allows_deep_tool_for_explicit_video_analysis(
     monkeypatch: pytest.MonkeyPatch,
 ):
     settings = SimpleNamespace(max_agent_steps=3, tool_execution_concurrency=4)
-    monkeypatch.setattr("video_sourcing_agent.agent.core.get_settings", lambda: settings)
-    monkeypatch.setattr(VideoSourcingAgent, "_register_tools", lambda self, _: None)
+    monkeypatch.setattr("video_searching_agent.agent.core.get_settings", lambda: settings)
+    monkeypatch.setattr(VideoSearchingAgent, "_register_tools", lambda self, _: None)
 
-    agent = VideoSourcingAgent(enable_clarification=False)
+    agent = VideoSearchingAgent(enable_clarification=False)
     agent.gemini = _DeepToolGemini()
     agent.query_parser = SimpleNamespace(
         parse=lambda query: asyncio.sleep(
@@ -386,10 +386,10 @@ async def test_core_agent_preserves_metadata_tool_for_url_specific_query(
     monkeypatch: pytest.MonkeyPatch,
 ):
     settings = SimpleNamespace(max_agent_steps=3, tool_execution_concurrency=4)
-    monkeypatch.setattr("video_sourcing_agent.agent.core.get_settings", lambda: settings)
-    monkeypatch.setattr(VideoSourcingAgent, "_register_tools", lambda self, _: None)
+    monkeypatch.setattr("video_searching_agent.agent.core.get_settings", lambda: settings)
+    monkeypatch.setattr(VideoSearchingAgent, "_register_tools", lambda self, _: None)
 
-    agent = VideoSourcingAgent(enable_clarification=False)
+    agent = VideoSearchingAgent(enable_clarification=False)
     agent.gemini = _MetadataToolGemini()
     agent.query_parser = SimpleNamespace(
         parse=lambda query: asyncio.sleep(

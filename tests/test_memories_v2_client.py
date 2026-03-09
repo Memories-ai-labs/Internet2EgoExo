@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from video_sourcing_agent.api.memories_v2_client import MemoriesV2Client
+from video_searching_agent.api.memories_v2_client import MemoriesV2Client
 
 
 class TestMemoriesV2ClientInit:
@@ -13,7 +13,7 @@ class TestMemoriesV2ClientInit:
 
     def test_default_init(self):
         """Test client initialization with defaults."""
-        with patch("video_sourcing_agent.api.memories_v2_client.get_settings") as mock_settings:
+        with patch("video_searching_agent.api.memories_v2_client.get_settings") as mock_settings:
             mock_settings.return_value = MagicMock(
                 memories_api_key="test_api_key",
                 memories_base_url="https://test.api.com/v2",
@@ -28,7 +28,7 @@ class TestMemoriesV2ClientInit:
 
     def test_custom_init(self):
         """Test client initialization with custom values."""
-        with patch("video_sourcing_agent.api.memories_v2_client.get_settings") as mock_settings:
+        with patch("video_searching_agent.api.memories_v2_client.get_settings") as mock_settings:
             mock_settings.return_value = MagicMock(
                 memories_api_key="default_key",
                 memories_base_url="https://default.api.com/v2",
@@ -44,7 +44,7 @@ class TestMemoriesV2ClientInit:
 
     def test_init_strips_whitespace_values(self):
         """Client should normalize whitespace around key/base_url/channel."""
-        with patch("video_sourcing_agent.api.memories_v2_client.get_settings") as mock_settings:
+        with patch("video_searching_agent.api.memories_v2_client.get_settings") as mock_settings:
             mock_settings.return_value = MagicMock(
                 memories_api_key="  settings_key  ",
                 memories_base_url=" https://default.api.com/v2/ ",
@@ -63,7 +63,7 @@ class TestMemoriesV2ClientInit:
 
     def test_blank_custom_base_url_falls_back_to_settings_base_url(self):
         """Blank override base_url should not produce empty client base URL."""
-        with patch("video_sourcing_agent.api.memories_v2_client.get_settings") as mock_settings:
+        with patch("video_searching_agent.api.memories_v2_client.get_settings") as mock_settings:
             mock_settings.return_value = MagicMock(
                 memories_api_key="test_api_key",
                 memories_base_url="https://settings.api.com/v2",
@@ -77,7 +77,7 @@ class TestMemoriesV2ClientInit:
 
     def test_blank_settings_base_url_falls_back_to_builtin_default(self):
         """If settings base_url is blank, client should use builtin BASE_URL."""
-        with patch("video_sourcing_agent.api.memories_v2_client.get_settings") as mock_settings:
+        with patch("video_searching_agent.api.memories_v2_client.get_settings") as mock_settings:
             mock_settings.return_value = MagicMock(
                 memories_api_key="test_api_key",
                 memories_base_url="   ",
@@ -91,7 +91,7 @@ class TestMemoriesV2ClientInit:
 
     def test_headers_no_bearer_prefix(self):
         """Test that authorization header does not use Bearer prefix."""
-        with patch("video_sourcing_agent.api.memories_v2_client.get_settings") as mock_settings:
+        with patch("video_searching_agent.api.memories_v2_client.get_settings") as mock_settings:
             mock_settings.return_value = MagicMock(
                 memories_api_key="test_api_key",
                 memories_base_url="https://test.api.com/v2",
@@ -110,7 +110,7 @@ class TestMemoriesV2ClientPlatformDetection:
     @pytest.fixture
     def client(self):
         """Create a Memories.ai v2 client for testing."""
-        with patch("video_sourcing_agent.api.memories_v2_client.get_settings") as mock_settings:
+        with patch("video_searching_agent.api.memories_v2_client.get_settings") as mock_settings:
             mock_settings.return_value = MagicMock(
                 memories_api_key="test_key",
                 memories_base_url="https://test.api.com/v2",
@@ -155,7 +155,7 @@ class TestMemoriesV2ClientYouTube:
     @pytest.fixture
     def client(self):
         """Create a Memories.ai v2 client for testing."""
-        with patch("video_sourcing_agent.api.memories_v2_client.get_settings") as mock_settings:
+        with patch("video_searching_agent.api.memories_v2_client.get_settings") as mock_settings:
             mock_settings.return_value = MagicMock(
                 memories_api_key="test_key",
                 memories_base_url="https://test.api.com/v2",
@@ -318,7 +318,7 @@ class TestMemoriesV2ClientVLM:
     @pytest.fixture
     def client(self):
         """Create a Memories.ai v2 client for testing."""
-        with patch("video_sourcing_agent.api.memories_v2_client.get_settings") as mock_settings:
+        with patch("video_searching_agent.api.memories_v2_client.get_settings") as mock_settings:
             mock_settings.return_value = MagicMock(
                 memories_api_key="test_key",
                 memories_base_url="https://test.api.com/v2",
@@ -448,7 +448,7 @@ class TestMemoriesV2ClientUnifiedMethods:
     @pytest.fixture
     def client(self):
         """Create a Memories.ai v2 client for testing."""
-        with patch("video_sourcing_agent.api.memories_v2_client.get_settings") as mock_settings:
+        with patch("video_searching_agent.api.memories_v2_client.get_settings") as mock_settings:
             mock_settings.return_value = MagicMock(
                 memories_api_key="test_key",
                 memories_base_url="https://test.api.com/v2",
@@ -517,7 +517,7 @@ class TestMemoriesV2ClientAssetManagement:
     @pytest.fixture
     def client(self):
         """Create a Memories.ai v2 client for testing."""
-        with patch("video_sourcing_agent.api.memories_v2_client.get_settings") as mock_settings:
+        with patch("video_searching_agent.api.memories_v2_client.get_settings") as mock_settings:
             mock_settings.return_value = MagicMock(
                 memories_api_key="test_key",
                 memories_base_url="https://test.api.com/v2",
@@ -568,7 +568,7 @@ class TestMemoriesV2ClientTranscription:
     @pytest.fixture
     def client(self):
         """Create a Memories.ai v2 client for testing."""
-        with patch("video_sourcing_agent.api.memories_v2_client.get_settings") as mock_settings:
+        with patch("video_searching_agent.api.memories_v2_client.get_settings") as mock_settings:
             mock_settings.return_value = MagicMock(
                 memories_api_key="test_key",
                 memories_base_url="https://test.api.com/v2",
@@ -610,7 +610,7 @@ class TestMemoriesV2ClientTranscriptNormalization:
     @pytest.fixture
     def client(self):
         """Create a Memories.ai v2 client for testing."""
-        with patch("video_sourcing_agent.api.memories_v2_client.get_settings") as mock_settings:
+        with patch("video_searching_agent.api.memories_v2_client.get_settings") as mock_settings:
             mock_settings.return_value = MagicMock(
                 memories_api_key="test_key",
                 memories_base_url="https://test.api.com/v2",
@@ -715,7 +715,7 @@ class TestMemoriesV2ClientMAITranscript:
     @pytest.fixture
     def client(self):
         """Create a Memories.ai v2 client for testing."""
-        with patch("video_sourcing_agent.api.memories_v2_client.get_settings") as mock_settings:
+        with patch("video_searching_agent.api.memories_v2_client.get_settings") as mock_settings:
             mock_settings.return_value = MagicMock(
                 memories_api_key="test_key",
                 memories_base_url="https://test.api.com/v2",

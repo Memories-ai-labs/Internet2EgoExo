@@ -2,24 +2,24 @@
 
 ## Scope
 
-Manual validation checklist for `video-sourcing` OpenClaw skill integration.
+Manual validation checklist for `video-searching` OpenClaw skill integration.
 
 ## Scenarios
 
-1. `/video_sourcing <query>` with managed bootstrap runtime
+1. `/video_searching <query>` with managed bootstrap runtime
    - Preconditions:
-     - `VIDEO_SOURCING_AGENT_ROOT` unset
+     - `VIDEO_SEARCHING_AGENT_ROOT` unset
      - `git` and `uv` available
      - required API keys set
-   - Send: `/video_sourcing Find trending UGC videos for SaaS this week`
+   - Send: `/video_searching Find trending UGC videos for SaaS this week`
    - Expect:
-     - Runner bootstraps `~/.openclaw/data/video-sourcing-agent/v0.2.3` on first run.
+     - Runner bootstraps `~/.openclaw/data/video-searching-agent/v0.2.3` on first run.
      - Query executes successfully.
 
-2. `/video_sourcing <query>` with local override runtime
+2. `/video_searching <query>` with local override runtime
    - Preconditions:
-     - `skills.entries["video-sourcing"].env.VIDEO_SOURCING_AGENT_ROOT` points to valid local repo.
-   - Send: `/video_sourcing Find trending UGC videos for SaaS this week`
+     - `skills.entries["video-searching"].env.VIDEO_SEARCHING_AGENT_ROOT` points to valid local repo.
+   - Send: `/video_searching Find trending UGC videos for SaaS this week`
    - Expect:
      - Override path is used.
      - Managed bootstrap path is not required.
@@ -43,13 +43,13 @@ Manual validation checklist for `video-sourcing` OpenClaw skill integration.
    - Preconditions:
      - `agents.defaults.typingMode` set to `"message"`
      - `agents.defaults.typingIntervalSeconds` set to `6`
-   - Send: `/video_sourcing top trending videos about AI`
+   - Send: `/video_searching top trending videos about AI`
    - Expect:
      - Start/progress/final messages still arrive.
      - Typing indicator clears promptly after terminal message (typically within 5-8 seconds).
 
 ## Channel matrix
 
-1. Telegram DM with `/video_sourcing`.
+1. Telegram DM with `/video_searching`.
 2. Telegram free-form.
 3. Non-Telegram channel (for example Discord) with block/partial streaming fallback.

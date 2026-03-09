@@ -1,6 +1,6 @@
-# Video Sourcing Agent
+# Video Searching Agent
 
-AI-powered video sourcing agent that searches, analyzes, and sources videos from across the internet to answer user queries with video references.
+AI-powered video searching agent that searches, analyzes, and sources videos from across the internet to answer user queries with video references.
 
 ## Features
 
@@ -15,7 +15,7 @@ AI-powered video sourcing agent that searches, analyzes, and sources videos from
 
 ## How It Works
 
-The Video Sourcing Agent follows an **agentic loop pattern** where Google Gemini orchestrates which tools to call based on user queries. Here's the core flow:
+The Video Searching Agent follows an **agentic loop pattern** where Google Gemini orchestrates which tools to call based on user queries. Here's the core flow:
 
 ### 1. Query Parsing (LLM-First Slot Extraction)
 
@@ -80,8 +80,8 @@ The final `AgentResponse` includes:
 
 ```bash
 # Clone the repository
-git clone https://github.com/OpenInterX-Products/video-sourcing-agent.git
-cd video-sourcing-agent
+git clone https://github.com/OpenInterX-Products/video-searching-agent.git
+cd video-searching-agent
 
 # Install dependencies
 pip install -e .
@@ -123,11 +123,11 @@ APIFY_API_TOKEN=your_apify_api_token
 
 ```python
 import asyncio
-from video_sourcing_agent import VideoSourcingAgent
+from video_searching_agent import VideoSearchingAgent
 
 async def main():
     # Initialize the agent
-    agent = VideoSourcingAgent()
+    agent = VideoSearchingAgent()
 
     # Simple query
     response = await agent.query(
@@ -244,7 +244,7 @@ UsageMetrics:
 ## Architecture
 
 ```
-VideoSourcingAgent
+VideoSearchingAgent
     ├── GeminiClient (Google Gemini API)
     ├── QueryParser (LLM-first slot extraction)
     ├── ClarificationManager (handles missing context)
@@ -469,8 +469,8 @@ mypy src/
 ## Project Structure
 
 ```
-video-sourcing-agent/
-├── src/video_sourcing_agent/
+video-searching-agent/
+├── src/video_searching_agent/
 │   ├── agent/          # Core agent logic
 │   ├── api/            # External API clients
 │   ├── config/         # Configuration

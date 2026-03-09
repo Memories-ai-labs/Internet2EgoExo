@@ -1,14 +1,14 @@
 # OpenClaw Skill Integration
 
-This integration installs the `video-sourcing` skill for OpenClaw and runs a pinned self-bootstrap runtime.
+This integration installs the `video-searching` skill for OpenClaw and runs a pinned self-bootstrap runtime.
 
 Default runtime source:
 
-- `https://github.com/Memories-ai-labs/video-sourcing-agent`
+- `https://github.com/Memories-ai-labs/video-searching-agent`
 - pinned tag: `v0.2.3`
-- managed path: `~/.openclaw/data/video-sourcing-agent/v0.2.3`
+- managed path: `~/.openclaw/data/video-searching-agent/v0.2.3`
 
-`VIDEO_SOURCING_AGENT_ROOT` is optional and only needed when you want to override the managed runtime with a local checkout.
+`VIDEO_SEARCHING_AGENT_ROOT` is optional and only needed when you want to override the managed runtime with a local checkout.
 
 ## Prerequisites
 
@@ -37,13 +37,13 @@ Default runtime source:
 1. Install the skill:
 
 ```bash
-bash /Users/samuelzhang/Documents/GitHub/video-sourcing-agent/openclaw/install_skill.sh
+bash /Users/samuelzhang/Documents/GitHub/video-searching-agent/openclaw/install_skill.sh
 ```
 
 Use `--copy` to copy instead of symlink:
 
 ```bash
-bash /Users/samuelzhang/Documents/GitHub/video-sourcing-agent/openclaw/install_skill.sh --copy
+bash /Users/samuelzhang/Documents/GitHub/video-searching-agent/openclaw/install_skill.sh --copy
 ```
 
 2. Add env vars and enable the skill in `~/.openclaw/openclaw.json`:
@@ -61,7 +61,7 @@ bash /Users/samuelzhang/Documents/GitHub/video-sourcing-agent/openclaw/install_s
   },
   skills: {
     entries: {
-      "video-sourcing": {
+      "video-searching": {
         enabled: true,
       },
     },
@@ -69,7 +69,7 @@ bash /Users/samuelzhang/Documents/GitHub/video-sourcing-agent/openclaw/install_s
 }
 ```
 
-3. Merge the rest of settings from [openclaw_config.example.json5](/Users/samuelzhang/Documents/GitHub/video-sourcing-agent/openclaw/openclaw_config.example.json5).
+3. Merge the rest of settings from [openclaw_config.example.json5](/Users/samuelzhang/Documents/GitHub/video-searching-agent/openclaw/openclaw_config.example.json5).
 
 4. Restart OpenClaw Gateway.
 
@@ -81,10 +81,10 @@ If you want to run against a local development checkout instead of the pinned ma
 {
   skills: {
     entries: {
-      "video-sourcing": {
+      "video-searching": {
         enabled: true,
         env: {
-          VIDEO_SOURCING_AGENT_ROOT: "/absolute/path/to/local/video-sourcing-agent",
+          VIDEO_SEARCHING_AGENT_ROOT: "/absolute/path/to/local/video-searching-agent",
         },
       },
     },
@@ -96,15 +96,15 @@ If you want to run against a local development checkout instead of the pinned ma
 
 Slash command:
 
-`/video_sourcing Find the fastest-growing tech videos in the past 48 hours`
+`/video_searching Find the fastest-growing tech videos in the past 48 hours`
 
 Free-form:
 
 `Show me trending TikTok videos about mindful movement this week`
 
-`/video_sourcing` deterministic UX behavior:
+`/video_searching` deterministic UX behavior:
 
-1. Immediate start message: `Starting video sourcing...`
+1. Immediate start message: `Starting video searching...`
 2. Throttled middle progress messages when runtime reaches 5+ seconds.
 3. Final terminal message (`complete`, `clarification_needed`, or `error`).
 4. Use explicit command timeout (`exec.timeout: 420`) for long runs.
@@ -112,7 +112,7 @@ Free-form:
 
 ## Typing indicator and live progress
 
-For seamless UX during long `/video_sourcing` runs:
+For seamless UX during long `/video_searching` runs:
 
 ```bash
 openclaw config set agents.defaults.typingMode '"instant"'
@@ -135,11 +135,11 @@ Expected behavior:
    - Set `GOOGLE_API_KEY` and `YOUTUBE_API_KEY` in global `env.vars`.
 3. Bootstrap clone/sync failures
    - Verify host network access to GitHub and that tag `v0.2.3` exists.
-4. `/video_sourcing` returns only final response without progress
+4. `/video_searching` returns only final response without progress
    - Ensure `blockStreamingDefault` is not set: `openclaw config unset agents.defaults.blockStreamingDefault`.
    - Restart OpenClaw Gateway after config changes.
 5. Override path invalid
-   - Ensure `VIDEO_SOURCING_AGENT_ROOT` points to a valid repository directory.
+   - Ensure `VIDEO_SEARCHING_AGENT_ROOT` points to a valid repository directory.
 6. Typing indicator remains stuck after terminal response
    - Fallback: set `agents.defaults.typingMode` to `"message"` and restart the gateway.
    - Rollback: unset typing keys with `openclaw config unset agents.defaults.typingMode` and `openclaw config unset agents.defaults.typingIntervalSeconds`.

@@ -1,5 +1,5 @@
 {
-  // Command registration for /video_sourcing and other skill commands
+  // Command registration for /video_searching and other skill commands
   commands: {
     native: "auto",
     nativeSkills: "auto",
@@ -33,13 +33,13 @@
   },
 
   // Skill-specific config.
-  // VIDEO_SOURCING_AGENT_ROOT is optional: set it only to override managed bootstrap runtime.
+  // VIDEO_SEARCHING_AGENT_ROOT is optional: set it only to override managed bootstrap runtime.
   skills: {
     entries: {
-      "video-sourcing": {
+      "video-searching": {
         enabled: true,
         // env: {
-        //   VIDEO_SOURCING_AGENT_ROOT: "/absolute/path/to/local/video-sourcing-agent",
+        //   VIDEO_SEARCHING_AGENT_ROOT: "/absolute/path/to/local/video-searching-agent",
         // },
       },
     },

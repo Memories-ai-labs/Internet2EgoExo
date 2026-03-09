@@ -3,8 +3,8 @@
 
 import pytest
 
-from video_sourcing_agent.tools.base import BaseTool, ToolResult
-from video_sourcing_agent.tools.retry import RetryExecutor, get_fallback_tools
+from video_searching_agent.tools.base import BaseTool, ToolResult
+from video_searching_agent.tools.retry import RetryExecutor, get_fallback_tools
 
 
 class MockTool(BaseTool):

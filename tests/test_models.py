@@ -1,9 +1,9 @@
 """Tests for data models."""
 
 
-from video_sourcing_agent.models.query import AgentSession, ParsedQuery, QueryType
-from video_sourcing_agent.models.result import AgentResponse, VideoReference
-from video_sourcing_agent.models.video import (
+from video_searching_agent.models.query import AgentSession, ParsedQuery, QueryType
+from video_searching_agent.models.result import AgentResponse, VideoReference
+from video_searching_agent.models.video import (
     Platform,
     Video,
     VideoCollection,

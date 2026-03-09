@@ -3,7 +3,7 @@
 import os
 from unittest.mock import patch
 
-from video_sourcing_agent.config.settings import Settings
+from video_searching_agent.config.settings import Settings
 
 
 def _base_env() -> dict[str, str]:
