@@ -26,6 +26,18 @@ views, likes or engagement.
   published rates, per hour collected and per hour delivered
 - **Video Datalake**: Index footage once into Memories.ai, then read captions,
   transcription and summary, or search moments across the indexed corpus
+- **Specialized agents**: A cleaning agent for filtering and clipping, an
+  annotation agent for the task → action → event tree, a curation agent for the
+  set — each judged on its own output, with an auditable Thought → Action →
+  Observation trace
+- **The hands gate**: A clip whose frames show no hands is dropped, not ranked
+  low — for manipulation data it is worthless, and this is the one rule with no
+  override
+- **Quality gates as code**: The internal first-person standard as executable
+  checks — rights, media usability, annotation depth L0-L3, diversity — with
+  unmeasured checks excluded from the score rather than assumed to pass
+- **Four hour measures, never mixed**: worn / delivered / accepted /
+  accepted_labeled, so a delivered hour is never quoted as an accepted one
 - **Moment-level annotation tree**: Open a clip to see its viewpoint evidence,
   provenance and per-span hand/object annotations with the tags written back
 - **Multi-source**: YouTube, TikTok, Instagram, Twitter/X and the open web
@@ -163,7 +175,240 @@ async def main():
 asyncio.run(main())
 ```
 
-## Training-data collection
+## The pipeline, end to end
+
+One request — *"find me first-person cooking footage, hands must be visible"* —
+runs the whole way through. Nothing below is a separate product: it is one path,
+and each leg is owned by an agent whose job is narrow enough to be judged on its
+own output.
+
+```
+                      ┌──────────────────────── you ────────────────────────┐
+                      │  "all first-person cooking videos, hands visible"   │
+                      └───────────────────────────┬─────────────────────────┘
+                                                  ▼
+ 1  SEARCH        search agent        YouTube · TikTok · Instagram · X · web
+                                     viewpoint classification, usability ranking
+                                                  ▼
+ 2  SCREEN        cleaning agent      licence · length · viewpoint     ← spends nothing
+                                                  ▼
+ 3  DOWNLOAD      yt-dlp              platform pages are not fetchable media
+                                                  ▼
+ 4  INDEX         Video Datalake      upload → captions · transcription · embeddings
+                                                  ▼
+ 5  CLEAN         cleaning agent      hands · other people · editing · resolution
+                                     then: where does each action start and stop
+                                                  ▼
+ 6  ANNOTATE      annotation agent    task → action → event, on time anchors
+                                                  ▼
+ 7  CURATE        curation agent      hours ledger · diversity · duplicates · grade
+                                                  ▼
+                      ┌──────────────────────────────────────────────────────┐
+                      │  clean clips, every one with hands, each with a tree  │
+                      └──────────────────────────────────────────────────────┘
+```
+
+Every verdict is written back onto the video as tags, so each pass narrows the
+next one: `clean_pass` is the annotation agent's worklist, `first_person_view`
+and `hands_visible` are how the next query finds only footage that already
+qualified.
+
+### The agents
+
+| Agent | Owns | Module |
+|-------|------|--------|
+| Search agent | Finding candidates and ranking them by usability | `agent/core.py` |
+| **Cleaning agent** | **Agentic filtering** and **agentic clipping** | `agent/cleaning_agent.py` |
+| **Annotation agent** | **Agentic annotation** — task → action → event | `agent/annotation_agent.py` |
+| **Curation agent** | **Agentic data curation** across a whole set | `agent/curation_agent.py` |
+
+They are separate on purpose. Filtering is a judgement about footage, annotation
+is a judgement about language, and curation is a judgement about a set — mixing
+them into one prompt produces an agent that is mediocre at all three and whose
+mistakes cannot be attributed.
+
+### Agentic filtering
+
+Filtering runs twice, at the two points where it is cheapest.
+
+**Before the download**, from platform metadata alone — nothing is fetched and
+nothing is indexed, so a candidate that cannot qualify costs nothing:
+
+| Check | Rule |
+|-------|------|
+| `PRE-DUR` | Shorter than the minimum you asked for → skip |
+| `PRE-VIEW` | Metadata places it in the *other* viewpoint → skip. Metadata *silence* never rejects: the frames get the deciding vote |
+| `G0-LIC` | Licence recorded as a data field. Unclear licensing does not stop collection, it bars the clip from the training set — and it is enforced by the field, not by memory |
+
+**After indexing**, from the derived content — this is the pass that matters,
+because it judges the footage rather than the description of it:
+
+| Gate | Check | Blocking |
+|------|-------|----------|
+| `G1-HAND` | The wearer's own hands in ≥60% of caption segments | **yes** |
+| `G1-OTHERHAND` | Nobody else's hands in frame — a second pair misattributes the action | **yes** |
+| `G1-OTHERFACE` | Nobody else's face in frame — consent, and the mount must be wrong | **yes** |
+| `G1-ORIENT` | Landscape. Portrait footage is scrapped | no |
+| `G1-RES` | ≥720p to pass, ≥1080p for grade A | no |
+| `G1-FPS` | ≥30 fps, the temporal-annotation floor | no |
+| `G1-GLOVE` | No loose or bulky gloves — they swallow hand shape and keypoints | no |
+| `G1-WHOLE` | One take. Splicing manufactures causality that never happened | no |
+| `G1-IDLE` | ≤15% idle, and idle time is *subtracted*, never averaged in | no |
+| `G1-CODEC` | H.264/H.265 MP4 | no |
+| — | Not footage at all (screen recording, slideshow, title card, gameplay) | **yes** |
+
+A clip with no hands is dropped. That is the point of the run, and it is the one
+rule with no override: first-person footage without hands in it is just ordinary
+video.
+
+Two honesty rules hold everywhere:
+
+* **Nothing is scored on a number that was not measured.** A check that cannot be
+  computed from the available inputs reports `measured: false` and is excluded
+  from the score, rather than being assumed to pass. `G3-DUP` (overlap with
+  public corpora) needs embeddings this repo does not compute, so it reports
+  unmeasured — always.
+* **The evidence is caption wording, not a detector.** Every hand verdict
+  carries the caveat *"read from caption wording, not a hand-tracking or pose
+  model"*, so nothing downstream can mistake it for detector output.
+
+### Agentic clipping
+
+Caption segments carry timestamps, so a run of consecutive segments with work
+happening in them is an action and a run of idle segments is not. The cleaning
+agent merges, splits and drops:
+
+* consecutive hand-present segments **merge** into one action;
+* a gap longer than two seconds **splits** rather than merges;
+* an idle segment **breaks** the run and is excluded;
+* a span under two seconds is **dropped** as noise;
+* the task span covers the actions that survived — usually *less* than the whole
+  video, because the intro and the outro are not the task.
+
+The output is a tree of **time anchors** on the original video — `[start, end]`
+pairs — and never cut files. That is `G2-TREE-5` in the standard and it is not
+negotiable: cut clips lose the context on either side of a boundary, and a
+boundary that turns out to be wrong can no longer be moved.
+
+### Agentic annotation
+
+The annotation agent narrates what happens between the boundaries, at three
+depths:
+
+```
+task     replace-inner-tube      "A punctured tube is swapped for a new one."
+  action   lever-tyre-off        "Two levers walk the bead off the rim."
+    event    lever-slips         "The second lever slips out of the bead."
+```
+
+Depth is the grade:
+
+| Level | What it is | Points |
+|-------|-----------|--------|
+| `L0` | Metadata only | 0 |
+| `L1` | One flat caption for the whole video — untrainable | 10 |
+| `L2` | Task → action hierarchy, own text per level, time anchors — the minimum | 22 |
+| `L3` | Plus events, objects and hand state | 30 |
+
+The structural rules are checked, not trusted:
+
+| Check | Rule |
+|-------|------|
+| `G2-TREE-1` | A child's span sits inside its parent's — events are clamped, never written out broken |
+| `G2-TREE-2` | Sibling spans do not overlap |
+| `G2-TREE-3` | Each level says something of its own. Copying the task sentence down onto its actions produces a tree that looks deep and teaches nothing |
+| `G2-TREE-5` | Every annotation is an anchor on the whole video, never a delivered clip file |
+
+And one rule the prompt enforces because the data is worthless without it:
+**hand assignment is never invented.** If the captions do not say which hand did
+what, `left_hand` and `right_hand` stay null. A guessed left/right is worse than
+a blank one, because downstream it cannot be told apart from a real one.
+
+Tags are written back in the form `hoi/<label>/<hand>/<verb-object>` — for
+example `hoi/chop-vegetables/right/move-knife` — which is what makes the next
+query able to ask for exactly that.
+
+There are two ways in. `annotate_video` narrates anchors the cleaning agent
+already found. `run` is the discovery loop the Datalake is built for:
+`search_moments` shortlists spans → `get_moment` says what is really in them →
+the model judges → `update_video` writes the verdict back. The share of the
+shortlist that survives the read is reported as the run's **survival rate**;
+retrieval proposes, the span decides.
+
+### Agentic data curation
+
+Curation is what can only be judged across a set.
+
+**Four hour measures, never mixed.** Reporting a delivered hour as an accepted
+hour overstates a dataset by 30-40%:
+
+| Measure | Meaning |
+|---------|---------|
+| `worn_hours` | Recorded at the source |
+| `delivered_hours` | Landed on disk |
+| `accepted_hours` | Cleared the media gates, idle time removed |
+| `accepted_labeled_hours` | Accepted *and* annotated to L2+ — the only figure to quote externally |
+
+`media_yield` is `accepted / delivered`, and it is reported rather than assumed.
+
+**Diversity, across the set:**
+
+| Check | Rule |
+|-------|------|
+| `G3-OP` | ≥3 sources, none above 50% — one creator's kitchen filmed twenty times is one hour of information, not twenty |
+| `G3-SOP` | ≥10 task families |
+| `G3-ERR` | 10-20% error / rework samples. Mistakes are wanted; a set of only clean runs teaches a model that nothing ever goes wrong |
+| `G3-DUP` | ≤10% overlap with public corpora — **reported unmeasured**; reposts by the same uploader at the same length are grouped as a cheap proxy |
+
+**The scorecard**, 100 points: annotation 45, diversity 25, media 20, licensing
+10 → **A** ≥85 (main training set, sellable), **B** 70-84 (main set, not
+external), **C** 55-69 (pretrain / diversity supplement), **D** <55 (not
+ingested). A clip is re-graded *after* annotation, because annotation depth is
+45 of those points: the score the cleaning agent produced is a floor, not a
+grade.
+
+### Running it
+
+The whole path, three calls:
+
+```bash
+# 1. find candidates
+curl -N localhost:8000/api/v1/queries/stream -H 'Content-Type: application/json' \
+  -d '{"query":"first-person cooking, hands visible, long takes",
+       "viewpoint":"egocentric","min_duration_seconds":300,"target_hours":2}'
+
+# 2. download → index → clean → annotate (streams every stage per clip)
+curl -N localhost:8000/api/v1/collect/stream -H 'Content-Type: application/json' \
+  -d '{"urls":["https://www.youtube.com/watch?v=..."],
+       "require_hands":true,"viewpoint":"egocentric","annotate":true}'
+
+# 3. grade the set that is already indexed
+curl -N localhost:8000/api/v1/curate/stream -H 'Content-Type: application/json' \
+  -d '{"tag":"clean_pass","query":"first-person cooking"}'
+```
+
+Or from Python, without the API:
+
+```python
+import asyncio
+from video_searching_agent.pipeline import IngestPipeline
+from video_searching_agent.agent import CurationAgent
+from video_searching_agent.curation.viewpoint import Viewpoint
+
+async def main():
+    pipeline = IngestPipeline()
+    result = await pipeline.ingest(
+        "https://www.youtube.com/watch?v=...",
+        require_hands=True,
+        wanted_viewpoint=Viewpoint.EGOCENTRIC,
+    )
+    print(result.stage, result.rejection_reason or "", result.annotation_level)
+
+    report = await CurationAgent().curate(tag="clean_pass")
+    print(report.hours.as_dict(), report.batch_grade)
+
+asyncio.run(main())
+```
 
 ### Requirements you can set
 
@@ -173,18 +418,7 @@ asyncio.run(main())
 | Minimum length | `min_duration_seconds` | Drops clips too short to train on |
 | Licence | `license_filter` | `reusable` keeps only licence-clear footage (Creative Commons via the YouTube API) |
 | Volume goal | `target_hours` | The run reports hours collected against this target |
-
-```bash
-curl -N http://localhost:8000/api/v1/queries/stream \
-  -H "Content-Type: application/json" \
-  -d '{
-        "query": "egocentric kitchen prep footage, long continuous takes",
-        "viewpoint": "egocentric",
-        "min_duration_seconds": 300,
-        "license_filter": "reusable",
-        "target_hours": 2
-      }'
-```
+| Hands | `require_hands` | On by default in collection and curation; a clip whose frames show no hands is dropped |
 
 ### How a candidate is judged
 
@@ -204,10 +438,10 @@ minutes) and licence at 0.1.
 ### The manifest
 
 Every run returns a `dataset` manifest: clips with viewpoint, confidence,
-evidence, duration, licence and usability score, plus totals — hours collected,
-viewpoint mix, source mix, reusable-licence count, and every exclusion with its
-reason. The UI exports it as JSONL (one clip per line, for an ingest pipeline)
-or CSV.
+evidence, duration, licence and usability score, plus totals — the hours ledger,
+viewpoint mix, source mix, reusable-licence count, per-clip grade and annotation
+depth, the Gate 3 checks, and every exclusion with its reason. The UI exports it
+as JSONL (one clip per line, for an ingest pipeline) or CSV.
 
 ### Cost per hour
 
@@ -265,9 +499,12 @@ What it gives you:
 The UI is public (so it can load and ask for a key); `/api/v1/queries/*` stays behind
 API-key auth and rate limiting.
 
-The design language follows the memories.ai framework: Manrope, square corners, hairline
-borders on a black canvas, with the violet accent ramp and one muted signal colour per
-source.
+The design language follows the
+[Memories.ai Design System](https://github.com/Memories-ai-labs/Memories.ai-Design-System):
+Manrope, the dark surface ladder (`#0a0a0c` → `#1c1c1e` → `#3f3f46`), hairline
+borders at 12% white, an 8/12/16px radius scale, elevation from borders and
+whitespace rather than shadows, and violet used only as a selection fill — never
+as decoration, and no gradients.
 
 ## Streaming API
 
@@ -295,6 +532,36 @@ curl -N http://localhost:8000/api/v1/queries/stream \
 
 Pinned sources replace whatever platforms the query parser inferred, and the agent is told
 to search only those.
+
+### `POST /api/v1/collect/stream`
+
+Download candidates, index them into the Video Datalake, clean them and annotate
+what survives. Events: `started`, `clip_stage` (one per stage, per clip),
+`clip_done`, `complete`, `error`.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `urls` | string[] | Candidate page URLs, 1-25 per request. Each one costs money to index, so the bound is deliberate |
+| `require_hands` | bool | Default `true`. Reject footage with no hands in frame |
+| `viewpoint` | string | `egocentric` / `exocentric`, or omit for any |
+| `min_duration_seconds` | int | Skip candidates shorter than this, before downloading |
+| `annotate` | bool | Default `true`. `false` is a cleaning-only pass, which is much cheaper |
+
+### `POST /api/v1/curate/stream`
+
+Clean, annotate and grade a worklist that is already indexed. Events: `started`,
+`clip_done`, `complete` (hours ledger, Gate 3 checks, batch grade), `error`.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `video_ids` | string[] | Indexed videos to curate |
+| `tag` | string | Or pull the worklist from a tag, e.g. `clean_pass` |
+| `query` | string | What the collection was looking for, carried into the record |
+| `require_hands` | bool | Default `true` |
+| `viewpoint` | string | Require a camera viewpoint |
+| `annotate` | bool | Default `true` |
+
+One of `video_ids` or `tag` is required.
 
 ## Usage Examples
 
