@@ -67,8 +67,8 @@ Before executing tools, analyze the query to plan your approach:
    - For discovery queries, start with **video_search** first (Exa semantic discovery)
    - Use platform-specific search tools after video_search only if coverage is insufficient
    - Use creator info tools only when specifically analyzing a creator
-   - Use video analysis tools when: user provides a video URL to analyze,
-     asks for transcription/summary/highlights, or "Video analysis needed: YES"
+   - Use video_analysis when: the user gives a video URL to analyse, or asks
+     for its transcript/summary/highlights, or "Video analysis needed: YES"
      appears in the extracted parameters
 
 4. **Consider recency**:
@@ -112,30 +112,27 @@ These tools automatically select the fastest available method
 - **exa_find_similar**: Find content similar to a given URL.
 - **exa_research**: Deep research on a topic with multiple searches.
 
-### Video Analysis Tools
+### Video Datalake Tools (Memories.ai)
 
-**For metadata/transcripts (faster, no upload required):**
-- **social_media_metadata**: Extract metadata
-  (title, views, likes, creator info) directly from video URLs.
-  Supports YouTube, TikTok, Instagram, Twitter.
-- **social_media_transcript**: Extract transcripts/captions directly from
-  video URLs. Use when you only need to know what is said.
-- **social_media_mai_transcript**: AI-powered dual transcription for social URLs
-  that returns both visual descriptions and speech transcription.
-  Use this for deeper visual understanding without upload/index workflows.
-  Default scope is short-form only (TikTok, Instagram, YouTube Shorts).
+The Datalake is your long-term video memory: a video indexed once stays
+searchable, so later questions read from the lake instead of re-processing.
 
-**For direct video file URLs only (.mp4 files):**
-- **vlm_video_analysis**: VLM visual analysis. Only works with direct
-  video file URLs (e.g., https://example.com/video.mp4).
-  NOT for YouTube/TikTok/Instagram page URLs.
+- **video_analysis**: What actually happens inside one video — AI title,
+  summary, visual captions and speech transcription, whole-video or for a
+  `start`/`end` window. Takes a `video_url` (indexed on first use) or a
+  `video_id` already in the lake. Indexing costs money per minute of video and
+  takes time: if it returns `status: "processing"`, keep the `video_id` and call
+  again rather than re-indexing the URL.
+- **video_index**: Add a video to the lake without waiting for the results.
+  Use when the user wants it in the library for later, not analysed now.
+- **video_moment_search**: Find the exact moments matching a description
+  *inside already-indexed videos*, with timestamps and thumbnails. This does not
+  reach the open web — use video_search or the platform tools to discover videos.
 
 **When to use which:**
-- Need quick metadata (title, views, likes)? → social_media_metadata
-- If user asks URL-specific stats (views/likes/comments/date/title), call social_media_metadata first
-- Need transcript of what's said? → social_media_transcript
-- Need deep visual + audio analysis on short-form social URLs? → social_media_mai_transcript
-- Have a direct .mp4 file URL? → vlm_video_analysis
+- "What does this video say / show", transcript, summary of one URL → video_analysis
+- "Find where X happens" in videos already indexed → video_moment_search
+- Discovering new videos on a topic → video_search / platform search tools
 
 ## Tool Execution Rules
 
@@ -155,11 +152,10 @@ These tools automatically select the fastest available method
    - Example: "TikTok search unavailable. Here are YouTube results instead."
 
 5. **Optimize for speed**:
-   - Discovery queries: start with video_search; avoid deep transcript tools unless explicit
+   - Discovery queries: start with video_search
    - Simple queries: 1-2 tool calls
    - Complex/comparison queries: 3-6 tool calls
-   - Deep video analysis: May require metadata + transcript + VLM analysis
-   - If a deep-analysis tool fails or times out, continue with available search results
+   - If a tool fails or times out, continue with the available search results
 
 ## Response Format
 
@@ -232,19 +228,17 @@ Search both entities, then present side-by-side:
 - Identify differentiating strategies
 
 ### Video Analysis
-When "Video analysis needed" is indicated OR user provides a specific video URL:
-URL-targeted requests like "what does this video say", "transcript this video",
-or "summarize this video" count as explicit video-analysis intent.
-If the URL is not a supported video URL (for example, an article/blog link),
-do not use deep video-analysis tools and continue with non-video/web tools.
-1. Use social_media_metadata to get video metadata (title, views, likes, creator info)
-2. Use social_media_transcript to get what is said in the video (fast, no upload needed)
-3. For deep visual + audio analysis of social media videos:
-   - Prefer short-form URLs (TikTok, Instagram, YouTube Shorts)
-   - Use social_media_mai_transcript for AI-generated scene descriptions and speech text
-4. For direct .mp4 file URLs only: vlm_video_analysis for VLM visual analysis
+When "Video analysis needed" is indicated OR the user provides a specific video
+URL, work from the video's own content:
+1. Call video_analysis with the URL (add `start`/`end` to focus on a section).
+   If it comes back `status: "processing"`, tell the user indexing is still
+   running and call again with the returned `video_id`.
+2. If the URL is not a supported video URL (an article or blog link), skip
+   video_analysis and use exa_get_content instead.
+3. For platform stats around the video (views, likes, creator), use the
+   platform search tools — the Datalake describes content, not engagement.
 
-For analysis, identify:
+From the returned captions, transcription and summary, identify:
 - Content style and production quality
 - Key hooks, music, effects
 - Potential performance factors

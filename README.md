@@ -10,7 +10,7 @@ AI-powered video searching agent that searches, analyzes, and sources videos fro
 - **Social Media Scraping**: Professional-grade scraping via Apify with anti-bot handling
 - **Creator Analysis**: Get detailed insights about content creators
 - **Trend Discovery**: Find trending videos in any niche or topic
-- **Video Analysis**: Deep analysis using Memories.ai v2 for metadata, transcripts, MAI, and VLM
+- **Video Analysis**: Index a video into the Memories.ai Video Datalake, then read its captions, transcription and summary, or search moments inside your indexed library
 - **Comparison**: Compare brands, creators, or products side-by-side
 - **Interactive Web UI**: Bundled zero-build UI with per-source selection and live streaming progress
 
@@ -99,12 +99,14 @@ Create a `.env` file with your API keys:
 # Required
 GOOGLE_API_KEY=your_google_api_key
 YOUTUBE_API_KEY=your_youtube_data_api_key
-MEMORIES_API_KEY=your_memories_ai_api_key
-MEMORIES_BASE_URL=https://mavi-backend.memories.ai/serve/api/v2
+MEMORIES_API_KEY=sk-mai-your_datalake_api_key
+MEMORIES_BASE_URL=https://api.memories.ai/serve/datalake/v1
 
 # Optional
-MEMORIES_DEFAULT_CHANNEL=memories.ai
-MEMORIES_VLM_MODEL=gemini:gemini-3-flash-preview
+MEMORIES_COLLECTION_ID=            # index into an existing collection
+MEMORIES_COLLECTION_NAME=video-searching-agent
+MEMORIES_INDEX_FPS=1.0
+MEMORIES_INDEX_WAIT_SECONDS=120    # how long one call waits for indexing
 EXA_API_KEY=your_exa_api_key
 APIFY_API_TOKEN=your_apify_api_token
 ```
@@ -116,7 +118,7 @@ APIFY_API_TOKEN=your_apify_api_token
    - Go to [Google Cloud Console](https://console.cloud.google.com)
    - Create a project and enable YouTube Data API v3
    - Create an API key
-3. **Memories.ai API Key** (required): Sign up at [memories.ai](https://memories.ai)
+3. **Memories.ai API Key** (required): Create a Video Datalake key (`sk-mai-...`) in the [Console](https://console.memories.ai) → API keys. Indexing is billed per minute of video — see [pricing](https://docs.memories.ai/datalake/pricing)
 4. **Exa.ai API Key** (optional): Sign up at [exa.ai](https://exa.ai) for neural web search
 5. **Apify API Token** (optional): Sign up at [apify.com](https://apify.com) for TikTok/Instagram/Twitter scraping
 
@@ -236,11 +238,18 @@ response = await agent.compare(
 
 ### Analyze a Specific Video
 
+Ask about a video's own content and the agent indexes it into the Video Datalake,
+then reads back the captions, transcription and summary:
+
 ```python
-response = await agent.analyze_video(
-    "https://www.youtube.com/watch?v=VIDEO_ID"
+response = await agent.query(
+    "What does this video actually show and say? https://example.com/clip.mp4"
 )
 ```
+
+Indexing takes time. If it is still running when the call's wait budget expires,
+the tool reports `status: "processing"` with a `video_id`, and the next call reads
+the results instead of re-indexing.
 
 ### Complex Query
 
@@ -318,14 +327,14 @@ VideoSearchingAgent
     │   ├── TikTok (Apify): TikTokSearchTool, TikTokCreatorTool
     │   ├── Instagram (Apify): InstagramSearchTool, InstagramCreatorTool
     │   ├── Twitter (Apify): TwitterSearchTool, TwitterProfileTool
-    │   ├── Memories.ai v2: MetadataTool, TranscriptTool, MAITranscriptTool, VLMAnalysisTool
+    │   ├── Video Datalake: VideoIndexTool, VideoAnalysisTool, VideoMomentSearchTool
     │   └── Unified: VideoSearchTool
     └── AgentSession (tracks query lifecycle)
 ```
 
 ## Tools Reference
 
-The agent has access to 17 specialized tools organized by category:
+The agent has access to 16 specialized tools organized by category:
 
 ### YouTube Tools (2)
 
@@ -354,14 +363,20 @@ The agent has access to 17 specialized tools organized by category:
 | `twitter_search` | Search Twitter/X for video tweets |
 | `twitter_profile_info` | Get Twitter profile and video tweets |
 
-### Memories.ai v2 Tools (4)
+### Memories.ai Video Datalake Tools (3)
+
+The Datalake is the agent's long-term video memory: a video indexed once stays
+searchable, so later questions read the lake instead of re-processing the video.
 
 | Tool | Description |
 |------|-------------|
-| `social_media_metadata` | Extract metadata from any social media video URL |
-| `social_media_transcript` | Get transcripts from video URLs |
-| `social_media_mai_transcript` | Get AI-generated visual + audio transcript for social video URLs |
-| `vlm_video_analysis` | Deep video analysis using Vision-Language Models |
+| `video_analysis` | Index a video URL (or read an indexed `video_id`) and return its AI title, summary, visual captions and speech transcription — whole video or a `start`/`end` window |
+| `video_index` | Add a video to the Datalake without waiting for indexing to finish |
+| `video_moment_search` | Search already-indexed videos for the moments matching a description, with timestamps and thumbnails |
+
+Cost control: indexing is billed per minute of video, so the tool policy blocks
+these tools unless the query actually names a video or asks what is inside one —
+a broad discovery query can never trigger paid indexing.
 
 ### Unified Tools (1)
 

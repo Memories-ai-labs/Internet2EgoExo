@@ -109,7 +109,7 @@ class ParsedQuery(BaseModel):
     # Special requirements
     needs_video_analysis: bool = Field(
         False,
-        description="Requires Memories.ai deep video analysis",
+        description="User asked about a specific video's own content",
     )
     is_comparison: bool = False
     comparison_entities: list[str] = Field(default_factory=list)

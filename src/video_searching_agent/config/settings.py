@@ -32,26 +32,47 @@ class Settings(BaseSettings):
         validation_alias="YOUTUBE_API_KEY",
     )
 
-    # Memories.ai v2 API (canonical names)
+    # Memories.ai Video Datalake API
     memories_api_key: str = Field(
         default="",
-        description="Memories.ai v2 API key",
+        description="Memories.ai Video Datalake API key (sk-mai-...)",
         validation_alias="MEMORIES_API_KEY",
     )
     memories_base_url: str = Field(
-        default="https://mavi-backend.memories.ai/serve/api/v2",
-        description="Memories.ai v2 API base URL",
+        default="https://api.memories.ai/serve/datalake/v1",
+        description="Video Datalake API base URL",
         validation_alias="MEMORIES_BASE_URL",
     )
-    memories_default_channel: str = Field(
-        default="memories.ai",
-        description="Default scraping channel (memories.ai, apify, rapid)",
-        validation_alias="MEMORIES_DEFAULT_CHANNEL",
+    memories_collection_id: str = Field(
+        default="",
+        description="Existing Datalake collection to index into (optional)",
+        validation_alias="MEMORIES_COLLECTION_ID",
     )
-    memories_vlm_model: str = Field(
-        default="gemini:gemini-3-flash-preview",
-        description="Default VLM model for video analysis",
-        validation_alias="MEMORIES_VLM_MODEL",
+    memories_collection_name: str = Field(
+        default="video-searching-agent",
+        description="Collection created/reused when no collection id is configured",
+        validation_alias="MEMORIES_COLLECTION_NAME",
+    )
+    memories_index_fps: float = Field(
+        default=1.0,
+        gt=0,
+        le=30,
+        description="Frames per second to index at (cost scales with fps)",
+        validation_alias="MEMORIES_INDEX_FPS",
+    )
+    memories_index_wait_seconds: int = Field(
+        default=120,
+        ge=0,
+        le=900,
+        description="How long a single tool call waits for indexing to finish",
+        validation_alias="MEMORIES_INDEX_WAIT_SECONDS",
+    )
+    memories_index_poll_seconds: int = Field(
+        default=5,
+        ge=1,
+        le=60,
+        description="Delay between ingest-operation polls",
+        validation_alias="MEMORIES_INDEX_POLL_SECONDS",
     )
 
     # Exa.ai API (for web search)
@@ -165,17 +186,16 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def normalize_memories_settings(self) -> "Settings":
-        """Normalize user-provided Memories settings values."""
+        """Normalize user-provided Datalake settings values."""
         self.memories_api_key = self.memories_api_key.strip()
+        self.memories_collection_id = self.memories_collection_id.strip()
 
         # Preserve sane defaults when users provide empty/whitespace env values.
         base_url = self.memories_base_url.strip()
-        channel = self.memories_default_channel.strip()
-        vlm_model = self.memories_vlm_model.strip()
+        collection_name = self.memories_collection_name.strip()
 
-        self.memories_base_url = base_url or "https://mavi-backend.memories.ai/serve/api/v2"
-        self.memories_default_channel = channel or "memories.ai"
-        self.memories_vlm_model = vlm_model or "gemini:gemini-3-flash-preview"
+        self.memories_base_url = base_url or "https://api.memories.ai/serve/datalake/v1"
+        self.memories_collection_name = collection_name or "video-searching-agent"
         return self
 
     model_config = {

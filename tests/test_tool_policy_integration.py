@@ -14,8 +14,8 @@ from video_searching_agent.tools.base import ToolResult
 from video_searching_agent.web.streaming.agent_stream import StreamingAgentWrapper
 
 
-class _DeepToolGemini:
-    """Gemini stub that asks for MAI first, then returns final text."""
+class _ContentAnalysisGemini:
+    """Gemini stub that asks for video_analysis first, then returns final text."""
 
     def __init__(self) -> None:
         self._calls = 0
@@ -27,7 +27,7 @@ class _DeepToolGemini:
             return {
                 "done": False,
                 "tool_calls": [{
-                    "name": "social_media_mai_transcript",
+                    "name": "video_analysis",
                     "input": {"video_url": "https://twitter.com/user/status/123"},
                 }],
             }
@@ -68,7 +68,7 @@ class _MetadataToolGemini:
             return {
                 "done": False,
                 "tool_calls": [{
-                    "name": "social_media_metadata",
+                    "name": "video_analysis",
                     "input": {"video_url": "https://www.youtube.com/watch?v=abc123"},
                 }],
             }
@@ -109,7 +109,7 @@ class _TranscriptToolGemini:
             return {
                 "done": False,
                 "tool_calls": [{
-                    "name": "social_media_transcript",
+                    "name": "video_analysis",
                     "input": {"video_url": "https://www.youtube.com/watch?v=abc123"},
                 }],
             }
@@ -138,7 +138,7 @@ class _TranscriptToolGemini:
 
 
 @pytest.mark.asyncio
-async def test_stream_wrapper_rewrites_discovery_deep_tool_to_video_search(
+async def test_stream_wrapper_rewrites_discovery_content_tool_to_video_search(
     monkeypatch: pytest.MonkeyPatch,
 ):
     settings = SimpleNamespace(
@@ -153,7 +153,7 @@ async def test_stream_wrapper_rewrites_discovery_deep_tool_to_video_search(
     monkeypatch.setattr(StreamingAgentWrapper, "_register_tools", lambda self, _: None)
 
     wrapper = StreamingAgentWrapper(enable_clarification=False)
-    wrapper.gemini = _DeepToolGemini()
+    wrapper.gemini = _ContentAnalysisGemini()
     wrapper.query_parser = SimpleNamespace(
         parse=lambda query: asyncio.sleep(
             0,
@@ -187,7 +187,7 @@ async def test_stream_wrapper_rewrites_discovery_deep_tool_to_video_search(
 
 
 @pytest.mark.asyncio
-async def test_stream_wrapper_allows_deep_tool_for_explicit_url_analysis_phrase(
+async def test_stream_wrapper_allows_content_tool_for_explicit_url_analysis_phrase(
     monkeypatch: pytest.MonkeyPatch,
 ):
     settings = SimpleNamespace(
@@ -234,12 +234,12 @@ async def test_stream_wrapper_allows_deep_tool_for_explicit_url_analysis_phrase(
         events.append(event)
 
     tool_calls = [e.data["tool"] for e in events if e.event == "tool_call"]
-    assert tool_calls == ["social_media_transcript"]
-    assert called_tools == ["social_media_transcript"]
+    assert tool_calls == ["video_analysis"]
+    assert called_tools == ["video_analysis"]
 
 
 @pytest.mark.asyncio
-async def test_stream_wrapper_blocks_deep_tool_for_non_video_url_analysis_phrase(
+async def test_stream_wrapper_blocks_content_tool_for_non_video_url_analysis_phrase(
     monkeypatch: pytest.MonkeyPatch,
 ):
     settings = SimpleNamespace(
@@ -254,7 +254,7 @@ async def test_stream_wrapper_blocks_deep_tool_for_non_video_url_analysis_phrase
     monkeypatch.setattr(StreamingAgentWrapper, "_register_tools", lambda self, _: None)
 
     wrapper = StreamingAgentWrapper(enable_clarification=False)
-    wrapper.gemini = _DeepToolGemini()
+    wrapper.gemini = _ContentAnalysisGemini()
     wrapper.query_parser = SimpleNamespace(
         parse=lambda query: asyncio.sleep(
             0,
@@ -291,7 +291,7 @@ async def test_stream_wrapper_blocks_deep_tool_for_non_video_url_analysis_phrase
 
 
 @pytest.mark.asyncio
-async def test_stream_wrapper_preserves_metadata_tool_for_url_specific_query(
+async def test_stream_wrapper_preserves_content_tool_for_url_specific_query(
     monkeypatch: pytest.MonkeyPatch,
 ):
     settings = SimpleNamespace(
@@ -314,6 +314,7 @@ async def test_stream_wrapper_preserves_metadata_tool_for_url_specific_query(
                 original_query=query,
                 query_type=QueryType.GENERAL,
                 needs_video_analysis=False,
+                video_urls=["https://www.youtube.com/watch?v=abc123"],
                 time_frame=TimeFrame.ALL_TIME,
             ),
         )
@@ -337,12 +338,12 @@ async def test_stream_wrapper_preserves_metadata_tool_for_url_specific_query(
         events.append(event)
 
     tool_calls = [e.data["tool"] for e in events if e.event == "tool_call"]
-    assert tool_calls == ["social_media_metadata"]
-    assert called_tools == ["social_media_metadata"]
+    assert tool_calls == ["video_analysis"]
+    assert called_tools == ["video_analysis"]
 
 
 @pytest.mark.asyncio
-async def test_core_agent_allows_deep_tool_for_explicit_video_analysis(
+async def test_core_agent_allows_content_tool_for_explicit_video_analysis(
     monkeypatch: pytest.MonkeyPatch,
 ):
     settings = SimpleNamespace(max_agent_steps=3, tool_execution_concurrency=4)
@@ -350,7 +351,7 @@ async def test_core_agent_allows_deep_tool_for_explicit_video_analysis(
     monkeypatch.setattr(VideoSearchingAgent, "_register_tools", lambda self, _: None)
 
     agent = VideoSearchingAgent(enable_clarification=False)
-    agent.gemini = _DeepToolGemini()
+    agent.gemini = _ContentAnalysisGemini()
     agent.query_parser = SimpleNamespace(
         parse=lambda query: asyncio.sleep(
             0,
@@ -375,14 +376,14 @@ async def test_core_agent_allows_deep_tool_for_explicit_video_analysis(
     agent._execute_tool = execute_tool  # type: ignore[assignment]
 
     response = await agent.query("analyze this video https://twitter.com/user/status/123")
-    assert called_tools == ["social_media_mai_transcript"]
+    assert called_tools == ["video_analysis"]
     assert [detail["tool"] for detail in response.tool_execution_details] == [
-        "social_media_mai_transcript"
+        "video_analysis"
     ]
 
 
 @pytest.mark.asyncio
-async def test_core_agent_preserves_metadata_tool_for_url_specific_query(
+async def test_core_agent_preserves_content_tool_for_url_specific_query(
     monkeypatch: pytest.MonkeyPatch,
 ):
     settings = SimpleNamespace(max_agent_steps=3, tool_execution_concurrency=4)
@@ -398,6 +399,7 @@ async def test_core_agent_preserves_metadata_tool_for_url_specific_query(
                 original_query=query,
                 query_type=QueryType.GENERAL,
                 needs_video_analysis=False,
+                video_urls=["https://www.youtube.com/watch?v=abc123"],
                 time_frame=TimeFrame.ALL_TIME,
             ),
         )
@@ -417,7 +419,7 @@ async def test_core_agent_preserves_metadata_tool_for_url_specific_query(
     response = await agent.query(
         "how many views does this video have? https://www.youtube.com/watch?v=abc123"
     )
-    assert called_tools == ["social_media_metadata"]
+    assert called_tools == ["video_analysis"]
     assert [detail["tool"] for detail in response.tool_execution_details] == [
-        "social_media_metadata"
+        "video_analysis"
     ]

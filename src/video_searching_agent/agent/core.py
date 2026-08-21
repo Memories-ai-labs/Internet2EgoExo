@@ -39,11 +39,10 @@ from video_searching_agent.tools.instagram_apify import (
     InstagramApifyCreatorTool,
     InstagramApifySearchTool,
 )
-from video_searching_agent.tools.memories_v2 import (
-    SocialMediaMAITranscriptTool,
-    SocialMediaMetadataTool,
-    SocialMediaTranscriptTool,
-    VLMVideoAnalysisTool,
+from video_searching_agent.tools.memories_datalake import (
+    VideoAnalysisTool,
+    VideoIndexTool,
+    VideoMomentSearchTool,
 )
 from video_searching_agent.tools.registry import ToolRegistry
 from video_searching_agent.tools.retry import RetryExecutor, get_fallback_tools
@@ -78,7 +77,6 @@ class VideoSearchingAgent:
         self,
         google_api_key: str | None = None,
         youtube_api_key: str | None = None,
-        memories_api_key: str | None = None,
         max_steps: int | None = None,
         enable_clarification: bool = True,
         enable_retry: bool = True,
@@ -88,7 +86,6 @@ class VideoSearchingAgent:
         Args:
             google_api_key: Google API key for Gemini. Defaults to env var.
             youtube_api_key: YouTube API key. Defaults to env var.
-            memories_api_key: Memories.ai API key. Defaults to env var.
             max_steps: Maximum agent steps per query. Defaults to settings.
             enable_clarification: Whether to enable clarification flow.
             enable_retry: Whether to enable retry with exponential backoff.
@@ -145,11 +142,10 @@ class VideoSearchingAgent:
             TikTokApifyCreatorTool(),
             InstagramApifyCreatorTool(),
             TwitterApifyProfileTool(),
-            # Memories.ai v2 tools (direct metadata/transcript extraction)
-            SocialMediaMetadataTool(),
-            SocialMediaTranscriptTool(),
-            SocialMediaMAITranscriptTool(),
-            VLMVideoAnalysisTool(),
+            # Video Datalake (index / analyse / search indexed moments)
+            VideoIndexTool(),
+            VideoAnalysisTool(),
+            VideoMomentSearchTool(),
             # Unified video search (Exa discovery + Apify scraping)
             VideoSearchTool(),
         ])
@@ -222,8 +218,6 @@ class VideoSearchingAgent:
         total_output_tokens = 0
         gemini_calls = 0
         tool_invocations: dict[str, int] = {}
-        # Track VLM tokens separately for token-based pricing
-        vlm_token_usage = TokenUsage(input_tokens=0, output_tokens=0, total_tokens=0)
 
         # Agentic loop
         while session.current_step < session.max_steps:
@@ -309,32 +303,6 @@ class VideoSearchingAgent:
                         "success": result.success,
                     })
 
-                    # Track VLM token usage if applicable
-                    if tool_name == "vlm_video_analysis" and result.success and result.data:
-                        usage = result.data.get("usage")
-                        if usage:
-                            input_raw = usage.get("prompt_tokens")
-                            if input_raw is None:
-                                input_raw = usage.get("input_tokens")
-
-                            output_raw = usage.get("completion_tokens")
-                            if output_raw is None:
-                                output_raw = usage.get("output_tokens")
-
-                            input_tokens = _coerce_token_count(input_raw)
-                            output_tokens = _coerce_token_count(output_raw)
-
-                            total_raw = usage.get("total_tokens")
-                            total_tokens = _coerce_token_count(
-                                total_raw,
-                                input_tokens + output_tokens,
-                            )
-                            vlm_token_usage = vlm_token_usage.add(TokenUsage(
-                                input_tokens=input_tokens,
-                                output_tokens=output_tokens,
-                                total_tokens=total_tokens,
-                            ))
-
                     # Format result for Gemini
                     result_str = result.to_string()
                     if not result.success:
@@ -347,13 +315,14 @@ class VideoSearchingAgent:
                         )
                     )
             elif blocked_tools:
-                # Steer the model away from deep-analysis tools in discovery flows.
+                # Steer the model away from paid video indexing on broad queries.
                 messages.append(types.Content(
                     role="user",
                     parts=[types.Part(
                         text=(
-                            "Policy note: Deep transcript/video-analysis tools are disabled "
-                            "for this query. Continue with discovery/search tools."
+                            "Policy note: video content analysis is disabled for this "
+                            "query because no specific video was given. Continue with "
+                            "discovery/search tools."
                         )
                     )],
                 ))
@@ -384,7 +353,6 @@ class VideoSearchingAgent:
             total_output_tokens=total_output_tokens,
             gemini_calls=gemini_calls,
             tool_invocations=tool_invocations,
-            vlm_token_usage=vlm_token_usage,
         )
 
         # Extract video references
@@ -531,10 +499,7 @@ class VideoSearchingAgent:
             slot_context.append(f"Results requested: {parsed_query.quantity}")
 
         if parsed_query.needs_video_analysis:
-            slot_context.append(
-                "Video analysis needed: YES - use Memories.ai tools to "
-                "analyze video content"
-            )
+            slot_context.append("Video analysis needed: YES")
 
         if slot_context:
             parts.append("\nExtracted Parameters:")
@@ -548,7 +513,6 @@ class VideoSearchingAgent:
         total_output_tokens: int,
         gemini_calls: int,
         tool_invocations: dict[str, int],
-        vlm_token_usage: TokenUsage | None = None,
     ) -> UsageMetrics:
         """Calculate usage metrics and costs for the session.
 
@@ -557,7 +521,6 @@ class VideoSearchingAgent:
             total_output_tokens: Total output tokens used across all Gemini calls.
             gemini_calls: Number of Gemini API calls made.
             tool_invocations: Dict of tool_name -> invocation count.
-            vlm_token_usage: Token usage for VLM video analysis calls.
 
         Returns:
             UsageMetrics with cost breakdown.
@@ -585,36 +548,15 @@ class VideoSearchingAgent:
         # Calculate tool costs
         tool_costs: list[ToolUsageCost] = []
         for tool_name, count in tool_invocations.items():
-            is_vlm_with_usage = (
-                tool_name == "vlm_video_analysis"
-                and vlm_token_usage
-                and vlm_token_usage.total_tokens > 0
-            )
-            if is_vlm_with_usage:
-                # Token-based pricing for VLM
-                assert vlm_token_usage is not None  # Type narrowing for mypy
-                cost = pricing.tools.calculate_vlm_cost(
-                    vlm_token_usage.input_tokens,
-                    vlm_token_usage.output_tokens,
-                )
-                tool_cost = ToolUsageCost(
-                    tool_name=tool_name,
-                    invocation_count=count,
-                    estimated_cost_usd=cost,
-                    token_usage=vlm_token_usage,
-                )
-            else:
-                # Flat-rate pricing for other tools
-                unit_cost = pricing.tools.get_tool_cost(tool_name)
-                quota = pricing.tools.get_youtube_quota(tool_name)
+            unit_cost = pricing.tools.get_tool_cost(tool_name)
+            quota = pricing.tools.get_youtube_quota(tool_name)
 
-                tool_cost = ToolUsageCost(
-                    tool_name=tool_name,
-                    invocation_count=count,
-                    estimated_cost_usd=unit_cost * count,
-                    quota_used=quota * count if quota > 0 else None,
-                )
-            tool_costs.append(tool_cost)
+            tool_costs.append(ToolUsageCost(
+                tool_name=tool_name,
+                invocation_count=count,
+                estimated_cost_usd=unit_cost * count,
+                quota_used=quota * count if quota > 0 else None,
+            ))
 
         # Build usage metrics
         usage_metrics = UsageMetrics(
@@ -894,8 +836,6 @@ class VideoSearchingAgent:
                 platforms.add("instagram")
             elif "twitter" in tool:
                 platforms.add("twitter")
-            elif "memories" in tool:
-                platforms.add("memories.ai")
             elif "exa" in tool:
                 platforms.add("web")
         return list(platforms)
@@ -918,30 +858,6 @@ class VideoSearchingAgent:
                 count += len(data.get("videos", []))
                 count += data.get("total_results", 0)
         return count
-
-    async def analyze_video(self, video_url: str) -> AgentResponse:
-        """Analyze a specific video in depth.
-
-        Convenience method that uploads the video to Memories.ai
-        and generates a comprehensive analysis.
-
-        Args:
-            video_url: URL of the video to analyze.
-
-        Returns:
-            AgentResponse with video analysis.
-        """
-        query = f"""Analyze this video in detail: {video_url}
-
-Please:
-1. Upload the video to Memories.ai
-2. Generate a summary of the video content
-3. Identify key highlights and moments
-4. Describe the content style and production quality
-5. Note any notable elements (music, effects, hooks)
-6. Provide insights on why this video might perform well or poorly"""
-
-        return await self.query(query)
 
     async def find_trending(
         self,

@@ -173,17 +173,16 @@ def create_default_registry() -> ToolRegistry:
     Returns:
         ToolRegistry with standard tools registered.
     """
-    from video_searching_agent.tools.memories_v2 import (
-        SocialMediaMAITranscriptTool,
-        SocialMediaMetadataTool,
-        SocialMediaTranscriptTool,
-        VLMVideoAnalysisTool,
-    )
     from video_searching_agent.tools.exa import (
         ExaContentTool,
         ExaResearchTool,
         ExaSearchTool,
         ExaSimilarTool,
+    )
+    from video_searching_agent.tools.memories_datalake import (
+        VideoAnalysisTool,
+        VideoIndexTool,
+        VideoMomentSearchTool,
     )
     from video_searching_agent.tools.youtube import YouTubeSearchTool
 
@@ -194,10 +193,9 @@ def create_default_registry() -> ToolRegistry:
         ExaSimilarTool(),
         ExaContentTool(),
         ExaResearchTool(),
-        # Memories.ai v2 tools
-        SocialMediaMetadataTool(),
-        SocialMediaTranscriptTool(),
-        SocialMediaMAITranscriptTool(),
-        VLMVideoAnalysisTool(),
+        # Memories.ai Video Datalake
+        VideoIndexTool(),
+        VideoAnalysisTool(),
+        VideoMomentSearchTool(),
     ])
     return registry

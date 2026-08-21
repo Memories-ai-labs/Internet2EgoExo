@@ -57,39 +57,19 @@ class ToolPricing(BaseModel):
     youtube_video_quota: int = Field(1, description="Quota units per video detail")
     youtube_channel_quota: int = Field(1, description="Quota units per channel detail")
 
-    # Memories.ai v2 API - pricing varies by channel
-    # memories.ai channel: $0.01/video, rapid channel: $0.02/video
-    memories_youtube_metadata: float = Field(
-        0.01,
-        description="YouTube metadata per request (memories.ai)",
+    # Memories.ai Video Datalake (https://docs.memories.ai/datalake/pricing)
+    # Indexing is billed per minute of video at fps=1.0; management and
+    # database reads are free.
+    datalake_index_per_video_minute: float = Field(
+        0.05,
+        description="Video indexing per minute of video",
     )
-    memories_youtube_metadata_rapid: float = Field(
-        0.02,
-        description="YouTube metadata per request (rapid)",
+    datalake_search: float = Field(0.008, description="Moment search per call")
+    datalake_moment: float = Field(0.008, description="Get moment per call")
+    datalake_derived_read: float = Field(
+        0.001,
+        description="Caption/transcription/title/summary read per call",
     )
-    memories_youtube_transcript: float = Field(
-        0.01,
-        description="YouTube transcript per request (memories.ai)",
-    )
-    memories_youtube_transcript_rapid: float = Field(
-        0.02,
-        description="YouTube transcript per request (rapid)",
-    )
-    memories_tiktok_metadata: float = Field(0.01, description="TikTok metadata per request")
-    memories_tiktok_transcript: float = Field(0.01, description="TikTok transcript per request")
-    memories_instagram_metadata: float = Field(0.01, description="Instagram metadata per request")
-    memories_instagram_transcript: float = Field(
-        0.01,
-        description="Instagram transcript per request",
-    )
-    memories_twitter_metadata: float = Field(0.01, description="Twitter metadata per request")
-    memories_twitter_transcript: float = Field(0.01, description="Twitter transcript per request")
-    memories_vlm_input_per_million: float = Field(0.45, description="VLM input per 1M tokens")
-    memories_vlm_output_per_million: float = Field(3.75, description="VLM output per 1M tokens")
-    memories_transcription: float = Field(0.001, description="Asset transcription per second")
-    # MAI transcript - AI-powered dual transcription (token-based + per-second)
-    memories_mai_transcript_base: float = Field(0.05, description="MAI transcript base cost")
-    memories_mai_transcript_per_second: float = Field(0.0001, description="MAI per second")
 
     # Video search tool (combines Exa + Apify)
     video_search: float = Field(0.005, description="Unified video search per request")
@@ -126,11 +106,13 @@ class ToolPricing(BaseModel):
             "youtube_search": 0.0,  # Quota-based, no direct cost
             "youtube_channel": 0.0,
             "youtube_channel_info": 0.0,
-            # Memories.ai v2
-            "social_media_metadata": self.memories_youtube_metadata,  # $0.01 per request
-            "social_media_transcript": self.memories_youtube_transcript,  # $0.01 per request
-            "social_media_mai_transcript": self.memories_mai_transcript_base,  # $0.05 base
-            "vlm_video_analysis": 0.05,  # Flat rate fallback when no token usage available
+            # Memories.ai Video Datalake
+            # video_index/video_analysis also incur per-minute indexing cost on
+            # first index; these are one-minute baselines.
+            "video_index": self.datalake_index_per_video_minute,
+            "video_analysis": self.datalake_index_per_video_minute
+            + (3 * self.datalake_derived_read),
+            "video_moment_search": self.datalake_search,
             # Unified
             "video_search": self.video_search,
         }
@@ -151,20 +133,6 @@ class ToolPricing(BaseModel):
             "youtube_channel_info": self.youtube_channel_quota,
         }
         return quota_map.get(tool_name, 0)
-
-    def calculate_vlm_cost(self, input_tokens: int, output_tokens: int) -> float:
-        """Calculate VLM cost based on actual token usage.
-
-        Args:
-            input_tokens: Number of input tokens.
-            output_tokens: Number of output tokens.
-
-        Returns:
-            Total VLM cost in USD.
-        """
-        input_cost = (input_tokens / 1_000_000) * self.memories_vlm_input_per_million
-        output_cost = (output_tokens / 1_000_000) * self.memories_vlm_output_per_million
-        return input_cost + output_cost
 
 
 class PricingConfig(BaseModel):

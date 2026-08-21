@@ -61,7 +61,6 @@ class StreamingAgentWrapper:
         self,
         google_api_key: str | None = None,
         youtube_api_key: str | None = None,
-        memories_api_key: str | None = None,
         max_steps: int | None = None,
         enable_clarification: bool = True,
         enable_retry: bool = True,
@@ -71,7 +70,6 @@ class StreamingAgentWrapper:
         Args:
             google_api_key: Google API key for Gemini. Defaults to env var.
             youtube_api_key: YouTube API key. Defaults to env var.
-            memories_api_key: Memories.ai API key. Defaults to env var.
             max_steps: Maximum agent steps per query. Defaults to settings.
             enable_clarification: Whether to enable clarification flow.
             enable_retry: Whether to enable retry with exponential backoff.
@@ -115,11 +113,10 @@ class StreamingAgentWrapper:
             InstagramApifyCreatorTool,
             InstagramApifySearchTool,
         )
-        from video_searching_agent.tools.memories_v2 import (
-            SocialMediaMAITranscriptTool,
-            SocialMediaMetadataTool,
-            SocialMediaTranscriptTool,
-            VLMVideoAnalysisTool,
+        from video_searching_agent.tools.memories_datalake import (
+            VideoAnalysisTool,
+            VideoIndexTool,
+            VideoMomentSearchTool,
         )
         from video_searching_agent.tools.tiktok_apify import (
             TikTokApifyCreatorTool,
@@ -146,10 +143,9 @@ class StreamingAgentWrapper:
             TikTokApifyCreatorTool(),
             InstagramApifyCreatorTool(),
             TwitterApifyProfileTool(),
-            SocialMediaMetadataTool(),
-            SocialMediaTranscriptTool(),
-            SocialMediaMAITranscriptTool(),
-            VLMVideoAnalysisTool(),
+            VideoIndexTool(),
+            VideoAnalysisTool(),
+            VideoMomentSearchTool(),
             VideoSearchTool(),
         ])
 
@@ -252,7 +248,6 @@ class StreamingAgentWrapper:
             total_output_tokens = 0
             gemini_calls = 0
             tool_invocations: dict[str, int] = {}
-            vlm_token_usage = TokenUsage(input_tokens=0, output_tokens=0, total_tokens=0)
 
             # Agentic loop
             while session.current_step < session.max_steps:
@@ -362,32 +357,6 @@ class StreamingAgentWrapper:
                             "success": result.success,
                         })
 
-                        # Track VLM token usage
-                        if tool_name == "vlm_video_analysis" and result.success and result.data:
-                            usage_data = result.data.get("usage")
-                            if usage_data:
-                                input_raw = usage_data.get("prompt_tokens")
-                                if input_raw is None:
-                                    input_raw = usage_data.get("input_tokens")
-
-                                output_raw = usage_data.get("completion_tokens")
-                                if output_raw is None:
-                                    output_raw = usage_data.get("output_tokens")
-
-                                input_tokens = _coerce_token_count(input_raw)
-                                output_tokens = _coerce_token_count(output_raw)
-
-                                total_raw = usage_data.get("total_tokens")
-                                total_tokens = _coerce_token_count(
-                                    total_raw,
-                                    input_tokens + output_tokens,
-                                )
-                                vlm_token_usage = vlm_token_usage.add(TokenUsage(
-                                    input_tokens=input_tokens,
-                                    output_tokens=output_tokens,
-                                    total_tokens=total_tokens,
-                                ))
-
                         # Format result for Gemini
                         result_str = result.to_string()
                         if not result.success:
@@ -400,13 +369,14 @@ class StreamingAgentWrapper:
                             )
                         )
                 elif blocked_tools:
-                    # Steer the model away from deep-analysis tools in discovery flows.
+                    # Steer the model away from paid video indexing on broad queries.
                     messages.append(types.Content(
                         role="user",
                         parts=[types.Part(
                             text=(
-                                "Policy note: Deep transcript/video-analysis tools are disabled "
-                                "for this query. Continue with discovery/search tools."
+                                "Policy note: video content analysis is disabled for this "
+                                "query because no specific video was given. Continue with "
+                                "discovery/search tools."
                             )
                         )],
                     ))
@@ -437,7 +407,6 @@ class StreamingAgentWrapper:
                 total_output_tokens=total_output_tokens,
                 gemini_calls=gemini_calls,
                 tool_invocations=tool_invocations,
-                vlm_token_usage=vlm_token_usage,
             )
 
             video_references = self._extract_video_references(
@@ -600,7 +569,6 @@ class StreamingAgentWrapper:
         total_output_tokens: int,
         gemini_calls: int,
         tool_invocations: dict[str, int],
-        vlm_token_usage: TokenUsage | None = None,
     ) -> UsageMetrics:
         """Calculate usage metrics and costs for the session."""
         pricing = get_pricing()
@@ -624,36 +592,16 @@ class StreamingAgentWrapper:
 
         tool_costs: list[ToolUsageCost] = []
         for tool_name, count in tool_invocations.items():
-            is_vlm_with_usage = (
-                tool_name == "vlm_video_analysis"
-                and vlm_token_usage
-                and vlm_token_usage.total_tokens > 0
-            )
-            if is_vlm_with_usage and vlm_token_usage:
-                cost = pricing.tools.calculate_vlm_cost(
-                    vlm_token_usage.input_tokens,
-                    vlm_token_usage.output_tokens,
-                )
-                tool_cost = ToolUsageCost(
-                    tool_name=tool_name,
-                    invocation_count=count,
-                    estimated_cost_usd=cost,
-                    token_usage=vlm_token_usage,
-                    quota_used=None,
-                    details=None,
-                )
-            else:
-                unit_cost = pricing.tools.get_tool_cost(tool_name)
-                quota = pricing.tools.get_youtube_quota(tool_name)
-                tool_cost = ToolUsageCost(
-                    tool_name=tool_name,
-                    invocation_count=count,
-                    estimated_cost_usd=unit_cost * count,
-                    quota_used=quota * count if quota > 0 else None,
-                    token_usage=None,
-                    details=None,
-                )
-            tool_costs.append(tool_cost)
+            unit_cost = pricing.tools.get_tool_cost(tool_name)
+            quota = pricing.tools.get_youtube_quota(tool_name)
+            tool_costs.append(ToolUsageCost(
+                tool_name=tool_name,
+                invocation_count=count,
+                estimated_cost_usd=unit_cost * count,
+                quota_used=quota * count if quota > 0 else None,
+                token_usage=None,
+                details=None,
+            ))
 
         usage_metrics = UsageMetrics(
             gemini=gemini_cost,
@@ -835,8 +783,6 @@ class StreamingAgentWrapper:
                 platforms.add("instagram")
             elif "twitter" in tool:
                 platforms.add("twitter")
-            elif "memories" in tool:
-                platforms.add("memories.ai")
             elif "exa" in tool:
                 platforms.add("web")
         return list(platforms)

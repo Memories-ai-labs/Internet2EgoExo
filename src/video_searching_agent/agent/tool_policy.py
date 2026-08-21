@@ -6,10 +6,12 @@ from typing import Any
 
 from video_searching_agent.models.query import MetricType, ParsedQuery, QueryType
 
-DEEP_ANALYSIS_TOOLS = frozenset({
-    "social_media_transcript",
-    "social_media_mai_transcript",
-    "vlm_video_analysis",
+# Tools that index or read one video's own content. Indexing is billed per
+# minute of video, so they are held back unless the user actually pointed at a
+# video or asked what is inside one.
+CONTENT_ANALYSIS_TOOLS = frozenset({
+    "video_index",
+    "video_analysis",
 })
 
 DISCOVERY_QUERY_TYPES = frozenset({
@@ -41,19 +43,28 @@ def _metric_to_video_search_sort(metric: MetricType) -> str:
     return "views"
 
 
-def allows_deep_video_analysis(parsed_query: ParsedQuery) -> bool:
-    """True when the user explicitly requested video-content analysis."""
+def wants_video_content_analysis(parsed_query: ParsedQuery) -> bool:
+    """True when the user explicitly asked about a video's own content."""
     return (
         parsed_query.needs_video_analysis
         or parsed_query.query_type == QueryType.VIDEO_ANALYSIS
     )
 
 
+def may_analyze_video_content(parsed_query: ParsedQuery) -> bool:
+    """True when a paid content-analysis call is warranted.
+
+    Either the user asked what is inside a video, or they named a specific
+    video URL to work with.
+    """
+    return wants_video_content_analysis(parsed_query) or bool(parsed_query.video_urls)
+
+
 def is_discovery_query(parsed_query: ParsedQuery) -> bool:
     """True for broad discovery queries where speed is preferred."""
     return (
         parsed_query.query_type in DISCOVERY_QUERY_TYPES
-        and not allows_deep_video_analysis(parsed_query)
+        and not wants_video_content_analysis(parsed_query)
         and not parsed_query.is_comparison
         and not parsed_query.creators
         and not parsed_query.video_urls
@@ -92,11 +103,15 @@ def apply_tool_call_policy(
     """
     blocked_tools: list[str] = []
     filtered: list[dict[str, Any]] = []
-    allow_deep = allows_deep_video_analysis(parsed_query)
+    allow_content_analysis = may_analyze_video_content(parsed_query)
 
     for call in tool_calls:
         tool_name = call.get("name")
-        if isinstance(tool_name, str) and tool_name in DEEP_ANALYSIS_TOOLS and not allow_deep:
+        if (
+            isinstance(tool_name, str)
+            and tool_name in CONTENT_ANALYSIS_TOOLS
+            and not allow_content_analysis
+        ):
             blocked_tools.append(tool_name)
             continue
         filtered.append(call)

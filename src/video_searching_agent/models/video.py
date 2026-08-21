@@ -149,16 +149,6 @@ class Video(BaseModel):
     category: str | None = None
     language: str | None = None
 
-    # Memories.ai integration
-    memories_video_no: str | None = Field(
-        None,
-        description="Video number in Memories.ai if uploaded",
-    )
-    memories_status: str | None = Field(
-        None,
-        description="Processing status in Memories.ai",
-    )
-
     # Search relevance
     relevance_score: float | None = Field(None, ge=0, le=1)
     source_query: str | None = Field(None, description="Query that found this video")
