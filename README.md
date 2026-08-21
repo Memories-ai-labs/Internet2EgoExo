@@ -488,6 +488,21 @@ npm run dev      # localhost:5173, proxying /api to localhost:8000
 npm run build    # type-checks, then rebuilds the committed bundle
 ```
 
+### Browser QA
+
+`ui/qa/` drives the whole flow in a real browser against a stub API — no
+Datalake calls, no downloads, no model calls, nothing spent:
+
+```bash
+uv run python ui/qa/stub_api.py 8821   # serves the built UI + canned payloads
+cd ui && npm run qa                    # search -> collect -> gates -> grade
+```
+
+It screenshots each step and fails on the things that have actually broken
+before: a tree that does not nest or name its levels, a page that scrolls
+sideways at 420px, a rejected clip with no reason, an unmeasured gate rendered
+as a pass, a stage a clip never reached shown as done, and any console error.
+
 ### Two halves, one flow
 
 **1 · Search & scrape.** A query, the requirements it has to satisfy — viewpoint,

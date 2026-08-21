@@ -17,6 +17,9 @@ export function DatasetPanel({ manifest }: { manifest: Manifest }) {
     ledger.accepted_labeled_hours || ledger.accepted_hours || manifest.total_hours;
   const target = manifest.target_hours;
   const progress = target ? Math.min((measured / target) * 100, 100) : 0;
+  // Before the gates have run there is nothing accepted *yet* — which is not
+  // the same as nothing being acceptable. A zero here would read as a verdict.
+  const graded = manifest.accepted_clips > 0 || Object.keys(manifest.grades).length > 0;
 
   return (
     <Panel
@@ -56,13 +59,13 @@ export function DatasetPanel({ manifest }: { manifest: Manifest }) {
         />
         <Stat
           label="Accepted"
-          value={hours(ledger.accepted_hours)}
-          note={`media yield ${percent(ledger.media_yield)}`}
+          value={graded ? hours(ledger.accepted_hours) : "—"}
+          note={graded ? `media yield ${percent(ledger.media_yield)}` : "not gated yet"}
         />
         <Stat
           label="Accepted + labelled"
-          value={hours(ledger.accepted_labeled_hours)}
-          note="the only figure to quote"
+          value={graded ? hours(ledger.accepted_labeled_hours) : "—"}
+          note={graded ? "the only figure to quote" : "collect these clips to find out"}
         />
       </div>
 
