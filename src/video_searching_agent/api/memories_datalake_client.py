@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from json import dumps as json_dumps
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -22,6 +24,17 @@ logger = logging.getLogger(__name__)
 
 # Search targets accepted by POST /search.
 SEARCH_TARGETS = ("caption", "transcription", "summary", "title", "frame_embedding", "event")
+
+
+def _as_dict(response: httpx.Response, label: str) -> dict[str, Any]:
+    """Decode a JSON object body, or fail loudly."""
+    try:
+        payload = response.json()
+    except ValueError as exc:
+        raise MemoriesDatalakeError(f"{label} returned non-JSON body") from exc
+    if not isinstance(payload, dict):
+        raise MemoriesDatalakeError(f"{label} returned {type(payload).__name__}")
+    return payload
 
 
 class MemoriesDatalakeError(RuntimeError):
@@ -188,6 +201,151 @@ class MemoriesDatalakeClient:
     async def get_video(self, video_id: str) -> dict[str, Any]:
         """Get video details: status, duration, AI title, tags (free)."""
         return await self._request("GET", f"/videos/{video_id}")
+
+    async def upload_video_file(
+        self,
+        file_path: str | Path,
+        collection_id: str | None = None,
+        fps: float | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Upload a local file with multipart/form-data.
+
+        Recommended up to ~100 MB; use the resumable flow above that. Billed per
+        minute of video. Returns ``{video_id, operation}``.
+        """
+        settings = get_settings()
+        path = Path(file_path)
+        if not path.is_file():
+            raise MemoriesDatalakeError(f"No such file: {path}")
+
+        body: dict[str, Any] = {
+            "collection_id": collection_id or await self.ensure_collection(),
+            "fps": fps if fps is not None else settings.memories_index_fps,
+        }
+        if metadata:
+            body["metadata"] = metadata
+
+        # Uploads are large; give them their own, longer timeout.
+        timeout = max(self.timeout, 300.0)
+        url = f"{self.base_url}/videos"
+        headers = {"Authorization": self.api_key}
+
+        try:
+            with path.open("rb") as handle:
+                files = {
+                    "json": (None, json_dumps(body), "application/json"),
+                    "file": (path.name, handle, "application/octet-stream"),
+                }
+                async with httpx.AsyncClient(timeout=timeout) as client:
+                    response = await client.post(url, headers=headers, files=files)
+        except httpx.HTTPError as exc:
+            raise MemoriesDatalakeError(f"POST /videos (multipart) failed: {exc}") from exc
+        except OSError as exc:
+            raise MemoriesDatalakeError(f"Could not read {path}: {exc}") from exc
+
+        if response.status_code >= 400:
+            raise MemoriesDatalakeError(
+                f"POST /videos (multipart) returned {response.status_code}: {response.text[:300]}",
+                status_code=response.status_code,
+            )
+        return _as_dict(response, "POST /videos (multipart)")
+
+    async def start_resumable_upload(
+        self,
+        collection_id: str | None = None,
+        fps: float | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Open a resumable upload session for a large file.
+
+        Returns ``{video_id, upload_url, chunk_size}``. The caller PUTs the file
+        to the GCS session URI, then calls :meth:`finalize_upload`.
+        """
+        settings = get_settings()
+        body: dict[str, Any] = {
+            "collection_id": collection_id or await self.ensure_collection(),
+            "fps": fps if fps is not None else settings.memories_index_fps,
+        }
+        if metadata:
+            body["metadata"] = metadata
+        return await self._request(
+            "POST", "/videos", json=body, params={"upload": "resumable"}
+        )
+
+    async def finalize_upload(self, video_id: str) -> dict[str, Any]:
+        """Confirm a resumable upload finished and start indexing (free)."""
+        return await self._request("POST", f"/videos/{video_id}:finalize")
+
+    async def update_video(
+        self,
+        video_id: str,
+        tags: list[str] | None = None,
+        custom: dict[str, Any] | None = None,
+        title: str | None = None,
+    ) -> dict[str, Any]:
+        """Write a verdict back onto a video as tags and metadata (free).
+
+        Tags become filters for the next query, which is what makes the
+        curation loop compound: each pass narrows the next one.
+        """
+        metadata: dict[str, Any] = {}
+        if tags is not None:
+            metadata["tags"] = list(tags)
+        if custom is not None:
+            metadata["custom"] = custom
+        if title is not None:
+            metadata["title"] = title
+
+        if not metadata:
+            raise MemoriesDatalakeError("update_video needs tags, custom or title")
+
+        return await self._request("PATCH", f"/videos/{video_id}", json={"metadata": metadata})
+
+    async def list_videos(
+        self,
+        collection_id: str | None = None,
+        status: str | None = None,
+        tag: str | None = None,
+        cursor: str | None = None,
+        limit: int = 50,
+    ) -> dict[str, Any]:
+        """List videos, optionally filtered by status or exact tag (free).
+
+        This is the curation worklist: `tag="first_person_view"` is the ego
+        subset, `status="failed"` is everything that never finished indexing.
+        """
+        return await self._request(
+            "GET",
+            "/videos",
+            params={
+                "collection_id": collection_id or await self.ensure_collection(),
+                "status": status,
+                "tag": tag,
+                "cursor": cursor,
+                "limit": limit,
+            },
+        )
+
+    async def get_clip(self, video_id: str, start: float, end: float) -> dict[str, Any]:
+        """Cut a span and get a signed download link ($0.005 + egress)."""
+        return await self._request(
+            "GET",
+            f"/videos/{video_id}/clip",
+            params={"start": start, "end": end},
+        )
+
+    async def get_events(
+        self,
+        video_id: str,
+        event_type: str | None = None,
+    ) -> dict[str, Any]:
+        """Read detector events for a video ($0.001/call)."""
+        return await self._request(
+            "GET",
+            f"/videos/{video_id}/events",
+            params={"event_type": event_type},
+        )
 
     # ---------------------------------------------------------------- operations
 
