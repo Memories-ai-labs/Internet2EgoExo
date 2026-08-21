@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PINNED_REPO_URL="https://github.com/Memories-ai-labs/video-searching-agent.git"
+PINNED_REPO_URL="https://github.com/Memories-ai-labs/Internet-Video-Search.git"
 PINNED_TAG="v0.2.5"
 
 OPENCLAW_HOME_DIR="${OPENCLAW_HOME:-${HOME}/.openclaw}"

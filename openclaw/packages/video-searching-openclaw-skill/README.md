@@ -4,7 +4,7 @@ Standalone OpenClaw skill package for deterministic self-bootstrap execution.
 
 Default runtime source:
 
-- `https://github.com/Memories-ai-labs/video-searching-agent`
+- `https://github.com/Memories-ai-labs/Internet-Video-Search`
 - pinned tag: `v0.2.5`
 - managed path: `~/.openclaw/data/video-searching-agent/v0.2.5`
 

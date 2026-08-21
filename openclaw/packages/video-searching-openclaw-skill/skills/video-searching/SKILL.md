@@ -2,7 +2,7 @@
 name: video-searching
 description: Run the Video Searching Agent with deterministic, concise chat UX for /video_searching using a pinned self-bootstrap runtime.
 user-invocable: true
-metadata: {"openclaw":{"os":["darwin","linux"],"homepage":"https://github.com/Memories-ai-labs/video-searching-agent","requires":{"bins":["git","uv"],"env":["GOOGLE_API_KEY","YOUTUBE_API_KEY"]}}}
+metadata: {"openclaw":{"os":["darwin","linux"],"homepage":"https://github.com/Memories-ai-labs/Internet-Video-Search","requires":{"bins":["git","uv"],"env":["GOOGLE_API_KEY","YOUTUBE_API_KEY"]}}}
 ---
 
 # Video Searching Skill
@@ -10,7 +10,7 @@ metadata: {"openclaw":{"os":["darwin","linux"],"homepage":"https://github.com/Me
 Use this skill when the user asks to find, compare, or analyze social videos (YouTube, TikTok, Instagram, Twitter/X), or explicitly invokes `/video_searching`.
 
 This workflow expects host runtime execution (sandbox mode off).
-The runner auto-bootstraps a pinned runtime from `Memories-ai-labs/video-searching-agent@v0.2.5` when `VIDEO_SEARCHING_AGENT_ROOT` is not set.
+The runner auto-bootstraps a pinned runtime from `Memories-ai-labs/Internet-Video-Search@v0.2.5` when `VIDEO_SEARCHING_AGENT_ROOT` is not set.
 
 ## Triggering
 

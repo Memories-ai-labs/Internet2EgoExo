@@ -81,8 +81,8 @@ The final `AgentResponse` includes:
 
 ```bash
 # Clone the repository
-git clone https://github.com/Memories-ai-labs/video-searching-agent.git
-cd video-searching-agent
+git clone https://github.com/Memories-ai-labs/Internet-Video-Search.git
+cd Internet-Video-Search
 
 # Install dependencies
 pip install -e .

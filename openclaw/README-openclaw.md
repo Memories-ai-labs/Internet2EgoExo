@@ -4,7 +4,7 @@ This integration installs the `video-searching` skill for OpenClaw and runs a pi
 
 Default runtime source:
 
-- `https://github.com/Memories-ai-labs/video-searching-agent`
+- `https://github.com/Memories-ai-labs/Internet-Video-Search`
 - pinned tag: `v0.2.3`
 - managed path: `~/.openclaw/data/video-searching-agent/v0.2.3`
 
