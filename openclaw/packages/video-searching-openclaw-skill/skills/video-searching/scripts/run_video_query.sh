@@ -2,7 +2,7 @@
 set -euo pipefail
 
 PINNED_REPO_URL="https://github.com/Memories-ai-labs/Internet-Video-Search.git"
-PINNED_TAG="v0.2.5"
+PINNED_TAG="v0.3.0"
 
 OPENCLAW_HOME_DIR="${OPENCLAW_HOME:-${HOME}/.openclaw}"
 MANAGED_BASE_DIR="${OPENCLAW_HOME_DIR}/data/video-searching-agent"

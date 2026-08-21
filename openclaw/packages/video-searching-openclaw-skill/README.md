@@ -5,8 +5,9 @@ Standalone OpenClaw skill package for deterministic self-bootstrap execution.
 Default runtime source:
 
 - `https://github.com/Memories-ai-labs/Internet-Video-Search`
-- pinned tag: `v0.2.5`
-- managed path: `~/.openclaw/data/video-searching-agent/v0.2.5`
+- pinned tag: `v0.3.0` (must exist as a tag/release in the repo above; the runner
+  clones that tag, so a moving branch is deliberately not used)
+- managed path: `~/.openclaw/data/video-searching-agent/v0.3.0`
 
 `VIDEO_SEARCHING_AGENT_ROOT` is optional and only for local development override.
 
@@ -137,7 +138,7 @@ Expected behavior:
 2. `Required environment variable is not set: GOOGLE_API_KEY` / `YOUTUBE_API_KEY`
    - Add required keys in global env vars.
 3. Clone/sync errors during first run
-   - Confirm host can access GitHub and fetch tag `v0.2.5`.
+   - Confirm host can access GitHub and fetch tag `v0.3.0`.
 4. No progress updates shown
    - Restart gateway and verify channel stream mode settings.
 5. Typing indicator remains visible after final response

@@ -10,7 +10,7 @@ metadata: {"openclaw":{"os":["darwin","linux"],"homepage":"https://github.com/Me
 Use this skill when the user asks to find, compare, or analyze social videos (YouTube, TikTok, Instagram, Twitter/X), or explicitly invokes `/video_searching`.
 
 This workflow expects host runtime execution (sandbox mode off).
-The runner auto-bootstraps a pinned runtime from `Memories-ai-labs/Internet-Video-Search@v0.2.5` when `VIDEO_SEARCHING_AGENT_ROOT` is not set.
+The runner auto-bootstraps a pinned runtime from `Memories-ai-labs/Internet-Video-Search@v0.3.0` when `VIDEO_SEARCHING_AGENT_ROOT` is not set.
 
 ## Triggering
 
@@ -92,7 +92,7 @@ When terminal event is `error`:
 
 1. If script fails due to missing env/tooling, explain exact missing piece (for example `VIDEO_SEARCHING_AGENT_ROOT`, `uv`, or API key env var).
 2. If `VIDEO_SEARCHING_AGENT_ROOT` is unset, the runner uses managed path:
-   - `~/.openclaw/data/video-searching-agent/v0.2.5`
+   - `~/.openclaw/data/video-searching-agent/v0.3.0`
 3. `VIDEO_SEARCHING_AGENT_ROOT` remains an advanced override for local development.
 4. Keep response concise and action-oriented.
 5. Never fabricate video URLs or metrics.
