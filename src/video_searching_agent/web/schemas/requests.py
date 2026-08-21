@@ -1,6 +1,6 @@
 """Request schemas for the API."""
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from video_searching_agent.curation.viewpoint import Viewpoint
 
@@ -126,3 +126,86 @@ class QueryRequest(BaseModel):
         True,
         description="Whether to enable clarification flow",
     )
+
+
+# Every clip in a collection request costs money to index, so a single request
+# cannot queue an unbounded number of them.
+MAX_URLS_PER_REQUEST = 25
+
+
+class CollectRequest(BaseModel):
+    """Request body for the collection stream.
+
+    The candidates a search found, handed to the pipeline: download, index,
+    clean, annotate.
+    """
+
+    urls: list[str] = Field(
+        ...,
+        min_length=1,
+        max_length=MAX_URLS_PER_REQUEST,
+        description="Candidate page URLs to collect (YouTube, TikTok, Instagram, X)",
+    )
+    require_hands: bool = Field(
+        True,
+        description="Reject footage with no hands in frame — the manipulation-data gate",
+    )
+    viewpoint: Viewpoint | None = Field(
+        None, description="Require a camera viewpoint; omit for any"
+    )
+    min_duration_seconds: int | None = Field(
+        None, ge=0, le=86_400, description="Skip candidates shorter than this"
+    )
+    annotate: bool = Field(
+        True,
+        description="Run the annotation agent on what survives cleaning. "
+        "False is a cleaning-only pass, which is much cheaper.",
+    )
+
+    @field_validator("urls")
+    @classmethod
+    def validate_urls(cls, v: list[str]) -> list[str]:
+        """Keep http(s) URLs only, de-duplicated, order preserved."""
+        cleaned: list[str] = []
+        for raw in v:
+            candidate = raw.strip()
+            if not candidate:
+                continue
+            if not candidate.startswith(("http://", "https://")):
+                raise ValueError(f"'{raw}' is not an http(s) URL")
+            if candidate not in cleaned:
+                cleaned.append(candidate)
+        if not cleaned:
+            raise ValueError("At least one URL is required")
+        return cleaned
+
+
+class CurateRequest(BaseModel):
+    """Request body for the curation stream.
+
+    Either a list of indexed video ids, or a tag to pull the worklist from.
+    """
+
+    video_ids: list[str] | None = Field(
+        None,
+        max_length=MAX_URLS_PER_REQUEST,
+        description="Indexed videos to curate",
+    )
+    tag: str | None = Field(
+        None,
+        max_length=100,
+        description="Pull the worklist from this tag instead (e.g. 'clean_pass')",
+    )
+    query: str | None = Field(
+        None, max_length=2000, description="What the collection was looking for"
+    )
+    require_hands: bool = Field(True, description="Reject footage with no hands")
+    viewpoint: Viewpoint | None = Field(None, description="Require a camera viewpoint")
+    annotate: bool = Field(True, description="Annotate what survives cleaning")
+
+    @model_validator(mode="after")
+    def require_a_worklist(self) -> "CurateRequest":
+        """One of `video_ids` or `tag` has to say what to curate."""
+        if not self.video_ids and not self.tag:
+            raise ValueError("Provide either video_ids or tag")
+        return self

@@ -1,14 +1,14 @@
 """Video and creator data models."""
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Optional
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, HttpUrl
 
 
-class Platform(str, Enum):
+class Platform(StrEnum):
     """Supported video platforms."""
 
     YOUTUBE = "youtube"

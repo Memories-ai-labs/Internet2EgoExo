@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -47,6 +48,11 @@ logger = logging.getLogger(__name__)
 
 # Files above this go through the resumable upload path.
 RESUMABLE_THRESHOLD_MB = 100
+
+# Called as each stage begins, so a caller can stream progress. A clip can sit
+# in `indexing` for minutes; without this the UI would show nothing until the
+# whole pipeline finished.
+StageCallback = Callable[["IngestResult"], Awaitable[None]]
 
 
 @dataclass
@@ -170,6 +176,7 @@ class IngestPipeline:
         min_duration_seconds: int | None = None,
         wait_seconds: float | None = None,
         annotate: bool = True,
+        on_stage: StageCallback | None = None,
     ) -> IngestResult:
         """Run one candidate through the whole pipeline.
 
@@ -180,6 +187,7 @@ class IngestPipeline:
             min_duration_seconds: Skip before downloading if too short.
             wait_seconds: Indexing wait budget. Defaults to settings.
             annotate: Run the annotation agent on what survives cleaning.
+            on_stage: Awaited as each stage begins, for progress streaming.
 
         Returns:
             An IngestResult; `accepted` is True only for a clip that is indexed
@@ -187,12 +195,17 @@ class IngestPipeline:
         """
         result = IngestResult(url=url)
 
+        async def stage(name: str) -> None:
+            result.stage = name
+            if on_stage is not None:
+                await on_stage(result)
+
         # --- 1. probe and screen before spending disk or money -------------
-        result.stage = "probing"
+        await stage("probing")
         try:
             info = await self.downloader.probe_async(url)
         except DownloadError as exc:
-            result.stage = "failed"
+            await stage("failed")
             result.error = str(exc)
             return result
 
@@ -207,16 +220,16 @@ class IngestPipeline:
         )
         result.screening = screening
         if not screening.accepted:
-            result.stage = "skipped"
+            await stage("skipped")
             result.rejection_reason = "; ".join(screening.reasons)
             return result
 
         # --- 2. download ---------------------------------------------------
-        result.stage = "downloading"
+        await stage("downloading")
         try:
             clip = await self.downloader.download_async(url)
         except DownloadError as exc:
-            result.stage = "failed"
+            await stage("failed")
             result.error = str(exc)
             return result
 
@@ -226,7 +239,7 @@ class IngestPipeline:
         result.notes.extend(clip.warnings)
 
         # --- 3. upload and index ------------------------------------------
-        result.stage = "uploading"
+        await stage("uploading")
         try:
             uploaded = await self._upload(clip)
             result.video_id = uploaded.get("video_id")
@@ -234,14 +247,14 @@ class IngestPipeline:
             if not result.video_id:
                 raise MemoriesDatalakeError("upload returned no video_id")
         except MemoriesDatalakeError as exc:
-            result.stage = "failed"
+            await stage("failed")
             result.error = str(exc)
             return result
         finally:
             if not self.keep_files:
                 self.downloader.discard(clip)
 
-        result.stage = "indexing"
+        await stage("indexing")
         try:
             if result.operation:
                 operation = await self.client.wait_for_operation(
@@ -253,16 +266,16 @@ class IngestPipeline:
                     )
                     return result
                 if operation.get("error"):
-                    result.stage = "failed"
+                    await stage("failed")
                     result.error = f"indexing failed: {operation['error']}"
                     return result
         except MemoriesDatalakeError as exc:
-            result.stage = "failed"
+            await stage("failed")
             result.error = str(exc)
             return result
 
         # --- 4. clean: filter on the frames, then find the anchors ---------
-        result.stage = "cleaning"
+        await stage("cleaning")
         verdict = await self.cleaning.clean(
             str(result.video_id),
             title=result.downloaded_title,
@@ -277,12 +290,12 @@ class IngestPipeline:
         result.notes.extend(verdict.errors)
 
         if not verdict.accepted:
-            result.stage = "rejected"
+            await stage("rejected")
             return result
 
         # --- 5. annotate what survived ------------------------------------
         if annotate and verdict.segments:
-            result.stage = "annotating"
+            await stage("annotating")
             run = await self.annotation.annotate_video(
                 str(result.video_id),
                 verdict.segments,
@@ -294,7 +307,7 @@ class IngestPipeline:
             )
             result.notes.extend(run.errors)
 
-        result.stage = "accepted"
+        await stage("accepted")
         return result
 
     @staticmethod

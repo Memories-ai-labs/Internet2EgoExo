@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import logging
 import re
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -50,6 +51,10 @@ from video_searching_agent.models.dataset import DatasetManifest
 logger = logging.getLogger(__name__)
 
 AGENT_NAME = "curation"
+
+# Awaited as each clip finishes, so a caller can stream verdicts as they land
+# rather than waiting for the whole set.
+ClipCallback = Callable[["CuratedClip"], Awaitable[None]]
 
 
 @dataclass
@@ -204,6 +209,7 @@ class CurationAgent:
         annotate: bool = True,
         write_back: bool = True,
         limit: int = 50,
+        on_clip: ClipCallback | None = None,
     ) -> CurationReport:
         """Clean, annotate and grade a set of indexed videos.
 
@@ -219,6 +225,7 @@ class CurationAgent:
                 False gives a cleaning-only pass, which is much cheaper.
             write_back: Write verdicts onto the videos.
             limit: Ceiling on videos pulled from a tag listing.
+            on_clip: Awaited as each clip finishes, for progress streaming.
 
         Returns:
             A CurationReport with per-clip verdicts, the hours ledger, the
@@ -288,6 +295,8 @@ class CurationAgent:
                 self._regrade(clip, verdict, facts, report)
 
             report.clips.append(clip)
+            if on_clip is not None:
+                await on_clip(clip)
 
         self._mark_duplicates(report)
         self._tally(report)

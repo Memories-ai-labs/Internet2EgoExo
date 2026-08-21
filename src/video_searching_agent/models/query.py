@@ -1,7 +1,7 @@
 """Query and session data models."""
 
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 from uuid import uuid4
 
@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from video_searching_agent.curation.viewpoint import Viewpoint
 
 
-class QueryType(str, Enum):
+class QueryType(StrEnum):
     """Classification of user query types."""
 
     DATA_COLLECTION = "data_collection"  # "2h of egocentric cooking footage"
@@ -31,7 +31,7 @@ class QueryType(str, Enum):
     CREATIVE_INSPIRATION = "creative_inspiration"
 
 
-class MetricType(str, Enum):
+class MetricType(StrEnum):
     """Ranking criteria for candidate clips.
 
     `USABILITY` is the default for data collection: viewpoint match, then
@@ -51,7 +51,7 @@ class MetricType(str, Enum):
     MOST_RECENT = "most_recent"  # Most recently published
 
 
-class TimeFrame(str, Enum):
+class TimeFrame(StrEnum):
     """Time frame options for video search per PRD."""
 
     PAST_24_HOURS = "past_24_hours"
@@ -62,7 +62,7 @@ class TimeFrame(str, Enum):
     ALL_TIME = "all_time"
 
 
-class SortOrder(str, Enum):
+class SortOrder(StrEnum):
     """Sort order for results."""
 
     DESC = "desc"  # Default: highest first

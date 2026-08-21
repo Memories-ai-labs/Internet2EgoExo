@@ -13,7 +13,11 @@ from fastapi.staticfiles import StaticFiles
 from video_searching_agent.config.settings import get_settings
 from video_searching_agent.web.middleware.auth import APIKeyAuthMiddleware
 from video_searching_agent.web.middleware.rate_limit import RateLimitMiddleware
-from video_searching_agent.web.routers import health_router, queries_router
+from video_searching_agent.web.routers import (
+    health_router,
+    pipeline_router,
+    queries_router,
+)
 
 # Import version directly to avoid circular import
 __version__ = "0.1.0"
@@ -71,6 +75,7 @@ def create_app() -> FastAPI:
     # Include routers
     app.include_router(health_router)
     app.include_router(queries_router)
+    app.include_router(pipeline_router)
 
     # Serve the bundled web UI (no build step) and send "/" to it.
     if STATIC_DIR.is_dir():

@@ -1,12 +1,12 @@
 """Error schemas for the API."""
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 
-class ErrorCode(str, Enum):
+class ErrorCode(StrEnum):
     """API error codes."""
 
     INVALID_REQUEST = "invalid_request"

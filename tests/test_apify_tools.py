@@ -12,8 +12,14 @@ from video_searching_agent.tools.instagram_apify import (
     InstagramApifyCreatorTool,
     InstagramApifySearchTool,
 )
-from video_searching_agent.tools.tiktok_apify import TikTokApifyCreatorTool, TikTokApifySearchTool
-from video_searching_agent.tools.twitter_apify import TwitterApifyProfileTool, TwitterApifySearchTool
+from video_searching_agent.tools.tiktok_apify import (
+    TikTokApifyCreatorTool,
+    TikTokApifySearchTool,
+)
+from video_searching_agent.tools.twitter_apify import (
+    TwitterApifyProfileTool,
+    TwitterApifySearchTool,
+)
 from video_searching_agent.tools.video_search import VideoSearchTool
 
 
