@@ -64,17 +64,19 @@ class YouTubeSearchTool(BaseTool):
 
     @property
     def description(self) -> str:
-        return """Search YouTube for videos, channels, or playlists.
-Use this tool when the user specifically asks about YouTube content or when
-YouTube is the most relevant platform for their query.
+        return """Search YouTube for candidate training footage, channels or playlists.
+
+YouTube is the largest public source of both egocentric (POV, head-mounted,
+GoPro, wearable) and exocentric (fixed camera, tripod, multi-view) recordings.
 
 Capabilities:
-- Search for videos by keyword, topic, or trend
-- Find specific channels or creators
-- Get video details including views, likes, comments, duration
-- Filter by upload date, view count, or relevance
+- Search by activity, scene or capture style ("first person kitchen", "POV assembly")
+- Filter by clip length (`video_duration`) and by reusable licence (`license`)
+- Return duration in seconds and the licence for every hit, which is what
+  decides whether a clip can go into a dataset
+- Find channels that publish a given capture style
 
-Returns structured video data including thumbnails, statistics, and channel info."""
+Returns structured video data including duration, licence, thumbnails and channel info."""
 
     @property
     def input_schema(self) -> dict[str, Any]:
@@ -118,7 +120,18 @@ Returns structured video data including thumbnails, statistics, and channel info
                     "enum": ["any", "short", "medium", "long"],
                     "description": (
                         "Filter by video duration: short (<4min), "
-                        "medium (4-20min), long (>20min)"
+                        "medium (4-20min), long (>20min). Prefer medium/long for "
+                        "training footage."
+                    ),
+                    "default": "any",
+                },
+                "license": {
+                    "type": "string",
+                    "enum": ["any", "reusable"],
+                    "description": (
+                        "Set to 'reusable' to return only Creative-Commons "
+                        "licensed videos, which are the ones safe to reuse as "
+                        "training data."
                     ),
                     "default": "any",
                 },
@@ -148,6 +161,7 @@ Returns structured video data including thumbnails, statistics, and channel info
         published_after = kwargs.get("published_after")
         channel_id = kwargs.get("channel_id")
         video_duration = kwargs.get("video_duration", "any")
+        license_filter = str(kwargs.get("license", "any")).lower()
 
         try:
             # Build search request
@@ -167,6 +181,9 @@ Returns structured video data including thumbnails, statistics, and channel info
 
             if video_duration != "any" and search_type == "video":
                 search_params["videoDuration"] = video_duration
+
+            if license_filter == "reusable" and search_type == "video":
+                search_params["videoLicense"] = "creativeCommon"
 
             # Execute search
             search_response = await self._execute_request_locked(
@@ -227,7 +244,7 @@ Returns structured video data including thumbnails, statistics, and channel info
         videos_response = await self._execute_request_locked(
             self.youtube.videos().list(
                 id=",".join(video_ids),
-                part="snippet,statistics,contentDetails",
+                part="snippet,statistics,contentDetails,status",
             )
         )
 
@@ -305,6 +322,7 @@ Returns structured video data including thumbnails, statistics, and channel info
             metrics=metrics,
             hashtags=self._extract_hashtags(snippet.get("description", "")),
             category=snippet.get("categoryId"),
+            license=item.get("status", {}).get("license"),
             source_query=query,
         )
 

@@ -148,6 +148,10 @@ class Video(BaseModel):
     hashtags: list[str] = Field(default_factory=list)
     category: str | None = None
     language: str | None = None
+    license: str | None = Field(
+        None,
+        description="Platform licence string, e.g. 'creativeCommon' or 'youtube'",
+    )
 
     # Search relevance
     relevance_score: float | None = Field(None, ge=0, le=1)

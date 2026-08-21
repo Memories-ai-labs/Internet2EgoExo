@@ -9,15 +9,31 @@ import logging
 from typing import Any
 
 from video_searching_agent.api.apify_client import ApifyClient
+from video_searching_agent.curation.viewpoint import Viewpoint
 from video_searching_agent.models.video import Platform, Video
 from video_searching_agent.tools.base import BaseTool, ToolResult
 from video_searching_agent.tools.exa import ExaSearchTool, extract_platform_urls
 from video_searching_agent.tools.instagram_apify import InstagramApifySearchTool
-from video_searching_agent.tools.sorting import sort_videos_by_popularity
+from video_searching_agent.tools.sorting import (
+    rank_videos_for_training_data,
+    sort_videos_by_popularity,
+)
 from video_searching_agent.tools.tiktok_apify import TikTokApifySearchTool
 from video_searching_agent.tools.twitter_apify import TwitterApifySearchTool
 
 logger = logging.getLogger(__name__)
+
+
+def _parse_viewpoint(value: Any) -> Viewpoint | None:
+    """Map a tool argument to a viewpoint, treating 'any'/missing as no filter."""
+    if not value:
+        return None
+    candidate = str(value).strip().lower()
+    if candidate in ("egocentric", "ego", "first_person"):
+        return Viewpoint.EGOCENTRIC
+    if candidate in ("exocentric", "exo", "third_person"):
+        return Viewpoint.EXOCENTRIC
+    return None
 
 
 class VideoSearchTool(BaseTool):
@@ -81,19 +97,22 @@ class VideoSearchTool(BaseTool):
 
     @property
     def description(self) -> str:
-        return """Search for videos across multiple platforms using semantic search.
+        return """Find candidate training footage across platforms and the open web.
 
-This tool combines Exa semantic search with Apify scraping for comprehensive results.
+Combines Exa semantic search for discovery with Apify scraping for full data,
+then ranks what it finds by training-data usability rather than popularity.
 
-Use this tool when:
-- Searching for videos on a general topic across multiple platforms
-- Need to find video content without a specific platform in mind
-- Want comprehensive video discovery with full metadata
+Use this tool as the first step of any collection run:
+- Gathering footage of an activity without a specific platform in mind
+- Sweeping for a capture style ("first person", "fixed camera", "GoPro")
+- Building the initial candidate pool that later steps filter and verify
 
-Platforms searched: TikTok, Instagram, Twitter/X, YouTube
+Curation arguments do real work here: `viewpoint` drops footage shot from the
+wrong perspective, `min_duration_seconds` drops clips too short to train on,
+and `license` restricts to material that is safe to reuse. The response reports
+what was excluded and why.
 
-Note: For platform-specific searches, use the dedicated tools
-(tiktok_search, instagram_search, twitter_search, youtube_search)."""
+Sources searched: YouTube, TikTok, Instagram, Twitter/X and the open web."""
 
     @property
     def input_schema(self) -> dict[str, Any]:
@@ -123,11 +142,38 @@ Note: For platform-specific searches, use the dedicated tools
                     "description": "Scrape URLs for full data (slower but more complete)",
                     "default": False,
                 },
+                "viewpoint": {
+                    "type": "string",
+                    "enum": ["egocentric", "exocentric", "any"],
+                    "description": (
+                        "Required camera viewpoint. 'egocentric' keeps "
+                        "first-person/head-mounted footage, 'exocentric' keeps "
+                        "third-person/fixed-camera footage. Default 'any'."
+                    ),
+                    "default": "any",
+                },
+                "min_duration_seconds": {
+                    "type": "integer",
+                    "description": "Drop clips shorter than this many seconds.",
+                },
+                "license": {
+                    "type": "string",
+                    "enum": ["any", "reusable"],
+                    "description": (
+                        "'reusable' keeps only clips whose licence is known to "
+                        "permit reuse."
+                    ),
+                    "default": "any",
+                },
                 "sort_by": {
                     "type": "string",
-                    "enum": ["views", "likes", "engagement", "recent"],
-                    "description": "Sort by: views (popularity), likes, engagement, or recent",
-                    "default": "views",
+                    "enum": ["usability", "longest", "views", "likes", "engagement", "recent"],
+                    "description": (
+                        "Ranking. 'usability' (default) ranks by viewpoint match, "
+                        "then duration, then licence. The popularity options exist "
+                        "for reporting, not for building datasets."
+                    ),
+                    "default": "usability",
                 },
                 "time_frame": {
                     "type": "string",
@@ -167,8 +213,11 @@ Note: For platform-specific searches, use the dedicated tools
         platforms = kwargs.get("platforms", ["all"])
         max_results = min(kwargs.get("max_results", 20), 50)
         scrape_urls = kwargs.get("scrape_urls", False)
-        sort_by = kwargs.get("sort_by", "views")
+        sort_by = kwargs.get("sort_by", "usability")
         time_frame = kwargs.get("time_frame")
+        wanted_viewpoint = _parse_viewpoint(kwargs.get("viewpoint"))
+        min_duration_seconds = kwargs.get("min_duration_seconds")
+        license_filter = str(kwargs.get("license", "any")).lower()
 
         if not query:
             return ToolResult.fail("Query is required")
@@ -206,6 +255,8 @@ Note: For platform-specific searches, use the dedicated tools
                 )
                 all_videos.extend(scraped_videos)
 
+            exclusions: dict[str, int] = {}
+
             # Deduplicate by URL
             seen_urls = set()
             unique_videos = []
@@ -225,8 +276,22 @@ Note: For platform-specific searches, use the dedicated tools
                         pass  # Skip malformed entries
 
                 if video_objects:
-                    sorted_videos = sort_videos_by_popularity(video_objects, sort_by=sort_by)
-                    unique_videos = [v.model_dump(mode="json") for v in sorted_videos]
+                    if sort_by in ("usability", "longest"):
+                        kept, dropped = rank_videos_for_training_data(
+                            video_objects,
+                            wanted_viewpoint=wanted_viewpoint,
+                            min_duration_seconds=min_duration_seconds,
+                            license_filter=license_filter,
+                        )
+                        if sort_by == "longest":
+                            kept.sort(key=lambda v: v.duration_seconds or 0, reverse=True)
+                        for video, reason in dropped:
+                            exclusions[reason] = exclusions.get(reason, 0) + 1
+                            del video
+                        unique_videos = [v.model_dump(mode="json") for v in kept]
+                    else:
+                        sorted_videos = sort_videos_by_popularity(video_objects, sort_by=sort_by)
+                        unique_videos = [v.model_dump(mode="json") for v in sorted_videos]
 
             # Limit to max_results after sorting
             unique_videos = unique_videos[:max_results]
@@ -241,6 +306,9 @@ Note: For platform-specific searches, use the dedicated tools
                 },
                 "method": "exa+apify" if scrape_urls else "exa",
                 "sorted_by": sort_by,
+                "requested_viewpoint": wanted_viewpoint.value if wanted_viewpoint else None,
+                "excluded": sum(exclusions.values()),
+                "exclusion_reasons": exclusions,
             })
 
         except Exception as e:

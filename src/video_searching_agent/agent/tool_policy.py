@@ -34,13 +34,22 @@ DISCOVERY_SEARCH_TOOLS = frozenset({
 
 
 def _metric_to_video_search_sort(metric: MetricType) -> str:
+    """Map the ranking slot onto video_search's sort_by.
+
+    Training-data runs rank by usability; the popularity sorts are only
+    reachable when a caller explicitly asked for them.
+    """
+    if metric == MetricType.LONGEST:
+        return "longest"
     if metric == MetricType.HIGHEST_ENGAGEMENT:
         return "engagement"
     if metric == MetricType.MOST_LIKED:
         return "likes"
     if metric == MetricType.MOST_RECENT:
         return "recent"
-    return "views"
+    if metric == MetricType.MOST_POPULAR:
+        return "views"
+    return "usability"
 
 
 def wants_video_content_analysis(parsed_query: ParsedQuery) -> bool:
@@ -82,6 +91,16 @@ def build_video_search_input(user_query: str, parsed_query: ParsedQuery) -> dict
     }
     if parsed_query.platforms:
         tool_input["platforms"] = parsed_query.platforms
+
+    # Curation requirements travel with the forced call, so the first step
+    # already filters instead of returning footage that will be dropped later.
+    if parsed_query.viewpoint:
+        tool_input["viewpoint"] = parsed_query.viewpoint.value
+    if parsed_query.min_duration_seconds:
+        tool_input["min_duration_seconds"] = parsed_query.min_duration_seconds
+    if parsed_query.license_filter == "reusable":
+        tool_input["license"] = "reusable"
+
     return tool_input
 
 

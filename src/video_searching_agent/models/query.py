@@ -7,26 +7,42 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
+from video_searching_agent.curation.viewpoint import Viewpoint
+
 
 class QueryType(str, Enum):
     """Classification of user query types."""
 
-    INDUSTRY_TOPIC = "industry_topic"  # "trending UGC for SaaS"
-    BRAND_ANALYSIS = "brand_analysis"  # "analyze Sephora's Reels"
-    PRODUCT_SEARCH = "product_search"  # "viral videos featuring mugs"
-    CREATOR_PROFILE = "creator_profile"  # "what type of blogger is @user"
-    CREATOR_DISCOVERY = "creator_discovery"  # "10 popular pet bloggers"
-    COMPARISON = "comparison"  # "Coca-Cola vs Pepsi"
-    CHANNEL_ANALYSIS = "channel_analysis"  # "@mkbhd's views on tech"
-    CREATIVE_INSPIRATION = "creative_inspiration"  # title/script generation
-    VIDEO_ANALYSIS = "video_analysis"  # analyze specific video content
+    DATA_COLLECTION = "data_collection"  # "2h of egocentric cooking footage"
+    ACTIVITY_SEARCH = "activity_search"  # "warehouse picking, fixed camera"
+    DATASET_DISCOVERY = "dataset_discovery"  # "existing ego-exo datasets"
+    SOURCE_SURVEY = "source_survey"  # "channels that publish POV assembly"
+    VIDEO_ANALYSIS = "video_analysis"  # inspect one video's own content
     GENERAL = "general"  # Catch-all for other queries
+
+    # Retained so older callers and stored sessions keep deserialising.
+    INDUSTRY_TOPIC = "industry_topic"
+    PRODUCT_SEARCH = "product_search"
+    CREATOR_PROFILE = "creator_profile"
+    CREATOR_DISCOVERY = "creator_discovery"
+    COMPARISON = "comparison"
+    CHANNEL_ANALYSIS = "channel_analysis"
+    BRAND_ANALYSIS = "brand_analysis"
+    CREATIVE_INSPIRATION = "creative_inspiration"
 
 
 class MetricType(str, Enum):
-    """Metric types for sorting/filtering videos per PRD."""
+    """Ranking criteria for candidate clips.
 
-    MOST_POPULAR = "most_popular"  # Default: highest current views
+    `USABILITY` is the default for data collection: viewpoint match, then
+    duration, then licence. The popularity metrics remain for callers that
+    still want them, but they say nothing about training-data value.
+    """
+
+    USABILITY = "usability"  # Default: viewpoint match, duration, licence
+    LONGEST = "longest"  # Longest continuous footage first
+
+    MOST_POPULAR = "most_popular"  # Highest current views
     FASTEST_GROWTH_VIEWS = "fastest_growth_views"  # View velocity
     HIGHEST_ENGAGEMENT = "highest_engagement"  # Engagement rate
     MOST_LIKED = "most_liked"  # Highest likes
@@ -124,8 +140,32 @@ class ParsedQuery(BaseModel):
         description="Video category (industry, brand, product). E.g., 'Technology', 'Beauty'",
     )
     metric: MetricType = Field(
-        MetricType.MOST_POPULAR,
-        description="Metric for sorting/filtering videos",
+        MetricType.USABILITY,
+        description="Ranking criteria for candidate clips",
+    )
+
+    # Training-data collection slots
+    viewpoint: Viewpoint | None = Field(
+        None,
+        description="Required camera viewpoint (egocentric/exocentric); None means any",
+    )
+    activities: list[str] = Field(
+        default_factory=list,
+        description="Activities or tasks the footage must show (e.g. 'chopping', 'assembly')",
+    )
+    min_duration_seconds: int | None = Field(
+        None,
+        ge=0,
+        description="Reject clips shorter than this",
+    )
+    license_filter: str = Field(
+        "any",
+        description="'any', or 'reusable' to require a licence that permits reuse",
+    )
+    target_hours: float | None = Field(
+        None,
+        gt=0,
+        description="How many hours of footage the run should try to collect",
     )
     time_frame: TimeFrame = Field(
         TimeFrame.PAST_YEAR,

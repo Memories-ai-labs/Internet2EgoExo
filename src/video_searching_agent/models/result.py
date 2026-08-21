@@ -7,7 +7,9 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from video_searching_agent.curation.viewpoint import Viewpoint
 from video_searching_agent.models.cost import UsageMetrics
+from video_searching_agent.models.dataset import DatasetManifest
 
 
 class VideoReference(BaseModel):
@@ -31,7 +33,24 @@ class VideoReference(BaseModel):
     comments: int | None = None
     engagement_rate: float | None = None
     duration: str | None = None
+    duration_seconds: int | None = None
     published_at: str | None = None
+
+    # Training-data curation
+    viewpoint: Viewpoint = Field(
+        Viewpoint.UNKNOWN,
+        description="Classified camera viewpoint",
+    )
+    viewpoint_confidence: float = Field(0.0, ge=0, le=1)
+    viewpoint_evidence: list[str] = Field(
+        default_factory=list,
+        description="Cues behind the viewpoint verdict",
+    )
+    license: str | None = Field(None, description="Platform licence, when known")
+    usability_score: float = Field(
+        0.0,
+        description="Ranking score: viewpoint match, duration, licence",
+    )
 
 
 class ComparisonResult(BaseModel):
@@ -108,6 +127,12 @@ class AgentResponse(BaseModel):
     video_references: list[VideoReference] = Field(default_factory=list)
     creator_analyses: list[CreatorAnalysis] = Field(default_factory=list)
     comparisons: list[ComparisonResult] = Field(default_factory=list)
+
+    # The collection deliverable
+    dataset: DatasetManifest | None = Field(
+        None,
+        description="Manifest of collected clips with viewpoint/duration/licence totals",
+    )
 
     # Metadata about the search
     platforms_searched: list[str] = Field(default_factory=list)

@@ -5,6 +5,7 @@ import re
 from typing import Any
 
 from video_searching_agent.api.gemini_client import GeminiClient
+from video_searching_agent.curation.viewpoint import Viewpoint
 from video_searching_agent.models.query import (
     MetricType,
     ParsedQuery,
@@ -14,55 +15,56 @@ from video_searching_agent.models.query import (
 )
 
 # LLM prompt for slot extraction
-SLOT_EXTRACTION_PROMPT = """You are a slot extraction system for a video search agent.
+SLOT_EXTRACTION_PROMPT = """You are a slot extraction system for a video
+training-data collection agent.
 Extract structured information from the user's query and return a JSON object.
+
+The user is assembling video data for model training. What matters is the camera
+viewpoint, the activity on screen, clip length, licence and how many hours they
+need — not popularity.
 
 ## Slots to Extract
 
-- **query_type**: One of: industry_topic, brand_analysis, product_search,
-  creator_profile, creator_discovery, comparison, channel_analysis,
-  video_analysis, creative_inspiration, general
-- **video_category**: Industry/brand/product category
-  (e.g., "Technology", "Beauty", "Food", "AI Art")
-- **topics**: List of specific keywords or topic phrases
-- **hashtags**: List of hashtags (with or without #)
-- **creators**: List of creator handles/usernames (with or without @)
-- **brands**: List of brand names mentioned
-- **products**: List of product names mentioned
-- **platforms**: List of target platforms (youtube, tiktok, instagram,
-  twitter, web). Use "web" for queries about blogs, Vimeo, news sites,
-  podcasts, or general web search.
-- **metric**: Sorting metric - one of: most_popular, fastest_growth_views,
-  highest_engagement, most_liked, most_commented, most_shared, most_recent
-- **time_frame**: Time range - one of: past_24_hours, past_48_hours,
-  past_week, past_month, past_year, all_time
-- **quantity**: Number of results requested (integer, default 10)
-- **language**: Content language (ISO code, e.g., "en", "zh-CN")
-- **sort_order**: "desc" or "asc" (default "desc")
-- **is_comparison**: Boolean - is this a comparison query?
-- **comparison_entities**: List of entities being compared
-- **needs_video_analysis**: Boolean - does this need deep video content analysis?
+- **query_type**: One of: data_collection (gather footage), activity_search
+  (footage of a specific activity), dataset_discovery (find existing published
+  datasets/corpora), source_survey (find channels/accounts that publish this
+  kind of footage), video_analysis (inspect one specific video), general
+- **viewpoint**: "egocentric" (first-person, head/body-mounted, POV, GoPro,
+  smart glasses), "exocentric" (third-person, fixed camera, tripod, multi-view,
+  surveillance), or omit when the user did not say
+- **activities**: List of activities/tasks the footage must show
+  (e.g. ["chopping vegetables", "bike assembly", "warehouse picking"])
+- **topics**: List of domain or scene keywords (e.g. ["kitchen", "factory"])
+- **min_duration_seconds**: Integer, when the user asks for clips of a minimum
+  length ("at least 5 minutes" -> 300, "longer than 30s" -> 30)
+- **target_hours**: Number, when the user names a volume goal
+  ("2 hours of footage" -> 2, "collect 30 minutes" -> 0.5)
+- **license_filter**: "reusable" when the user asks for licence-clear,
+  Creative-Commons, or commercially usable material; otherwise "any"
+- **quantity**: Number of clips requested (integer, default 10)
+- **platforms**: List of sources (youtube, tiktok, instagram, twitter, web).
+  Use "web" for dataset pages, academic corpora, blogs or archives.
+- **creators**: List of channel/account handles, without @
+- **time_frame**: One of: past_24_hours, past_48_hours, past_week, past_month,
+  past_year, all_time. Default all_time — training data does not go stale.
+- **language**: Spoken/on-screen language (ISO code, e.g. "en", "zh-CN")
+- **needs_video_analysis**: Boolean - does the user want one specific video's
+  own content read (transcript, what is shown)?
+- **video_urls**: Any video URLs in the query
 - **confidence**: A confidence score from 0-1 for the overall extraction
 
 ## Rules
 
 1. If a slot is not mentioned or unclear, omit it from the response
-2. For platforms, only include if explicitly mentioned or strongly implied
-3. For metric, infer from context:
-   - "trending", "viral", "popular" → most_popular
-   - "fastest growing", "blowing up" → fastest_growth_views
-   - "best engagement", "most engaging" → highest_engagement
-4. For time_frame, ALWAYS infer based on context (do not leave empty):
-   - "today", "24 hours", "just happened", "breaking" → past_24_hours
-   - "48 hours", "2 days" → past_48_hours
-   - "this week", "trending", "viral", "what's hot", "buzzing" → past_week
-   - "this month", "recent", "latest", "new" → past_month
-   - "this year" → past_year
-   - "best", "top", "all time", "ever" → all_time
-   - If no time signals present, default to past_year
-5. Extract exact numbers for quantity (e.g., "top 20" → 20, "give me 15" → 15)
-6. For creators, remove @ prefix in the response
-7. For hashtags, remove # prefix in the response
+2. Infer viewpoint from wording, not just the literal words:
+   - "POV", "first person", "head-mounted", "GoPro", "wearable", "what the
+     worker sees", "from the driver's seat" -> egocentric
+   - "third person", "fixed camera", "tripod", "CCTV", "multi-view", "observing
+     the operator", "from the side" -> exocentric
+   - If the user asks for both, omit the slot
+3. Convert every duration and volume to the units above (seconds / hours)
+4. time_frame defaults to all_time unless the user asks for recent footage
+5. For creators, remove the @ prefix
 
 ## Response Format
 
@@ -70,14 +72,16 @@ Return ONLY a valid JSON object, no explanation or markdown.
 
 Example response:
 {
-  "query_type": "industry_topic",
-  "video_category": "Beauty",
-  "topics": ["ASMR", "makeup tutorial"],
-  "hashtags": ["ASMRbeauty", "MakeupASMR"],
-  "platforms": ["tiktok", "instagram"],
-  "metric": "most_popular",
-  "time_frame": "past_week",
-  "quantity": 10,
+  "query_type": "data_collection",
+  "viewpoint": "egocentric",
+  "activities": ["chopping vegetables", "plating"],
+  "topics": ["kitchen", "home cooking"],
+  "min_duration_seconds": 300,
+  "target_hours": 2,
+  "license_filter": "reusable",
+  "platforms": ["youtube"],
+  "time_frame": "all_time",
+  "quantity": 25,
   "confidence": 0.9
 }
 
@@ -220,6 +224,13 @@ class QueryParser:
             products=data.get("products", []),
             platforms=platforms,
             metric=metric,
+            viewpoint=self._map_viewpoint(data.get("viewpoint")),
+            activities=data.get("activities", []),
+            min_duration_seconds=self._coerce_positive_int(data.get("min_duration_seconds")),
+            license_filter=(
+                "reusable" if str(data.get("license_filter", "")).lower() == "reusable" else "any"
+            ),
+            target_hours=self._coerce_positive_float(data.get("target_hours")),
             time_frame=time_frame,
             time_range=data.get("time_frame"),  # Keep string version too
             quantity=data.get("quantity", 10),
@@ -232,6 +243,36 @@ class QueryParser:
             needs_clarification=needs_clarification,
             clarification_reason=clarification_reason,
         )
+
+    @staticmethod
+    def _map_viewpoint(value: Any) -> Viewpoint | None:
+        """Map an extracted viewpoint string, or None when unspecified."""
+        if not value:
+            return None
+        candidate = str(value).strip().lower().replace("_", "").replace("-", "")
+        if candidate in {"egocentric", "ego", "firstperson", "pov"}:
+            return Viewpoint.EGOCENTRIC
+        if candidate in {"exocentric", "exo", "thirdperson"}:
+            return Viewpoint.EXOCENTRIC
+        return None
+
+    @staticmethod
+    def _coerce_positive_int(value: Any) -> int | None:
+        """Coerce a slot to a positive int, dropping junk."""
+        try:
+            number = int(float(value))
+        except (TypeError, ValueError):
+            return None
+        return number if number > 0 else None
+
+    @staticmethod
+    def _coerce_positive_float(value: Any) -> float | None:
+        """Coerce a slot to a positive float, dropping junk."""
+        try:
+            number = float(value)
+        except (TypeError, ValueError):
+            return None
+        return number if number > 0 else None
 
     def _map_query_type(self, value: str) -> QueryType:
         """Map string to QueryType enum."""

@@ -9,6 +9,7 @@
 const API_BASE = "/api/v1";
 const STORAGE_KEY_API = "vsa.apiKey";
 const STORAGE_KEY_SOURCES = "vsa.sources";
+const STORAGE_KEY_REQS = "vsa.requirements";
 
 const SOURCE_LABELS = {
   youtube: "YouTube",
@@ -48,6 +49,15 @@ const dom = {
   searchBtn: el("search-btn"),
   stopBtn: el("stop-btn"),
   sources: el("sources"),
+  viewpoint: el("viewpoint"),
+  minDuration: el("min-duration"),
+  license: el("license"),
+  targetHours: el("target-hours"),
+  datasetPanel: el("dataset-panel"),
+  dataset: el("dataset"),
+  datasetMeta: el("dataset-meta"),
+  exportJsonl: el("export-jsonl"),
+  exportCsv: el("export-csv"),
   sourcesHint: el("sources-hint"),
   examples: el("examples"),
   settings: el("settings"),
@@ -82,6 +92,11 @@ const dom = {
 
 const state = {
   selected: new Set(),
+  viewpoint: "",
+  moments: [],
+  minDurationSeconds: "",
+  licenseFilter: "",
+  manifest: null,
   running: false,
   controller: null,
   lastQuery: "",
@@ -112,6 +127,31 @@ const compactNumber = (value) => {
     }
   }
   return String(value);
+};
+
+// Licence values that mean "safe to reuse" — mirrors the backend list.
+const REUSABLE_LICENSES = new Set([
+  "creativecommon",
+  "creative_commons",
+  "cc-by",
+  "cc0",
+  "public",
+  "reusable",
+]);
+
+/** Human clip length: prefers seconds, falls back to a platform string. */
+const durationLabel = (video) => {
+  const seconds = video.duration_seconds;
+  if (typeof seconds === "number" && Number.isFinite(seconds) && seconds > 0) {
+    const whole = Math.floor(seconds);
+    const hours = Math.floor(whole / 3600);
+    const minutes = Math.floor((whole % 3600) / 60);
+    const rest = whole % 60;
+    return hours
+      ? `${hours}:${String(minutes).padStart(2, "0")}:${String(rest).padStart(2, "0")}`
+      : `${minutes}:${String(rest).padStart(2, "0")}`;
+  }
+  return video.duration ?? "";
 };
 
 /** Seconds → m:ss, for moment ranges and transcript turns. */
@@ -215,6 +255,40 @@ const syncSourceChips = () => {
   localStorage.setItem(STORAGE_KEY_SOURCES, JSON.stringify(selectedSources()));
 };
 
+/**
+ * Wire a single-select chip group: exactly one chip active, its dataset value
+ * pushed into `state[stateKey]`.
+ */
+const wireChoiceGroup = (container, datasetKey, stateKey) => {
+  container.addEventListener("click", (event) => {
+    const chip = event.target.closest(".chip");
+    if (!chip) return;
+    state[stateKey] = chip.dataset[datasetKey] ?? "";
+    container.querySelectorAll(".chip").forEach((node) => {
+      const active = node === chip;
+      node.classList.toggle("is-active", active);
+      node.setAttribute("aria-pressed", String(active));
+    });
+    persistRequirements();
+  });
+};
+
+const persistRequirements = () => {
+  try {
+    localStorage.setItem(
+      STORAGE_KEY_REQS,
+      JSON.stringify({
+        viewpoint: state.viewpoint,
+        minDurationSeconds: state.minDurationSeconds,
+        licenseFilter: state.licenseFilter,
+        targetHours: dom.targetHours.value,
+      }),
+    );
+  } catch {
+    /* storage unavailable */
+  }
+};
+
 dom.sources.addEventListener("click", (event) => {
   const chip = event.target.closest(".chip");
   if (!chip) return;
@@ -253,17 +327,34 @@ const videoCard = (video) => {
   const title = video.title || "Untitled video";
   const creator = video.creator ? `@${String(video.creator).replace(/^@/, "")}` : null;
 
-  const metrics = [
-    ["views", compactNumber(video.views)],
-    ["likes", compactNumber(video.likes)],
-    ["comments", compactNumber(video.comments)],
+  // Training-data facts, not engagement: viewpoint, length, licence.
+  const viewpoint = String(video.viewpoint ?? "unknown").toLowerCase();
+  const confidence =
+    typeof video.viewpoint_confidence === "number" && video.viewpoint_confidence > 0
+      ? `<span class="viewpoint-badge__conf">${video.viewpoint_confidence.toFixed(2)}</span>`
+      : "";
+  const reusable = REUSABLE_LICENSES.has(String(video.license ?? "").toLowerCase());
+  const curation = [
+    `<span class="viewpoint-badge" data-viewpoint="${escapeHtml(viewpoint)}" title="${
+      escapeHtml((video.viewpoint_evidence ?? []).join(", ")) || "no viewpoint cues found"
+    }">${escapeHtml(viewpoint)}${confidence}</span>`,
+    video.license
+      ? `<span class="license-tag${reusable ? " license-tag--reusable" : ""}">${escapeHtml(
+          reusable ? "reusable" : video.license,
+        )}</span>`
+      : "",
   ]
-    .filter(([, value]) => value !== null)
-    .map(([label, value]) => `<span><b>${value}</b> ${label}</span>`);
+    .filter(Boolean)
+    .join("");
 
-  if (typeof video.engagement_rate === "number" && Number.isFinite(video.engagement_rate)) {
-    metrics.push(`<span><b>${(video.engagement_rate * 100).toFixed(1)}%</b> eng</span>`);
-  }
+  const metrics = [
+    ["length", durationLabel(video)],
+    ["score", typeof video.usability_score === "number" && video.usability_score > 0
+      ? video.usability_score.toFixed(2)
+      : null],
+  ]
+    .filter(([, value]) => value !== null && value !== "")
+    .map(([label, value]) => `<span><b>${escapeHtml(value)}</b> ${label}</span>`);
 
   const thumb = video.thumbnail_url && /^https?:\/\//i.test(video.thumbnail_url)
     ? `<img src="${escapeHtml(video.thumbnail_url)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()" />`
@@ -288,10 +379,30 @@ const videoCard = (video) => {
           ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${escapeHtml(title)}</a>`
           : escapeHtml(title)
       }</h3>
+      ${curation ? `<div class="card__curation">${curation}</div>` : ""}
       ${creator ? `<span class="card__creator">${escapeHtml(creator)}</span>` : ""}
       ${video.relevance_note ? `<p class="card__note">${escapeHtml(video.relevance_note)}</p>` : ""}
       ${metrics.length ? `<div class="card__metrics">${metrics.join("")}</div>` : ""}
-    </div>`;
+      <button type="button" class="card__toggle">Annotation tree</button>
+    </div>
+    <div class="card__tree" hidden></div>`;
+
+  // The tree is built on first open, from the manifest clip plus any moments
+  // the run retrieved for this video.
+  const toggle = card.querySelector(".card__toggle");
+  const treeHost = card.querySelector(".card__tree");
+  toggle.addEventListener("click", () => {
+    const opening = treeHost.hidden;
+    if (opening && !treeHost.dataset.built) {
+      const clip =
+        (state.manifest?.clips ?? []).find((candidate) => candidate.url === video.url) ?? video;
+      treeHost.innerHTML = clipTree(clip, state.moments);
+      treeHost.dataset.built = "1";
+    }
+    treeHost.hidden = !opening;
+    card.classList.toggle("card--open", opening);
+  });
+
   return card;
 };
 
@@ -374,6 +485,7 @@ const renderDatalake = (analyses) => {
 
 /** Render moments returned by video_moment_search. */
 const renderMoments = (moments) => {
+  state.moments = moments;
   dom.moments.innerHTML = moments
     .map((moment) => {
       const start = timecode(moment.start);
@@ -425,6 +537,234 @@ const extractDatalake = (response) => {
   return { analyses, moments };
 };
 
+/** Render the collection manifest: totals, viewpoint mix, exclusions, cost. */
+const renderDataset = (manifest) => {
+  state.manifest = manifest ?? null;
+  if (!manifest || !manifest.total_clips) {
+    dom.datasetPanel.hidden = true;
+    return;
+  }
+
+  const stat = (label, value, extraClass = "") =>
+    `<div class="ds-stat"><span class="ds-stat__label">${escapeHtml(label)}</span>
+      <span class="ds-stat__value ${extraClass}">${escapeHtml(value)}</span></div>`;
+
+  const viewpointMix = Object.entries(manifest.by_viewpoint ?? {})
+    .map(([key, count]) => `${count} ${key}`)
+    .join(" · ");
+  const platformMix = Object.entries(manifest.by_platform ?? {})
+    .map(([key, count]) => `${count} ${key}`)
+    .join(" · ");
+
+  const blocks = [
+    stat("Clips", String(manifest.total_clips)),
+    stat("Hours", manifest.total_hours.toFixed(2)),
+    stat("Reusable licence", `${manifest.reusable_license_clips}/${manifest.total_clips}`),
+    stat("Known length", `${manifest.clips_with_known_duration}/${manifest.total_clips}`),
+  ];
+
+  if (manifest.target_hours) {
+    const pct = Math.min((manifest.total_hours / manifest.target_hours) * 100, 100);
+    const met = manifest.total_hours >= manifest.target_hours;
+    blocks.push(`<div class="ds-target${met ? " ds-target--met" : ""}">
+        <span class="ds-stat__label">${
+          met ? "Target reached" : "Progress to target"
+        } — ${escapeHtml(manifest.total_hours.toFixed(2))}h of ${escapeHtml(
+          String(manifest.target_hours),
+        )}h</span>
+        <div class="ds-target__bar"><div class="ds-target__fill" style="width:${pct.toFixed(
+          1,
+        )}%"></div></div>
+      </div>`);
+  }
+
+  if (viewpointMix) {
+    blocks.push(stat("Viewpoint mix", viewpointMix, "ds-stat__value--small"));
+  }
+  if (platformMix) {
+    blocks.push(stat("Sources", platformMix, "ds-stat__value--small"));
+  }
+
+  if (manifest.excluded_clips) {
+    const reasons = Object.entries(manifest.exclusion_reasons ?? {})
+      .map(([reason, count]) => `<span><code>${escapeHtml(String(count))}</code> ${escapeHtml(reason)}</span>`)
+      .join("");
+    blocks.push(`<div class="ds-excluded">
+        <span class="ds-stat__label">Excluded ${escapeHtml(String(manifest.excluded_clips))}</span>
+        ${reasons}
+      </div>`);
+  }
+
+  if (manifest.cost) {
+    blocks.push(renderCostBlock(manifest.cost));
+  }
+
+  dom.dataset.innerHTML = blocks.join("");
+  dom.datasetMeta.textContent = manifest.requested_viewpoint
+    ? `${manifest.requested_viewpoint} requested`
+    : "any viewpoint";
+  dom.datasetPanel.hidden = false;
+};
+
+/** Cost accounting for the collected set, as reported by the backend. */
+const renderCostBlock = (cost) => {
+  const money = (value) =>
+    typeof value === "number" && Number.isFinite(value) ? `$${value.toFixed(2)}` : "—";
+  const rows = [
+    ["Discovery", cost.discovery_usd],
+    ["Download", cost.download_usd],
+    ["Indexing", cost.indexing_usd],
+    ["Annotation", cost.annotation_usd],
+  ]
+    .filter(([, value]) => typeof value === "number")
+    .map(([label, value]) => `<span>${escapeHtml(label)} ${escapeHtml(money(value))}</span>`)
+    .join(" · ");
+
+  return `<div class="ds-excluded ds-stat--wide">
+      <span class="ds-stat__label">Cost per hour</span>
+      <span class="ds-stat__value">${escapeHtml(money(cost.usd_per_collected_hour))}<span
+        class="viewpoint-badge__conf"> /h collected</span></span>
+      <span>${escapeHtml(money(cost.usd_per_delivered_hour))} per delivered hour at
+        ${escapeHtml(String(Math.round((cost.assumed_yield ?? 0) * 100)))}% frame-check yield</span>
+      <span>${rows}</span>
+      <span>Total ${escapeHtml(money(cost.total_usd))} for
+        ${escapeHtml((cost.hours ?? 0).toFixed(2))}h</span>
+    </div>`;
+};
+
+/**
+ * The annotation tree for one clip: what was decided about it, span by span.
+ * Renders whatever exists — viewpoint evidence always, moments and hand/object
+ * annotations once the curation loop has written them — and says plainly when a
+ * branch is still empty.
+ */
+const clipTree = (clip, moments) => {
+  const leaf = (label, value) =>
+    value ? `<div class="tree__leaf"><span><b>${escapeHtml(label)}</b> ${value}</span></div>` : "";
+
+  const viewpoint = String(clip.viewpoint ?? "unknown").toLowerCase();
+  const evidence = (clip.viewpoint_evidence ?? []).length
+    ? (clip.viewpoint_evidence ?? [])
+        .map((cue) => `<span class="tree__tag">${escapeHtml(cue)}</span>`)
+        .join("")
+    : "";
+
+  const viewpointNode = `<span class="tree__branch">viewpoint</span>
+    <div class="tree__node">
+      ${leaf("verdict", `${escapeHtml(viewpoint)} (${
+        typeof clip.viewpoint_confidence === "number"
+          ? clip.viewpoint_confidence.toFixed(2)
+          : "0.00"
+      })`)}
+      ${
+        evidence
+          ? `<div class="tree__leaf"><span><b>evidence</b></span></div>
+             <div class="tree__tags">${evidence}</div>`
+          : '<div class="tree__empty">no viewpoint cues in the available text</div>'
+      }
+    </div>`;
+
+  const sourceNode = `<span class="tree__branch">source</span>
+    <div class="tree__node">
+      ${leaf("platform", escapeHtml(String(clip.platform ?? "")))}
+      ${leaf("creator", clip.creator ? escapeHtml(String(clip.creator)) : "")}
+      ${leaf("length", escapeHtml(durationLabel(clip) || "unknown"))}
+      ${leaf("licence", escapeHtml(String(clip.license ?? "unknown")))}
+      ${leaf(
+        "usability",
+        typeof clip.usability_score === "number" ? clip.usability_score.toFixed(2) : "",
+      )}
+      ${leaf("datalake id", clip.datalake_video_id ? escapeHtml(clip.datalake_video_id) : "")}
+    </div>`;
+
+  const annotations = Array.isArray(clip.annotations) ? clip.annotations : [];
+  const relatedMoments = (moments ?? []).filter(
+    (moment) =>
+      clip.datalake_video_id && moment.video_id && moment.video_id === clip.datalake_video_id,
+  );
+
+  const annotationRows = annotations
+    .map((annotation) => {
+      const span =
+        annotation.span_start !== null && annotation.span_start !== undefined
+          ? `${timecode(annotation.span_start) ?? "0:00"}–${
+              timecode(annotation.span_end) ?? "end"
+            }`
+          : annotation.ref ?? "span";
+      const tags = (annotation.tags ?? [])
+        .map((tag) => `<span class="tree__tag">${escapeHtml(tag)}</span>`)
+        .join("");
+      return `<div class="tree__leaf">
+          <span><span class="tree__span">${escapeHtml(span)}</span>
+          ${annotation.label ? `<b>${escapeHtml(annotation.label)}</b>` : ""}</span>
+        </div>
+        <div class="tree__node">
+          ${
+            annotation.left_hand
+              ? `<div class="tree__leaf"><span><span class="tree__hand">left hand</span> ${escapeHtml(
+                  annotation.left_hand,
+                )}</span></div>`
+              : ""
+          }
+          ${
+            annotation.right_hand
+              ? `<div class="tree__leaf"><span><span class="tree__hand">right hand</span> ${escapeHtml(
+                  annotation.right_hand,
+                )}</span></div>`
+              : ""
+          }
+          ${
+            (annotation.objects ?? []).length
+              ? `<div class="tree__leaf"><span><b>objects</b> ${escapeHtml(
+                  (annotation.objects ?? []).join(", "),
+                )}</span></div>`
+              : ""
+          }
+          ${tags ? `<div class="tree__tags">${tags}</div>` : ""}
+          ${
+            annotation.source || typeof annotation.confidence === "number"
+              ? `<div class="tree__leaf"><span><b>by</b> ${escapeHtml(
+                  annotation.source ?? "unknown",
+                )}${
+                  typeof annotation.confidence === "number"
+                    ? ` (${annotation.confidence.toFixed(2)})`
+                    : ""
+                }</span></div>`
+              : ""
+          }
+          ${annotation.caveat ? `<div class="tree__caveat">${escapeHtml(annotation.caveat)}</div>` : ""}
+        </div>`;
+    })
+    .join("");
+
+  const momentRows = relatedMoments
+    .map(
+      (moment) => `<div class="tree__leaf">
+        <span><span class="tree__span">${escapeHtml(
+          `${timecode(moment.start) ?? "0:00"}–${timecode(moment.end) ?? "end"}`,
+        )}</span> ${escapeHtml(moment.snippet ?? "")}</span>
+      </div>`,
+    )
+    .join("");
+
+  const annotationNode = `<span class="tree__branch">annotations</span>
+    <div class="tree__node">
+      ${annotationRows}
+      ${
+        !annotationRows && momentRows
+          ? `<div class="tree__empty">retrieved spans, not yet labelled:</div>${momentRows}`
+          : ""
+      }
+      ${
+        !annotationRows && !momentRows
+          ? `<div class="tree__empty">not annotated yet — index this clip, then run the curation loop</div>`
+          : ""
+      }
+    </div>`;
+
+  return `<div class="tree">${viewpointNode}${sourceNode}${annotationNode}</div>`;
+};
+
 const renderStats = (response) => {
   const cost = response.usage_metrics?.total_cost_usd;
   const entries = [
@@ -457,6 +797,8 @@ const renderComplete = (response) => {
     : "";
   dom.answerPanel.hidden = false;
 
+  renderDataset(response.dataset);
+
   const { analyses, moments } = extractDatalake(response);
   renderDatalake(analyses);
   renderMoments(moments);
@@ -483,6 +825,8 @@ const resetRun = () => {
   dom.videosPanel.hidden = true;
   dom.datalakePanel.hidden = true;
   dom.momentsPanel.hidden = true;
+  dom.datasetPanel.hidden = true;
+  state.manifest = null;
   dom.datalake.innerHTML = "";
   dom.moments.innerHTML = "";
   dom.clarifyPanel.hidden = true;
@@ -624,6 +968,13 @@ const runQuery = async (query, clarification = null) => {
   if (clarification) body.clarification = clarification;
   const sources = selectedSources();
   if (sources.length) body.sources = sources;
+  if (state.viewpoint) body.viewpoint = state.viewpoint;
+  if (state.minDurationSeconds) {
+    body.min_duration_seconds = Number(state.minDurationSeconds);
+  }
+  if (state.licenseFilter) body.license_filter = state.licenseFilter;
+  const targetHours = Number.parseFloat(dom.targetHours.value);
+  if (Number.isFinite(targetHours) && targetHours > 0) body.target_hours = targetHours;
 
   try {
     const response = await fetch(`${API_BASE}/queries/stream`, {
@@ -675,6 +1026,61 @@ const runQuery = async (query, clarification = null) => {
   }
 };
 
+/* ------------------------------------------------------------ export */
+
+/** Hand the browser a file built from the current manifest. */
+const download = (filename, text, mime) => {
+  const blob = new Blob([text], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+};
+
+const CSV_COLUMNS = [
+  "url",
+  "platform",
+  "platform_id",
+  "title",
+  "creator",
+  "duration_seconds",
+  "viewpoint",
+  "viewpoint_confidence",
+  "license",
+  "usability_score",
+  "published_at",
+  "datalake_video_id",
+];
+
+const csvCell = (value) => {
+  if (value === null || value === undefined) return "";
+  const text = Array.isArray(value) ? value.join("; ") : String(value);
+  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+};
+
+const exportManifest = (format) => {
+  const manifest = state.manifest;
+  if (!manifest?.clips?.length) return;
+
+  const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+  if (format === "jsonl") {
+    // One clip per line: what an ingest pipeline reads.
+    const body = manifest.clips.map((clip) => JSON.stringify(clip)).join("\n");
+    download(`dataset-${stamp}.jsonl`, `${body}\n`, "application/x-ndjson");
+    return;
+  }
+
+  const header = CSV_COLUMNS.join(",");
+  const rows = manifest.clips.map((clip) =>
+    CSV_COLUMNS.map((column) => csvCell(clip[column])).join(","),
+  );
+  download(`dataset-${stamp}.csv`, [header, ...rows].join("\n") + "\n", "text/csv");
+};
+
 /* ------------------------------------------------------------ wiring */
 
 dom.composer.addEventListener("submit", (event) => {
@@ -690,6 +1096,14 @@ dom.query.addEventListener("keydown", (event) => {
 });
 
 dom.stopBtn.addEventListener("click", () => state.controller?.abort());
+
+dom.exportJsonl.addEventListener("click", () => exportManifest("jsonl"));
+dom.exportCsv.addEventListener("click", () => exportManifest("csv"));
+
+wireChoiceGroup(dom.viewpoint, "viewpoint", "viewpoint");
+wireChoiceGroup(dom.minDuration, "seconds", "minDurationSeconds");
+wireChoiceGroup(dom.license, "license", "licenseFilter");
+dom.targetHours.addEventListener("change", persistRequirements);
 
 dom.examples.addEventListener("click", (event) => {
   const example = event.target.closest(".example");
@@ -750,6 +1164,30 @@ const restore = () => {
     /* ignore malformed storage */
   }
   syncSourceChips();
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY_REQS) ?? "{}");
+    const restoreGroup = (container, datasetKey, value) => {
+      const chip = [...container.querySelectorAll(".chip")].find(
+        (node) => (node.dataset[datasetKey] ?? "") === String(value ?? ""),
+      );
+      if (!chip) return;
+      container.querySelectorAll(".chip").forEach((node) => {
+        const active = node === chip;
+        node.classList.toggle("is-active", active);
+        node.setAttribute("aria-pressed", String(active));
+      });
+    };
+    state.viewpoint = saved.viewpoint ?? "";
+    state.minDurationSeconds = saved.minDurationSeconds ?? "";
+    state.licenseFilter = saved.licenseFilter ?? "";
+    restoreGroup(dom.viewpoint, "viewpoint", state.viewpoint);
+    restoreGroup(dom.minDuration, "seconds", state.minDurationSeconds);
+    restoreGroup(dom.license, "license", state.licenseFilter);
+    if (saved.targetHours) dom.targetHours.value = saved.targetHours;
+  } catch {
+    /* ignore malformed storage */
+  }
 };
 
 restore();

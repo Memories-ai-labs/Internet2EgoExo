@@ -44,6 +44,9 @@
   --sig-web: #7a7bdc;
   --sig-ok: #b5d996;
   --sig-bad: #de7341;
+  --sig-ego: #7a7bdc;
+  --sig-exo: #85cdc9;
+  --sig-unknown: #b4b4b4;
 
   /* scheme */
   --bg: var(--c-black);
@@ -893,6 +896,315 @@ kbd {
   font-size: 0.6875rem;
   color: var(--text-dim);
   overflow-wrap: anywhere;
+}
+
+
+/* -------------------------------------------------- collection requirements */
+
+.composer__requirements {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.75rem 1.5rem;
+  padding: 0.875rem var(--gap);
+  border-bottom: var(--stroke) solid var(--border);
+}
+
+.req {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.req--target {
+  min-width: 6rem;
+}
+
+.input--compact {
+  padding: 0.3125rem 0.5rem;
+  font-size: 0.8125rem;
+  width: 6rem;
+}
+
+.chip[data-viewpoint="egocentric"].is-active { border-color: var(--sig-ego); }
+.chip[data-viewpoint="egocentric"].is-active .chip__dot { background: var(--sig-ego); }
+.chip[data-viewpoint="exocentric"].is-active { border-color: var(--sig-exo); }
+.chip[data-viewpoint="exocentric"].is-active .chip__dot { background: var(--sig-exo); }
+.chip[data-viewpoint=""].is-active { border-color: var(--accent); }
+.chip[data-viewpoint=""].is-active .chip__dot { background: var(--accent); }
+
+/* ------------------------------------------------------------------ dataset */
+
+.dataset {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.875rem var(--gap);
+  padding: var(--gap);
+}
+
+.ds-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.ds-stat__label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-dim);
+}
+
+.ds-stat__value {
+  font-size: 1.375rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.ds-stat__value--small {
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.ds-stat--wide {
+  grid-column: 1 / -1;
+}
+
+/* Progress toward a requested hour target. */
+.ds-target {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.ds-target__bar {
+  height: 0.375rem;
+  background: var(--w-10);
+  overflow: hidden;
+}
+
+.ds-target__fill {
+  height: 100%;
+  background: var(--accent);
+}
+
+.ds-target--met .ds-target__fill {
+  background: var(--sig-ok);
+}
+
+.ds-excluded {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.ds-excluded code {
+  color: var(--text);
+}
+
+.dataset__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0 var(--gap) var(--gap);
+}
+
+/* --------------------------------------------------------- clip curation bits */
+
+.card__curation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.viewpoint-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: var(--stroke) solid var(--border-strong);
+  color: var(--text);
+}
+
+.viewpoint-badge[data-viewpoint="egocentric"] {
+  border-color: var(--sig-ego);
+  color: var(--sig-ego);
+}
+
+.viewpoint-badge[data-viewpoint="exocentric"] {
+  border-color: var(--sig-exo);
+  color: var(--sig-exo);
+}
+
+.viewpoint-badge[data-viewpoint="unknown"] {
+  border-color: var(--border);
+  color: var(--text-dim);
+}
+
+.viewpoint-badge__conf {
+  font-weight: 600;
+  opacity: 0.75;
+  font-variant-numeric: tabular-nums;
+}
+
+.license-tag {
+  padding: 0.125rem 0.375rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--w-10);
+  color: var(--text-muted);
+}
+
+.license-tag--reusable {
+  background: var(--sig-ok);
+  color: var(--c-black);
+}
+
+.card__duration-long {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+/* --------------------------------------------------------------- clip tree */
+
+.card--open {
+  grid-column: 1 / -1;
+  background: var(--surface-raised);
+}
+
+/* Full width would stretch a 16:9 preview into a wall of empty space. */
+.card--open .card__thumb {
+  aspect-ratio: auto;
+  height: 11rem;
+}
+
+.card--open .card__thumb img {
+  object-position: center;
+}
+
+.card__toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: auto;
+  padding: 0.4375rem 0;
+  background: transparent;
+  border: none;
+  border-top: var(--stroke) solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-align: left;
+}
+
+.card__toggle:hover {
+  color: var(--text);
+}
+
+.card__toggle::before {
+  content: "▸";
+  font-size: 0.75rem;
+}
+
+.card--open .card__toggle::before {
+  content: "▾";
+}
+
+/* Annotation tree: guides drawn with hairlines, no rounding. */
+.tree {
+  padding: 0 0.75rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.tree__node {
+  padding-left: 0.875rem;
+  border-left: var(--stroke) solid var(--border);
+  margin-left: 0.25rem;
+}
+
+.tree__branch {
+  display: block;
+  padding: 0.3125rem 0;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.tree__leaf {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.125rem 0;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.tree__leaf::before {
+  content: "─";
+  color: var(--w-30);
+  flex: none;
+}
+
+.tree__leaf b {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.tree__span {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  color: var(--sig-tiktok);
+}
+
+.tree__hand {
+  color: var(--sig-ego);
+  font-weight: 700;
+}
+
+.tree__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0.25rem 0 0.125rem;
+}
+
+.tree__tag {
+  padding: 0.0625rem 0.3125rem;
+  font-size: 0.6875rem;
+  background: var(--w-10);
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.tree__empty {
+  padding: 0.25rem 0;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.tree__caveat {
+  padding: 0.1875rem 0 0;
+  font-size: 0.6875rem;
+  color: var(--sig-youtube);
 }
 
 /* ------------------------------------------------------------------ timeline */

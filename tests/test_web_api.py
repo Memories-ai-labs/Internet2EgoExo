@@ -529,8 +529,11 @@ class TestWebUI:
         client = TestClient(create_app())
         response = client.get("/ui/")
         assert response.status_code == 200
-        assert "Video Searching Agent" in response.text
-        assert 'id="sources"' in response.text
+        assert "Internet Video Search" in response.text
+        # The collection controls the agent is driven by.
+        for control in ('id="sources"', 'id="viewpoint"', 'id="min-duration"',
+                        'id="license"', 'id="target-hours"', 'id="dataset-panel"'):
+            assert control in response.text
 
     def test_assets_served(self):
         client = TestClient(create_app())

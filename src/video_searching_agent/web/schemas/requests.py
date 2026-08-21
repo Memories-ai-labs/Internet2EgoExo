@@ -2,6 +2,8 @@
 
 from pydantic import BaseModel, Field, field_validator
 
+from video_searching_agent.curation.viewpoint import Viewpoint
+
 # Canonical sources the agent can be pinned to. An empty selection means
 # "auto": the agent picks sources from the query itself.
 SUPPORTED_SOURCES = ("youtube", "tiktok", "instagram", "twitter", "web")
@@ -77,6 +79,43 @@ class QueryRequest(BaseModel):
                 normalized.append(canonical)
 
         return normalized or None
+    viewpoint: Viewpoint | None = Field(
+        None,
+        description=(
+            "Require a camera viewpoint: egocentric (first-person, head/body "
+            "mounted) or exocentric (third-person, fixed camera). Omit for any."
+        ),
+    )
+    min_duration_seconds: int | None = Field(
+        None,
+        ge=0,
+        le=86_400,
+        description="Drop candidate clips shorter than this",
+    )
+    license_filter: str | None = Field(
+        None,
+        description="'reusable' to keep only licence-clear footage; omit or 'any' for no filter",
+    )
+    target_hours: float | None = Field(
+        None,
+        gt=0,
+        le=1000,
+        description="How many hours of footage this run should try to collect",
+    )
+
+    @field_validator("license_filter")
+    @classmethod
+    def validate_license_filter(cls, v: str | None) -> str | None:
+        """Only the two documented values are accepted."""
+        if v is None:
+            return None
+        candidate = v.strip().lower()
+        if candidate in ("", "any"):
+            return None
+        if candidate != "reusable":
+            raise ValueError("license_filter must be 'any' or 'reusable'")
+        return candidate
+
     max_steps: int | None = Field(
         None,
         ge=1,

@@ -1,18 +1,36 @@
-# Video Searching Agent
+# Internet Video Search
 
-AI-powered video searching agent that searches, analyzes, and sources videos from across the internet to answer user queries with video references.
+An agent that finds, filters and documents video footage for model training —
+**egocentric** (first-person, head or body mounted) and **exocentric**
+(third-person, fixed camera, multi-view) — and reports what an hour of it costs.
+
+Popularity is not a signal here. A 200-view head-mounted recording of someone
+assembling a bicycle is worth more than a 10M-view edit of the same task, so
+candidates are ranked by viewpoint match, clip length and licence — never by
+views, likes or engagement.
 
 ## Features
 
-- **Multi-Platform Search**: Search videos across YouTube, TikTok, Instagram, and Twitter/X
-- **AI-Powered Analysis**: Uses Google Gemini to understand queries and orchestrate searches
-- **Neural Web Search**: Discover videos across the web using Exa.ai neural search
-- **Social Media Scraping**: Professional-grade scraping via Apify with anti-bot handling
-- **Creator Analysis**: Get detailed insights about content creators
-- **Trend Discovery**: Find trending videos in any niche or topic
-- **Video Analysis**: Index a video into the Memories.ai Video Datalake, then read its captions, transcription and summary, or search moments inside your indexed library
-- **Comparison**: Compare brands, creators, or products side-by-side
-- **Interactive Web UI**: Bundled zero-build UI with per-source selection and live streaming progress
+- **Viewpoint-aware search**: Every candidate is classified egocentric /
+  exocentric / unknown with the cues behind the verdict, and footage from the
+  wrong perspective is dropped rather than ranked low
+- **Usability ranking**: Viewpoint match, then duration, then licence — with the
+  popularity sorts kept only for reporting
+- **Licence filtering**: Restrict to Creative-Commons material that is safe to
+  reuse, straight through the YouTube API
+- **Volume goals**: Ask for hours, not clip counts; the run reports progress
+  against the target and what the binding constraint was
+- **Dataset manifest**: Every run emits clips with viewpoint, confidence,
+  duration, licence and usability score, exportable as JSONL or CSV
+- **Cost per hour**: Discovery, download, indexing and annotation costed from
+  published rates, per hour collected and per hour delivered
+- **Video Datalake**: Index footage once into Memories.ai, then read captions,
+  transcription and summary, or search moments across the indexed corpus
+- **Moment-level annotation tree**: Open a clip to see its viewpoint evidence,
+  provenance and per-span hand/object annotations with the tags written back
+- **Multi-source**: YouTube, TikTok, Instagram, Twitter/X and the open web
+  (dataset pages, lab sites, archives) via Exa neural search and Apify scraping
+- **Interactive Web UI**: Bundled zero-build UI for the whole loop
 
 ## How It Works
 
@@ -144,6 +162,72 @@ async def main():
 
 asyncio.run(main())
 ```
+
+## Training-data collection
+
+### Requirements you can set
+
+| Field | API | What it does |
+|-------|-----|--------------|
+| Viewpoint | `viewpoint` | `egocentric` or `exocentric`; footage classified as the other perspective is excluded, unknown is kept but ranked below matches |
+| Minimum length | `min_duration_seconds` | Drops clips too short to train on |
+| Licence | `license_filter` | `reusable` keeps only licence-clear footage (Creative Commons via the YouTube API) |
+| Volume goal | `target_hours` | The run reports hours collected against this target |
+
+```bash
+curl -N http://localhost:8000/api/v1/queries/stream \
+  -H "Content-Type: application/json" \
+  -d '{
+        "query": "egocentric kitchen prep footage, long continuous takes",
+        "viewpoint": "egocentric",
+        "min_duration_seconds": 300,
+        "license_filter": "reusable",
+        "target_hours": 2
+      }'
+```
+
+### How a candidate is judged
+
+Classification is deterministic keyword/pattern evidence over the title,
+description, tags and — once indexed — the Datalake captions, which describe
+what the frame actually shows. No LLM call per candidate, and the evidence is
+returned so a verdict can be checked.
+
+Confidence is deliberately conservative about `POV`: a large amount of
+short-form content titled "POV: ..." is scripted skit work shot in third
+person, so POV only reaches high confidence alongside a capture cue
+(head/chest mount, GoPro, wearable, visible hands) or a real activity.
+
+Ranking weights viewpoint match at 0.6, duration at 0.3 (saturating at 10
+minutes) and licence at 0.1.
+
+### The manifest
+
+Every run returns a `dataset` manifest: clips with viewpoint, confidence,
+evidence, duration, licence and usability score, plus totals — hours collected,
+viewpoint mix, source mix, reusable-licence count, and every exclusion with its
+reason. The UI exports it as JSONL (one clip per line, for an ingest pipeline)
+or CSV.
+
+### Cost per hour
+
+Costed from the [published Datalake rates](https://docs.memories.ai/datalake/pricing):
+
+| Term | Rate | Per hour of footage |
+|------|------|---------------------|
+| Indexing | $0.05 / video-minute at fps 1.0 | **$3.00** |
+| Moment search | $0.008 / call | per annotation pass |
+| Moment read | $0.008 / call | per annotation pass |
+| Derived read (caption/transcript/title/summary) | $0.001 / call | a few cents |
+| Storage | $0.02 / GB-month | ~$0.04 for 1080p |
+| Discovery | measured per run (Gemini + Exa + Apify) | cents |
+| Download | your egress; $0/h on owned infrastructure | configurable |
+
+Indexing dominates, so a collected hour lands near **$3.05/h** with discovery
+included. The run also reports cost per *delivered* hour: the vendor-facing
+figure that 44% of an agent's shortlist survives a frame-level check makes that
+roughly **$6.90/h**. Terms the run could not measure are reported as zero and
+called out, never filled with a guess.
 
 ## Web UI
 

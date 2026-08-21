@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Video Searching Agent</title>
-  <meta name="description" content="Search, analyse and source videos across the internet with an agentic video search loop." />
+  <title>Internet Video Search</title>
+  <meta name="description" content="Find, filter and document egocentric and exocentric video footage for model training." />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000'/%3E%3Crect x='6' y='6' width='14' height='14' fill='%23804de7'/%3E%3Crect x='13' y='13' width='13' height='13' fill='%235026a4'/%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -15,8 +15,8 @@
   <header class="topbar">
     <div class="topbar__brand">
       <span class="mark" aria-hidden="true"></span>
-      <span class="brand__name">Video Searching Agent</span>
-      <span class="brand__org">memories.ai labs</span>
+      <span class="brand__name">Internet Video Search</span>
+      <span class="brand__org">training data · memories.ai labs</span>
     </div>
     <div class="topbar__actions">
       <div class="status" id="health" title="API health">
@@ -64,13 +64,54 @@
         <p class="composer__hint" id="sources-hint">Auto lets the agent pick sources from your query.</p>
       </div>
 
+      <div class="composer__requirements">
+        <div class="req">
+          <span class="composer__label">Viewpoint</span>
+          <div class="chips" id="viewpoint" role="group" aria-label="Camera viewpoint">
+            <button type="button" class="chip is-active" data-viewpoint="" aria-pressed="true">
+              <span class="chip__dot"></span>Any
+            </button>
+            <button type="button" class="chip" data-viewpoint="egocentric" aria-pressed="false">
+              <span class="chip__dot"></span>Egocentric
+            </button>
+            <button type="button" class="chip" data-viewpoint="exocentric" aria-pressed="false">
+              <span class="chip__dot"></span>Exocentric
+            </button>
+          </div>
+        </div>
+
+        <div class="req">
+          <span class="composer__label">Min length</span>
+          <div class="chips" id="min-duration" role="group" aria-label="Minimum clip length">
+            <button type="button" class="chip is-active" data-seconds="" aria-pressed="true">Any</button>
+            <button type="button" class="chip" data-seconds="30" aria-pressed="false">30s</button>
+            <button type="button" class="chip" data-seconds="120" aria-pressed="false">2m</button>
+            <button type="button" class="chip" data-seconds="300" aria-pressed="false">5m</button>
+            <button type="button" class="chip" data-seconds="600" aria-pressed="false">10m</button>
+          </div>
+        </div>
+
+        <div class="req">
+          <span class="composer__label">Licence</span>
+          <div class="chips" id="license" role="group" aria-label="Licence requirement">
+            <button type="button" class="chip is-active" data-license="" aria-pressed="true">Any</button>
+            <button type="button" class="chip" data-license="reusable" aria-pressed="false">Reusable only</button>
+          </div>
+        </div>
+
+        <label class="req req--target">
+          <span class="composer__label">Target hours</span>
+          <input type="number" id="target-hours" class="input input--compact" min="0.1" max="1000" step="any" placeholder="—" />
+        </label>
+      </div>
+
       <div class="composer__input">
         <textarea
           id="query"
           class="textarea"
           rows="2"
           maxlength="2000"
-          placeholder="Find the most viral coffee videos from the past week…"
+          placeholder="2 hours of egocentric cooking footage, clips over 5 minutes…"
           required
         ></textarea>
         <div class="composer__submit">
@@ -83,10 +124,10 @@
 
     <section class="examples" id="examples">
       <span class="examples__label">Try</span>
-      <button type="button" class="example" data-query="Top 5 most liked TikTok videos about latte art from the past week">Most liked TikToks about latte art</button>
-      <button type="button" class="example" data-query="What are the trending UGC videos for SaaS products on YouTube?">Trending SaaS UGC on YouTube</button>
-      <button type="button" class="example" data-query="Compare Nike and Adidas video content on YouTube over the past month">Nike vs Adidas on YouTube</button>
-      <button type="button" class="example" data-query="What type of creator is @mkbhd and what does he cover lately?">Creator profile: @mkbhd</button>
+      <button type="button" class="example" data-query="Collect 2 hours of egocentric kitchen footage, head-mounted, clips over 5 minutes">2h egocentric kitchen</button>
+      <button type="button" class="example" data-query="Exocentric fixed-camera footage of bicycle or furniture assembly, long continuous takes">Exocentric assembly, fixed camera</button>
+      <button type="button" class="example" data-query="Creative-Commons first-person warehouse and logistics footage I can reuse for training">Reusable POV warehouse work</button>
+      <button type="button" class="example" data-query="Which published egocentric-exocentric datasets exist for manipulation tasks, and what are their licences?">Existing ego-exo datasets</button>
     </section>
 
     <section class="run" id="run" hidden>
@@ -118,6 +159,18 @@
           <p class="error__message" id="error-message"></p>
         </article>
 
+        <article class="panel panel--dataset" id="dataset-panel" hidden>
+          <header class="panel__head">
+            <h2 class="panel__title">Dataset</h2>
+            <span class="panel__meta" id="dataset-meta"></span>
+          </header>
+          <div class="dataset" id="dataset"></div>
+          <div class="dataset__actions">
+            <button type="button" class="btn" id="export-jsonl">Export JSONL</button>
+            <button type="button" class="btn" id="export-csv">Export CSV</button>
+          </div>
+        </article>
+
         <article class="panel panel--datalake" id="datalake-panel" hidden>
           <header class="panel__head">
             <h2 class="panel__title">Video content</h2>
@@ -136,7 +189,7 @@
 
         <article class="panel panel--videos" id="videos-panel" hidden>
           <header class="panel__head">
-            <h2 class="panel__title">Videos</h2>
+            <h2 class="panel__title">Clips</h2>
             <span class="panel__meta" id="videos-count"></span>
           </header>
           <div class="grid" id="videos"></div>
@@ -163,7 +216,7 @@
   </main>
 
   <footer class="footer">
-    <span>Video Searching Agent · open source</span>
+    <span>Internet Video Search · training-data collection · open source</span>
     <a href="/docs">API docs</a>
   </footer>
 

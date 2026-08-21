@@ -14,6 +14,7 @@ from video_searching_agent.agent.tool_policy import apply_tool_call_policy
 from video_searching_agent.api.gemini_client import GeminiClient
 from video_searching_agent.config.pricing import get_pricing
 from video_searching_agent.config.settings import get_settings
+from video_searching_agent.curation.manifest import curate_references
 from video_searching_agent.models.cost import (
     GeminiCost,
     TokenUsage,
@@ -366,11 +367,21 @@ class VideoSearchingAgent:
                 video_references, parsed_query.time_frame
             )
 
+        # Curate: classify viewpoint, drop what fails the requirements, rank by
+        # usability and build the manifest.
+        video_references, dataset = curate_references(
+            video_references,
+            parsed_query,
+            query=user_query,
+            discovery_usd=usage_metrics.total_cost_usd,
+        )
+
         return AgentResponse(
             session_id=session.session_id,
             query=user_query,
             answer=session.final_answer or session.error_message or "Unable to process query.",
             video_references=video_references,
+            dataset=dataset,
             platforms_searched=self._extract_platforms(session.search_results),
             total_videos_analyzed=self._count_videos(session.search_results),
             steps_taken=session.current_step,
@@ -639,6 +650,7 @@ class VideoSearchingAgent:
                         if published_at is not None and not isinstance(published_at, str):
                             # Convert datetime to string if needed
                             published_at = str(published_at)
+                        duration_seconds = video.get("duration_seconds")
                         references.append(VideoReference(
                             video_id=str(video.get("id") or video.get("platform_id") or ""),
                             url=url,
@@ -648,6 +660,12 @@ class VideoSearchingAgent:
                             thumbnail_url=video.get("thumbnail_url"),
                             views=views,
                             likes=likes,
+                            duration_seconds=(
+                                int(duration_seconds)
+                                if isinstance(duration_seconds, int | float)
+                                else None
+                            ),
+                            license=video.get("license"),
                             published_at=published_at,
                         ))
 

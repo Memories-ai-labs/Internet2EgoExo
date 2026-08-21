@@ -18,6 +18,8 @@ from video_searching_agent.agent.tool_policy import apply_tool_call_policy
 from video_searching_agent.api.gemini_client import GeminiClient
 from video_searching_agent.config.pricing import get_pricing
 from video_searching_agent.config.settings import get_settings
+from video_searching_agent.curation.manifest import curate_references
+from video_searching_agent.curation.viewpoint import Viewpoint
 from video_searching_agent.models.cost import (
     GeminiCost,
     TokenUsage,
@@ -156,6 +158,10 @@ class StreamingAgentWrapper:
         max_steps: int | None = None,
         enable_clarification: bool | None = None,
         sources: list[str] | None = None,
+        viewpoint: Viewpoint | None = None,
+        min_duration_seconds: int | None = None,
+        license_filter: str | None = None,
+        target_hours: float | None = None,
     ) -> AsyncGenerator[SSEEvent, None]:
         """Process a query and yield SSE events during execution.
 
@@ -167,6 +173,11 @@ class StreamingAgentWrapper:
             sources: Sources the user pinned in the UI. When set, they replace
                 the platforms extracted from the query; when empty or None the
                 agent auto-selects sources.
+            viewpoint: Required camera viewpoint, overriding what the parser
+                inferred from the query text.
+            min_duration_seconds: Reject clips shorter than this.
+            license_filter: "reusable" to keep only licence-clear footage.
+            target_hours: Hours of footage this run should try to collect.
 
         Yields:
             SSE events representing progress, tool calls, and results.
@@ -197,6 +208,25 @@ class StreamingAgentWrapper:
                 parse_duration_ms,
                 session_id,
             )
+
+            # Explicit collection requirements win over the parser's guesses.
+            if viewpoint:
+                parsed_query.viewpoint = viewpoint
+                parsed_query.extraction_confidence["viewpoint"] = 1.0
+            if min_duration_seconds:
+                parsed_query.min_duration_seconds = min_duration_seconds
+            if license_filter:
+                parsed_query.license_filter = license_filter
+            if target_hours:
+                parsed_query.target_hours = target_hours
+
+            requirements = self._describe_requirements(parsed_query)
+            if requirements:
+                yield ProgressEvent.create(
+                    step=0,
+                    max_steps=max_steps,
+                    message=f"Collecting: {requirements}",
+                )
 
             # User-pinned sources win over whatever the parser inferred.
             if sources:
@@ -428,11 +458,21 @@ class StreamingAgentWrapper:
                     video_references, parsed_query.time_frame
                 )
 
+            # Curate: classify viewpoint, drop what fails the requirements,
+            # rank by usability and build the manifest.
+            video_references, dataset = curate_references(
+                video_references,
+                parsed_query,
+                query=user_query,
+                discovery_usd=usage_metrics.total_cost_usd,
+            )
+
             agent_response = AgentResponse(
                 session_id=session.session_id,
                 query=user_query,
                 answer=session.final_answer or session.error_message or "Unable to process query.",
                 video_references=video_references,
+                dataset=dataset,
                 platforms_searched=self._extract_platforms(session.search_results),
                 total_videos_analyzed=self._count_videos(session.search_results),
                 steps_taken=session.current_step,
@@ -531,6 +571,20 @@ class StreamingAgentWrapper:
                 return await self.tools.execute(tool_name, **tool_input)
         else:
             return await self.tools.execute(tool_name, **tool_input)
+
+    @staticmethod
+    def _describe_requirements(parsed_query: ParsedQuery) -> str:
+        """One line naming the collection requirements in force."""
+        parts: list[str] = []
+        if parsed_query.viewpoint:
+            parts.append(f"{parsed_query.viewpoint.value} footage")
+        if parsed_query.min_duration_seconds:
+            parts.append(f"clips over {parsed_query.min_duration_seconds}s")
+        if parsed_query.license_filter == "reusable":
+            parts.append("reusable licence only")
+        if parsed_query.target_hours:
+            parts.append(f"target {parsed_query.target_hours}h")
+        return ", ".join(parts)
 
     def _build_enhanced_query(
         self,
@@ -667,6 +721,7 @@ class StreamingAgentWrapper:
                             published_at = str(published_at)
                         video_id_raw = video.get("id", video.get("platform_id", ""))
                         video_id = str(video_id_raw) if video_id_raw else ""
+                        duration_seconds = video.get("duration_seconds")
                         references.append(VideoReference(
                             video_id=video_id,
                             url=url,
@@ -676,6 +731,12 @@ class StreamingAgentWrapper:
                             thumbnail_url=video.get("thumbnail_url"),
                             views=views,
                             likes=likes,
+                            duration_seconds=(
+                                int(duration_seconds)
+                                if isinstance(duration_seconds, int | float)
+                                else None
+                            ),
+                            license=video.get("license"),
                             published_at=published_at,
                             relevance_note=None,
                         ))
