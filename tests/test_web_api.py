@@ -1,5 +1,6 @@
 """Tests for the web API."""
 
+import re
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -516,8 +517,19 @@ class TestSourcesForwarding:
             assert captured["sources"] is None
 
 
+def _asset_paths() -> list[str]:
+    """The hashed asset URLs the built index.html actually references.
+
+    The bundle is hashed on every build, so the test reads the paths out of the
+    served HTML rather than hard-coding names that go stale.
+    """
+    client = TestClient(create_app())
+    html = client.get("/ui/").text
+    return [f"/ui/{match}" for match in re.findall(r'(?:src|href)="/ui/(assets/[^"]+)"', html)]
+
+
 class TestWebUI:
-    """Test the bundled static UI."""
+    """Test the bundled static UI (built from ui/ by Vite, output committed)."""
 
     def test_root_redirects_to_ui(self):
         client = TestClient(create_app())
@@ -530,15 +542,17 @@ class TestWebUI:
         response = client.get("/ui/")
         assert response.status_code == 200
         assert "Internet Video Search" in response.text
-        # The collection controls the agent is driven by.
-        for control in ('id="sources"', 'id="viewpoint"', 'id="min-duration"',
-                        'id="license"', 'id="target-hours"', 'id="dataset-panel"'):
-            assert control in response.text
+        assert '<div id="root">' in response.text
 
     def test_assets_served(self):
+        paths = _asset_paths()
+        # A script and a stylesheet, both hashed by the build.
+        assert any(path.endswith(".js") for path in paths)
+        assert any(path.endswith(".css") for path in paths)
+
         client = TestClient(create_app())
-        for asset in ("/ui/app.js", "/ui/styles.css"):
-            assert client.get(asset).status_code == 200
+        for path in paths:
+            assert client.get(path).status_code == 200
 
     def test_ui_public_while_api_protected(self):
         """The UI loads without a key; the API still requires one."""
@@ -551,7 +565,8 @@ class TestWebUI:
             client = TestClient(create_app())
 
             assert client.get("/ui/").status_code == 200
-            assert client.get("/ui/app.js").status_code == 200
+            for path in _asset_paths():
+                assert client.get(path).status_code == 200
             assert client.get("/", follow_redirects=False).status_code in (307, 308)
 
             response = client.post("/api/v1/queries/stream", json={"query": "test"})

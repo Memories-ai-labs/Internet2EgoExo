@@ -1,0 +1,142 @@
+/** What the run actually collected — and which hour measure that is.
+ *
+ * The four hour figures are shown side by side on purpose. Quoting a delivered
+ * hour as an accepted one overstates a set by a third, so the panel never
+ * collapses them into a single "hours" number.
+ */
+
+import { hours, mix, money, percent } from "../lib/format";
+import { manifestToCsv, manifestToJsonl, download } from "../lib/exports";
+import type { Manifest } from "../lib/types";
+import { GateList } from "./GateList";
+import { Panel, Stat } from "./primitives";
+
+export function DatasetPanel({ manifest }: { manifest: Manifest }) {
+  const ledger = manifest.hours;
+  const measured =
+    ledger.accepted_labeled_hours || ledger.accepted_hours || manifest.total_hours;
+  const target = manifest.target_hours;
+  const progress = target ? Math.min((measured / target) * 100, 100) : 0;
+
+  return (
+    <Panel
+      title="Dataset"
+      action={
+        <div className="row">
+          <span className="panel__meta">
+            {manifest.requested_viewpoint
+              ? `${manifest.requested_viewpoint} requested`
+              : "any viewpoint"}
+          </span>
+          <button
+            type="button"
+            className="button button--small button--ghost"
+            onClick={() =>
+              download("dataset.jsonl", manifestToJsonl(manifest), "application/x-ndjson")
+            }
+          >
+            JSONL
+          </button>
+          <button
+            type="button"
+            className="button button--small button--ghost"
+            onClick={() => download("dataset.csv", manifestToCsv(manifest), "text/csv")}
+          >
+            CSV
+          </button>
+        </div>
+      }
+    >
+      <div className="stats">
+        <Stat label="Clips" value={manifest.total_clips} note={`${manifest.accepted_clips} accepted`} />
+        <Stat
+          label="Delivered"
+          value={hours(ledger.delivered_hours)}
+          note="downloaded, before the gates"
+        />
+        <Stat
+          label="Accepted"
+          value={hours(ledger.accepted_hours)}
+          note={`media yield ${percent(ledger.media_yield)}`}
+        />
+        <Stat
+          label="Accepted + labelled"
+          value={hours(ledger.accepted_labeled_hours)}
+          note="the only figure to quote"
+        />
+      </div>
+
+      {target ? (
+        <div className="progress">
+          <span className="stat__label">
+            {measured >= target ? "Target reached" : "Progress to target"} — {hours(measured)} of{" "}
+            {hours(target)}
+          </span>
+          <div className="progress__bar">
+            <div className="progress__fill" style={{ width: `${progress.toFixed(1)}%` }} />
+          </div>
+        </div>
+      ) : null}
+
+      <div className="stats">
+        <Stat label="Viewpoint mix" value={mix(manifest.by_viewpoint)} small />
+        <Stat label="Sources" value={mix(manifest.by_platform)} small />
+        <Stat
+          label="Reusable licence"
+          value={`${manifest.reusable_license_clips}/${manifest.total_clips}`}
+          small
+        />
+        {Object.keys(manifest.grades).length ? (
+          <Stat label="Grades" value={mix(manifest.grades)} small />
+        ) : null}
+        {Object.keys(manifest.annotation_levels).length ? (
+          <Stat label="Annotation depth" value={mix(manifest.annotation_levels)} small />
+        ) : null}
+        {manifest.excluded_clips ? (
+          <Stat
+            label={`Excluded ${manifest.excluded_clips}`}
+            value={mix(manifest.exclusion_reasons)}
+            small
+          />
+        ) : null}
+      </div>
+
+      {manifest.cost ? (
+        <div className="stats">
+          <Stat
+            label="Per collected hour"
+            value={money(manifest.cost.usd_per_collected_hour)}
+            note={`${money(manifest.cost.total_usd)} total for ${hours(manifest.cost.hours)}`}
+          />
+          <Stat
+            label="Per delivered hour"
+            value={money(manifest.cost.usd_per_delivered_hour)}
+            note={`at ${percent(manifest.cost.assumed_yield)} frame-check yield`}
+          />
+          <Stat
+            label="Indexing"
+            value={money(manifest.cost.indexing_usd)}
+            note="dominates the bill"
+            small
+          />
+          <Stat
+            label="Discovery"
+            value={money(manifest.cost.discovery_usd)}
+            note="Gemini + search tools"
+            small
+          />
+        </div>
+      ) : null}
+
+      {manifest.cost?.notes?.length ? (
+        <div className="notice">
+          {manifest.cost.notes.map((note) => (
+            <div key={note}>{note}</div>
+          ))}
+        </div>
+      ) : null}
+
+      {manifest.dataset_checks.length ? <GateList checks={manifest.dataset_checks} /> : null}
+    </Panel>
+  );
+}

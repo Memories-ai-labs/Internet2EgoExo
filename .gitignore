@@ -90,3 +90,10 @@ accounts.db
 
 # Claude Code
 CLAUDE.md
+
+# Web UI toolchain (the build output under
+# src/video_searching_agent/web/static is committed on purpose, so the UI
+# works from a clean clone without npm)
+ui/node_modules/
+ui/.vite/
+npm-debug.log*

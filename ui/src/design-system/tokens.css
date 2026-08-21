@@ -1,0 +1,113 @@
+/* Memories.ai Design System — colour tokens.
+ *
+ * Vendored from github.com/Memories-ai-labs/Memories.ai-Design-System,
+ * `src/theme.css` at commit 12cc152. Values are copied verbatim; the HeroUI and
+ * Tailwind-specific rules from that file are not, because this app does not use
+ * either — it consumes the custom properties directly.
+ *
+ * The rules that come with them, and are not negotiable here:
+ *   - Primary CTA is background-inverse (black on light, white on dark), never
+ *     the accent.
+ *   - The accent (violet) is a selection fill and emphasis only: at most three
+ *     accents on a screen, and never decoration.
+ *   - Elevation comes from borders and whitespace, not shadows.
+ *   - Radius has four steps: 8px inputs/buttons, 12px item cards, 16px cards
+ *     and canvases, full for pills. Don't mix radii on one surface.
+ *   - Spacing on a 4px grid.
+ *   - Gradients are banned. The one exception in the system is the upgrade
+ *     button, which this app does not have.
+ */
+
+:root,
+[data-theme="light"] {
+  --accent: #5026a4;
+  --accent-foreground: #ffffff;
+  --accent-soft: color-mix(in oklab, var(--accent) 12%, var(--background));
+  --accent-soft-foreground: var(--foreground);
+
+  --background: #ffffff;
+  --background-inverse: #1a1a1e;
+  --background-inverse-foreground: #ffffff;
+  --foreground: #1a1a1e;
+  --surface: #ffffff;
+  --overlay: #ffffff;
+  --default: #f5f5f5;
+  --default-hover: color-mix(in oklab, var(--foreground) 6%, var(--default));
+
+  --muted: color-mix(in oklab, var(--foreground) 55%, var(--background));
+  --border: rgba(0, 0, 0, 0.1);
+  --border-secondary: rgba(0, 0, 0, 0.16);
+
+  --sidebar-bg: color-mix(in oklab, var(--default) 55%, var(--background));
+  --sidebar-border: color-mix(in oklab, var(--border) 50%, var(--background));
+  --sidebar-selected: #ececec;
+
+  --segment: #e4e4e7;
+  --focus: #5026a4;
+  --success: #17a34a;
+  --warning: #e8930c;
+  --danger: #e11d2e;
+  --danger-foreground: #ffffff;
+
+  --field-border: var(--border);
+  --field-border-focus: color-mix(in oklab, var(--border) 70%, var(--foreground) 30%);
+  --list-row-active: color-mix(in oklab, var(--foreground) 3%, var(--background));
+  --list-tile-bg: color-mix(in oklab, var(--foreground) 9%, var(--background));
+}
+
+[data-theme="dark"] {
+  --accent: #7d4fd8;
+  --accent-foreground: #ffffff;
+  --accent-soft: color-mix(in oklab, var(--accent) 22%, var(--background));
+  --accent-soft-foreground: var(--foreground);
+
+  --background: #0a0a0c;
+  --background-inverse: #ffffff;
+  --background-inverse-foreground: #1a1a1e;
+  --foreground: #fafafa;
+  --surface: #1c1c1e;
+  --overlay: #1c1c1e;
+  --default: #3f3f46;
+  --default-hover: color-mix(in oklab, var(--foreground) 10%, var(--default));
+
+  --muted: color-mix(in oklab, var(--foreground) 55%, var(--background));
+  --border: rgba(255, 255, 255, 0.12);
+  --border-secondary: rgba(255, 255, 255, 0.2);
+
+  --sidebar-bg: color-mix(in oklab, var(--foreground) 15%, var(--background));
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-selected: #37373c;
+
+  --segment: #3a3a40;
+  --focus: #5026a4;
+  --success: #17a34a;
+  --warning: #e8930c;
+  --danger: #e11d2e;
+  --danger-foreground: #ffffff;
+
+  --field-border: var(--border);
+  --field-border-focus: color-mix(in oklab, var(--border) 70%, var(--foreground) 30%);
+  --list-row-active: color-mix(in oklab, var(--foreground) 6%, var(--background));
+  --list-tile-bg: color-mix(in oklab, var(--foreground) 14%, var(--background));
+}
+
+/* Radius scale — four steps, no more. */
+:root {
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-full: 9999px;
+
+  /* 4px spacing grid. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  --font-sans: "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+}

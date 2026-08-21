@@ -465,46 +465,80 @@ called out, never filled with a guess.
 
 ## Web UI
 
-The package ships a zero-build web UI (plain HTML/CSS/JS, no npm, no bundler) served by
-the API itself:
+The UI is a Vite + React app in `ui/`, built on the
+[Memories.ai Design System](https://github.com/Memories-ai-labs/Memories.ai-Design-System)
+tokens (vendored into `ui/src/design-system/tokens.css` from that repo's
+`src/theme.css`). **The build output is committed** under
+`src/video_searching_agent/web/static`, so a clean clone serves the UI with no
+npm step:
 
 ```bash
-# Start the server (reads .env)
 uvicorn video_searching_agent.web.main:app --port 8000
 # or: python -m video_searching_agent.web.main
 ```
 
 Open <http://localhost:8000> — `/` redirects to the UI at `/ui/`.
 
-What it gives you:
+To work on the UI itself:
 
-- **Source selection** — pin the search to any combination of YouTube, TikTok, Instagram,
-  X and the open web, or leave **Auto** on and let the agent infer sources from your query.
-- **Live agent activity** — every step, tool call and tool failure streams in over SSE
-  while the run is still going, so a long query is never a blank screen.
-- **Video results** — thumbnail cards with platform, creator, duration, views, likes,
-  comments, engagement rate and the agent's relevance note for each video.
-- **Video content** — when the agent reads a video through the Datalake, its AI title,
-  summary, visual captions and timestamped speech turns are shown inline; while indexing
-  is still running you get an `indexing` notice with the `video_id` to ask again with.
-- **Moments** — hits from `video_moment_search` render as cards with their time range,
-  match target, score, snippet and thumbnail.
-- **Run stats** — steps, tools used, videos analysed, wall-clock time and the run's
-  Gemini + tool cost in USD.
-- **Clarification flow** — when the agent needs one more detail it asks inline; answer
-  with a suggested option or in your own words and the query re-runs.
-- **API key field** — only needed when the server sets `API_KEYS`. The key is kept in the
-  browser's `localStorage` and sent as the `X-API-Key` header.
+```bash
+cd ui
+npm install
+npm run dev      # localhost:5173, proxying /api to localhost:8000
+npm run build    # type-checks, then rebuilds the committed bundle
+```
 
-The UI is public (so it can load and ask for a key); `/api/v1/queries/*` stays behind
-API-key auth and rate limiting.
+### Two halves, one flow
 
-The design language follows the
-[Memories.ai Design System](https://github.com/Memories-ai-labs/Memories.ai-Design-System):
-Manrope, the dark surface ladder (`#0a0a0c` → `#1c1c1e` → `#3f3f46`), hairline
-borders at 12% white, an 8/12/16px radius scale, elevation from borders and
-whitespace rather than shadows, and violet used only as a selection fill — never
-as decoration, and no gradients.
+**1 · Search & scrape.** A query, the requirements it has to satisfy — viewpoint,
+minimum length, licence, target hours — and the sources to search, or Auto to
+let the agent infer them. Every step and tool call streams in while the run is
+going. Candidates come back as cards with the viewpoint verdict and the cues
+behind it; open any card for its **annotation tree**. Tick the clips you want
+and *Send to the Datalake*.
+
+**2 · Curate & annotate.** The queue arrives pre-filled. *Download & index*
+walks each clip through the pipeline and streams **every stage as it happens** —
+probing, downloading, uploading, indexing, cleaning, annotating — then shows the
+verdict: the gate report (pass / flagged / blocked / *not measured*), the action
+anchors the cleaning agent found, the annotation tree the annotation agent
+wrote, and the tags written back. *Grade the set* runs the curation agent over
+what is indexed and reports the four hour measures, the grade histogram, the
+duplicate groups and the Gate 3 diversity checks.
+
+### The annotation tree
+
+Opening a clip shows, as one nested tree:
+
+```
+SOURCE      platform · creator · length · licence · datalake id
+VIEWPOINT   verdict (confidence) + the cues behind it
+QUALITY     grade, annotation depth, usable vs idle, blocking gates
+ANNOTATION  TASK   0:00–9:00  prep-mirepoix
+              ACTION 0:12–3:00  chop-vegetables
+                hands   left: holds the onion steady · right: moves the knife
+                objects onion, knife, cutting board
+                hoi/chop-vegetables/right/move-knife  hands_visible
+                EVENT  1:36–1:41  reposition-grip
+              ACTION 3:40–9:00  saute-vegetables
+                hand assignment not stated in the captions
+```
+
+That last line is the point of the design: where the captions did not say which
+hand did what, the tree says so rather than showing a plausible guess. Every
+tree carries the caveat that hand and viewpoint verdicts are read from index
+caption wording, not from a hand-tracking or pose model.
+
+### Details
+
+- **Exports** — the manifest as JSONL (one clip per line, for an ingest
+  pipeline) or CSV, including grade, annotation depth, usable/idle seconds and
+  duplicate group.
+- **API key field** — only needed when the server sets `API_KEYS`. Kept in the
+  browser's `localStorage` and sent as `X-API-Key`.
+- **Light and dark** — both themes ship; the choice is remembered per browser.
+- The UI is public (so it can load and ask for a key); `/api/v1/*` stays behind
+  API-key auth and rate limiting.
 
 ## Streaming API
 
