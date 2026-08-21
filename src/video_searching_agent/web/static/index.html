@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Video Searching Agent</title>
+  <meta name="description" content="Search, analyse and source videos across the internet with an agentic video search loop." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000'/%3E%3Crect x='6' y='6' width='14' height='14' fill='%23804de7'/%3E%3Crect x='13' y='13' width='13' height='13' fill='%235026a4'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar__brand">
+      <span class="mark" aria-hidden="true"></span>
+      <span class="brand__name">Video Searching Agent</span>
+      <span class="brand__org">memories.ai labs</span>
+    </div>
+    <div class="topbar__actions">
+      <div class="status" id="health" title="API health">
+        <span class="status__dot" data-state="unknown"></span>
+        <span class="status__label">checking…</span>
+      </div>
+      <button class="btn btn--ghost" id="settings-toggle" aria-expanded="false" aria-controls="settings">
+        API key
+      </button>
+    </div>
+  </header>
+
+  <section class="settings" id="settings" hidden>
+    <label class="field">
+      <span class="field__label">X-API-Key</span>
+      <input type="password" id="api-key" class="input" placeholder="Only needed if the server sets API_KEYS" autocomplete="off" spellcheck="false" />
+    </label>
+    <p class="settings__hint">Stored in this browser only (localStorage) and sent as the <code>X-API-Key</code> header.</p>
+  </section>
+
+  <main class="shell">
+    <form class="composer" id="composer">
+      <div class="composer__sources">
+        <span class="composer__label">Sources</span>
+        <div class="chips" id="sources" role="group" aria-label="Video sources">
+          <button type="button" class="chip chip--auto is-active" data-source="auto" aria-pressed="true">
+            <span class="chip__dot"></span>Auto
+          </button>
+          <button type="button" class="chip" data-source="youtube" aria-pressed="false">
+            <span class="chip__dot"></span>YouTube
+          </button>
+          <button type="button" class="chip" data-source="tiktok" aria-pressed="false">
+            <span class="chip__dot"></span>TikTok
+          </button>
+          <button type="button" class="chip" data-source="instagram" aria-pressed="false">
+            <span class="chip__dot"></span>Instagram
+          </button>
+          <button type="button" class="chip" data-source="twitter" aria-pressed="false">
+            <span class="chip__dot"></span>X
+          </button>
+          <button type="button" class="chip" data-source="web" aria-pressed="false">
+            <span class="chip__dot"></span>Web
+          </button>
+        </div>
+        <p class="composer__hint" id="sources-hint">Auto lets the agent pick sources from your query.</p>
+      </div>
+
+      <div class="composer__input">
+        <textarea
+          id="query"
+          class="textarea"
+          rows="2"
+          maxlength="2000"
+          placeholder="Find the most viral coffee videos from the past week…"
+          required
+        ></textarea>
+        <div class="composer__submit">
+          <span class="kbd-hint"><kbd>⌘</kbd><kbd>↵</kbd> to search</span>
+          <button type="submit" class="btn btn--primary" id="search-btn">Search</button>
+          <button type="button" class="btn btn--stop" id="stop-btn" hidden>Stop</button>
+        </div>
+      </div>
+    </form>
+
+    <section class="examples" id="examples">
+      <span class="examples__label">Try</span>
+      <button type="button" class="example" data-query="Top 5 most liked TikTok videos about latte art from the past week">Most liked TikToks about latte art</button>
+      <button type="button" class="example" data-query="What are the trending UGC videos for SaaS products on YouTube?">Trending SaaS UGC on YouTube</button>
+      <button type="button" class="example" data-query="Compare Nike and Adidas video content on YouTube over the past month">Nike vs Adidas on YouTube</button>
+      <button type="button" class="example" data-query="What type of creator is @mkbhd and what does he cover lately?">Creator profile: @mkbhd</button>
+    </section>
+
+    <section class="run" id="run" hidden>
+      <div class="run__main">
+        <article class="panel panel--answer" id="answer-panel" hidden>
+          <header class="panel__head">
+            <h2 class="panel__title">Answer</h2>
+            <span class="panel__meta" id="answer-meta"></span>
+          </header>
+          <div class="prose" id="answer"></div>
+        </article>
+
+        <article class="panel panel--clarify" id="clarify-panel" hidden>
+          <header class="panel__head">
+            <h2 class="panel__title">One more thing</h2>
+          </header>
+          <p class="clarify__question" id="clarify-question"></p>
+          <div class="clarify__options" id="clarify-options"></div>
+          <form class="clarify__form" id="clarify-form">
+            <input type="text" class="input" id="clarify-input" maxlength="500" placeholder="Answer in your own words…" />
+            <button type="submit" class="btn btn--primary">Send</button>
+          </form>
+        </article>
+
+        <article class="panel panel--error" id="error-panel" hidden>
+          <header class="panel__head">
+            <h2 class="panel__title">Something broke</h2>
+          </header>
+          <p class="error__message" id="error-message"></p>
+        </article>
+
+        <article class="panel panel--videos" id="videos-panel" hidden>
+          <header class="panel__head">
+            <h2 class="panel__title">Videos</h2>
+            <span class="panel__meta" id="videos-count"></span>
+          </header>
+          <div class="grid" id="videos"></div>
+        </article>
+      </div>
+
+      <aside class="run__side">
+        <article class="panel panel--activity">
+          <header class="panel__head">
+            <h2 class="panel__title">Activity</h2>
+            <span class="panel__meta" id="activity-step"></span>
+          </header>
+          <ol class="timeline" id="activity"></ol>
+        </article>
+
+        <article class="panel panel--stats" id="stats-panel" hidden>
+          <header class="panel__head">
+            <h2 class="panel__title">Run</h2>
+          </header>
+          <dl class="stats" id="stats"></dl>
+        </article>
+      </aside>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>Video Searching Agent · open source</span>
+    <a href="/docs">API docs</a>
+  </footer>
+
+  <script src="./app.js"></script>
+</body>
+</html>

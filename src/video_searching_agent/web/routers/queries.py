@@ -41,6 +41,7 @@ async def generate_events(
             clarification=query_request.clarification,
             max_steps=query_request.max_steps,
             enable_clarification=query_request.enable_clarification,
+            sources=query_request.sources,
         )
 
         async for event in event_gen:

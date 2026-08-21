@@ -159,6 +159,7 @@ class StreamingAgentWrapper:
         clarification: str | None = None,
         max_steps: int | None = None,
         enable_clarification: bool | None = None,
+        sources: list[str] | None = None,
     ) -> AsyncGenerator[SSEEvent, None]:
         """Process a query and yield SSE events during execution.
 
@@ -167,6 +168,9 @@ class StreamingAgentWrapper:
             clarification: Optional clarification response.
             max_steps: Override default max steps.
             enable_clarification: Override default clarification setting.
+            sources: Sources the user pinned in the UI. When set, they replace
+                the platforms extracted from the query; when empty or None the
+                agent auto-selects sources.
 
         Yields:
             SSE events representing progress, tool calls, and results.
@@ -198,6 +202,16 @@ class StreamingAgentWrapper:
                 session_id,
             )
 
+            # User-pinned sources win over whatever the parser inferred.
+            if sources:
+                parsed_query.platforms = list(sources)
+                parsed_query.extraction_confidence["platforms"] = 1.0
+                yield ProgressEvent.create(
+                    step=0,
+                    max_steps=max_steps,
+                    message=f"Searching pinned sources: {', '.join(sources)}",
+                )
+
             # Check if clarification is needed
             if do_clarification and self.clarification_manager.needs_clarification(parsed_query):
                 clarification_response = self.clarification_manager.build_clarification_response(
@@ -219,7 +233,9 @@ class StreamingAgentWrapper:
             session.start()
 
             # Build enhanced query
-            enhanced_query = self._build_enhanced_query(user_query, parsed_query)
+            enhanced_query = self._build_enhanced_query(
+                user_query, parsed_query, pinned_sources=bool(sources)
+            )
 
             # Initialize messages
             messages: list[types.Content] = [
@@ -537,13 +553,24 @@ class StreamingAgentWrapper:
         else:
             return await self.tools.execute(tool_name, **tool_input)
 
-    def _build_enhanced_query(self, user_query: str, parsed_query: ParsedQuery) -> str:
+    def _build_enhanced_query(
+        self,
+        user_query: str,
+        parsed_query: ParsedQuery,
+        pinned_sources: bool = False,
+    ) -> str:
         """Build enhanced query string with extracted slots for Gemini."""
         parts = [f"User Query: {user_query}"]
         slot_context = []
 
         if parsed_query.platforms:
-            slot_context.append(f"Platforms: {', '.join(parsed_query.platforms)}")
+            platforms = ", ".join(parsed_query.platforms)
+            if pinned_sources:
+                slot_context.append(
+                    f"Platforms (selected by the user - search only these): {platforms}"
+                )
+            else:
+                slot_context.append(f"Platforms: {platforms}")
         if parsed_query.video_category:
             slot_context.append(f"Category: {parsed_query.video_category}")
         if parsed_query.topics:

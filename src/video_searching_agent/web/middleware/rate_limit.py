@@ -54,7 +54,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     """Token bucket rate limiting middleware."""
 
     # Paths that don't have rate limiting
-    EXEMPT_PATHS = {"/api/v1/health", "/docs", "/openapi.json", "/redoc"}
+    EXEMPT_PATHS = {"/", "/api/v1/health", "/docs", "/openapi.json", "/redoc", "/favicon.ico"}
+
+    # Prefixes that don't have rate limiting (static UI assets)
+    EXEMPT_PREFIXES = ("/ui/",)
 
     def __init__(self, app: Any, rpm: int | None = None) -> None:
         super().__init__(app)
@@ -77,7 +80,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         # Skip rate limiting for exempt paths
-        if request.url.path in self.EXEMPT_PATHS:
+        path = request.url.path
+        if path in self.EXEMPT_PATHS or path.startswith(self.EXEMPT_PREFIXES):
             return await call_next(request)
 
         # Get API key from request state (set by auth middleware)

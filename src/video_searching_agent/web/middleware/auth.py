@@ -17,14 +17,22 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
     """Middleware for API key authentication."""
 
     # Paths that don't require authentication
-    PUBLIC_PATHS = {"/api/v1/health", "/docs", "/openapi.json", "/redoc"}
+    PUBLIC_PATHS = {"/", "/api/v1/health", "/docs", "/openapi.json", "/redoc", "/favicon.ico"}
+
+    # Prefixes that don't require authentication (the bundled web UI assets;
+    # the UI itself asks the user for the API key it sends to the API).
+    PUBLIC_PREFIXES = ("/ui/",)
+
+    def _is_public(self, path: str) -> bool:
+        """True when a path is served without an API key."""
+        return path in self.PUBLIC_PATHS or path.startswith(self.PUBLIC_PREFIXES)
 
     async def dispatch(
         self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
         """Check API key for protected endpoints."""
         # Skip auth for public paths
-        if request.url.path in self.PUBLIC_PATHS:
+        if self._is_public(request.url.path):
             return await call_next(request)
 
         settings = get_settings()

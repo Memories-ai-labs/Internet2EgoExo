@@ -3,9 +3,12 @@
 import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 from video_searching_agent.config.settings import get_settings
 from video_searching_agent.web.middleware.auth import APIKeyAuthMiddleware
@@ -16,6 +19,10 @@ from video_searching_agent.web.routers import health_router, queries_router
 __version__ = "0.1.0"
 
 logger = logging.getLogger(__name__)
+
+# Static single-page UI shipped with the package.
+STATIC_DIR = Path(__file__).parent / "static"
+UI_PATH = "/ui"
 
 
 @asynccontextmanager
@@ -64,5 +71,15 @@ def create_app() -> FastAPI:
     # Include routers
     app.include_router(health_router)
     app.include_router(queries_router)
+
+    # Serve the bundled web UI (no build step) and send "/" to it.
+    if STATIC_DIR.is_dir():
+        app.mount(UI_PATH, StaticFiles(directory=STATIC_DIR, html=True), name="ui")
+
+        @app.get("/", include_in_schema=False)
+        async def ui_root() -> RedirectResponse:
+            return RedirectResponse(url=f"{UI_PATH}/")
+    else:  # pragma: no cover - only when static assets are stripped from a build
+        logger.warning("Static UI directory not found at %s - UI disabled", STATIC_DIR)
 
     return app

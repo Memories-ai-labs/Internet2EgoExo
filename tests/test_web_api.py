@@ -421,3 +421,115 @@ class TestSSEEventEdgeCases:
         )
         sse = event.to_sse()
         assert "1000" in sse
+
+
+class TestSourceSelection:
+    """Test source (platform) pinning on the query request."""
+
+    def test_sources_default_to_auto(self):
+        """No sources means auto-select."""
+        assert QueryRequest(query="find coffee videos").sources is None
+
+    def test_sources_normalized_and_deduplicated(self):
+        """Aliases map to canonical names, order is preserved, dupes dropped."""
+        request = QueryRequest(
+            query="find coffee videos",
+            sources=["YouTube", "yt", " X ", "web", "tiktok"],
+        )
+        assert request.sources == ["youtube", "twitter", "web", "tiktok"]
+
+    def test_empty_and_auto_mean_auto(self):
+        """Empty list and the explicit 'auto' sentinel both mean auto-select."""
+        assert QueryRequest(query="q", sources=[]).sources is None
+        assert QueryRequest(query="q", sources=["auto"]).sources is None
+
+    def test_unsupported_source_rejected(self):
+        """Unknown sources are a validation error, not silently ignored."""
+        with pytest.raises(ValueError, match="Unsupported source"):
+            QueryRequest(query="q", sources=["vimeo"])
+
+
+class TestSourcesForwarding:
+    """Test that pinned sources reach the streaming agent."""
+
+    def test_sources_forwarded_to_stream_query(self):
+        captured: dict = {}
+
+        async def fake_stream(**kwargs):
+            captured.update(kwargs)
+            yield StartedEvent.create(session_id="test-123", query=kwargs["user_query"])
+
+        with patch("video_searching_agent.web.routers.queries.get_agent") as mock_get_agent:
+            mock_agent = MagicMock()
+            mock_agent.stream_query.side_effect = lambda **kwargs: fake_stream(**kwargs)
+            mock_get_agent.return_value = mock_agent
+
+            client = TestClient(create_app())
+            response = client.post(
+                "/api/v1/queries/stream",
+                json={"query": "viral coffee videos", "sources": ["youtube", "x"]},
+            )
+
+            assert response.status_code == 200
+            assert captured["user_query"] == "viral coffee videos"
+            assert captured["sources"] == ["youtube", "twitter"]
+
+    def test_auto_forwards_no_sources(self):
+        captured: dict = {}
+
+        async def fake_stream(**kwargs):
+            captured.update(kwargs)
+            yield StartedEvent.create(session_id="test-123", query=kwargs["user_query"])
+
+        with patch("video_searching_agent.web.routers.queries.get_agent") as mock_get_agent:
+            mock_agent = MagicMock()
+            mock_agent.stream_query.side_effect = lambda **kwargs: fake_stream(**kwargs)
+            mock_get_agent.return_value = mock_agent
+
+            client = TestClient(create_app())
+            response = client.post(
+                "/api/v1/queries/stream",
+                json={"query": "viral coffee videos"},
+            )
+
+            assert response.status_code == 200
+            assert captured["sources"] is None
+
+
+class TestWebUI:
+    """Test the bundled static UI."""
+
+    def test_root_redirects_to_ui(self):
+        client = TestClient(create_app())
+        response = client.get("/", follow_redirects=False)
+        assert response.status_code in (307, 308)
+        assert response.headers["location"] == "/ui/"
+
+    def test_index_served(self):
+        client = TestClient(create_app())
+        response = client.get("/ui/")
+        assert response.status_code == 200
+        assert "Video Searching Agent" in response.text
+        assert 'id="sources"' in response.text
+
+    def test_assets_served(self):
+        client = TestClient(create_app())
+        for asset in ("/ui/app.js", "/ui/styles.css"):
+            assert client.get(asset).status_code == 200
+
+    def test_ui_public_while_api_protected(self):
+        """The UI loads without a key; the API still requires one."""
+        with patch("video_searching_agent.web.middleware.auth.get_settings") as mock_settings:
+            mock_settings_instance = MagicMock()
+            mock_settings_instance.api_keys = "valid-key"
+            mock_settings_instance.api_key_header = "X-API-Key"
+            mock_settings.return_value = mock_settings_instance
+
+            client = TestClient(create_app())
+
+            assert client.get("/ui/").status_code == 200
+            assert client.get("/ui/app.js").status_code == 200
+            assert client.get("/", follow_redirects=False).status_code in (307, 308)
+
+            response = client.post("/api/v1/queries/stream", json={"query": "test"})
+            assert response.status_code == 401

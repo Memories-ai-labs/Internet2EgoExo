@@ -12,6 +12,7 @@ AI-powered video searching agent that searches, analyzes, and sources videos fro
 - **Trend Discovery**: Find trending videos in any niche or topic
 - **Video Analysis**: Deep analysis using Memories.ai v2 for metadata, transcripts, MAI, and VLM
 - **Comparison**: Compare brands, creators, or products side-by-side
+- **Interactive Web UI**: Bundled zero-build UI with per-source selection and live streaming progress
 
 ## How It Works
 
@@ -80,7 +81,7 @@ The final `AgentResponse` includes:
 
 ```bash
 # Clone the repository
-git clone https://github.com/OpenInterX-Products/video-searching-agent.git
+git clone https://github.com/Memories-ai-labs/video-searching-agent.git
 cd video-searching-agent
 
 # Install dependencies
@@ -141,6 +142,68 @@ async def main():
 
 asyncio.run(main())
 ```
+
+## Web UI
+
+The package ships a zero-build web UI (plain HTML/CSS/JS, no npm, no bundler) served by
+the API itself:
+
+```bash
+# Start the server (reads .env)
+uvicorn video_searching_agent.web.main:app --port 8000
+# or: python -m video_searching_agent.web.main
+```
+
+Open <http://localhost:8000> — `/` redirects to the UI at `/ui/`.
+
+What it gives you:
+
+- **Source selection** — pin the search to any combination of YouTube, TikTok, Instagram,
+  X and the open web, or leave **Auto** on and let the agent infer sources from your query.
+- **Live agent activity** — every step, tool call and tool failure streams in over SSE
+  while the run is still going, so a long query is never a blank screen.
+- **Video results** — thumbnail cards with platform, creator, duration, views, likes,
+  comments, engagement rate and the agent's relevance note for each video.
+- **Run stats** — steps, tools used, videos analysed, wall-clock time and the run's
+  Gemini + tool cost in USD.
+- **Clarification flow** — when the agent needs one more detail it asks inline; answer
+  with a suggested option or in your own words and the query re-runs.
+- **API key field** — only needed when the server sets `API_KEYS`. The key is kept in the
+  browser's `localStorage` and sent as the `X-API-Key` header.
+
+The UI is public (so it can load and ask for a key); `/api/v1/queries/*` stays behind
+API-key auth and rate limiting.
+
+The design language follows the memories.ai framework: Manrope, square corners, hairline
+borders on a black canvas, with the violet accent ramp and one muted signal colour per
+source.
+
+## Streaming API
+
+`POST /api/v1/queries/stream` runs a query and streams Server-Sent Events
+(`started`, `progress`, `tool_call`, `tool_result`, `clarification_needed`,
+`complete`, `error`):
+
+```bash
+curl -N http://localhost:8000/api/v1/queries/stream \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $API_KEY" \
+  -d '{
+        "query": "Top latte art videos from the past week",
+        "sources": ["youtube", "tiktok"]
+      }'
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `query` | string | Natural language query (1-2000 chars) |
+| `sources` | string[] | Pin the search to `youtube`, `tiktok`, `instagram`, `twitter`, `web`. Omit, send `[]`, or send `["auto"]` to let the agent choose. Aliases: `yt`, `x`, `ig`, `reels`, `exa` |
+| `clarification` | string | Answer to a previous `clarification_needed` event |
+| `max_steps` | int | Override the agent step budget (1-20) |
+| `enable_clarification` | bool | Set `false` to never ask for clarification |
+
+Pinned sources replace whatever platforms the query parser inferred, and the agent is told
+to search only those.
 
 ## Usage Examples
 
@@ -476,7 +539,9 @@ video-searching-agent/
 │   ├── config/         # Configuration
 │   ├── models/         # Pydantic data models
 │   ├── router/         # Query classification
-│   └── tools/          # Gemini function calling tools
+│   ├── tools/          # Gemini function calling tools
+│   └── web/            # FastAPI app, SSE streaming, middleware
+│       └── static/     # Zero-build web UI (index.html / styles.css / app.js)
 ├── examples/           # Usage examples
 ├── tests/              # Test suite
 └── pyproject.toml      # Project configuration
