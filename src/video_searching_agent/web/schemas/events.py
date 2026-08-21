@@ -61,10 +61,17 @@ class ToolResultEvent(SSEEvent):
         success: bool,
         videos_found: int | None = None,
         error: str | None = None,
+        status: str | None = None,
+        moments_found: int | None = None,
     ) -> ToolResultEvent:
         data: dict[str, Any] = {"tool": tool, "success": success}
         if videos_found is not None:
             data["videos_found"] = videos_found
+        if moments_found is not None:
+            data["moments_found"] = moments_found
+        if status:
+            # Datalake tools report "processing" while indexing is unfinished.
+            data["status"] = status
         if error:
             data["error"] = error
         return cls(data=data)

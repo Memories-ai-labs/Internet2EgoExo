@@ -336,10 +336,18 @@ class StreamingAgentWrapper:
                                 parsed_query.time_frame,
                             )
 
-                        # Count videos found
+                        # Count videos found, plus Datalake-specific detail
                         videos_found = 0
+                        moments_found = None
+                        tool_status = None
                         if result.success and isinstance(result.data, dict):
                             videos_found = len(result.data.get("videos", []))
+                            moments = result.data.get("moments")
+                            if isinstance(moments, list):
+                                moments_found = len(moments)
+                            status = result.data.get("status")
+                            if isinstance(status, str):
+                                tool_status = status
 
                         # Emit tool result event
                         yield ToolResultEvent.create(
@@ -347,6 +355,8 @@ class StreamingAgentWrapper:
                             success=result.success,
                             videos_found=videos_found if result.success else None,
                             error=result.error if not result.success else None,
+                            status=tool_status,
+                            moments_found=moments_found,
                         )
 
                         # Store result in session

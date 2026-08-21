@@ -166,6 +166,11 @@ What it gives you:
   while the run is still going, so a long query is never a blank screen.
 - **Video results** — thumbnail cards with platform, creator, duration, views, likes,
   comments, engagement rate and the agent's relevance note for each video.
+- **Video content** — when the agent reads a video through the Datalake, its AI title,
+  summary, visual captions and timestamped speech turns are shown inline; while indexing
+  is still running you get an `indexing` notice with the `video_id` to ask again with.
+- **Moments** — hits from `video_moment_search` render as cards with their time range,
+  match target, score, snippet and thumbnail.
 - **Run stats** — steps, tools used, videos analysed, wall-clock time and the run's
   Gemini + tool cost in USD.
 - **Clarification flow** — when the agent needs one more detail it asks inline; answer

@@ -731,6 +731,170 @@ kbd {
   font-weight: 800;
 }
 
+/* ------------------------------------------------------- datalake content */
+
+.datalake {
+  display: flex;
+  flex-direction: column;
+}
+
+.dl-block {
+  padding: var(--gap);
+  border-bottom: var(--stroke) solid var(--border);
+}
+
+.dl-block:last-child {
+  border-bottom: none;
+}
+
+.dl-block__label {
+  display: block;
+  margin-bottom: 0.4375rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-dim);
+}
+
+.dl-block__text {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.dl-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: var(--gap);
+  border-bottom: var(--stroke) solid var(--border);
+  background: var(--w-5);
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.dl-status__badge {
+  padding: 0.125rem 0.4375rem;
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--c-black);
+  background: var(--sig-youtube);
+}
+
+.dl-status--ready .dl-status__badge {
+  background: var(--sig-ok);
+}
+
+.dl-status code {
+  color: var(--text);
+}
+
+/* Speech turns keep their timestamps beside the text. */
+.dl-segments {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  max-height: 18rem;
+  overflow-y: auto;
+}
+
+.dl-segment {
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr);
+  gap: 0.625rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.dl-segment__time {
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding-top: 0.0625rem;
+}
+
+.dl-segment__speaker {
+  color: var(--periwinkle);
+  font-weight: 700;
+}
+
+/* ------------------------------------------------------------------ moments */
+
+.moments {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: var(--stroke);
+}
+
+.moment {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4375rem;
+  padding: 0.75rem;
+  background: var(--surface);
+  box-shadow: 0 0 0 var(--stroke) var(--border);
+}
+
+.moment__head {
+  display: flex;
+  align-items: center;
+  gap: 0.4375rem;
+  flex-wrap: wrap;
+}
+
+.moment__range {
+  padding: 0.125rem 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-black);
+  background: var(--sig-tiktok);
+}
+
+.moment__target {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-dim);
+}
+
+.moment__score {
+  margin-left: auto;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.moment__thumb {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border: var(--stroke) solid var(--border);
+}
+
+.moment__snippet {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.moment__ref {
+  font-size: 0.6875rem;
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+}
+
 /* ------------------------------------------------------------------ timeline */
 
 .timeline {

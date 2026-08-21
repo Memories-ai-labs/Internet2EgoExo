@@ -94,7 +94,9 @@ class TestDatalakeClient:
     @pytest.mark.asyncio
     async def test_index_video_url_posts_expected_body(self):
         client, fake = _client([
-            _FakeResponse(payload={"video_id": "vid_1", "operation": "op_1", "status": "processing"})
+            _FakeResponse(payload={
+                "video_id": "vid_1", "operation": "op_1", "status": "processing",
+            })
         ])
         with patch("httpx.AsyncClient", fake):
             result = await client.index_video_url("https://example.com/a.mp4", fps=2.0)
@@ -151,7 +153,9 @@ class TestDatalakeClient:
     async def test_wait_for_operation_gives_up_within_budget(self):
         """A zero budget polls once and returns the unfinished operation."""
         client, fake = _client([
-            _FakeResponse(payload={"operation": "op_1", "done": False, "progress": {"percent": 10}}),
+            _FakeResponse(payload={
+                "operation": "op_1", "done": False, "progress": {"percent": 10},
+            }),
         ])
         with patch("httpx.AsyncClient", fake):
             operation = await client.wait_for_operation(
@@ -201,7 +205,9 @@ class TestVideoIndexTool:
     @pytest.mark.asyncio
     async def test_returns_ids_without_waiting(self):
         client, fake = _client([
-            _FakeResponse(payload={"video_id": "vid_1", "operation": "op_1", "status": "processing"})
+            _FakeResponse(payload={
+                "video_id": "vid_1", "operation": "op_1", "status": "processing",
+            })
         ])
         with patch("httpx.AsyncClient", fake):
             result = await VideoIndexTool(client=client).execute(
@@ -238,7 +244,9 @@ class TestVideoAnalysisTool:
     async def test_reports_processing_when_indexing_is_unfinished(self):
         client, fake = _client([
             _FakeResponse(payload={"video_id": "vid_1", "operation": "op_1"}),
-            _FakeResponse(payload={"operation": "op_1", "done": False, "progress": {"percent": 30}}),
+            _FakeResponse(payload={
+                "operation": "op_1", "done": False, "progress": {"percent": 30},
+            }),
         ])
         # Zero wait budget: poll once, then hand the caller back the video_id.
         with patch("httpx.AsyncClient", fake), patch(

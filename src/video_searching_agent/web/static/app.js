@@ -18,6 +18,28 @@ const SOURCE_LABELS = {
   web: "Web",
 };
 
+// Tool names the agent reports, in words a reader recognises.
+const TOOL_LABELS = {
+  video_search: "web video search",
+  youtube_search: "YouTube search",
+  youtube_channel_info: "YouTube channel",
+  tiktok_search: "TikTok search",
+  tiktok_creator_info: "TikTok creator",
+  instagram_search: "Instagram search",
+  instagram_creator_info: "Instagram creator",
+  twitter_search: "X search",
+  twitter_profile_info: "X profile",
+  exa_search: "neural web search",
+  exa_find_similar: "similar pages",
+  exa_get_content: "page content",
+  exa_research: "deep research",
+  video_index: "indexing video",
+  video_analysis: "reading video content",
+  video_moment_search: "searching indexed moments",
+};
+
+const toolLabel = (tool) => TOOL_LABELS[tool] ?? tool;
+
 const el = (id) => document.getElementById(id);
 
 const dom = {
@@ -43,6 +65,12 @@ const dom = {
   clarifyInput: el("clarify-input"),
   errorPanel: el("error-panel"),
   errorMessage: el("error-message"),
+  datalakePanel: el("datalake-panel"),
+  datalake: el("datalake"),
+  datalakeMeta: el("datalake-meta"),
+  momentsPanel: el("moments-panel"),
+  moments: el("moments"),
+  momentsCount: el("moments-count"),
   videosPanel: el("videos-panel"),
   videos: el("videos"),
   videosCount: el("videos-count"),
@@ -84,6 +112,14 @@ const compactNumber = (value) => {
     }
   }
   return String(value);
+};
+
+/** Seconds → m:ss, for moment ranges and transcript turns. */
+const timecode = (seconds) => {
+  if (typeof seconds !== "number" || !Number.isFinite(seconds)) return null;
+  const whole = Math.max(0, Math.floor(seconds));
+  const minutes = Math.floor(whole / 60);
+  return `${minutes}:${String(whole % 60).padStart(2, "0")}`;
 };
 
 /** Inline markdown: bold, code, links. Input is escaped first. */
@@ -259,6 +295,136 @@ const videoCard = (video) => {
   return card;
 };
 
+/** Render one derived-content block (summary, captions, or transcription). */
+const datalakeBlock = (label, value) => {
+  if (!value) return "";
+
+  if (Array.isArray(value)) {
+    const segments = value
+      .filter((segment) => segment && typeof segment === "object")
+      .map((segment) => {
+        const start = timecode(segment.start);
+        const speaker = segment.speaker_id
+          ? `<span class="dl-segment__speaker">${escapeHtml(segment.speaker_id)}</span> `
+          : "";
+        return `<div class="dl-segment">
+            <span class="dl-segment__time">${start ? escapeHtml(start) : ""}</span>
+            <span>${speaker}${escapeHtml(segment.text ?? "")}</span>
+          </div>`;
+      })
+      .join("");
+    if (!segments) return "";
+    return `<div class="dl-block">
+        <span class="dl-block__label">${escapeHtml(label)}</span>
+        <div class="dl-segments">${segments}</div>
+      </div>`;
+  }
+
+  return `<div class="dl-block">
+      <span class="dl-block__label">${escapeHtml(label)}</span>
+      <p class="dl-block__text">${escapeHtml(String(value))}</p>
+    </div>`;
+};
+
+/**
+ * Render what the Datalake returned for a video: either the indexing-still-running
+ * notice, or its title/summary/captions/transcription.
+ */
+const renderDatalake = (analyses) => {
+  const parts = analyses
+    .map((analysis) => {
+      const videoId = analysis.video_id ? escapeHtml(String(analysis.video_id)) : "";
+
+      if (analysis.status === "processing") {
+        const percent = analysis.progress?.percent;
+        return `<div class="dl-status">
+            <span class="dl-status__badge">indexing</span>
+            <span>Still indexing${
+              typeof percent === "number" ? ` — ${escapeHtml(percent)}%` : ""
+            }. Ask again to read the results${videoId ? ` (<code>${videoId}</code>)` : ""}.</span>
+          </div>`;
+      }
+
+      const window = analysis.window
+        ? `${timecode(analysis.window.start) ?? "0:00"}–${timecode(analysis.window.end) ?? "end"}`
+        : null;
+      const duration = timecode(analysis.duration_seconds);
+
+      const header = `<div class="dl-status dl-status--ready">
+          <span class="dl-status__badge">ready</span>
+          <span>${escapeHtml(analysis.title || "Indexed video")}</span>
+          ${duration ? `<span>· ${escapeHtml(duration)}</span>` : ""}
+          ${window ? `<span>· window ${escapeHtml(window)}</span>` : ""}
+          ${videoId ? `<span>· <code>${videoId}</code></span>` : ""}
+        </div>`;
+
+      return (
+        header +
+        datalakeBlock("Summary", analysis.summary) +
+        datalakeBlock("Visual captions", analysis.caption) +
+        datalakeBlock("Speech", analysis.transcription)
+      );
+    })
+    .join("");
+
+  dom.datalake.innerHTML = parts;
+  dom.datalakeMeta.textContent = analyses.length > 1 ? `${analyses.length} videos` : "";
+  dom.datalakePanel.hidden = !parts;
+};
+
+/** Render moments returned by video_moment_search. */
+const renderMoments = (moments) => {
+  dom.moments.innerHTML = moments
+    .map((moment) => {
+      const start = timecode(moment.start);
+      const end = timecode(moment.end);
+      const range = start && end ? `${start}–${end}` : start || "";
+      const thumb = /^https?:\/\//i.test(moment.thumbnail_url ?? "")
+        ? `<img class="moment__thumb" src="${escapeHtml(moment.thumbnail_url)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()" />`
+        : "";
+      const score =
+        typeof moment.score === "number" ? `${(moment.score * 100).toFixed(0)}%` : "";
+
+      return `<article class="moment">
+          <div class="moment__head">
+            ${range ? `<span class="moment__range">${escapeHtml(range)}</span>` : ""}
+            ${moment.target ? `<span class="moment__target">${escapeHtml(moment.target)}</span>` : ""}
+            ${score ? `<span class="moment__score">${escapeHtml(score)}</span>` : ""}
+          </div>
+          ${thumb}
+          ${moment.snippet ? `<p class="moment__snippet">${escapeHtml(moment.snippet)}</p>` : ""}
+          ${moment.ref ? `<span class="moment__ref">${escapeHtml(moment.ref)}</span>` : ""}
+        </article>`;
+    })
+    .join("");
+
+  dom.momentsCount.textContent = moments.length ? `${moments.length} found` : "";
+  dom.momentsPanel.hidden = moments.length === 0;
+};
+
+/**
+ * Pull Datalake payloads out of the run's tool results. The complete event
+ * carries each tool's own result, so no extra request is needed.
+ */
+const extractDatalake = (response) => {
+  const analyses = [];
+  const moments = [];
+
+  for (const detail of response.tool_execution_details ?? []) {
+    if (!detail || detail.success === false) continue;
+    const data = detail.result;
+    if (!data || typeof data !== "object") continue;
+
+    if (detail.tool === "video_analysis" || detail.tool === "video_index") {
+      if (data.status) analyses.push(data);
+    } else if (detail.tool === "video_moment_search" && Array.isArray(data.moments)) {
+      moments.push(...data.moments.filter((m) => m && typeof m === "object"));
+    }
+  }
+
+  return { analyses, moments };
+};
+
 const renderStats = (response) => {
   const cost = response.usage_metrics?.total_cost_usd;
   const entries = [
@@ -291,6 +457,10 @@ const renderComplete = (response) => {
     : "";
   dom.answerPanel.hidden = false;
 
+  const { analyses, moments } = extractDatalake(response);
+  renderDatalake(analyses);
+  renderMoments(moments);
+
   const videos = Array.isArray(response.video_references) ? response.video_references : [];
   dom.videos.innerHTML = "";
   videos.forEach((video) => dom.videos.appendChild(videoCard(video)));
@@ -311,6 +481,10 @@ const resetRun = () => {
   dom.activityStep.textContent = "";
   dom.answerPanel.hidden = true;
   dom.videosPanel.hidden = true;
+  dom.datalakePanel.hidden = true;
+  dom.momentsPanel.hidden = true;
+  dom.datalake.innerHTML = "";
+  dom.moments.innerHTML = "";
   dom.clarifyPanel.hidden = true;
   dom.errorPanel.hidden = true;
   dom.statsPanel.hidden = true;
@@ -344,22 +518,28 @@ const handleEvent = (name, payload) => {
       break;
 
     case "tool_call":
-      addEvent("tool_call", `Calling <b>${escapeHtml(payload.tool ?? "tool")}</b>`, { live: true });
+      addEvent("tool_call", `<b>${escapeHtml(toolLabel(payload.tool ?? "tool"))}</b>`, {
+        live: true,
+      });
       break;
 
     case "tool_result": {
-      const found =
-        typeof payload.videos_found === "number" ? ` — ${payload.videos_found} videos` : "";
-      if (payload.success) {
-        addEvent("tool_ok", `<b>${escapeHtml(payload.tool ?? "tool")}</b> done${escapeHtml(found)}`);
-      } else {
+      const label = escapeHtml(toolLabel(payload.tool ?? "tool"));
+      if (!payload.success) {
         addEvent(
           "tool_fail",
-          `<b>${escapeHtml(payload.tool ?? "tool")}</b> failed${
-            payload.error ? ` — ${escapeHtml(payload.error)}` : ""
-          }`,
+          `<b>${label}</b> failed${payload.error ? ` — ${escapeHtml(payload.error)}` : ""}`,
         );
+        break;
       }
+
+      let detail = "";
+      if (payload.status === "processing") detail = " — still indexing";
+      else if (typeof payload.moments_found === "number") {
+        detail = ` — ${payload.moments_found} moments`;
+      } else if (payload.videos_found) detail = ` — ${payload.videos_found} videos`;
+
+      addEvent("tool_ok", `<b>${label}</b> done${escapeHtml(detail)}`);
       break;
     }
 

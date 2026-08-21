@@ -70,6 +70,26 @@ class TestSSEEvents:
         assert "tool_error" in sse
         assert "Something went wrong" in sse
 
+    def test_tool_result_event_reports_indexing_status(self):
+        """Datalake tools report status while indexing is unfinished."""
+        event = ToolResultEvent.create(
+            tool="video_analysis", success=True, videos_found=0, status="processing"
+        )
+        assert event.data["status"] == "processing"
+        assert "event: tool_result" in event.to_sse()
+
+    def test_tool_result_event_reports_moment_count(self):
+        event = ToolResultEvent.create(
+            tool="video_moment_search", success=True, moments_found=3
+        )
+        assert event.data["moments_found"] == 3
+
+    def test_tool_result_event_omits_absent_detail(self):
+        """Unset fields stay out of the payload."""
+        event = ToolResultEvent.create(tool="youtube_search", success=True, videos_found=5)
+        assert "status" not in event.data
+        assert "moments_found" not in event.data
+
     def test_clarification_event(self):
         event = ClarificationEvent.create(
             question="Which platform?",
