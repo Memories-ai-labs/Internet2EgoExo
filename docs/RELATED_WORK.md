@@ -69,7 +69,7 @@ teaches, the ego video executes."
 **[HOI4D](https://arxiv.org/pdf/2404.09933)** — 2.4 M RGB-D egocentric frames
 across 4,000 sequences in 610 indoor rooms, with category-level 4D hand–object
 labels. Depth-equipped, so it is the geometric ground truth that monocular
-pipelines like [EgoInfinity](#egoinfinity) are trying to approximate from RGB.
+pipelines like [EgoInfinity](#egoinfinity--lift-to-4d-then-reproject) are trying to approximate from RGB.
 
 **[ENIGMA-360](https://arxiv.org/pdf/2603.09741)** — ego-exo capture in
 industrial settings; the nearest published analogue to factory-floor procedural
@@ -230,7 +230,7 @@ video–caption samples from 3.78 M source videos (~36 TB), with 10.47 M (8 TB) 
 The construction is a three-step design worth copying wholesale:
 
 1. Split long videos into semantically coherent clips (see
-   [§9](#9-clip--panda-70m-splitting)).
+   [§9](#9-clip)).
 2. Run **multiple cross-modality teachers** — video, subtitle and image models —
    so each clip gets several candidate captions.
 3. Train a **retrieval model to *select* the best caption** at scale, supervised
@@ -745,7 +745,104 @@ and no amount of downstream processing fixes it.
 
 **Retrieval proposes; pixels decide. The moat is in the deciding.**
 
-## 13. Build vs. reuse, per stage
+## 13. Why no open-source project does exactly this
+
+The obvious question, having read all of the above: internet-scale video →
+ego/exo training footage is a clearly valuable, clearly defined problem, and
+almost every individual piece of it is open. So why is there no open-source
+project that does the whole thing?
+
+The answer is not that people tried and failed. **Open source went hard at the
+two adjacent problems and skipped this one.**
+
+### Where the effort actually went
+
+**Capture.** A substantial open effort exists for *recording new* egocentric
+video: [EgoKit](https://arxiv.org/pdf/2605.16797) unifies low-cost collection
+across heterogeneous devices; [MobileEgo Anywhere](https://arxiv.org/pdf/2605.05945)
+ships a free mobile app plus an open STERA processing pipeline so a lab can
+generate VLA-ready data on commodity phones. Both solve "how do we make more
+footage cheaply."
+
+**Annotation.** An equally substantial effort exists for *labelling footage you
+already hold*: [EgoLive](https://arxiv.org/html/2604.23570v1) releases an
+automated pipeline producing language annotations, camera pose, 3D hand
+keypoints, depth, hand and object masks and sub-task segmentation;
+[Action100M](#action100m) publishes a fully automatic hierarchical labelling
+recipe; [annotated-egocentric-10k](#annotated-egocentric-10k-dataset) does
+process mining over a corpus someone else released.
+
+**Acquisition from the web is the hole between them.** The tools that touch the
+internet — [video2dataset](#video2dataset), [LAION-BVD](#laion-bvd) — are
+viewpoint-blind by design: they fetch and package whatever URLs you hand them,
+and have no concept of "egocentric," "hands visible," or "licensed for reuse."
+Published guidance for sourcing ego footage from the web still describes the
+method as *manually searching YouTube and TikTok for phrases like "egocentric
+view"*. That is the state of the art for this stage: a person typing queries.
+
+### Six reasons the hole persists
+
+**1. The citable unit is a corpus, not a machine.** Research reputation attaches
+to an artefact others can benchmark against — Ego4D, Panda-70M, Action100M,
+Egocentric-10K. A pipeline that produces *a different corpus for every
+requirement* has no fixed output to cite, so the natural thing to release is the
+fish, not the rod. Note who broke that pattern:
+[cosmos-curate](#cosmos-curate), from a company that profits when anyone runs a
+large pipeline on anything.
+
+**2. Where it is commercially valuable, the pipeline is the product.** Build AI
+open-sourced ten thousand *hours* and not the stack that produced them. Data
+vendors sell hours and keep the sourcing machinery. The asymmetry — corpus
+given away, acquisition layer retained — is what you would expect if the
+acquisition layer is where the margin sits.
+
+**3. Legal exposure lands on the maintainer, and it is asymmetric.** A dataset
+release can be framed as research; LAION-BVD does exactly that ("research
+purposes only"). A general-purpose tool that automates *search → download →
+licence filtering → redistribution* invites terms-of-service, portrait-rights
+and privacy questions that fall on whoever's name is on the repository.
+[YT_crawler](#yt_crawler) is 6 stars with an educational-use disclaimer; that is
+roughly the equilibrium.
+
+**4. There is no stable interface to standardise around.** Open infrastructure
+crystallises where the contract is fixed: *fetch this URL*, *split this video*,
+*embed this clip*. "Collect N hours matching this requirement" has no fixed
+contract — the slot vocabulary, the viewpoint definition, the acceptance bar and
+the rights posture all change per buyer. Without a stable interface there is
+nothing for a library to be.
+
+**5. The hard parts are contested judgement, not deterministic transforms.**
+Whether a clip is egocentric, whether the hands are usable, whether the licence
+holds — these are decisions with an evidence burden, not functions. Open source
+is excellent at transforms and poor at adjudication. And until per-clip VLM
+inspection became cheap, the only affordable approach was a heuristic — which is
+why [RynnVLA-001](#rynnvla-001--filter-dont-convert) states its ego-filter rule
+in a single paragraph of a VLA paper rather than shipping it as a project. As a
+heuristic it did not merit one.
+
+**6. The demand is barely older than the tooling.** The scaling results that make
+web-sourced human video worth paying for are recent:
+[EgoScale](#egoscale)'s log-linear law and [HumanNet](#humannet)'s
+1,000 h-vs-100 h comparison are 2026. The models that make per-clip judgement
+affordable are about as old. The window in which this is both *worth building*
+and *buildable* has been open for roughly a year.
+
+### What this does and does not license us to claim
+
+Not "nobody has solved this." The honest statement is narrower and more useful:
+
+> Every individual stage of the chain is open. What is missing from open source
+> is the **acquisition layer** — requirement → search → viewpoint proof → rights
+> proof → manifest — and it is missing for structural reasons, not because it is
+> technically hard.
+
+Which also sets the bar. If the assembly is the contribution, then the assembly
+has to be good at the parts nobody else is doing — the requirement front-end and
+the provenance back-end — and should reuse, not reimplement, the stages the
+field has already solved. That is what [§14](#14-build-vs-reuse-per-stage)
+records.
+
+## 14. Build vs. reuse, per stage
 
 | Stage | Best open option | Verdict | What this repo does |
 |---|---|---|---|

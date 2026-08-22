@@ -185,6 +185,31 @@ them:
   right viewpoint, hands-visible, licensed at every link of its chain, and
   annotated deeply enough to train on.
 
+### Why no open-source project does exactly this
+
+Every individual stage is open. The assembly is not — and the reason is
+structural, not technical. Open source went hard at the two adjacent problems and
+skipped this one: **capture** ([EgoKit](https://arxiv.org/pdf/2605.16797),
+[MobileEgo Anywhere](https://arxiv.org/pdf/2605.05945) — how to record more
+footage cheaply) and **annotation** ([EgoLive](https://arxiv.org/html/2604.23570v1),
+Action100M — how to label footage you already hold). Acquisition from the open
+web is the hole between them: the tools that touch the internet are
+viewpoint-blind by construction, and published guidance for sourcing ego footage
+still amounts to *manually searching YouTube for "egocentric view"*.
+
+It stays a hole because the citable unit is a corpus rather than a machine;
+because where it pays, the sourcing pipeline is the product and gets kept;
+because a tool that automates search → download → licence filtering carries legal
+exposure a dataset release does not; because "collect N hours matching this
+requirement" has no stable interface to standardise around; because the hard
+parts are contested judgement rather than deterministic transforms; and because
+the scaling results that make it worth paying for are about a year old.
+
+So the missing piece is specifically the **acquisition layer** — requirement →
+search → viewpoint proof → rights proof → manifest. That is what this repo is,
+and it is why it reuses the stages the field has already solved rather than
+reimplementing them.
+
 Full survey — both halves, the positioning table and references:
 **[docs/RELATED_WORK.md](docs/RELATED_WORK.md)**.
 
