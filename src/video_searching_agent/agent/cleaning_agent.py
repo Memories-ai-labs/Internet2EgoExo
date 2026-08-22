@@ -38,6 +38,7 @@ from video_searching_agent.api.memories_datalake_client import (
 from video_searching_agent.curation.frame_check import (
     CAPTION_EVIDENCE_CAVEAT,
     FrameCheck,
+    action_signature,
     check_frames,
     mentions_hands,
 )
@@ -46,6 +47,7 @@ from video_searching_agent.curation.quality_gates import (
     QualityReport,
     evaluate_clip,
     mentions_idle,
+    mentions_other_people,
     permits_commercial_use,
 )
 from video_searching_agent.curation.viewpoint import Viewpoint, classify_viewpoint
@@ -55,9 +57,12 @@ logger = logging.getLogger(__name__)
 AGENT_NAME = "cleaning"
 
 # Clipping bounds. An action shorter than this is noise; a gap longer than this
-# is a new action rather than a pause inside one.
+# is a new action rather than a pause inside one; and an "action" longer than
+# this is not an action any more — a single eight-minute span says nothing a
+# trainer can use, so a long continuous run is cut at segment boundaries.
 MIN_ACTION_SECONDS = 2.0
 MAX_MERGE_GAP_SECONDS = 2.0
+MAX_ACTION_SECONDS = 120.0
 
 # Tags the cleaning agent writes so the annotation pass has a worklist.
 TAG_CLEAN = "clean_pass"
@@ -187,6 +192,7 @@ class CleaningAgent:
         client: MemoriesDatalakeClient | None = None,
         min_action_seconds: float = MIN_ACTION_SECONDS,
         max_merge_gap_seconds: float = MAX_MERGE_GAP_SECONDS,
+        max_action_seconds: float = MAX_ACTION_SECONDS,
     ) -> None:
         """Initialize the agent.
 
@@ -194,10 +200,12 @@ class CleaningAgent:
             client: Datalake client. Created on first use when omitted.
             min_action_seconds: Shortest span worth anchoring.
             max_merge_gap_seconds: Longest pause that still counts as one action.
+            max_action_seconds: Longest span still called one action.
         """
         self._client = client
         self.min_action_seconds = min_action_seconds
         self.max_merge_gap_seconds = max_merge_gap_seconds
+        self.max_action_seconds = max_action_seconds
 
     @property
     def client(self) -> MemoriesDatalakeClient:
@@ -341,7 +349,7 @@ class CleaningAgent:
         media = media or {}
 
         caption, caption_segments, transcription, summary = await self._read_derived(
-            video_id, verdict
+            video_id, verdict, duration_seconds=media.get("duration_seconds")
         )
 
         # --- the frame check: does the footage show what we need? ----------
@@ -445,6 +453,7 @@ class CleaningAgent:
         Args:
             caption_segments: `[{start, end, text}, …]` from the index.
             require_hands: Only anchor spans with hands in them.
+                A run also ends when the action itself changes.
             total_duration: Whole-video duration, used only as a fallback bound.
             task_label: Name for the task level. The annotation agent normally
                 supplies this later; it is accepted here for callers that
@@ -469,7 +478,11 @@ class CleaningAgent:
             text = str(segment.get("text") or "")
             hands, evidence = mentions_hands(text)
             idle = bool(mentions_idle(text))
-            keep = (hands or not require_hands) and not idle
+            # A span with someone else in it is dropped rather than anchored:
+            # their hands and face are not the wearer's, whatever else is right
+            # about the footage.
+            others = bool(mentions_other_people(text))
+            keep = (hands or not require_hands) and not idle and not others
 
             if not keep:
                 if current:
@@ -477,22 +490,45 @@ class CleaningAgent:
                     current = []
                 continue
 
-            segment = {**segment, "evidence": evidence, "hands_visible": hands}
+            signature = action_signature(text)
+            segment = {
+                **segment,
+                "evidence": evidence,
+                "hands_visible": hands,
+                "signature": signature,
+            }
             if current:
                 gap = float(segment["start"]) - float(current[-1]["end"])
-                if gap > self.max_merge_gap_seconds:
+                previous = current[-1].get("signature") or set()
+                # Two reasons to start a new action: a real pause, or a change
+                # of action. Without the second, one continuous take of
+                # chopping-then-stirring collapses into a single anchor that
+                # says nothing.
+                changed_action = bool(previous and signature and not (previous & signature))
+                if gap > self.max_merge_gap_seconds or changed_action:
                     runs.append(current)
                     current = []
             current.append(segment)
         if current:
             runs.append(current)
 
+        # A run of segments that never changes action can still be far too long
+        # to call one action, so it is cut at segment boundaries first.
+        runs = [chunk for run in runs for chunk in self._cap_run_length(run)]
+
         actions: list[Segment] = []
+        previous_end = 0.0
         for index, run in enumerate(runs, start=1):
             start = float(run[0]["start"])
             end = float(run[-1]["end"])
+            # Caption segments can overlap by a hair. Left alone that becomes a
+            # sibling overlap in the tree, which fails G2-TREE-2.
+            start = max(start, previous_end)
+            if total_duration:
+                end = min(end, float(total_duration))
             if end - start < self.min_action_seconds:
                 continue
+            previous_end = end
             evidence: list[str] = []
             for segment in run:
                 for item in segment.get("evidence", []):
@@ -534,14 +570,44 @@ class CleaningAgent:
             task.span_end = float(total_duration)
         return [task, *actions]
 
+    def _cap_run_length(
+        self, run: list[dict[str, Any]]
+    ) -> list[list[dict[str, Any]]]:
+        """Cut a run into chunks no longer than `max_action_seconds`.
+
+        The cut always lands on a caption-segment boundary — an anchor should
+        never claim a boundary the index did not give us.
+        """
+        if not run:
+            return []
+        chunks: list[list[dict[str, Any]]] = []
+        current: list[dict[str, Any]] = []
+        for segment in run:
+            if current:
+                span = float(segment["end"]) - float(current[0]["start"])
+                if span > self.max_action_seconds:
+                    chunks.append(current)
+                    current = []
+            current.append(segment)
+        if current:
+            chunks.append(current)
+        return chunks
+
     # --------------------------------------------------------------- plumbing
 
     async def _read_derived(
         self,
         video_id: str,
         verdict: CleaningVerdict,
+        duration_seconds: int | float | None = None,
     ) -> tuple[str | None, list[dict[str, Any]], str | None, str | None]:
         """Read caption, caption segments, transcription and summary.
+
+        The window matters: asked for a whole video, the caption endpoint
+        returns one aggregated string with no timings, and there is nothing to
+        anchor against. Asked for a `[start, end]` window it returns timed
+        segments — so when the duration is known, the whole video is requested
+        *as* a window.
 
         Missing pieces are tolerated. A clip whose captions are not ready yet
         produces an abstention downstream, not a rejection.
@@ -552,9 +618,16 @@ class CleaningAgent:
         summary: str | None = None
 
         try:
-            payload = await self.client.get_caption(video_id)
-            caption = text_of(payload, "caption")
-            caption_segments = segments_of(payload, "caption")
+            if duration_seconds:
+                payload = await self.client.get_caption(
+                    video_id, start=0, end=float(duration_seconds)
+                )
+                caption_segments = segments_of(payload, "caption")
+                caption = text_of(payload, "caption")
+            if not caption_segments:
+                payload = await self.client.get_caption(video_id)
+                caption = text_of(payload, "caption") or caption
+                caption_segments = caption_segments or segments_of(payload, "caption")
         except MemoriesDatalakeError as exc:
             verdict.errors.append(f"caption unavailable: {exc}")
 

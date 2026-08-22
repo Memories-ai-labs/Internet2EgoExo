@@ -1,6 +1,7 @@
 """Application settings and configuration."""
 
 from functools import lru_cache
+from typing import Any
 
 from pydantic import Field, model_validator
 
@@ -13,6 +14,17 @@ except ImportError:
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
+    # Demo mode: serve canned payloads instead of calling anything.
+    demo_mode: bool = Field(
+        default=False,
+        description=(
+            "Serve canned payloads from the streaming endpoints instead of "
+            "calling Gemini, the platforms or the Datalake. Nothing is "
+            "downloaded, indexed or spent. Credentials become optional."
+        ),
+        validation_alias="DEMO_MODE",
+    )
+
     # Google Gemini API
     google_api_key: str = Field(
         ...,
@@ -23,6 +35,31 @@ class Settings(BaseSettings):
         default="gemini-3.1-pro-preview",
         description="Gemini model to use",
         validation_alias="GEMINI_MODEL",
+    )
+
+    # OpenRouter (an alternative to Gemini: one key, hundreds of models)
+    openrouter_api_key: str = Field(
+        default="",
+        description="OpenRouter key (sk-or-...). When set, it drives the agents "
+        "instead of Gemini unless LLM_PROVIDER says otherwise.",
+        validation_alias="OPENROUTER_API_KEY",
+    )
+    openrouter_model: str = Field(
+        default="google/gemini-3.7-flash",
+        description="OpenRouter model slug; multimodal by default so the same "
+        "key can read frames, not only caption text",
+        validation_alias="OPENROUTER_MODEL",
+    )
+    openrouter_base_url: str = Field(
+        default="https://openrouter.ai/api/v1",
+        description="OpenRouter API root",
+        validation_alias="OPENROUTER_BASE_URL",
+    )
+    llm_provider: str = Field(
+        default="auto",
+        description="'auto' (OpenRouter when its key is set, else Gemini), "
+        "'openrouter', or 'gemini'",
+        validation_alias="LLM_PROVIDER",
     )
 
     # YouTube API
@@ -92,6 +129,14 @@ class Settings(BaseSettings):
         default=None,
         description="Apify API token for social media scraping actors",
         validation_alias="APIFY_API_TOKEN",
+    )
+
+    # Downloading
+    download_user_agent: str = Field(
+        default="",
+        description="User-Agent for yt-dlp. Empty uses the project default; "
+        "some hosts refuse requests that do not identify themselves.",
+        validation_alias="DOWNLOAD_USER_AGENT",
     )
 
     # Agent configuration
@@ -184,6 +229,35 @@ class Settings(BaseSettings):
         validation_alias="OPENCLAW_PROGRESS_GATE_SECONDS",
     )
 
+    @model_validator(mode="before")
+    @classmethod
+    def allow_missing_keys_in_demo_mode(cls, values: Any) -> Any:
+        """Make Google credentials optional when they are not what drives the run.
+
+        Keys stay *required* in every other mode on purpose: a deployment with
+        a missing key should fail at startup with a clear message, not halfway
+        through someone's first query.
+        """
+        if not isinstance(values, dict):
+            return values
+
+        demo = str(values.get("DEMO_MODE") or values.get("demo_mode") or "").strip().lower()
+        openrouter = str(
+            values.get("OPENROUTER_API_KEY") or values.get("openrouter_api_key") or ""
+        ).strip()
+
+        if demo not in ("1", "true", "yes", "on") and not openrouter:
+            return values
+
+        # Either the app is serving canned data, or OpenRouter is driving the
+        # models — in both cases a Google project is not required to boot. Tools
+        # that need a key of their own still report themselves unavailable.
+        placeholder = "demo-mode-no-key" if not openrouter else "unset-using-openrouter"
+        for alias in ("GOOGLE_API_KEY", "YOUTUBE_API_KEY"):
+            if not values.get(alias):
+                values[alias] = placeholder
+        return values
+
     @model_validator(mode="after")
     def normalize_memories_settings(self) -> "Settings":
         """Normalize user-provided Datalake settings values."""
@@ -197,6 +271,14 @@ class Settings(BaseSettings):
         self.memories_base_url = base_url or "https://api.memories.ai/serve/datalake/v1"
         self.memories_collection_name = collection_name or "video-searching-agent"
         return self
+
+    @property
+    def resolved_llm_provider(self) -> str:
+        """Which provider actually drives the models: 'openrouter' or 'gemini'."""
+        choice = (self.llm_provider or "auto").strip().lower()
+        if choice in ("openrouter", "gemini"):
+            return choice
+        return "openrouter" if self.openrouter_api_key.strip() else "gemini"
 
     model_config = {
         "env_file": ".env",

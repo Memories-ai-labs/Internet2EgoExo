@@ -56,7 +56,9 @@ _HAND_CUES = (
     "双手",
 )
 
-# Actions that imply a hand even when no hand noun appears.
+# Actions that imply a hand even when no hand noun appears. Doubling as the
+# action signature the cleaning agent splits anchors on: a run of segments that
+# stops chopping and starts stirring is two actions, not one long one.
 _MANIPULATION_CUES = (
     "picks up",
     "places",
@@ -77,14 +79,43 @@ _MANIPULATION_CUES = (
     "turns the",
     "opens the",
     "closes the",
+    "chops",
+    "cuts",
+    "moves",
+    "steadies",
+    "holds",
+    "lifts",
+    "scrapes",
+    "sprinkles",
+    "kneads",
+    "folds",
+    "washes",
+    "rinses",
+    "flips",
+    "tightens",
+    "loosens",
+    "removes",
+    "attaches",
+    "wraps",
+    "seals",
+    "measures",
+    "sands",
+    "drills",
+    "saws",
+    "paints",
+    "welds",
 )
 
 # Content that is not footage of the physical world.
 _NON_FOOTAGE_CUES = (
     "screen recording",
     "screenshot",
-    "slide",
+    # Not the bare word "slide": manipulation captions are full of "slides the
+    # sleeve over the wires", and that cue rejected real assembly footage.
     "presentation slide",
+    "slide deck",
+    "title slide",
+    "slideshow",
     "powerpoint",
     "text on a black background",
     "title card",
@@ -190,6 +221,19 @@ def mentions_hands(text: str | None) -> tuple[bool, list[str]]:
     evidence = [f"hand:{cue}" for cue in hand_cues[:2]]
     evidence += [f"manipulation:{cue}" for cue in manipulation_cues[:2]]
     return bool(hand_cues or manipulation_cues), evidence
+
+
+def action_signature(text: str | None) -> set[str]:
+    """The manipulation cues in a piece of caption text.
+
+    Used as a cheap proxy for "which action is this": two consecutive caption
+    segments whose signatures are disjoint are doing different things, and the
+    cleaning agent splits the anchor between them rather than merging a whole
+    continuous take into one shapeless action.
+    """
+    if not text or not text.strip():
+        return set()
+    return set(_cues_present(text.lower(), _MANIPULATION_CUES))
 
 
 def is_footage_text(text: str | None) -> tuple[bool, list[str]]:

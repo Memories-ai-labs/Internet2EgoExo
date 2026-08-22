@@ -42,7 +42,7 @@ from video_searching_agent.agent.react import (
     parse_json_object,
     text_of,
 )
-from video_searching_agent.api.gemini_client import GeminiClient
+from video_searching_agent.api.llm import get_llm_client
 from video_searching_agent.api.memories_datalake_client import (
     MemoriesDatalakeClient,
     MemoriesDatalakeError,
@@ -183,7 +183,7 @@ class AnnotationAgent:
     def __init__(
         self,
         client: MemoriesDatalakeClient | None = None,
-        gemini: GeminiClient | None = None,
+        gemini: Any | None = None,
         max_spans: int = 12,
     ) -> None:
         """Initialize the agent.
@@ -204,9 +204,9 @@ class AnnotationAgent:
         return self._client
 
     @property
-    def gemini(self) -> GeminiClient:
+    def gemini(self) -> Any:
         if self._gemini is None:
-            self._gemini = GeminiClient()
+            self._gemini = get_llm_client()
         return self._gemini
 
     # ------------------------------------------------- annotate known anchors

@@ -4,7 +4,7 @@ import json
 import re
 from typing import Any
 
-from video_searching_agent.api.gemini_client import GeminiClient
+from video_searching_agent.api.llm import get_llm_client
 from video_searching_agent.curation.viewpoint import Viewpoint
 from video_searching_agent.models.query import (
     MetricType,
@@ -93,13 +93,13 @@ Example response:
 class QueryParser:
     """LLM-first slot extraction for video search queries."""
 
-    def __init__(self, gemini_client: GeminiClient | None = None):
+    def __init__(self, gemini_client: Any | None = None):
         """Initialize the query parser.
 
         Args:
             gemini_client: Gemini client for LLM extraction. Creates new if None.
         """
-        self.gemini = gemini_client or GeminiClient()
+        self.gemini = gemini_client or get_llm_client()
 
     async def parse(self, query: str) -> ParsedQuery:
         """Parse a user query and extract all PRD-defined slots.

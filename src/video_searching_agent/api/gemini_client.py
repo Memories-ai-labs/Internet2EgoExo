@@ -96,6 +96,47 @@ class GeminiClient:
             config=config,
         )
 
+    # ------------------------------------------------ conversation building
+    #
+    # These four keep the agent loops free of provider types, so the same loop
+    # runs on Gemini or on OpenRouter.
+
+    def new_conversation(self, text: str) -> list[types.Content]:
+        """Start a conversation with one user turn."""
+        return [types.Content(role="user", parts=[types.Part(text=text)])]
+
+    def append_user_text(self, messages: list[types.Content], text: str) -> None:
+        """Add a user turn."""
+        messages.append(types.Content(role="user", parts=[types.Part(text=text)]))
+
+    def append_model_response(
+        self,
+        messages: list[types.Content],
+        response: types.GenerateContentResponse,
+    ) -> None:
+        """Add the model turn, preserving thought signatures."""
+        content = self.get_response_content(response)
+        if content is not None:
+            messages.append(content)
+
+    def append_tool_results(
+        self,
+        messages: list[types.Content],
+        results: list[tuple[str, str]],
+    ) -> None:
+        """Add one user turn carrying every function response."""
+        if not results:
+            return
+        parts = [
+            types.Part.from_function_response(name=name, response={"result": content})
+            for name, content in results
+        ]
+        messages.append(types.Content(role="user", parts=parts))
+
+    def get_cost_usd(self, response: types.GenerateContentResponse) -> float | None:
+        """Gemini does not report cost; the local price table computes it."""
+        return None
+
     def convert_messages_to_gemini(
         self,
         messages: list[dict[str, Any]],

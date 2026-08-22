@@ -18,11 +18,35 @@ import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+from urllib.parse import unquote, urlparse
 
 logger = logging.getLogger(__name__)
 
 # Progressive MP4 up to 1080p: one file, no ffmpeg merge step required.
 DEFAULT_FORMAT = "best[ext=mp4][height<=1080]/best[height<=1080]/best"
+
+# Some hosts — Wikimedia among them — refuse a request that does not identify
+# itself, and yt-dlp's own default is refused by name in places. An honest,
+# contactable agent string is both politer and more likely to be served.
+DEFAULT_USER_AGENT = (
+    "InternetVideoSearch/0.1 "
+    "(+https://github.com/Memories-ai-labs/Internet-Video-Search)"
+)
+
+# A link that is already the media file needs no extractor. Dataset pages, lab
+# sites and archives serve these directly, and some of those hosts refuse
+# yt-dlp outright — so a plain fetch is tried when the extractor gives up.
+MEDIA_EXTENSIONS = (
+    ".mp4",
+    ".webm",
+    ".mov",
+    ".m4v",
+    ".mkv",
+    ".avi",
+    ".ogv",
+    ".mpg",
+    ".mpeg",
+)
 
 
 @dataclass
@@ -51,6 +75,26 @@ class DownloadError(RuntimeError):
     """Raised when a clip could not be downloaded."""
 
 
+def is_direct_media_url(url: str) -> bool:
+    """True when the URL path already names a media file."""
+    try:
+        path = unquote(urlparse(url).path).lower()
+    except ValueError:
+        return False
+    return path.endswith(MEDIA_EXTENSIONS)
+
+
+def _configured_user_agent() -> str:
+    """The configured agent string, falling back to the default."""
+    try:
+        from video_searching_agent.config.settings import get_settings
+
+        configured = (get_settings().download_user_agent or "").strip()
+    except Exception:  # settings are optional for a bare downloader
+        configured = ""
+    return configured or DEFAULT_USER_AGENT
+
+
 def _select_info(info: dict[str, Any]) -> dict[str, Any]:
     """Unwrap playlist results to the single entry yt-dlp actually fetched."""
     if info.get("_type") == "playlist":
@@ -70,6 +114,7 @@ class ClipDownloader:
         max_duration_seconds: int = 3 * 60 * 60,
         max_filesize_mb: int = 2048,
         format_selector: str = DEFAULT_FORMAT,
+        user_agent: str | None = None,
     ) -> None:
         """Initialize the downloader.
 
@@ -78,17 +123,23 @@ class ClipDownloader:
             max_duration_seconds: Skip anything longer (default 3h).
             max_filesize_mb: Skip anything larger (default 2 GB).
             format_selector: yt-dlp format string.
+            user_agent: Identify the fetcher. Defaults to settings, which
+                default to :data:`DEFAULT_USER_AGENT`.
         """
         self.output_dir = Path(output_dir or "downloads")
         self.max_duration_seconds = max_duration_seconds
         self.max_filesize_mb = max_filesize_mb
         self.format_selector = format_selector
+        self.user_agent = user_agent or _configured_user_agent()
 
     def probe(self, url: str) -> dict[str, Any]:
         """Read a clip's metadata without downloading it.
 
         Cheap enough to run before committing disk and Datalake spend, and it
         is how duration/licence get checked up front.
+
+        A direct media link that the extractor refuses is described from its
+        headers instead — with no duration, which the index fills in later.
         """
         from yt_dlp import YoutubeDL
 
@@ -97,16 +148,67 @@ class ClipDownloader:
             "no_warnings": True,
             "skip_download": True,
             "noplaylist": True,
+            "http_headers": {"User-Agent": self.user_agent},
         }
         try:
             with YoutubeDL(options) as ydl:
                 info = ydl.extract_info(url, download=False)
         except Exception as exc:  # yt-dlp raises a wide range of errors
+            if is_direct_media_url(url):
+                logger.info("extractor refused %s; treating it as a direct file", url)
+                return self._probe_direct(url)
             raise DownloadError(f"Could not read {url}: {exc}") from exc
 
         if not isinstance(info, dict):
             raise DownloadError(f"Could not read {url}: no metadata returned")
         return _select_info(info)
+
+    def _probe_direct(self, url: str) -> dict[str, Any]:
+        """Describe a direct media link from its own headers.
+
+        Duration is unknown here — reading it would mean decoding the file — so
+        it is left out rather than guessed, and the indexed video supplies it.
+        """
+        import httpx
+
+        name = Path(unquote(urlparse(url).path)).name
+        headers = {"User-Agent": self.user_agent}
+        try:
+            with httpx.Client(timeout=30, follow_redirects=True) as client:
+                response = client.head(url, headers=headers)
+                if response.status_code >= 400:
+                    # Some hosts only answer GET; ask for one byte.
+                    response = client.get(
+                        url, headers={**headers, "Range": "bytes=0-0"}
+                    )
+        except httpx.HTTPError as exc:
+            raise DownloadError(f"Could not read {url}: {exc}") from exc
+
+        if response.status_code >= 400:
+            raise DownloadError(
+                f"Could not read {url}: host returned {response.status_code}"
+            )
+
+        content_type = response.headers.get("content-type", "")
+        if content_type and not content_type.startswith(("video/", "application/octet-stream")):
+            raise DownloadError(f"{url} is {content_type or 'not a video'}, not a video file")
+
+        size = response.headers.get("content-range") or response.headers.get("content-length")
+        filesize = None
+        if size:
+            tail = str(size).split("/")[-1]
+            filesize = int(tail) if tail.isdigit() else None
+
+        return {
+            "_direct": True,
+            "id": Path(name).stem,
+            "title": Path(name).stem.replace("_", " "),
+            "ext": Path(name).suffix.lstrip(".") or "mp4",
+            "webpage_url": url,
+            "url": url,
+            "filesize": filesize,
+            "extractor_key": "direct",
+        }
 
     async def probe_async(self, url: str) -> dict[str, Any]:
         """Off-thread :meth:`probe`, so the event loop keeps serving."""
@@ -121,6 +223,8 @@ class ClipDownloader:
         from yt_dlp import YoutubeDL
 
         info = self.probe(url)
+        if info.get("_direct"):
+            return self._download_direct(url, info)
 
         duration = info.get("duration")
         if isinstance(duration, int | float) and duration > self.max_duration_seconds:
@@ -141,6 +245,7 @@ class ClipDownloader:
             "max_filesize": self.max_filesize_mb * 1024 * 1024,
             "retries": 2,
             "socket_timeout": 30,
+            "http_headers": {"User-Agent": self.user_agent},
         }
 
         try:
@@ -175,6 +280,57 @@ class ClipDownloader:
             extractor=result.get("extractor_key") or result.get("extractor"),
             license_note=str(licence) if licence else None,
             warnings=warnings,
+        )
+
+    def _download_direct(self, url: str, info: dict[str, Any]) -> DownloadedClip:
+        """Stream a direct media link to disk, honouring the size bound."""
+        import httpx
+
+        declared = info.get("filesize")
+        limit = self.max_filesize_mb * 1024 * 1024
+        if isinstance(declared, int) and declared > limit:
+            raise DownloadError(
+                f"Clip is {declared // (1024 * 1024)} MB, over the "
+                f"{self.max_filesize_mb} MB limit"
+            )
+
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        path = self.output_dir / f"direct-{info['id']}.{info['ext']}"
+        written = 0
+
+        try:
+            with httpx.Client(timeout=None, follow_redirects=True) as client:
+                with client.stream(
+                    "GET", url, headers={"User-Agent": self.user_agent}
+                ) as response:
+                    if response.status_code >= 400:
+                        raise DownloadError(
+                            f"Download failed for {url}: host returned "
+                            f"{response.status_code}"
+                        )
+                    with open(path, "wb") as handle:
+                        for chunk in response.iter_bytes(1024 * 256):
+                            written += len(chunk)
+                            if written > limit:
+                                handle.close()
+                                path.unlink(missing_ok=True)
+                                raise DownloadError(
+                                    f"Clip exceeded the {self.max_filesize_mb} MB limit "
+                                    "while downloading"
+                                )
+                            handle.write(chunk)
+        except httpx.HTTPError as exc:
+            path.unlink(missing_ok=True)
+            raise DownloadError(f"Download failed for {url}: {exc}") from exc
+
+        return DownloadedClip(
+            url=url,
+            path=path,
+            duration_seconds=None,
+            filesize_bytes=written,
+            title=info.get("title"),
+            extractor="direct",
+            warnings=["fetched directly: no extractor metadata, duration comes from the index"],
         )
 
     async def download_async(self, url: str) -> DownloadedClip:

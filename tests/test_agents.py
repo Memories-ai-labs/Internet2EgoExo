@@ -46,10 +46,23 @@ class _FakeDatalake:
         self._fail_update = fail_update
         self.updates: list[dict[str, Any]] = []
 
-    async def get_caption(self, video_id: str) -> dict[str, Any]:
+    async def get_caption(
+        self,
+        video_id: str,
+        start: float | None = None,
+        end: float | None = None,
+    ) -> dict[str, Any]:
+        """Mirror the real endpoint: timings only when a window is asked for.
+
+        A whole-video read comes back as one aggregated string with no
+        timestamps; a `[start, end]` read comes back as timed segments. Getting
+        this wrong in the fake is what hid the bug that anchors need a window.
+        """
         if self._caption is None and not self._segments:
             raise MemoriesDatalakeError("caption not ready")
-        return {"caption": self._caption, "segments": self._segments}
+        if start is None and end is None:
+            return {"caption": self._caption}
+        return {"segments": self._segments}
 
     async def get_transcription(self, video_id: str) -> dict[str, Any]:
         return {"transcription": self._transcription}
@@ -152,15 +165,37 @@ class TestCleaningAgentScreening:
 class TestAgenticClipping:
     """Where the boundaries are — anchors only, never files."""
 
-    def test_consecutive_hand_segments_merge_into_one_action(self):
+    def test_the_same_action_continuing_merges_into_one_anchor(self):
         segments = _segments(
-            (0.0, 4.0, "The left hand picks up a knife"),
-            (4.0, 9.0, "The right hand slices an onion"),
+            (0.0, 4.0, "The right hand slices an onion"),
+            (4.0, 9.0, "The right hand slices the last of it"),
         )
         tree = CleaningAgent().propose_segments(segments)
         actions = [s for s in tree if s.hier_level == "action"]
         assert len(actions) == 1
         assert (actions[0].span_start, actions[0].span_end) == (0.0, 9.0)
+
+    def test_a_change_of_action_splits_even_with_no_pause(self):
+        # Chopping then stirring is two actions. Merging them on the strength of
+        # "no gap" produces one shapeless anchor that teaches nothing.
+        segments = _segments(
+            (0.0, 40.0, "The right hand chops an onion on the board"),
+            (40.0, 90.0, "The right hand stirs the pan with a wooden spoon"),
+        )
+        tree = CleaningAgent().propose_segments(segments)
+        actions = [s for s in tree if s.hier_level == "action"]
+        assert [(a.span_start, a.span_end) for a in actions] == [(0.0, 40.0), (40.0, 90.0)]
+
+    def test_a_segment_with_no_verb_does_not_split_the_run(self):
+        # Only a real change of action splits; silence about the verb is not one.
+        segments = _segments(
+            (0.0, 5.0, "The right hand slices an onion"),
+            (5.0, 10.0, "Both hands are in frame over the board"),
+            (10.0, 16.0, "The right hand slices the carrot"),
+        )
+        tree = CleaningAgent().propose_segments(segments)
+        actions = [s for s in tree if s.hier_level == "action"]
+        assert len(actions) == 1
 
     def test_idle_segment_breaks_the_run(self):
         segments = _segments(
@@ -201,6 +236,22 @@ class TestAgenticClipping:
         assert task.parent_segment_id is None
         assert task.span_start == 10.0
         assert task.span_end == 30.0
+
+    def test_a_very_long_run_is_cut_at_segment_boundaries(self):
+        # 10 minutes of uninterrupted work is not one action.
+        segments = _segments(
+            *[
+                (float(i * 60), float((i + 1) * 60), "the right hand seats a connector")
+                for i in range(10)
+            ]
+        )
+        tree = CleaningAgent().propose_segments(segments)
+        actions = [s for s in tree if s.hier_level == "action"]
+        assert len(actions) > 1
+        assert all(a.duration <= 120.0 for a in actions)
+        # Cuts land on boundaries the index gave us, not invented ones.
+        boundaries = {0.0} | {float((i + 1) * 60) for i in range(10)}
+        assert all(a.span_start in boundaries and a.span_end in boundaries for a in actions)
 
     def test_no_timed_segments_yields_no_anchors(self):
         assert CleaningAgent().propose_segments([{"text": "hands"}]) == []
@@ -252,7 +303,8 @@ class TestCleaningAgentVerdicts:
         assert TAG_CLEAN in verdict.tags_written
         assert verdict.quality is not None
         assert verdict.quality.commercial_use_ok is True
-        assert len(verdict.action_segments) == 1
+        # Holding and slicing are different actions, so they anchor separately.
+        assert len(verdict.action_segments) == 2
         assert datalake.updates[0]["custom"]["segments"]
 
     @pytest.mark.asyncio
@@ -285,15 +337,36 @@ class TestCleaningAgentVerdicts:
 
     @pytest.mark.asyncio
     async def test_blocking_gate_failure_rejects_even_with_hands(self):
-        # Hands are there, but so is a second person: G1-OTHERFACE is blocking.
+        # Hands are there, but so is a second person, in most of the footage.
         datalake = _FakeDatalake(
             caption="The wearer's hands pass a tool while another person faces "
             "the camera across the bench.",
-            segments=_segments((0.0, 12.0, "the hands pass a tool")),
+            segments=_segments(
+                (0.0, 12.0, "the hands pass a tool while another person faces the camera"),
+                (12.0, 24.0, "two people work across the bench"),
+            ),
         )
-        verdict = await CleaningAgent(client=datalake).clean("vid_5")
+        verdict = await CleaningAgent(client=datalake).clean(
+            "vid_5", media={"duration_seconds": 24}
+        )
         assert verdict.accepted is False
         assert "G1-OTHERFACE" in (verdict.rejection_reason or "")
+
+    @pytest.mark.asyncio
+    async def test_spans_with_someone_else_in_them_are_not_anchored(self):
+        datalake = _FakeDatalake(
+            caption="hands work, then a colleague reaches in",
+            segments=_segments(
+                (0.0, 30.0, "the left hand seats the connector"),
+                (30.0, 60.0, "a colleague reaches in to hold the jig"),
+                (60.0, 90.0, "the left hand seats the next connector"),
+            ),
+        )
+        verdict = await CleaningAgent(client=datalake).clean(
+            "vid_6", media={"duration_seconds": 90}
+        )
+        spans = [(s.span_start, s.span_end) for s in verdict.action_segments]
+        assert spans == [(0.0, 30.0), (60.0, 90.0)]
 
     @pytest.mark.asyncio
     async def test_a_failed_tag_write_does_not_lose_the_verdict(self):
@@ -306,6 +379,23 @@ class TestCleaningAgentVerdicts:
         assert verdict.accepted is True
         assert verdict.tags_written == []
         assert any("could not write tags" in error for error in verdict.errors)
+
+    @pytest.mark.asyncio
+    async def test_anchors_need_a_windowed_caption_read(self):
+        # The whole-video read has no timings, so a clip whose duration is
+        # unknown can be judged but not anchored.
+        datalake = _FakeDatalake(
+            caption="The right hand turns the wrench.",
+            segments=_segments((0.0, 30.0, "the right hand turns the wrench")),
+        )
+        agent = CleaningAgent(client=datalake)
+
+        anchored = await agent.clean("vid_1", media={"duration_seconds": 30})
+        assert anchored.action_segments
+
+        unanchored = await agent.clean("vid_1")
+        assert unanchored.accepted is True
+        assert unanchored.action_segments == []
 
     @pytest.mark.asyncio
     async def test_the_trace_records_every_step(self):

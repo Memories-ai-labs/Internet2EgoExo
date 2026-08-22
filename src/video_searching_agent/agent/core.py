@@ -6,12 +6,10 @@ import time
 from datetime import UTC, datetime
 from typing import Any
 
-from google.genai import types
-
 from video_searching_agent.agent.clarification import ClarificationManager
 from video_searching_agent.agent.prompts import build_system_prompt
 from video_searching_agent.agent.tool_policy import apply_tool_call_policy
-from video_searching_agent.api.gemini_client import GeminiClient
+from video_searching_agent.api.llm import get_llm_client
 from video_searching_agent.config.pricing import get_pricing
 from video_searching_agent.config.settings import get_settings
 from video_searching_agent.curation.manifest import curate_references
@@ -60,6 +58,12 @@ from video_searching_agent.tools.youtube import YouTubeChannelTool, YouTubeSearc
 
 logger = logging.getLogger(__name__)
 
+# Told to the model when the tool policy blocks paid video indexing.
+POLICY_NOTE = (
+    "Policy note: video content analysis is disabled for this query because no "
+    "specific video was given. Continue with discovery/search tools."
+)
+
 
 def _coerce_token_count(value: Any, default: int = 0) -> int:
     """Coerce token usage values to integers with safe fallback."""
@@ -102,7 +106,11 @@ class VideoSearchingAgent:
             self.tool_execution_concurrency = 4
 
         # Initialize Gemini client
-        self.gemini = GeminiClient(api_key=google_api_key)
+        # Gemini or OpenRouter, decided by configuration. `gemini` is the
+        # historical name for it and is kept because the query parser and the
+        # tests reach for that attribute.
+        self.llm = get_llm_client(google_api_key=google_api_key)
+        self.gemini = self.llm
 
         # Initialize query parser for slot extraction (LLM-first approach)
         self.query_parser = QueryParser(gemini_client=self.gemini)
@@ -205,9 +213,7 @@ class VideoSearchingAgent:
         enhanced_query = self._build_enhanced_query(user_query, parsed_query)
 
         # Initialize messages with enhanced query
-        messages: list[types.Content] = [
-            types.Content(role="user", parts=[types.Part(text=enhanced_query)])
-        ]
+        messages: list[Any] = self.llm.new_conversation(enhanced_query)
 
         # Get tool definitions and convert to Gemini format
         tool_definitions = self.tools.get_tool_definitions()
@@ -218,6 +224,7 @@ class VideoSearchingAgent:
         total_input_tokens = 0
         total_output_tokens = 0
         gemini_calls = 0
+        provider_cost_usd = 0.0
         tool_invocations: dict[str, int] = {}
 
         # Agentic loop
@@ -239,6 +246,9 @@ class VideoSearchingAgent:
             # Track token usage
             gemini_calls += 1
             usage = self.gemini.get_usage_metadata(response)
+            reported = self.llm.get_cost_usd(response)
+            if reported is not None:
+                provider_cost_usd += reported
             total_input_tokens += usage["input_tokens"]
             total_output_tokens += usage["output_tokens"]
 
@@ -270,12 +280,10 @@ class VideoSearchingAgent:
                 )
 
             # Add model response to messages (preserves thought signatures)
-            model_content = self.gemini.get_response_content(response)
-            if model_content:
-                messages.append(model_content)
+            self.llm.append_model_response(messages, response)
 
             # Execute tools and collect results as function response parts
-            function_response_parts: list[types.Part] = []
+            tool_result_texts: list[tuple[str, str]] = []
             indexed_tool_calls = [
                 (index, call["name"], call["input"])
                 for index, call in enumerate(tool_calls)
@@ -309,28 +317,13 @@ class VideoSearchingAgent:
                     if not result.success:
                         result_str = f"Error: {result_str}"
 
-                    function_response_parts.append(
-                        types.Part.from_function_response(
-                            name=tool_name,
-                            response={"result": result_str},
-                        )
-                    )
+                    tool_result_texts.append((tool_name, result_str))
             elif blocked_tools:
                 # Steer the model away from paid video indexing on broad queries.
-                messages.append(types.Content(
-                    role="user",
-                    parts=[types.Part(
-                        text=(
-                            "Policy note: video content analysis is disabled for this "
-                            "query because no specific video was given. Continue with "
-                            "discovery/search tools."
-                        )
-                    )],
-                ))
+                self.llm.append_user_text(messages, POLICY_NOTE)
 
             # Add tool results to messages as user turn
-            if function_response_parts:
-                messages.append(types.Content(role="user", parts=function_response_parts))
+            self.llm.append_tool_results(messages, tool_result_texts)
 
             # Increment step
             if not session.increment_step():

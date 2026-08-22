@@ -129,11 +129,43 @@ class TestGateOne:
     def test_nothing_to_read_leaves_the_hand_check_unmeasured(self):
         assert "G1-HAND" in evaluate_clip().unmeasured
 
-    def test_other_people_and_their_hands_block(self):
-        report = evaluate_clip(
-            caption="Another person faces the camera while their hands reach in."
-        )
+    def test_other_people_across_the_clip_block(self):
+        # Pervasive: someone else is in most of the footage, so it is scrapped.
+        segments = [
+            {"text": "another person faces the camera while their hands reach in"},
+            {"text": "the second person keeps working across the bench"},
+            {"text": "the wearer's left hand holds the part"},
+        ]
+        report = evaluate_clip(caption=" ".join(s["text"] for s in segments),
+                               caption_segments=segments)
         assert {"G1-OTHERHAND", "G1-OTHERFACE"} <= set(report.blocking_failures)
+
+    def test_one_mention_in_a_long_clip_does_not_scrap_it(self):
+        # A colleague walking past once is a span to drop, not a dataset veto.
+        segments = [{"text": "the left hand seats the connector"} for _ in range(19)]
+        segments.append({"text": "another person walks past the bench"})
+        report = evaluate_clip(
+            caption=" ".join(s["text"] for s in segments), caption_segments=segments
+        )
+        face = report.check("G1-OTHERFACE")
+        assert face.value == 0.05
+        assert face.passed is True
+        assert "G1-OTHERFACE" not in report.blocking_failures
+
+    def test_without_segments_a_mention_only_flags(self):
+        # No per-segment breakdown means no idea how much of the clip it is, so
+        # the check reports the mention without vetoing on it.
+        report = evaluate_clip(
+            caption="Another person faces the camera while their hands reach in.",
+            require_commercial_use=False,
+        )
+        for check_id in ("G1-OTHERHAND", "G1-OTHERFACE"):
+            check = report.check(check_id)
+            assert check.passed is False
+            assert check.blocking is False
+            assert "no per-segment breakdown" in check.detail
+        assert "G1-OTHERFACE" not in report.blocking_failures
+        assert "G1-OTHERHAND" not in report.blocking_failures
 
     def test_loose_gloves_and_edits_are_flagged_without_blocking(self):
         report = evaluate_clip(
@@ -268,15 +300,21 @@ class TestScorecard:
         assert report.score < 60
 
     def test_a_blocking_failure_is_never_accepted(self):
+        segments = [
+            {"text": "another person faces the camera"},
+            {"text": "two people work across the bench"},
+        ]
         report = evaluate_clip(
             license_value="cc0",
             source_url="https://example.com/v",
             uploader="rider",
             height=1080,
             fps=60,
-            caption="Another person faces the camera.",
+            caption=" ".join(s["text"] for s in segments),
+            caption_segments=segments,
             annotations=_tree(),
         )
+        assert "G1-OTHERFACE" in report.blocking_failures
         assert report.accepted is False
 
 

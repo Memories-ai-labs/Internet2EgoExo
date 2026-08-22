@@ -127,6 +127,9 @@ def text_of(payload: dict[str, Any], field_name: str) -> str | None:
     value = payload.get(field_name)
     if isinstance(value, str) and value.strip():
         return value
+    if value is None and isinstance(payload.get("segments"), list):
+        # A windowed read returns segments and no aggregated field.
+        return _join_segments(payload["segments"])
     if isinstance(value, dict):
         for key in (field_name, "aggregated", "text"):
             inner = value.get(key)

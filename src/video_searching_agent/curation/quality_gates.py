@@ -70,6 +70,10 @@ RESOLUTION_UNUSABLE_HEIGHT = 480
 MIN_FPS = 30
 MAX_IDLE_RATIO = 0.15
 MAX_UNUSABLE_FRAME_RATIO = 0.10
+# Someone else appearing in one segment of a forty-minute factory recording is
+# a span to drop, not a reason to scrap the whole clip. Above this share it is
+# the clip's character rather than an incident, and it is scrapped.
+MAX_OTHER_PERSON_RATIO = 0.10
 
 LICENSES_PERMITTING_COMMERCIAL_USE = frozenset(
     {"creativecommon", "creative_commons", "cc-by", "cc0", "public", "apache-2.0", "cc-by-sa"}
@@ -242,6 +246,18 @@ def _cues(haystack: str, cues: tuple[str, ...]) -> list[str]:
     return [cue for cue in cues if cue in haystack]
 
 
+def mentions_other_people(text: str | None) -> list[str]:
+    """Cues that put someone other than the wearer in frame.
+
+    Exposed per segment because the useful response is usually to drop those
+    spans, not the clip.
+    """
+    if not text or not text.strip():
+        return []
+    lowered = text.lower()
+    return _cues(lowered, _OTHER_PERSON_CUES) + _cues(lowered, _OTHER_HAND_CUES)
+
+
 def mentions_idle(text: str | None) -> list[str]:
     """Idle cues in a piece of caption text.
 
@@ -259,6 +275,33 @@ def permits_commercial_use(license_value: str | None) -> bool:
         return False
     normalised = re.sub(r"[\s_]+", "", license_value.strip().lower())
     return normalised in {re.sub(r"[\s_]+", "", v) for v in LICENSES_PERMITTING_COMMERCIAL_USE}
+
+
+def _cue_ratio(
+    caption_segments: list[dict[str, Any]] | None,
+    cues: tuple[str, ...],
+) -> float | None:
+    """Share of caption segments containing any of these cues.
+
+    None when there are no segments to measure — the caller then has to say so
+    rather than treating silence as a pass.
+    """
+    if not caption_segments:
+        return None
+    total = 0
+    hits = 0
+    for segment in caption_segments:
+        if not isinstance(segment, dict):
+            continue
+        text = str(segment.get("text") or "").lower()
+        if not text.strip():
+            continue
+        total += 1
+        if _cues(text, cues):
+            hits += 1
+    if not total:
+        return None
+    return round(hits / total, 3)
 
 
 def hand_frame_ratio(caption_segments: list[dict[str, Any]] | None) -> float | None:
@@ -471,37 +514,80 @@ def evaluate_clip(
             )
         )
 
+        # With timed segments the question is *how much* of the clip has
+        # someone else in it; without them, all we can say is whether they are
+        # mentioned at all — which is too weak to veto on, so it only flags.
+        other_hand_ratio = _cue_ratio(caption_segments, _OTHER_HAND_CUES)
         other_hands = _cues(visual, _OTHER_HAND_CUES)
-        report.checks.append(
-            GateCheck(
-                "G1-OTHERHAND",
-                "No one else's hands in frame",
-                passed=not other_hands,
-                blocking=True,
-                value=", ".join(other_hands) if other_hands else "none seen",
-                threshold="only the wearer's hands",
-                detail=(
-                    "a second person's hands misattribute the action" if other_hands else None
-                ),
+        if other_hand_ratio is None:
+            report.checks.append(
+                GateCheck(
+                    "G1-OTHERHAND",
+                    "No one else's hands in frame",
+                    passed=not other_hands,
+                    blocking=False,
+                    value=", ".join(other_hands) if other_hands else "none seen",
+                    threshold="only the wearer's hands",
+                    detail=(
+                        "mentioned somewhere in the caption; no per-segment "
+                        "breakdown to say how much of the clip"
+                        if other_hands
+                        else None
+                    ),
+                )
             )
-        )
+        else:
+            report.checks.append(
+                GateCheck(
+                    "G1-OTHERHAND",
+                    "No one else's hands in frame",
+                    passed=other_hand_ratio <= MAX_OTHER_PERSON_RATIO,
+                    blocking=True,
+                    value=other_hand_ratio,
+                    threshold=f"<={MAX_OTHER_PERSON_RATIO:.0%} of segments",
+                    detail=(
+                        "a second person's hands misattribute the action"
+                        if other_hand_ratio > MAX_OTHER_PERSON_RATIO
+                        else None
+                    ),
+                )
+            )
 
+        other_face_ratio = _cue_ratio(caption_segments, _OTHER_PERSON_CUES)
         other_people = _cues(visual, _OTHER_PERSON_CUES)
-        report.checks.append(
-            GateCheck(
-                "G1-OTHERFACE",
-                "No one else's face in frame",
-                passed=not other_people,
-                blocking=True,
-                value=", ".join(other_people[:2]) if other_people else "none seen",
-                threshold="no other person in frame",
-                detail=(
-                    "consent and de-identification risk, and the mount must be wrong"
-                    if other_people
-                    else None
-                ),
+        if other_face_ratio is None:
+            report.checks.append(
+                GateCheck(
+                    "G1-OTHERFACE",
+                    "No one else's face in frame",
+                    passed=not other_people,
+                    blocking=False,
+                    value=", ".join(other_people[:2]) if other_people else "none seen",
+                    threshold="no other person in frame",
+                    detail=(
+                        "mentioned somewhere in the caption; no per-segment "
+                        "breakdown to say how much of the clip"
+                        if other_people
+                        else None
+                    ),
+                )
             )
-        )
+        else:
+            report.checks.append(
+                GateCheck(
+                    "G1-OTHERFACE",
+                    "No one else's face in frame",
+                    passed=other_face_ratio <= MAX_OTHER_PERSON_RATIO,
+                    blocking=True,
+                    value=other_face_ratio,
+                    threshold=f"<={MAX_OTHER_PERSON_RATIO:.0%} of segments",
+                    detail=(
+                        "consent and de-identification risk, and the mount must be wrong"
+                        if other_face_ratio > MAX_OTHER_PERSON_RATIO
+                        else None
+                    ),
+                )
+            )
 
         edits = _cues(visual, _EDIT_CUES)
         report.checks.append(
