@@ -291,6 +291,39 @@ async def refine_anchor(
             pass
 
 
+def record_refined(result: RefineResult, *, query: str = "", store: Any = None) -> int:
+    """Write the uploaded clips into the annotation store.
+
+    A clip row lands as soon as the clip exists, with no tree on it yet: cut and
+    cleaned but not annotated is a real state and the browse UI should be able to
+    show it rather than pretending the clip does not exist until somebody labels
+    it. The tree is attached later, keyed on the same `video_id`.
+    """
+    from video_searching_agent.store.annotations import Clip, open_store
+
+    target = store or open_store()
+    written = 0
+    for clip in result.uploaded:
+        measurement = clip.verdict.measurement if clip.verdict else None
+        target.put(
+            Clip(
+                video_id=str(clip.uploaded_video_id),
+                collection_id=result.collection_id or "",
+                source_video_id=clip.source_video_id,
+                source_start=clip.start,
+                source_end=clip.end,
+                duration_seconds=clip.seconds,
+                query=query,
+                motion_mean=getattr(measurement, "motion_mean", None),
+                sharpness_mean=getattr(measurement, "sharpness_mean", None),
+                payload={"refine": clip.as_dict()},
+            )
+        )
+        written += 1
+    logger.info("recorded %d refined clip(s) in the annotation store", written)
+    return written
+
+
 async def refine_anchors(
     lake: Any,
     anchors: list[dict[str, Any]],
@@ -298,6 +331,7 @@ async def refine_anchors(
     collection_name: str = "egoexo-clean-clips",
     deadline: float | None = None,
     max_clips: int | None = None,
+    record: bool = True,
 ) -> RefineResult:
     """Cut, clean and re-house a list of anchors.
 
@@ -370,6 +404,12 @@ async def refine_anchors(
             )
             result.clips.append(clip)
             result.cut_cost_usd += clip.cut_cost_usd
+
+    if record and result.uploaded:
+        try:
+            record_refined(result)
+        except Exception as exc:  # noqa: BLE001 - the clips are uploaded either way
+            logger.warning("could not record refined clips: %s", exc)
 
     logger.info(
         "refine: %d of %d anchors uploaded to %s, %.1fs of footage, $%.3f in cuts",

@@ -135,9 +135,20 @@ something else. Three frames out of an hour miss most of what happens.
 
 The line between "other_kind" and "unclear" is the whole point. Only \
 "other_kind" throws the video away, and it must be a claim about the video, \
-never about these three frames."""
+never about these three frames.
+
+And one more, separately: is this footage of the physical world at all?
+
+"screen" means the footage *is* a screen's contents — a software tutorial, an \
+editor, a game, a slide deck, a phone recording of a phone. Not merely that a \
+screen appears: somebody typing at a laptop, or working while a monitor sits on \
+the desk, is physical-world footage and the screen in it is furniture.
+
+"physical" means a camera pointed at the world. "unclear" when the frames \
+cannot say. Only "screen" throws the video away."""
 
 TASK_FIELDS = """
+ "world": "physical" | "screen" | "unclear",
  "task": "doing" | "other_kind" | "unclear",
  "task_confidence": 0.0-1.0,
  "task_why": "one clause naming what in the frames decided the activity","""
@@ -172,6 +183,13 @@ class SightVerdict:
     confidence: float = 0.0
     why: str = ""
     task_reading: str = ""
+    # Whether this is footage of the world at all. A fixed phrase list could not
+    # do this job: the Unity-editor clip's caption said "the user is back in the
+    # Unity editor, right-clicking in the hierarchy" and matched none of
+    # `_NON_FOOTAGE_CUES`, because the cues name the medium ("screen recording")
+    # and captions name the application. Asking generalises to software nobody
+    # thought to enumerate.
+    world: str = ""
     task_confidence: float = 0.0
     task_why: str = ""
     method: str = "none"
@@ -206,6 +224,16 @@ class SightVerdict:
 
         return {"doing": True, "other_kind": False}.get(self.task_reading)
 
+    def is_screen_capture(self) -> bool:
+        """Whether this is a screen's contents rather than the world.
+
+        No confidence threshold, unlike the other two: "physical" and "screen"
+        are a plain either-or that three frames settle, where a viewpoint can be
+        genuinely ambiguous and an activity can be off-frame. `unclear` and an
+        unanswered field both keep the candidate.
+        """
+        return self.looked and self.world == "screen"
+
     def misses_task(self) -> bool:
         """Whether what was seen makes this the wrong video for the task.
 
@@ -236,6 +264,7 @@ class SightVerdict:
             "why": self.why,
             "shows_task": self.shows_task,
             "task_reading": self.task_reading,
+            "world": self.world,
             "task_confidence": round(self.task_confidence, 2),
             "task_why": self.task_why,
             "method": self.method,
@@ -485,6 +514,9 @@ def _read(response: Any, client: Any) -> SightVerdict:
     task_reading = str(parsed.get("task") or "").strip().lower()
     if task_reading not in ("doing", "other_kind", "unclear"):
         task_reading = ""
+    world = str(parsed.get("world") or "").strip().lower()
+    if world not in ("physical", "screen", "unclear"):
+        world = ""
     task_confidence = parsed.get("task_confidence")
     try:
         task_confidence = float(task_confidence)
@@ -504,6 +536,7 @@ def _read(response: Any, client: Any) -> SightVerdict:
         confidence=max(0.0, min(1.0, confidence)),
         why=str(parsed.get("why") or "")[:300],
         task_reading=task_reading,
+        world=world,
         task_confidence=max(0.0, min(1.0, task_confidence)),
         task_why=str(parsed.get("task_why") or "")[:300],
         cost_usd=cost,
