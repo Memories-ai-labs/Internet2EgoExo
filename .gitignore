@@ -103,3 +103,6 @@ npm-debug.log*
 # deployment at one moment, and it can be large; eval/sample-scorecard.md is
 # committed instead so the output's shape is visible from a clean clone.
 eval/results/
+
+# The annotation store is data, not code. Its rows come from runs.
+data/
