@@ -36,6 +36,7 @@ function store(key: string, value: string): void {
 interface Health {
   demo_mode?: boolean;
   auth_required?: boolean;
+  max_collect_urls?: number;
   model?: string;
   version?: string;
 }
@@ -97,6 +98,9 @@ export function App() {
     setSelected((current) =>
       current.includes(url) ? current.filter((item) => item !== url) : [...current, url],
     );
+
+  const selectAll = (urls: string[]) =>
+    setSelected((current) => [...new Set([...current, ...urls])]);
 
   return (
     <div className="shell">
@@ -242,13 +246,20 @@ export function App() {
             ownKeys={ownKeys}
             selected={selected}
             onToggleSelected={toggleSelected}
+            onSelectAll={selectAll}
+            onClearSelection={() => setSelected([])}
             onSendToCollection={() => {
               setQueued(selected);
               setView("collect");
             }}
           />
         ) : (
-          <CollectView apiKey={apiKey} ownKeys={ownKeys} queuedUrls={queued} />
+          <CollectView
+            apiKey={apiKey}
+            ownKeys={ownKeys}
+            queuedUrls={queued}
+            maxUrlsPerRequest={health?.max_collect_urls ?? 25}
+          />
         )}
       </main>
     </div>

@@ -220,9 +220,16 @@ export interface CollectViewProps {
   ownKeys: OwnKeys;
   apiKey: string;
   queuedUrls: string[];
+  /** What the server accepts per request; the queue is sent in batches of it. */
+  maxUrlsPerRequest: number;
 }
 
-export function CollectView({ apiKey, ownKeys, queuedUrls }: CollectViewProps) {
+export function CollectView({
+  apiKey,
+  ownKeys,
+  queuedUrls,
+  maxUrlsPerRequest,
+}: CollectViewProps) {
   const [urlText, setUrlText] = useState(queuedUrls.join("\n"));
   const [requireHands, setRequireHands] = useState(true);
   const [viewpoint, setViewpoint] = useState("egocentric");
@@ -230,6 +237,7 @@ export function CollectView({ apiKey, ownKeys, queuedUrls }: CollectViewProps) {
   const [annotate, setAnnotate] = useState(true);
 
   const [collecting, setCollecting] = useState(false);
+  const [batch, setBatch] = useState<{ index: number; total: number } | null>(null);
   const [clips, setClips] = useState<Record<string, IngestClip>>({});
   const [order, setOrder] = useState<string[]>([]);
   const [error, setError] = useState("");
@@ -268,28 +276,44 @@ export function CollectView({ apiKey, ownKeys, queuedUrls }: CollectViewProps) {
       setOrder((current) => (current.includes(clip.url) ? current : [...current, clip.url]));
     };
 
-    await streamRequest(
-      "/api/v1/collect/stream",
-      {
-        urls,
-        require_hands: requireHands,
-        viewpoint: viewpoint || undefined,
-        min_duration_seconds: minDuration ? Number(minDuration) : undefined,
-        annotate,
-      },
-      {
-        onEvent: (event, data) => {
-          if (event === "clip_stage" || event === "clip_done") {
-            record(data.clip as unknown as IngestClip);
-          } else if (event === "error") {
-            setError(String(data.message ?? "Collection failed"));
-          }
+    // The server caps how many clips one request may queue, because indexing is
+    // billed per video-minute. Rather than refusing a longer queue — which is
+    // what it used to do, at submit time, after you had already picked them —
+    // the queue is sent in batches of that size.
+    const batches: string[][] = [];
+    for (let index = 0; index < urls.length; index += maxUrlsPerRequest) {
+      batches.push(urls.slice(index, index + maxUrlsPerRequest));
+    }
+
+    for (const [index, group] of batches.entries()) {
+      if (controller.current?.signal.aborted) break;
+      setBatch({ index: index + 1, total: batches.length });
+
+      await streamRequest(
+        "/api/v1/collect/stream",
+        {
+          urls: group,
+          require_hands: requireHands,
+          viewpoint: viewpoint || undefined,
+          min_duration_seconds: minDuration ? Number(minDuration) : undefined,
+          annotate,
         },
-        onError: setError,
-        onDone: () => setCollecting(false),
-      },
-      { apiKey, keys: ownKeys, signal: controller.current.signal },
-    );
+        {
+          onEvent: (event, data) => {
+            if (event === "clip_stage" || event === "clip_done") {
+              record(data.clip as unknown as IngestClip);
+            } else if (event === "error") {
+              setError(String(data.message ?? "Collection failed"));
+            }
+          },
+          onError: setError,
+        },
+        { apiKey, keys: ownKeys, signal: controller.current.signal },
+      );
+    }
+
+    setBatch(null);
+    setCollecting(false);
   }
 
   async function curate() {
@@ -331,9 +355,20 @@ export function CollectView({ apiKey, ownKeys, queuedUrls }: CollectViewProps) {
 
       <Panel
         title="Collect"
-        meta={collecting ? "running" : `${urls.length} URL${urls.length === 1 ? "" : "s"} queued`}
+        meta={
+          collecting
+            ? batch
+              ? `batch ${batch.index} of ${batch.total}`
+              : "running"
+            : `${urls.length} URL${urls.length === 1 ? "" : "s"} queued`
+        }
       >
-        <Field label="Candidate URLs — one per line, 25 at a time">
+        <Field
+          label={
+            `Candidate URLs — one per line. This deployment indexes ` +
+            `${maxUrlsPerRequest} per request; longer queues are sent in batches.`
+          }
+        >
           <textarea
             className="textarea"
             value={urlText}

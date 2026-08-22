@@ -30,6 +30,8 @@ export interface SearchViewProps {
   apiKey: string;
   selected: string[];
   onToggleSelected: (url: string) => void;
+  onSelectAll: (urls: string[]) => void;
+  onClearSelection: () => void;
   onSendToCollection: () => void;
 }
 
@@ -38,6 +40,8 @@ export function SearchView({
   ownKeys,
   selected,
   onToggleSelected,
+  onSelectAll,
+  onClearSelection,
   onSendToCollection,
 }: SearchViewProps) {
   const [query, setQuery] = useState("first-person cooking videos, hands visible");
@@ -146,6 +150,9 @@ export function SearchView({
       { apiKey, keys: ownKeys, signal: controller.current.signal },
     );
   }
+
+  const allSelected =
+    clips.length > 0 && clips.every((clip) => selected.includes(clip.url));
 
   return (
     <>
@@ -275,8 +282,19 @@ export function SearchView({
         action={
           <div className="row">
             <span className="panel__meta">
-              {selected.length ? `${selected.length} selected` : `${clips.length} found`}
+              {selected.length ? `${selected.length} of ${clips.length} selected` : `${clips.length} found`}
             </span>
+            {clips.length ? (
+              <button
+                type="button"
+                className="button button--small button--ghost"
+                onClick={() =>
+                  allSelected ? onClearSelection() : onSelectAll(clips.map((clip) => clip.url))
+                }
+              >
+                {allSelected ? "Clear" : "Select all"}
+              </button>
+            ) : null}
             <button
               type="button"
               className="button button--small button--primary"

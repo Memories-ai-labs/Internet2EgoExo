@@ -36,6 +36,7 @@ async def health_check() -> dict[str, Any]:
             "version": __version__,
             "demo_mode": True,
             "auth_required": auth_required,
+            "max_collect_urls": settings.max_collect_urls,
             "model": "none — demo payloads",
             "tools": {"total": 0, "healthy": 0, "details": {}},
         }
@@ -52,6 +53,7 @@ async def health_check() -> dict[str, Any]:
         "version": __version__,
         "demo_mode": False,
         "auth_required": auth_required,
+        "max_collect_urls": settings.max_collect_urls,
         "model": llm_label(),
         "tools": {
             "total": total_count,

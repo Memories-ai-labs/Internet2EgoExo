@@ -115,10 +115,22 @@ if (!treeText.includes("hand assignment not stated")) problems.push("tree does n
 const depth = await page.locator(".card__tree .tree__node .tree__node .tree__node").count();
 if (!depth) problems.push("the annotation tree is flat — task/action/event are not nested");
 
-// 3. select and send to collection — two clips, so the batch shows both a clip
-// that clears the gates and one that is dropped for having no hands.
-await page.locator(".card").first().locator('input[type="checkbox"]').check();
-await page.locator(".card").nth(2).locator('input[type="checkbox"]').check();
+// 3. Select all, then send to collection. Selecting everything is what a real
+// run does, and it is also how the queue-longer-than-the-server-cap path gets
+// exercised.
+await page.getByRole("button", { name: "Select all" }).click();
+// Target the Candidates panel by its own title: `hasText` alone also matches
+// panels that merely mention the word.
+const candidatesPanel = page.locator('.panel:has(.panel__title:text-is("Candidates"))');
+const selectedLabel = await candidatesPanel.locator(".panel__meta").innerText();
+if (!/\d+ of \d+ selected/.test(selectedLabel)) {
+  problems.push(`select all did not report a count: "${selectedLabel}"`);
+}
+if (!(await page.getByRole("button", { name: "Clear" }).count())) {
+  problems.push("Select all did not turn into Clear");
+}
+// Drop one so the batch contains both an accepted and a rejected clip.
+await page.locator(".card").nth(1).locator('input[type="checkbox"]').uncheck();
 await page.getByRole("button", { name: "Send to the Datalake" }).click();
 await page.waitForSelector(".page-head h1:has-text('Curate')", { timeout: 5000 });
 await step("04-collect-prefilled");
@@ -126,6 +138,11 @@ const queued = await page.locator(".textarea").inputValue();
 if (!queued.includes("aaa1")) problems.push("the selected URL did not reach the collection queue");
 if (queued.split("\n").filter(Boolean).length !== 2) {
   problems.push(`the collection queue holds ${queued.split("\n").filter(Boolean).length} URLs, expected 2`);
+}
+// The label must state the server's real cap, not a hardcoded number.
+const urlLabel = await page.locator(".field__label").filter({ hasText: "Candidate URLs" }).innerText();
+if (!/indexes \d+ per request/.test(urlLabel)) {
+  problems.push(`the URL field does not state the server cap: "${urlLabel}"`);
 }
 
 // 4. collect
