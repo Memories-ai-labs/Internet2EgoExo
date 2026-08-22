@@ -15,7 +15,6 @@ ui/vite.config.ts
 ui/index.html
 tests
 docs
-openclaw
 htmlcov
 .venv
 .pytest_cache

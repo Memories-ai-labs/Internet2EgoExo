@@ -250,15 +250,6 @@ class Settings(BaseSettings):
         validation_alias="SSE_PING_INTERVAL",
     )
 
-    # OpenClaw UX tuning
-    openclaw_progress_gate_seconds: int = Field(
-        default=5,
-        ge=1,
-        le=60,
-        description="Seconds before first throttled OpenClaw progress update",
-        validation_alias="OPENCLAW_PROGRESS_GATE_SECONDS",
-    )
-
     @model_validator(mode="before")
     @classmethod
     def allow_missing_keys_in_demo_mode(cls, values: Any) -> Any:
