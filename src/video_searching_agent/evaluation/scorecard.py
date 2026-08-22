@@ -33,6 +33,56 @@ def render(card: Scorecard, *, title: str = "Eval scorecard") -> str:
             "everything below the candidate count is empty by construction.",
             "",
         ]
+    # The one number the project is for, above the funnel that produced it.
+    # A grade mixes in licence and resolution — real concerns, but not what
+    # makes a clip trainable — so leading with a grade band buries the answer.
+    lines += [
+        "## 0. Valid clips — the deliverable",
+        "",
+        "A clip is **valid** when it is the thing this project exists to produce:",
+        "the hands are in frame, the manipulation is legible, and there is a tree",
+        "over it whose atomic actions name what each hand did and to what.",
+        "Independent of grade on purpose — a clip can be a C for having a",
+        "non-Creative-Commons licence and still be perfectly trainable.",
+        "",
+    ]
+    if not chain.validity_is_measurable:
+        lines += [
+            f"> ⚠️ **Not measured in this run.** All {chain.graded} graded clips were "
+            "recorded before the validity fields existed, so there is no evidence "
+            "here either way. Absent evidence is not a zero — re-run to measure it.",
+            "",
+        ]
+    elif chain.validity_unmeasured:
+        lines += [
+            f"> ⚠️ {chain.validity_unmeasured} of {chain.graded} clips predate the "
+            "validity fields and are excluded from the rate below, not counted "
+            "against it.",
+            "",
+        ]
+    lines += [
+        "| | count | rate |",
+        "| --- | --- | --- |",
+        f"| **valid clips** | **{chain.valid}** | "
+        f"**{_pct(chain.valid, chain.graded - chain.validity_unmeasured)} "
+        f"of the {chain.graded - chain.validity_unmeasured} measured** |",
+        f"| valid clips per query asked | {chain.valid_per_query:.2f} | — |",
+        f"| queries with at least one valid clip | {chain.queries_with_a_valid_clip} | "
+        f"{_pct(chain.queries_with_a_valid_clip, chain.queries)} |",
+        f"| valid hours | {chain.valid_hours:.2f} | "
+        f"{_pct(chain.valid_hours, chain.usable_hours)} of usable |",
+        "",
+    ]
+    # Where validity and acceptance disagree is the interesting number: a valid
+    # clip the gates rejected was rejected for something a buyer did not ask
+    # about, and the other direction would be a bug.
+    if chain.valid != chain.accepted:
+        lines += [
+            f"> {chain.valid} valid against {chain.accepted} accepted. The gap is "
+            "clips the gates judged on something other than trainability — check "
+            "section 6 before reading it as a defect.",
+            "",
+        ]
     lines += [
         "## 1. Yield — where the funnel loses things",
         "",
@@ -48,7 +98,9 @@ def render(card: Scorecard, *, title: str = "Eval scorecard") -> str:
         f"{_pct(chain.attempted, chain.candidates)} |",
         f"| reached the Datalake | {chain.indexed} | {_pct(chain.indexed, chain.attempted)} |",
         f"| graded by the gates | {chain.graded} | {_pct(chain.graded, chain.indexed)} |",
-        f"| **accepted** | **{chain.accepted}** | **{_pct(chain.accepted, chain.graded)}** |",
+        f"| **valid** | **{chain.valid}** | **{_pct(chain.valid, chain.graded)}** |",
+        f"| accepted by the gates | {chain.accepted} | "
+        f"{_pct(chain.accepted, chain.graded)} |",
         f"| of those, an A or a B | {chain.high_quality} | "
         f"{_pct(chain.high_quality, chain.graded)} |",
         f"| queries with at least one accepted clip | "

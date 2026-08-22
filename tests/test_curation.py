@@ -726,3 +726,103 @@ class TestRegradingMayOnlyTakeAcceptanceAway:
 
         assert clip.accepted is False
         assert clip.rejection_reason == "frames show exocentric footage"
+
+
+class TestTheWorldAndLegibilityHalvesOfTheLook:
+    """The two questions that were asked and then ignored.
+
+    `world` was added, billed on every look, and never wired: `is_screen_capture`
+    had no callers at all, which is why a Unity-editor screen recording reached
+    the clean collection. `legibility` is the fourth question — footage nobody
+    can read the manipulation in is not training data however right its
+    viewpoint is. Both reject here, at the last point before a download.
+    """
+
+    _refs = staticmethod(TestVerifyingViewpointsAtSearchTime._refs)
+    _manifest = staticmethod(TestVerifyingViewpointsAtSearchTime._manifest)
+
+    @staticmethod
+    def _seer(answers):
+        """check_many stand-in: ``video_id -> (world, legibility)``.
+
+        Everything else answers in the way that keeps a candidate, so each test
+        isolates the one question it is about.
+        """
+        from video_searching_agent.curation.frame_viewpoint import SightVerdict
+        from video_searching_agent.curation.viewpoint import Viewpoint
+
+        async def check_many(client, candidates, *, task=None, mode="frames", concurrency=6):
+            return [
+                SightVerdict(
+                    viewpoint=Viewpoint.EGOCENTRIC,
+                    confidence=0.95,
+                    method="frames",
+                    why="a worn camera over a work surface",
+                    task_reading="doing",
+                    task_confidence=0.9,
+                    world=answers[c["video_id"]][0],
+                    legibility=answers[c["video_id"]][1],
+                    cost_usd=0.002,
+                )
+                for c in candidates
+            ]
+
+        return check_many
+
+    async def _kept(self, monkeypatch, answers):
+        from video_searching_agent.curation import frame_viewpoint
+        from video_searching_agent.curation.manifest import verify_viewpoints
+        from video_searching_agent.curation.viewpoint import Viewpoint
+
+        refs = self._refs(*[(vid, f"POV {vid}") for vid in answers])
+        manifest = self._manifest(refs)
+        monkeypatch.setattr(frame_viewpoint, "check_many", self._seer(answers))
+        kept = await verify_viewpoints(
+            refs,
+            manifest,
+            wanted=Viewpoint.EGOCENTRIC,
+            task="someone assembling a desk",
+            llm=object(),
+            mode="frames",
+        )
+        return [r.video_id for r in kept], manifest.exclusion_reasons
+
+    @pytest.mark.asyncio
+    async def test_a_screen_recording_is_dropped(self, monkeypatch):
+        """It passes viewpoint and activity: a monitor fills the frame, and
+        somebody really is doing the task — in software."""
+        kept, reasons = await self._kept(
+            monkeypatch,
+            {"world": ("physical", "legible"), "unity": ("screen", "legible")},
+        )
+        assert kept == ["world"]
+        assert reasons == {"frames show a screen, not the world": 1}
+
+    @pytest.mark.asyncio
+    async def test_illegible_footage_is_dropped(self, monkeypatch):
+        kept, reasons = await self._kept(
+            monkeypatch,
+            {"sharp": ("physical", "legible"), "smeared": ("physical", "illegible")},
+        )
+        assert kept == ["sharp"]
+        assert reasons == {"cannot see what the hands are doing": 1}
+
+    @pytest.mark.asyncio
+    async def test_unclear_and_unanswered_both_keep_the_candidate(self, monkeypatch):
+        """The asymmetry that governs every question in this look.
+
+        A worn camera moves, and a legibility question that rejected on doubt
+        would throw away worn-camera footage for doing what worn cameras do. An
+        empty string is what a model that ignored the new field returns, and it
+        must cost nothing.
+        """
+        kept, reasons = await self._kept(
+            monkeypatch,
+            {
+                "doubtful": ("unclear", "unclear"),
+                "silent": ("", ""),
+                "fine": ("physical", "legible"),
+            },
+        )
+        assert sorted(kept) == ["doubtful", "fine", "silent"]
+        assert reasons == {}

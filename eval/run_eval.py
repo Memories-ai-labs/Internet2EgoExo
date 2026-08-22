@@ -230,9 +230,30 @@ def _clip_outcome(query_id: str, clip: dict) -> ClipOutcome:
     duration = int(clip.get("duration_seconds") or 0)
     spans_read = int(annotation.get("spans_considered") or 0)
 
+    # Validity, per the project's one goal: hands in frame, legible footage, and
+    # a tree naming atomic actions with what the hands did and to what. Counted
+    # over the annotation payloads rather than inferred from the grade, because
+    # the grade also moves with licence and resolution.
+    action_labels = [
+        label
+        for label in labels
+        if str(label.get("hier_level") or "").lower() in ("action", "event")
+    ]
+    with_hands = sum(
+        1 for label in action_labels if label.get("left_hand") or label.get("right_hand")
+    )
+    with_objects = sum(1 for label in action_labels if label.get("objects"))
+    # "unmeasured" is not "failed": captions that could not settle the hand
+    # question have not failed it, and must not be scored as though they had.
+    blocking = list(clip.get("blocking_failures") or [])
+    hands_gate = "failed" if "G1-HAND" in blocking else ("passed" if labels else "unmeasured")
+
     return ClipOutcome(
         query_id=query_id,
         video_id=str(clip.get("video_id") or ""),
+        hands_gate=hands_gate,
+        actions_with_hands=with_hands,
+        actions_with_objects=with_objects,
         grade=str(clip.get("grade") or "D"),
         score=int(clip.get("score") or 0),
         accepted=bool(clip.get("accepted")),

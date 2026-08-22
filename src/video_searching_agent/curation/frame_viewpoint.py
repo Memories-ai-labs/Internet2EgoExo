@@ -145,10 +145,29 @@ screen appears: somebody typing at a laptop, or working while a monitor sits on 
 the desk, is physical-world footage and the screen in it is furniture.
 
 "physical" means a camera pointed at the world. "unclear" when the frames \
-cannot say. Only "screen" throws the video away."""
+cannot say. Only "screen" throws the video away.
+
+And last, separately: can you see what the hands are doing?
+
+This is about legibility, not beauty. Training data has to show the manipulation \
+well enough to read it.
+
+"illegible" — the manipulation cannot be made out: motion-blurred to smearing, \
+out of focus, so dark or blown out that shape is gone, or the hands are a few \
+pixels across in a wide shot. A claim about how this footage is shot, so it \
+holds for the rest of the video too.
+
+"legible" — you can see what the hands are doing. Ordinary compression, a \
+shaky worn camera, grain, one passing blurred frame: all legible. Head-mounted \
+footage moves, and movement is not blur.
+
+"unclear" when the hands are not in these frames to judge, or the frames cannot \
+say. Only "illegible" throws the video away."""
 
 TASK_FIELDS = """
  "world": "physical" | "screen" | "unclear",
+ "legibility": "legible" | "illegible" | "unclear",
+ "legibility_why": "one clause naming what in the frames decided legibility",
  "task": "doing" | "other_kind" | "unclear",
  "task_confidence": 0.0-1.0,
  "task_why": "one clause naming what in the frames decided the activity","""
@@ -190,6 +209,14 @@ class SightVerdict:
     # and captions name the application. Asking generalises to software nobody
     # thought to enumerate.
     world: str = ""
+    # Whether the manipulation can be read at all. Not a beauty judgement and
+    # deliberately not a Laplacian: variance of Laplacian measures *texture*,
+    # not focus — real usable footage scored 96 against an end card's 4144, so
+    # the cheap numeric proxy ranks a title card above the footage it precedes.
+    # Asking the frames "can you see what the hands are doing" measures the
+    # thing that matters, in the look we are already paying for.
+    legibility: str = ""
+    legibility_why: str = ""
     task_confidence: float = 0.0
     task_why: str = ""
     method: str = "none"
@@ -234,6 +261,18 @@ class SightVerdict:
         """
         return self.looked and self.world == "screen"
 
+    def is_illegible(self) -> bool:
+        """Whether the manipulation cannot be read in this footage.
+
+        Same plain either-or as :meth:`is_screen_capture`, and for the same
+        reason: how a video is shot is a property of the video, so three stills
+        settle it. `unclear` and an unanswered field both keep the candidate —
+        the asymmetry that :meth:`misses_task` explains applies here too, and a
+        legibility question that rejected on doubt would throw away worn-camera
+        footage for moving, which is what worn cameras do.
+        """
+        return self.looked and self.legibility == "illegible"
+
     def misses_task(self) -> bool:
         """Whether what was seen makes this the wrong video for the task.
 
@@ -265,6 +304,7 @@ class SightVerdict:
             "shows_task": self.shows_task,
             "task_reading": self.task_reading,
             "world": self.world,
+            "legibility": self.legibility,
             "task_confidence": round(self.task_confidence, 2),
             "task_why": self.task_why,
             "method": self.method,
@@ -517,6 +557,9 @@ def _read(response: Any, client: Any) -> SightVerdict:
     world = str(parsed.get("world") or "").strip().lower()
     if world not in ("physical", "screen", "unclear"):
         world = ""
+    legibility = str(parsed.get("legibility") or "").strip().lower()
+    if legibility not in ("legible", "illegible", "unclear"):
+        legibility = ""
     task_confidence = parsed.get("task_confidence")
     try:
         task_confidence = float(task_confidence)
@@ -537,6 +580,8 @@ def _read(response: Any, client: Any) -> SightVerdict:
         why=str(parsed.get("why") or "")[:300],
         task_reading=task_reading,
         world=world,
+        legibility=legibility,
+        legibility_why=str(parsed.get("legibility_why") or "")[:300],
         task_confidence=max(0.0, min(1.0, task_confidence)),
         task_why=str(parsed.get("task_why") or "")[:300],
         cost_usd=cost,

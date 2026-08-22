@@ -86,6 +86,24 @@ class ClipOutcome:
     annotations: int = 0
     blocking_failures: list[str] = field(default_factory=list)
 
+    # --- validity: the one thing the project delivers -------------------
+    #
+    # A grade is a composite of things a buyer did not ask about; what they
+    # asked for is a clip you can train on. That is: the hands are in frame,
+    # the manipulation is legible, and there is a tree over it naming atomic
+    # actions with what each hand did and to what. These three fields are the
+    # per-clip evidence for that, recorded rather than derived from the grade,
+    # because the grade also moves with licence and resolution.
+    #
+    # `hands_gate` is "passed" / "failed" / "unmeasured" — never a bool, since
+    # a clip whose captions could not settle it has not failed anything.
+    hands_gate: str = "unmeasured"
+    # Annotated action spans that name at least one hand, and that name at
+    # least one object. An action span with neither is a label, not a
+    # demonstration.
+    actions_with_hands: int = 0
+    actions_with_objects: int = 0
+
     # --- what it cost, in billable units rather than dollars ------------
     #
     # Units, not dollars, because the rates belong in one place
@@ -111,6 +129,40 @@ class ClipOutcome:
     @property
     def high_quality(self) -> bool:
         return self.accepted and self.grade in HIGH_QUALITY
+
+    @property
+    def validity_measured(self) -> bool:
+        """Whether this record carries the evidence validity needs.
+
+        Records written before the validity fields existed default to
+        `hands_gate="unmeasured"` with zero action detail, which would read as
+        *invalid* when it means *not measured* — the repo's own rule broken in a
+        new place. The runner never writes "unmeasured" for a clip that has
+        annotations (labels present means the gate was read one way or the
+        other), so that combination identifies an older record exactly.
+        """
+        return not (self.hands_gate == "unmeasured" and self.annotations > 0)
+
+    @property
+    def valid(self) -> bool:
+        """Whether this clip is the thing the project exists to produce.
+
+        Hands in frame, legible footage, and a tree with at least one atomic
+        action carrying hand or object detail. Deliberately independent of
+        grade: a clip can be a C purely because its licence is not Creative
+        Commons (measured: licence is worth 7 points and is the C/B boundary)
+        and still be perfectly trainable. Deliberately independent of
+        annotation *level* too — L2 versus L3 is depth for its own sake, and
+        what matters is whether an action span says what the hands did.
+
+        Legibility is not re-checked here: an illegible candidate is dropped
+        before download, so anything that reached grading has passed it.
+        """
+        return (
+            self.hands_gate != "failed"
+            and not self.blocking_failures
+            and (self.actions_with_hands + self.actions_with_objects) > 0
+        )
 
 
 @dataclass
@@ -150,6 +202,10 @@ class QueryOutcome:
     def accepted(self) -> int:
         return sum(1 for clip in self.clips if clip.accepted)
 
+    @property
+    def valid(self) -> int:
+        return sum(1 for clip in self.clips if clip.valid)
+
 
 @dataclass
 class YieldChain:
@@ -173,6 +229,15 @@ class YieldChain:
     graded: int = 0
     accepted: int = 0
     high_quality: int = 0
+    # The headline. Counted alongside `accepted` rather than replacing it, so a
+    # divergence between them is visible: a clip that is valid but not accepted
+    # is one the gates rejected for something a buyer did not ask about.
+    valid: int = 0
+    queries_with_a_valid_clip: int = 0
+    valid_hours: float = 0.0
+    # Clips whose records predate the validity fields. Excluded from the rate's
+    # denominator rather than counted against it.
+    validity_unmeasured: int = 0
     action_anchors: int = 0
     accepted_action_anchors: int = 0
     total_anchors: int = 0
@@ -200,6 +265,36 @@ class YieldChain:
     def acceptance_rate(self) -> float:
         """Of the clips that were graded, how many the gates accepted."""
         return _ratio(self.accepted, self.graded)
+
+    @property
+    def validity_rate(self) -> float:
+        """Of the clips that were graded, how many are trainable.
+
+        The project's one number: hands in frame, legible, and annotated with
+        atomic actions naming hands or objects. Read this before the grade
+        bands — a grade mixes in licence and resolution, which are real
+        concerns but not what makes a clip usable.
+        """
+        return _ratio(self.valid, self.graded - self.validity_unmeasured)
+
+    @property
+    def valid_query_rate(self) -> float:
+        """Of the queries asked, how many produced at least one valid clip."""
+        return _ratio(self.queries_with_a_valid_clip, self.queries)
+
+    @property
+    def valid_per_query(self) -> float:
+        """Valid clips per query asked — the number to compare runs on.
+
+        Per *query asked*, not per query that found something, so a run cannot
+        improve by failing to search.
+        """
+        return _ratio(self.valid, self.queries)
+
+    @property
+    def validity_is_measurable(self) -> bool:
+        """Whether any clip in this run recorded what validity needs."""
+        return self.graded > self.validity_unmeasured
 
     @property
     def high_quality_rate(self) -> float:
@@ -327,6 +422,15 @@ class Stratum:
     graded: int = 0
     accepted: int = 0
     high_quality: int = 0
+    # The headline. Counted alongside `accepted` rather than replacing it, so a
+    # divergence between them is visible: a clip that is valid but not accepted
+    # is one the gates rejected for something a buyer did not ask about.
+    valid: int = 0
+    queries_with_a_valid_clip: int = 0
+    valid_hours: float = 0.0
+    # Clips whose records predate the validity fields. Excluded from the rate's
+    # denominator rather than counted against it.
+    validity_unmeasured: int = 0
     usable_hours: float = 0.0
     attributed_usd: float = 0.0
     grades: dict[str, int] = field(default_factory=dict)
@@ -422,6 +526,8 @@ def score_run(
             chain.queries_with_candidates += 1
         if outcome.accepted:
             chain.queries_with_an_accepted_clip += 1
+        if outcome.valid:
+            chain.queries_with_a_valid_clip += 1
         # Found something, kept nothing. Counted apart from queries_errored,
         # because this is the pipeline working: it says the footage of this task
         # is the wrong viewpoint, not that the search failed.
@@ -446,6 +552,11 @@ def score_run(
         for clip in outcome.clips:
             chain.accepted += 1 if clip.accepted else 0
             chain.high_quality += 1 if clip.high_quality else 0
+            if not clip.validity_measured:
+                chain.validity_unmeasured += 1
+            elif clip.valid:
+                chain.valid += 1
+                chain.valid_hours += clip.usable_seconds / 3600
             chain.action_anchors += clip.action_anchors
             if clip.accepted:
                 chain.accepted_action_anchors += clip.action_anchors
