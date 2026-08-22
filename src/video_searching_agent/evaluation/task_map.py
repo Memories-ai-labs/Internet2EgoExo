@@ -119,9 +119,62 @@ ROBOT_WORDING = (
     "subtask",
 )
 
+# Robot arm model names. These are the hardest rows to catch, because the
+# instruction reads like a human action with one extra word: "Pick Cube SO100"
+# is the SO-100 arm picking a cube in a teleoperation episode, and nobody ever
+# filmed a person doing it. Measured: 5 rows of the 1965 name hardware this way,
+# and every one of them returned zero candidates in a live run.
+#
+# Model names only, never the vendor's animal or place words: "franka" is here
+# and bare "panda" is not, because a panda is a thing somebody might film.
+ROBOT_HARDWARE = (
+    "so100",
+    "so-100",
+    "so101",
+    "widowx",
+    "widow x",
+    "franka",
+    "aloha",
+    "xarm",
+    "ur5",
+    "kinova",
+    "koch arm",
+    "lerobot",
+)
+
+# Rendering and benchmark abstractions. A person cannot be filmed doing any of
+# these, but the wording is domain jargon rather than robot vocabulary, so
+# ROBOT_WORDING does not reach it. Each entry earned its place by appearing in a
+# sampled query that could only ever return nothing.
+#
+# Deliberately excluded from this list, because they are real things in real
+# kitchens and workshops: "texture" (checking the texture of dough), "mesh" (a
+# mesh strainer), "panda", "block" and "cube" on their own (a block of butter,
+# a sugar cube).
+BENCHMARK_WORDING = (
+    "baked tex",
+    "in scene",
+    " rgb",
+    "rgb ",
+    "svg",
+    "forbidden object",
+    "visual goal",
+    "numbered block",
+    "cuboid",
+    "revolving-joint",
+    "revolving joint",
+    "blocks ranking",
+    "shape matching",
+)
+
 # Two more simulator tells that need a pattern rather than a phrase: a success
 # condition stated against "the goal", and a benchmark's difficulty suffix.
-SIM_WORDING = re.compile(r"\b(?:at|to) the goal\b|\blevel\s?\d\b", re.IGNORECASE)
+# Also catches "to its goal", which the phrase list missed: a success condition
+# stated against a possessive reads as English but is still a benchmark.
+SIM_WORDING = re.compile(
+    r"\b(?:at|to) (?:the|its|their) goal\b|\blevel\s?\d\b|\bgoal configuration\b",
+    re.IGNORECASE,
+)
 
 # Instructions that are slot templates (`[*vegetables*]`, `{hot/cold}`), have a
 # referent that never got filled in ("Grasp the target ."), or are not in
@@ -509,9 +562,16 @@ def drop_reason(task: Task, raw_family: str | None = None) -> str | None:
         return f"family: {raw_family or task.task_family}"
     if task.granularity in EXCLUDED_GRANULARITIES:
         return f"granularity: {task.granularity}"
-    lowered = task.instruction.lower()
+    # Hardware and benchmark jargon are checked against the task NAME as well as
+    # the instruction: `Pick Cube SO100` carries the model name in the name, and
+    # the instruction is only the name with a full stop.
+    lowered = f"{task.instruction} {task.task_name}".lower()
     if any(word in lowered for word in ROBOT_WORDING) or SIM_WORDING.search(lowered):
         return "instruction is written for a simulator or a rig"
+    if any(word in lowered for word in ROBOT_HARDWARE):
+        return "task names robot hardware"
+    if any(word in lowered for word in BENCHMARK_WORDING):
+        return "task is a rendering or benchmark abstraction"
     if UNUSABLE_INSTRUCTION.search(task.instruction):
         return "instruction has an unfilled slot, or is not English"
     if len(task.instruction.split()) < 2:
