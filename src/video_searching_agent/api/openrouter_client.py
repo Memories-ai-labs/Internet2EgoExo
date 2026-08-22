@@ -208,6 +208,32 @@ class OpenRouterClient:
         """Add a user turn."""
         messages.append({"role": "user", "content": text})
 
+    def append_user_images(
+        self,
+        messages: list[dict[str, Any]],
+        text: str,
+        images: list[bytes],
+        mime_type: str = "image/jpeg",
+    ) -> None:
+        """Add a user turn carrying frames.
+
+        This is what makes a ReAct loop able to *look*: a tool returns frames
+        and they come back as the observation, in the middle of the
+        conversation, rather than only in the opening turn.
+        """
+        import base64
+
+        content: list[dict[str, Any]] = [{"type": "text", "text": text}]
+        for raw in images:
+            encoded = base64.b64encode(raw).decode()
+            content.append(
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:{mime_type};base64,{encoded}"},
+                }
+            )
+        messages.append({"role": "user", "content": content})
+
     def append_model_response(
         self, messages: list[dict[str, Any]], response: dict[str, Any]
     ) -> None:

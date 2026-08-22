@@ -244,11 +244,62 @@ qualified.
 | **Annotation agent** | **Agentic annotation** — task → action → event | `agent/annotation_agent.py` |
 | **Curation agent** | **Agentic data curation** across a whole set | `agent/curation_agent.py` |
 | **Quality-check agent** | **Auditing the clips that came out** — independently | `agent/quality_check_agent.py` |
+| **Clipping agent** | **Deciding boundaries by looking at the frames** (ReAct) | `agent/clipping_agent.py` |
+| **Annotating agent** | **Labelling a span by looking at it** (ReAct) | `agent/annotating_agent.py` |
 
 They are separate on purpose. Filtering is a judgement about footage, annotation
 is a judgement about language, and curation is a judgement about a set — mixing
 them into one prompt produces an agent that is mediocre at all three and whose
 mistakes cannot be attributed.
+
+### Looking, rather than reading about it
+
+Every judgement here began as a statement about caption *wording*: whether hands
+are in frame, whether the camera is worn, whether a span is one action. Caption
+text is a real signal and a lossy one, and the failures were the kind you only
+find by looking — a vertical phone clip of somebody using a washing machine was
+rejected on a hand density of 43% computed from words like "pours" and "places",
+when what actually disqualified it (9:16, with a burned-in watermark) was sitting
+in the pixels.
+
+So two of the agents run as **ReAct loops with eyes**. `agent/eyes.py` cuts a
+span through the Datalake, pulls frames out of the file and hands them back as
+images; `agent/react_loop.py` is the think-act-observe runtime they share. On each
+turn the agent either calls a tool — look at frames, re-read a caption window —
+or answers. Every step lands in the trace, so the reasoning is inspectable rather
+than a black box that emitted a label.
+
+Three bounds keep it honest and affordable:
+
+* **steps** — a loop that has not converged in a handful of turns will not;
+* **money** — a cut is $0.005, tools report what they spend, and the loop stops
+  when the budget is gone rather than when it feels finished;
+* **the answer contract** — running out of steps is *not* an answer. It returns
+  nothing and the caller abstains.
+
+**The clipping agent** (`agent/clipping_agent.py`) takes the caption walk's
+proposal — which has never seen the footage — and corrects it where the frames
+disagree. On a real IKEA wardrobe build it merged two proposed spans, moved four
+boundaries, and gave reasons the captions do not contain ("inserting and
+hammering metal threaded inserts"). It may not invent a span covering footage it
+never examined, boundaries are clamped to the video, siblings are separated so
+`G2-TREE-2` holds, and a span it could not see stays exactly as proposed. When
+the loop does not converge the proposal stands — the honest outcome, not an
+empty one.
+
+**The annotating agent** (`agent/annotating_agent.py`) labels one span, and looks
+when the captions do not settle what it is being asked. That recovers the field
+that used to be lost most often. A hand is still never invented — but "I saw it"
+is now a way of knowing, and each hand field records which:
+
+| span | left hand | right hand | evidence |
+|---|---|---|---|
+| 155–195s | steadies the panel | hammers the fitting into the panel | frames |
+| 65–98s | holds and steadies the metal bracket | inserts screws and tightens them with a screwdriver | frames |
+
+Both of those came back null before, as "hand assignment not stated in the
+captions". A hand claimed from frames when no look happened is discarded in
+code, not merely discouraged in the prompt.
 
 ### Auditing what came out
 

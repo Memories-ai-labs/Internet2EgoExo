@@ -158,6 +158,19 @@ class GeminiClient:
         """Add a user turn."""
         messages.append(types.Content(role="user", parts=[types.Part(text=text)]))
 
+    def append_user_images(
+        self,
+        messages: list[types.Content],
+        text: str,
+        images: list[bytes],
+        mime_type: str = "image/jpeg",
+    ) -> None:
+        """Add a user turn carrying frames, so a loop can look mid-conversation."""
+
+        parts = [types.Part(text=text)]
+        parts.extend(types.Part.from_bytes(data=raw, mime_type=mime_type) for raw in images)
+        messages.append(types.Content(role="user", parts=parts))
+
     def append_model_response(
         self,
         messages: list[types.Content],
