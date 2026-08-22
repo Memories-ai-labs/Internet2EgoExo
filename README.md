@@ -160,22 +160,30 @@ as an industrial skeleton. Three things are worth knowing before planning around
 them:
 
 - **Generative exo → ego does not scale.** [Exo2Ego-V](https://github.com/showlab/Exo2Ego-V)
-  needs four synchronised 360°-surround views; the web has none. What works is
-  *filtering* — [RynnVLA-001](https://arxiv.org/pdf/2509.15212)'s rule (face
-  keypoints → discard, hand keypoints → keep) is independent corroboration of the
-  viewpoint and hands gates here — or *lifting to 4D and re-rendering*, which
-  [EgoInfinity](https://arxiv.org/abs/2606.17385) does at 142 M clips.
+  needs four synchronised 360°-surround views with known poses; the web has none.
+  What works is *filtering* — [RynnVLA-001](https://arxiv.org/pdf/2509.15212)'s
+  rule (face keypoints → discard, hand keypoints → keep) is independent
+  corroboration of the viewpoint and hands gates here — or *lifting to 4D and
+  reprojecting*, as [EgoInfinity](https://arxiv.org/abs/2606.17385) does, though
+  it assumes a roughly static camera and explicitly excludes head-mounted
+  footage.
 - **The licence trap.** EgoInfinity's own code is MIT, but WiLoR is CC-BY-NC-ND,
   Ultralytics YOLO is AGPL-3.0 and MANO is non-commercial — the repo states that
-  commercial use *as a whole* is restricted. A dataset inherits the restrictions
-  of the pipeline that built it, which is the same per-clip rights discipline
-  this project applies to footage, pointed at the toolchain.
+  commercial use *as a whole* is restricted. EgoDex, the field's favourite
+  hand-annotated reference set, is CC-BY-NC-ND outright. A dataset inherits the
+  restrictions of every model and corpus used to build it, which is the same
+  per-clip rights discipline this project applies to footage, pointed at the
+  toolchain.
 - **Hours are being commoditised.** Build AI released
   [Egocentric-10K](https://www.humanoidsdaily.com/news/build-ai-open-sources-10-000-hours-of-factory-worker-video-to-scale-robot-learning)
-  — 10,000 h of real factory first-person video, 2,138 workers, Apache 2.0. A
-  system whose pitch is "we can get you N hours" is standing on ground that keeps
-  vanishing. What does not commoditise is whether an hour is *provably* the right
-  viewpoint, hands-visible, licensed, and annotated deeply enough to train on.
+  — 10,000 h of real factory first-person video, 1.08 B frames, 2,138 workers,
+  Apache 2.0. Its dataset card also warns against worker surveillance and
+  biometric identification, and carries no consent documentation: even free hours
+  arrive with an open question on the one axis no downstream processing can fix.
+  A system whose pitch is "we can get you N hours" is standing on ground that
+  keeps vanishing. What does not commoditise is whether an hour is *provably* the
+  right viewpoint, hands-visible, licensed at every link of its chain, and
+  annotated deeply enough to train on.
 
 Full survey — both halves, the positioning table and references:
 **[docs/RELATED_WORK.md](docs/RELATED_WORK.md)**.
