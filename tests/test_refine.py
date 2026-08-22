@@ -315,3 +315,79 @@ def test_the_result_reports_the_cuts_it_paid_for_even_with_nothing_uploaded():
     assert payload["uploaded"] == 0
     assert payload["rejected_by_the_pixel_pass"] == 1
     assert payload["cut_cost_usd"] == 0.015
+
+
+class TestWaitingForTheCleanClipsToIndex:
+    """Annotation cannot start on a clip that is still indexing, and the point of
+    the clean collection is that it is what gets annotated next.
+
+    This existed untested and had the wrong keyword: `timeout=` where the client
+    takes `max_wait_seconds=`. The TypeError was caught by the same function's
+    except clause and reported as "still indexing", so a wait that never ran
+    looked exactly like a slow index — and the embedding check that followed it
+    ran against a half-indexed clip and produced a wrong answer.
+    """
+
+    @staticmethod
+    def _result(*operation_ids: str) -> RefineResult:
+        result = RefineResult(collection_id="col_clean")
+        for index, operation in enumerate(operation_ids, start=1):
+            clip = RefinedClip("vid_src", 0.0, 20.0)
+            clip.uploaded_video_id = f"vid_clean{index}"
+            clip.operation_id = operation
+            result.clips.append(clip)
+        return result
+
+    @pytest.mark.asyncio
+    async def test_it_calls_the_client_the_way_the_client_is_written(self):
+        from video_searching_agent.pipeline.refine import wait_for_clean_clips
+
+        seen: list[dict] = []
+
+        class Lake:
+            async def wait_for_operation(
+                self, operation_id, max_wait_seconds=None, poll_interval_seconds=None
+            ):
+                seen.append({"operation_id": operation_id, "max_wait_seconds": max_wait_seconds})
+                return {"done": True}
+
+        statuses = await wait_for_clean_clips(Lake(), self._result("op_1", "op_2"), timeout=90)
+
+        assert [row["operation_id"] for row in seen] == ["op_1", "op_2"]
+        assert {row["max_wait_seconds"] for row in seen} == {90}
+        assert statuses == {"vid_clean1": "ready", "vid_clean2": "ready"}
+
+    @pytest.mark.asyncio
+    async def test_a_wrong_keyword_would_be_caught_here(self):
+        """A client that only accepts the real keyword. If the call regresses to
+        `timeout=`, this fails instead of silently reporting 'still indexing'."""
+
+        from video_searching_agent.pipeline.refine import wait_for_clean_clips
+
+        class StrictLake:
+            async def wait_for_operation(self, operation_id, max_wait_seconds=None):
+                return {"done": True}
+
+        statuses = await wait_for_clean_clips(StrictLake(), self._result("op_1"))
+        assert statuses == {"vid_clean1": "ready"}
+
+    @pytest.mark.asyncio
+    async def test_a_slow_index_is_reported_rather_than_raised(self):
+        from video_searching_agent.pipeline.refine import wait_for_clean_clips
+
+        class SlowLake:
+            async def wait_for_operation(self, operation_id, max_wait_seconds=None):
+                raise TimeoutError("still running after the budget")
+
+        statuses = await wait_for_clean_clips(SlowLake(), self._result("op_1"))
+        assert "still indexing" in statuses["vid_clean1"]
+
+    @pytest.mark.asyncio
+    async def test_nothing_uploaded_means_nothing_to_wait_for(self):
+        from video_searching_agent.pipeline.refine import wait_for_clean_clips
+
+        class Lake:
+            async def wait_for_operation(self, *a, **k):
+                raise AssertionError("should not be called")
+
+        assert await wait_for_clean_clips(Lake(), RefineResult()) == {}

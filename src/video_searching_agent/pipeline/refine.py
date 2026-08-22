@@ -398,7 +398,10 @@ async def wait_for_clean_clips(
 
     async def one(clip: RefinedClip) -> None:
         try:
-            await lake.wait_for_operation(clip.operation_id, timeout=timeout)
+            # `max_wait_seconds`, not `timeout`. Calling it `timeout` raised a
+            # TypeError that this function then caught and reported as "still
+            # indexing", so a wait that never happened looked like a slow index.
+            await lake.wait_for_operation(clip.operation_id, max_wait_seconds=timeout)
             statuses[str(clip.uploaded_video_id)] = "ready"
         except Exception as exc:  # noqa: BLE001 - a slow index is not a failure
             statuses[str(clip.uploaded_video_id)] = f"still indexing: {str(exc)[:80]}"
