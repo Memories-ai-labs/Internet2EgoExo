@@ -406,3 +406,136 @@ class TestTheLookingPathIsActuallyReached:
         verdict = type("V", (), {"segments": [], "errors": [], "trace": None})()
         refined = await agent._refine_anchors("vid_1", verdict, duration=100.0)
         assert refined == []
+
+
+class TestTheVisualSearchTool:
+    """Both looking agents can now ask the video's own per-second index.
+
+    They used to reach only for caption text and extracted frames. The index is
+    a third instrument and a cheaper one than looking: it finds the seconds
+    worth looking at, so a $0.005 cut can be spent where it will change the
+    answer instead of on a guess.
+    """
+
+    @staticmethod
+    def _lake(rows):
+        class Lake:
+            def __init__(self):
+                self.bodies = []
+
+            async def ensure_collection(self):
+                return "col_test"
+
+            async def _request(self, method, path, json):
+                self.bodies.append(json)
+                return {"results": rows}
+
+        return Lake()
+
+    @staticmethod
+    def _row(start, snippet, score=0.4, video_id="vid_a"):
+        return {
+            "video_id": video_id,
+            "start": float(start),
+            "end": float(start) + 1.0,
+            "score": score,
+            "snippet": snippet,
+            "thumbnail_url": "",
+        }
+
+    @pytest.mark.asyncio
+    async def test_the_clipping_agent_can_locate_the_action(self):
+        from video_searching_agent.agent.clipping_agent import ClippingAgent
+
+        lake = self._lake(
+            [
+                self._row(40, "two hands turn a bolt with an allen key"),
+                self._row(41, "two hands turn a bolt with an allen key"),
+                self._row(300, "an empty workbench"),
+            ]
+        )
+        agent = ClippingAgent(client=lake, llm=object())
+        tools = {tool.name: tool for tool in agent._tools("vid_a", _clipping_result())}
+
+        assert "find_frames" in tools
+        result = await tools["find_frames"].run({"query": "hands turning a bolt"})
+
+        # Scoped the only way the endpoint honours.
+        assert lake.bodies[0]["filter"] == {"video_ids": ["vid_a"]}
+        assert lake.bodies[0]["targets"] == ["frame_embedding"]
+        # Runs, so the agent sees a stretch rather than three dots.
+        assert "run 40s-42s" in result.observation
+        assert "allen key" in result.observation
+        assert result.cost_usd == pytest.approx(0.008)
+
+    @pytest.mark.asyncio
+    async def test_the_tool_tells_the_agent_the_ranking_is_not_a_detection(self):
+        """The scores overlap with gibberish, so the observation has to say so —
+        otherwise the agent reads a rank as a finding."""
+
+        from video_searching_agent.agent.clipping_agent import ClippingAgent
+
+        lake = self._lake([self._row(5, "a hand grips a wrench", score=0.99)])
+        agent = ClippingAgent(client=lake, llm=object())
+        tools = {tool.name: tool for tool in agent._tools("vid_a", _clipping_result())}
+        result = await tools["find_frames"].run({"query": "hands"})
+
+        assert "never that it is" in result.observation or "not a detection" in result.observation
+
+    @pytest.mark.asyncio
+    async def test_the_annotating_agent_only_sees_its_own_span(self):
+        """A label justified by footage outside its span is a wrong label, and
+        the search has no span scope — so the clamping has to happen here."""
+
+        from video_searching_agent.agent.annotating_agent import AnnotatingAgent
+
+        lake = self._lake(
+            [
+                self._row(45, "the left hand steadies the panel"),
+                self._row(600, "somebody carries a box across the room"),
+            ]
+        )
+        agent = AnnotatingAgent(client=lake, llm=object())
+        tools = {tool.name: tool for tool in agent._tools("vid_a", 40.0, 60.0, _span_label())}
+        result = await tools["find_frames"].run({"query": "which hand acts"})
+
+        assert "steadies the panel" in result.observation
+        assert "carries a box" not in result.observation
+
+    @pytest.mark.asyncio
+    async def test_a_span_with_no_match_is_not_reported_as_a_video_with_no_match(self):
+        from video_searching_agent.agent.annotating_agent import AnnotatingAgent
+
+        lake = self._lake([self._row(600, "somebody carries a box")])
+        agent = AnnotatingAgent(client=lake, llm=object())
+        tools = {tool.name: tool for tool in agent._tools("vid_a", 40.0, 60.0, _span_label())}
+        result = await tools["find_frames"].run({"query": "hands"})
+
+        assert "found nothing" in result.observation
+        assert "elsewhere in the video" in result.observation
+        assert "says nothing about this span" in result.observation
+
+    @pytest.mark.asyncio
+    async def test_an_empty_query_is_refused_before_it_is_charged_for(self):
+        from video_searching_agent.agent.clipping_agent import ClippingAgent
+
+        lake = self._lake([])
+        agent = ClippingAgent(client=lake, llm=object())
+        tools = {tool.name: tool for tool in agent._tools("vid_a", _clipping_result())}
+        result = await tools["find_frames"].run({})
+
+        assert lake.bodies == []
+        assert result.cost_usd in (0.0, None)
+        assert "needs a query" in result.observation
+
+
+def _clipping_result():
+    from video_searching_agent.agent.clipping_agent import ClippingResult
+
+    return ClippingResult(video_id="vid_a")
+
+
+def _span_label():
+    from video_searching_agent.agent.annotating_agent import SpanLabel
+
+    return SpanLabel(start=40.0, end=60.0)

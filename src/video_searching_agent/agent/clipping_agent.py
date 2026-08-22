@@ -39,6 +39,7 @@ from video_searching_agent.api.memories_datalake_client import (
     MemoriesDatalakeClient,
     MemoriesDatalakeError,
 )
+from video_searching_agent.curation.embedding_search import search_frames
 
 logger = logging.getLogger(__name__)
 
@@ -334,7 +335,50 @@ class ClippingAgent:
             ]
             return ToolResult(observation="\n".join(lines))
 
+        async def find_frames(arguments: dict[str, Any]) -> ToolResult:
+            query = str(arguments.get("query") or "").strip()
+            if not query:
+                return ToolResult(
+                    observation='find_frames needs a query, e.g. {"query": "hands turning a bolt"}'
+                )
+            evidence = await search_frames(
+                self.client,
+                query,
+                video_ids=[video_id],
+                top_k=int(arguments.get("count") or 12),
+            )
+            if not evidence.looked:
+                return ToolResult(observation=f"visual search unavailable: {evidence.error}")
+            if not evidence.hits:
+                return ToolResult(
+                    observation=f"the visual index returned no seconds for {query!r}",
+                    cost_usd=evidence.cost_usd,
+                )
+            lines = [
+                f"{len(evidence.hits)} seconds ranked by visual similarity to {query!r}. "
+                "The ranking says which seconds are most like it, never that it is "
+                "present — gibberish scores nearly as high as a true query. Read what "
+                "each second shows."
+            ]
+            for start, end in evidence.spans():
+                lines.append(f"  run {start:.0f}s-{end:.0f}s")
+            for hit in evidence.hits[:8]:
+                lines.append(f"  [{hit.start:.0f}s] {hit.snippet[:150]}")
+            return ToolResult(observation="\n".join(lines), cost_usd=evidence.cost_usd)
+
         return [
+            Tool(
+                name="find_frames",
+                description=(
+                    "search this video's own per-second visual index for a description "
+                    "and get back the seconds that most look like it, each with what it "
+                    "shows. This is the frames, not the captions: it finds a moment the "
+                    "caption never mentioned. One search, $0.008. Use it to locate the "
+                    "action before reading or looking at anything"
+                ),
+                arguments='{"query": "<what to look for>", "count": 4-20}',
+                run=find_frames,
+            ),
             Tool(
                 name="look",
                 description=(

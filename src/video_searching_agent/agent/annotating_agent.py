@@ -38,6 +38,7 @@ from video_searching_agent.api.memories_datalake_client import (
     MemoriesDatalakeClient,
     MemoriesDatalakeError,
 )
+from video_searching_agent.curation.embedding_search import hits_within, search_frames
 
 logger = logging.getLogger(__name__)
 
@@ -282,7 +283,57 @@ class AnnotatingAgent:
             text = await self._captions(video_id, window_start, window_end)
             return ToolResult(observation=text or "no caption segments in that window")
 
+        async def find_frames(arguments: dict[str, Any]) -> ToolResult:
+            query = str(arguments.get("query") or "").strip()
+            if not query:
+                return ToolResult(
+                    observation="find_frames needs a query, "
+                    'e.g. {"query": "which hand holds the bracket"}'
+                )
+            evidence = await search_frames(self.client, query, video_ids=[video_id], top_k=24)
+            if not evidence.looked:
+                return ToolResult(observation=f"visual search unavailable: {evidence.error}")
+            # Clamped to this span, for the same reason `look` is: a label
+            # justified by footage outside its own span is a wrong label. The
+            # search runs over the whole video because that is the only scope
+            # the endpoint takes, so the clamping happens here.
+            inside = hits_within(evidence, start, end)
+            if not inside:
+                return ToolResult(
+                    observation=(
+                        f"the visual index found nothing like {query!r} inside "
+                        f"{start:.0f}s-{end:.0f}s"
+                        + (
+                            " (it did match elsewhere in the video, which says nothing "
+                            "about this span)"
+                            if evidence.hits
+                            else ""
+                        )
+                    ),
+                    cost_usd=evidence.cost_usd,
+                )
+            lines = [
+                f"{len(inside)} seconds inside this span rank as most like {query!r}. "
+                "A ranking, not a detection — read what each second shows."
+            ]
+            lines += [
+                f"  [{hit.start:.0f}s] {hit.snippet[:170]}"
+                for hit in sorted(inside, key=lambda h: h.start)[:8]
+            ]
+            return ToolResult(observation="\n".join(lines), cost_usd=evidence.cost_usd)
+
         return [
+            Tool(
+                name="find_frames",
+                description=(
+                    "search the video's per-second visual index and get back the seconds "
+                    "inside this span that most look like your description, each with "
+                    "what it shows. The frames, not the captions. $0.008. Use it when "
+                    "the captions do not name the object or say which hand acts"
+                ),
+                arguments='{"query": "<what to look for>"}',
+                run=find_frames,
+            ),
             Tool(
                 name="look",
                 description=(
