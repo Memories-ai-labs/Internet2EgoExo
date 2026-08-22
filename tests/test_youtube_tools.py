@@ -136,9 +136,7 @@ class TestYouTubeSearchTool:
 
         # Mock the YouTube API client
         mock_search_response = {
-            "items": [
-                {"id": {"videoId": "abc123"}, "snippet": {"title": "Test Video"}}
-            ]
+            "items": [{"id": {"videoId": "abc123"}, "snippet": {"title": "Test Video"}}]
         }
         mock_video_response = {
             "items": [
@@ -305,3 +303,218 @@ class TestYouTubeChannelTool:
 
         assert not result.success
         assert "not found" in result.error.lower()
+
+
+class TestWhenYouTubeSearchIsRateLimited:
+    """The failure that produced "every result is TikTok".
+
+    `search.list` costs 100 quota units against `videos.list`'s 1, so bursts of
+    searches hit a rate limit long before the day's quota is spent. Google
+    reports that burst with a message reading *"Quota exceeded for quota metric
+    'Search Queries' and limit 'Search Queries per day'"* — which read as a
+    spent day to both the retry classifier and to me, so nothing retried and
+    nothing routed around it. The reason code is the only thing that tells them
+    apart.
+    """
+
+    RESP = type("Resp", (), {"status": 403, "reason": "Forbidden"})
+
+    BURST = (
+        b'{"error": {"code": 403, "message": "Quota exceeded for quota metric '
+        b"'Search Queries' and limit 'Search Queries per day'\", "
+        b'"errors": [{"reason": "rateLimitExceeded", "domain": "usageLimits"}]}}'
+    )
+    DAILY = (
+        b'{"error": {"code": 403, "message": "Quota exceeded for quota metric '
+        b'\'Queries\'", "errors": [{"reason": "quotaExceeded"}]}}'
+    )
+
+    def _error(self, body: bytes):
+        from googleapiclient.errors import HttpError
+
+        return HttpError(self.RESP(), body)
+
+    def test_the_reason_code_is_read_not_the_sentence(self):
+        from video_searching_agent.tools.youtube import (
+            _BURST_REASONS,
+            _DAILY_REASONS,
+            _http_error_reason,
+        )
+
+        burst = _http_error_reason(self._error(self.BURST))
+        daily = _http_error_reason(self._error(self.DAILY))
+        assert burst == "rateLimitExceeded"
+        assert burst in _BURST_REASONS and burst not in _DAILY_REASONS
+        assert daily == "quotaExceeded"
+        assert daily in _DAILY_REASONS and daily not in _BURST_REASONS
+
+    def test_a_malformed_error_body_does_not_raise(self):
+        from video_searching_agent.tools.youtube import _http_error_reason
+
+        assert _http_error_reason(self._error(b"not json at all")) == "http403"
+
+    @pytest.mark.asyncio
+    async def test_a_burst_limit_falls_back_to_exa(self, monkeypatch):
+        """Exa finds them; the YouTube API still describes them, at 1/100th."""
+
+        from video_searching_agent.models.video import Platform, Video
+        from video_searching_agent.tools.youtube import YouTubeSearchTool
+
+        tool = YouTubeSearchTool(api_key="a-key")
+
+        async def rate_limited(request):
+            raise self._error(self.BURST)
+
+        described: list[list[str]] = []
+
+        async def describe(video_ids, query):
+            described.append(list(video_ids))
+            return [
+                Video(
+                    platform=Platform.YOUTUBE,
+                    platform_id=vid,
+                    url=f"https://www.youtube.com/watch?v={vid}",
+                    title=f"clip {vid}",
+                    license="creativeCommon" if vid == "aaa" else "youtube",
+                    source_query=query,
+                )
+                for vid in video_ids
+            ]
+
+        class FakeExa:
+            async def execute(self, **kwargs):
+                from video_searching_agent.tools.base import ToolResult
+
+                assert "youtube.com" in kwargs["include_domains"]
+                return ToolResult.ok(
+                    {
+                        "results": [
+                            {"url": "https://www.youtube.com/watch?v=aaa"},
+                            {"url": "https://youtu.be/bbb"},
+                            {"url": "https://example.com/not-a-video"},
+                            {"url": "https://www.youtube.com/watch?v=aaa"},
+                        ]
+                    }
+                )
+
+        monkeypatch.setattr(
+            "video_searching_agent.tools.exa.ExaSearchTool", lambda *a, **k: FakeExa()
+        )
+        tool._execute_request_locked = rate_limited
+        tool._get_video_details = describe
+        tool._youtube = _StubYouTubeApi()
+
+        result = await tool.execute(query="pov cooking", max_results=5)
+        assert result.success is True
+        assert result.data["found_via"] == "exa"
+        # Deduplicated, non-YouTube URLs dropped, both id shapes understood.
+        assert described == [["aaa", "bbb"]]
+        assert result.data["total_results"] == 2
+
+    @pytest.mark.asyncio
+    async def test_the_licence_filter_survives_the_fallback(self, monkeypatch):
+        """Exa cannot filter by licence, so it is applied to what the API says."""
+
+        from video_searching_agent.models.video import Platform, Video
+        from video_searching_agent.tools.youtube import YouTubeSearchTool
+
+        tool = YouTubeSearchTool(api_key="a-key")
+
+        async def rate_limited(request):
+            raise self._error(self.BURST)
+
+        async def describe(video_ids, query):
+            return [
+                Video(
+                    platform=Platform.YOUTUBE,
+                    platform_id=vid,
+                    url=f"https://www.youtube.com/watch?v={vid}",
+                    license="creativeCommon" if vid == "aaa" else "youtube",
+                    source_query=query,
+                )
+                for vid in video_ids
+            ]
+
+        class FakeExa:
+            async def execute(self, **kwargs):
+                from video_searching_agent.tools.base import ToolResult
+
+                return ToolResult.ok(
+                    {
+                        "results": [
+                            {"url": "https://www.youtube.com/watch?v=aaa"},
+                            {"url": "https://www.youtube.com/watch?v=bbb"},
+                        ]
+                    }
+                )
+
+        monkeypatch.setattr(
+            "video_searching_agent.tools.exa.ExaSearchTool", lambda *a, **k: FakeExa()
+        )
+        tool._execute_request_locked = rate_limited
+        tool._get_video_details = describe
+        tool._youtube = _StubYouTubeApi()
+
+        result = await tool.execute(query="pov cooking", max_results=5, license="reusable")
+        assert [v["platform_id"] for v in result.data["videos"]] == ["aaa"]
+
+    @pytest.mark.asyncio
+    async def test_a_spent_daily_quota_does_not_pretend_otherwise(self, monkeypatch):
+        """Routing around a spent day is pointless; say so instead."""
+
+        from video_searching_agent.tools.youtube import YouTubeSearchTool
+
+        tool = YouTubeSearchTool(api_key="a-key")
+
+        async def exhausted(request):
+            raise self._error(self.DAILY)
+
+        called = []
+
+        class FakeExa:
+            async def execute(self, **kwargs):
+                called.append(kwargs)
+                raise AssertionError("should not reach Exa for a spent day")
+
+        monkeypatch.setattr(
+            "video_searching_agent.tools.exa.ExaSearchTool", lambda *a, **k: FakeExa()
+        )
+        tool._execute_request_locked = exhausted
+        tool._youtube = _StubYouTubeApi()
+
+        result = await tool.execute(query="pov cooking", max_results=5)
+        assert result.success is False
+        assert "quotaExceeded" in str(result.error)
+        assert called == []
+
+    @pytest.mark.asyncio
+    async def test_no_exa_key_reports_the_original_youtube_failure(self, monkeypatch):
+        """A confusing second error is worse than the first one."""
+
+        from video_searching_agent.tools.youtube import YouTubeSearchTool
+
+        tool = YouTubeSearchTool(api_key="a-key")
+
+        async def rate_limited(request):
+            raise self._error(self.BURST)
+
+        def no_exa(*a, **k):
+            raise RuntimeError("EXA_API_KEY is not configured")
+
+        monkeypatch.setattr("video_searching_agent.tools.exa.ExaSearchTool", no_exa)
+        tool._execute_request_locked = rate_limited
+        tool._youtube = _StubYouTubeApi()
+
+        result = await tool.execute(query="pov cooking", max_results=5)
+        assert result.success is False
+        assert "rateLimitExceeded" in str(result.error)
+
+
+class _StubYouTubeApi:
+    """Enough of the discovery client to build a request object."""
+
+    def search(self):
+        return self
+
+    def list(self, **kwargs):
+        return type("Request", (), {"uri": "https://youtube/search?x=1"})()

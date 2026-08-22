@@ -1,6 +1,8 @@
 """YouTube Data API search tool."""
 
 import asyncio
+import json
+import logging
 import threading
 from datetime import datetime
 from typing import Any
@@ -11,6 +13,9 @@ from googleapiclient.errors import HttpError  # type: ignore[import-untyped]
 from video_searching_agent.config.settings import get_settings
 from video_searching_agent.models.video import Creator, Platform, Video, VideoMetrics
 from video_searching_agent.tools.base import BaseTool, ToolResult
+from video_searching_agent.utils.youtube_urls import youtube_video_id
+
+logger = logging.getLogger(__name__)
 
 
 def _execute_request_with_lock(
@@ -25,6 +30,32 @@ def _execute_request_with_lock(
 async def _execute_request(request: Any, request_lock: threading.Lock) -> dict[str, Any]:
     """Execute a blocking googleapiclient request without blocking event loop."""
     return await asyncio.to_thread(_execute_request_with_lock, request, request_lock)
+
+
+# A burst limit is worth retrying and worth routing around; a spent daily quota
+# is neither, because it does not come back until midnight Pacific. Google
+# reports both with a message that says "Quota exceeded", so the reason code is
+# the only thing that distinguishes them.
+_BURST_REASONS = frozenset({"rateLimitExceeded", "userRateLimitExceeded", "backendError"})
+_DAILY_REASONS = frozenset({"quotaExceeded", "dailyLimitExceeded"})
+
+
+def _http_error_reason(error: HttpError) -> str:
+    """The machine-readable reason code from a Google API error.
+
+    ``HttpError.reason`` is the human sentence, which is why a rate limit read
+    as an exhausted quota for so long: the sentence for both begins "Quota
+    exceeded for quota metric".
+    """
+    try:
+        payload = json.loads(error.content.decode("utf-8"))
+        errors = (payload.get("error") or {}).get("errors") or []
+        if errors and errors[0].get("reason"):
+            return str(errors[0]["reason"])
+    except (ValueError, AttributeError, UnicodeDecodeError):
+        pass
+    status = getattr(error, "status_code", None) or getattr(error.resp, "status", None)
+    return f"http{status}" if status else "unknown"
 
 
 class YouTubeSearchTool(BaseTool):
@@ -201,44 +232,130 @@ Returns structured video data including duration, licence, thumbnails and channe
 
             items = search_response.get("items", [])
             if not items:
-                return ToolResult.ok({
-                    "videos": [],
-                    "message": f"No {search_type}s found for query: {query}",
-                })
+                return ToolResult.ok(
+                    {
+                        "videos": [],
+                        "message": f"No {search_type}s found for query: {query}",
+                    }
+                )
 
             if search_type == "video":
                 # Get video IDs for detailed stats
                 video_ids: list[str] = [
-                    item["id"]["videoId"] for item in items
-                    if item.get("id", {}).get("videoId")
+                    item["id"]["videoId"] for item in items if item.get("id", {}).get("videoId")
                 ]
                 videos = await self._get_video_details(video_ids, str(query) if query else "")
-                return ToolResult.ok({
-                    "videos": [v.model_dump(mode='json') for v in videos],
-                    "total_results": len(videos),
-                    "query": query,
-                })
+                return ToolResult.ok(
+                    {
+                        "videos": [v.model_dump(mode="json") for v in videos],
+                        "total_results": len(videos),
+                        "query": query,
+                    }
+                )
 
             elif search_type == "channel":
                 channels = self._parse_channels(items)
-                return ToolResult.ok({
-                    "channels": channels,
-                    "total_results": len(channels),
-                    "query": query,
-                })
+                return ToolResult.ok(
+                    {
+                        "channels": channels,
+                        "total_results": len(channels),
+                        "query": query,
+                    }
+                )
 
             else:  # playlist
                 playlists = self._parse_playlists(items)
-                return ToolResult.ok({
-                    "playlists": playlists,
-                    "total_results": len(playlists),
-                    "query": query,
-                })
+                return ToolResult.ok(
+                    {
+                        "playlists": playlists,
+                        "total_results": len(playlists),
+                        "query": query,
+                    }
+                )
 
         except HttpError as e:
-            return ToolResult.fail(f"YouTube API error: {e.reason}")
+            reason = _http_error_reason(e)
+            if search_type == "video" and reason in _BURST_REASONS:
+                # search.list is the only expensive call here: 100 quota units
+                # against videos.list's 1. So when *searching* is what got
+                # limited, find the videos another way and still describe them
+                # through the API, which is a hundredth of the cost.
+                logger.info("YouTube search rate limited (%s); finding via Exa instead", reason)
+                fallback = await self._search_via_exa(
+                    str(query) if query else "",
+                    max_results=max_results,
+                    license_filter=license_filter,
+                )
+                if fallback is not None:
+                    return fallback
+            return ToolResult.fail(f"YouTube API error [{reason}]: {e.reason}")
         except Exception as e:
             return ToolResult.fail(f"YouTube search error: {str(e)}")
+
+    async def _search_via_exa(
+        self,
+        query: str,
+        *,
+        max_results: int,
+        license_filter: str,
+    ) -> ToolResult | None:
+        """Find YouTube videos through Exa, then describe them through the API.
+
+        Returns None when Exa cannot serve either, so the caller reports the
+        original YouTube failure rather than a confusing second one.
+
+        The licence filter cannot be applied by Exa, so it is applied here
+        against what ``videos.list`` reports — which is the authoritative
+        answer anyway.
+        """
+        from video_searching_agent.tools.exa import ExaSearchTool
+
+        try:
+            exa = ExaSearchTool()
+        except Exception as exc:  # noqa: BLE001 - no Exa key is a normal state
+            logger.info("no Exa fallback available: %s", exc)
+            return None
+
+        result = await exa.execute(
+            query=f"{query} site:youtube.com/watch",
+            num_results=min(max(max_results * 2, 10), 25),
+            include_domains=["youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"],
+        )
+        if not result.success:
+            logger.info("Exa fallback also failed: %s", result.error)
+            return None
+
+        payload = result.data if isinstance(result.data, dict) else {}
+        candidates = payload.get("results") or payload.get("videos") or []
+        video_ids: list[str] = []
+        for entry in candidates:
+            url = entry.get("url") if isinstance(entry, dict) else None
+            found = youtube_video_id(str(url)) if url else None
+            if found and found not in video_ids:
+                video_ids.append(found)
+            if len(video_ids) >= max_results:
+                break
+
+        if not video_ids:
+            logger.info("Exa returned no YouTube video URLs for %r", query)
+            return None
+
+        videos = await self._get_video_details(video_ids, query)
+        if license_filter == "reusable":
+            videos = [v for v in videos if str(v.license or "").lower() == "creativecommon"]
+
+        return ToolResult.ok(
+            {
+                "videos": [v.model_dump(mode="json") for v in videos],
+                "total_results": len(videos),
+                "query": query,
+                "found_via": "exa",
+                "note": (
+                    "YouTube's search endpoint was rate limited, so these were found "
+                    "through Exa and then described through the YouTube API"
+                ),
+            }
+        )
 
     async def _get_video_details(self, video_ids: list[str], query: str) -> list[Video]:
         """Get detailed video information including stats.
@@ -286,9 +403,7 @@ Returns structured video data including duration, licence, thumbnails and channe
         published_at = None
         if snippet.get("publishedAt"):
             try:
-                published_at = datetime.fromisoformat(
-                    snippet["publishedAt"].replace("Z", "+00:00")
-                )
+                published_at = datetime.fromisoformat(snippet["publishedAt"].replace("Z", "+00:00"))
             except ValueError:
                 pass
 
@@ -388,13 +503,15 @@ Returns structured video data including duration, licence, thumbnails and channe
         channels = []
         for item in items:
             snippet = item.get("snippet", {})
-            channels.append({
-                "channel_id": item["id"]["channelId"],
-                "title": snippet.get("title"),
-                "description": snippet.get("description", "")[:300],
-                "thumbnail_url": snippet.get("thumbnails", {}).get("high", {}).get("url"),
-                "url": f"https://www.youtube.com/channel/{item['id']['channelId']}",
-            })
+            channels.append(
+                {
+                    "channel_id": item["id"]["channelId"],
+                    "title": snippet.get("title"),
+                    "description": snippet.get("description", "")[:300],
+                    "thumbnail_url": snippet.get("thumbnails", {}).get("high", {}).get("url"),
+                    "url": f"https://www.youtube.com/channel/{item['id']['channelId']}",
+                }
+            )
         return channels
 
     def _parse_playlists(self, items: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -409,14 +526,16 @@ Returns structured video data including duration, licence, thumbnails and channe
         playlists = []
         for item in items:
             snippet = item.get("snippet", {})
-            playlists.append({
-                "playlist_id": item["id"]["playlistId"],
-                "title": snippet.get("title"),
-                "description": snippet.get("description", "")[:300],
-                "channel_title": snippet.get("channelTitle"),
-                "thumbnail_url": snippet.get("thumbnails", {}).get("high", {}).get("url"),
-                "url": f"https://www.youtube.com/playlist?list={item['id']['playlistId']}",
-            })
+            playlists.append(
+                {
+                    "playlist_id": item["id"]["playlistId"],
+                    "title": snippet.get("title"),
+                    "description": snippet.get("description", "")[:300],
+                    "channel_title": snippet.get("channelTitle"),
+                    "thumbnail_url": snippet.get("thumbnails", {}).get("high", {}).get("url"),
+                    "url": f"https://www.youtube.com/playlist?list={item['id']['playlistId']}",
+                }
+            )
         return playlists
 
 
@@ -559,9 +678,7 @@ Returns: subscriber count, video count, view count, recent uploads, and channel 
             # Get recent videos if requested
             if include_recent_videos:
                 uploads_playlist_id = (
-                    channel.get("contentDetails", {})
-                    .get("relatedPlaylists", {})
-                    .get("uploads")
+                    channel.get("contentDetails", {}).get("relatedPlaylists", {}).get("uploads")
                 )
                 if uploads_playlist_id:
                     playlist_response = await self._execute_request_locked(

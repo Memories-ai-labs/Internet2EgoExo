@@ -464,9 +464,15 @@ def phase_live(report: Report, full: bool, only: str | None = None) -> None:
         elif hour_claims(answer_text) and not manifest.get("total_hours"):
             problems.append(f"answer states {hour_claims(answer_text)} but the manifest has none")
 
+        # A tool that failed outright is a finding, not a footnote. This ran as
+        # a detail string for a while, which is how "every result is TikTok
+        # because YouTube was rate limited" reached a user before it reached
+        # the report.
         failed_tools = [
             p.get("tool") for e, p in events if e == "tool_result" and not p.get("success")
         ]
+        if failed_tools:
+            problems.append(f"tools failed: {sorted(set(failed_tools))}")
         detail = f"{len(clips)} clips, {manifest.get('total_hours')}h"
         if failed_tools:
             detail += f", tool failures: {sorted(set(failed_tools))}"

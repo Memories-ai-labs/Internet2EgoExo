@@ -194,6 +194,10 @@ class RetryExecutor:
             "malformed input",
             "validation error",
             "unprocessable entity",
+            # A daily quota does not come back until midnight Pacific, so
+            # retrying it burns the remaining attempts for nothing.
+            "quotaexceeded",
+            "dailylimitexceeded",
         ]
         if any(pattern in error_msg for pattern in non_retryable_patterns):
             return False
@@ -210,6 +214,13 @@ class RetryExecutor:
             "502",
             "503",
             "504",
+            # Google reports a burst limit with a message that reads "Quota
+            # exceeded for quota metric ... 'per day'", so the prose looked
+            # non-retryable while the reason code said otherwise. The codes are
+            # matched here; the prose is not to be trusted.
+            "ratelimitexceeded",
+            "userratelimitexceeded",
+            "429",
         ]
 
         return any(pattern in error_msg for pattern in retryable_patterns)
@@ -328,6 +339,12 @@ class RetryExecutor:
 TOOL_FALLBACKS: dict[str, list[str]] = {
     # Twitter: twscrape primary (handled in tool), exa fallback
     "twitter_search": ["exa_search"],
+
+    # YouTube handles its own fallback internally, because it can do better
+    # than a generic hand-off: Exa finds the videos and the YouTube API still
+    # describes them, at 1 quota unit against search.list's 100. The entry is
+    # here as a last resort for the case where that internal path also fails.
+    "youtube_search": ["exa_search"],
     "twitter_profile_info": [],
 
     # Exa internal fallbacks
