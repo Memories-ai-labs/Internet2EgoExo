@@ -155,9 +155,10 @@ class ClipOutcome:
 
         Hands in frame, legible footage, and a tree with at least one atomic
         action carrying hand or object detail. Deliberately independent of
-        grade: a clip can be a C purely because its licence is not Creative
-        Commons (measured: licence is worth 7 points and is the C/B boundary)
-        and still be perfectly trainable. Deliberately independent of
+        grade, and not derivable from it: the grade also spends points on
+        media quality and provenance, and its bands were calibrated for the
+        retired four-dimension scale, so a clip can miss a media check and
+        still score 87. Deliberately independent of
         annotation *level* too — L2 versus L3 is depth for its own sake, and
         what matters is whether an action span says what the hands did.
 
@@ -511,7 +512,6 @@ UNMEASURED_TERMS: tuple[str, ...] = (
     "curation, cleaning and narration model tokens — not reported over the "
     "pipeline API (the frame-examination spend inside them is, and is counted)",
     "download egress and disk — $0 on owned infrastructure, not billed per run",
-    "Gate 3 diversity and dedup — scored per dataset, not per clip",
     "human ground truth (IAA, boundary F1, caption 5-scale) — needs annotators",
 )
 

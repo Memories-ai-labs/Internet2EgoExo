@@ -42,8 +42,10 @@ def render(card: Scorecard, *, title: str = "Eval scorecard") -> str:
         "A clip is **valid** when it is the thing this project exists to produce:",
         "the hands are in frame, the manipulation is legible, and there is a tree",
         "over it whose atomic actions name what each hand did and to what.",
-        "Independent of grade on purpose — a clip can be a C for having a",
-        "non-Creative-Commons licence and still be perfectly trainable.",
+        "Independent of grade on purpose, and the grade is not a proxy for it:",
+        "the bands (85/70/55) were calibrated for the old four-dimension scale,",
+        "so a clip can fail a media check and still score 87. Read this section,",
+        "not the A/B share.",
         "",
     ]
     if not chain.validity_is_measurable:
