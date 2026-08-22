@@ -116,3 +116,56 @@ def test_the_workflow_and_the_test_agree_on_the_chunk_ladder():
     assert limits == list(CHUNKS), (
         f"workflow ladder {limits} does not match the tested ladder {list(CHUNKS)}"
     )
+
+
+def test_every_host_invokes_the_eval_through_the_same_script():
+    """Three hosts, one invocation — the property `eval/run.sh` exists for.
+
+    The server start, the health wait, `--resume` and the scoring step were
+    written out twice in YAML and were about to be written a third time in a
+    systemd unit. LEARNINGS.md L1 is that a rule derived in two places
+    eventually disagrees, and the disagreement here costs money: a caller that
+    forgot `--resume` pays again for finished queries, and one that started the
+    server differently measures something else. So each caller must reach
+    `run_eval.py` only through `eval/run.sh`.
+    """
+    runner_sh = ROOT / "eval" / "run.sh"
+    assert runner_sh.exists()
+
+    callers = {
+        ".github/workflows/eval.yml": "eval/run.sh --limit 20",
+        ".github/workflows/eval-chunk.yml": "eval/run.sh $limit_arg --resume",
+        "deploy/runner/egoexo-eval.service": "eval/run.sh --limit 20",
+    }
+    for path, expected in callers.items():
+        text = (ROOT / path).read_text(encoding="utf-8")
+        assert expected in text, f"{path} no longer calls run.sh as expected"
+        # The one thing that must never come back: a second, direct invocation.
+        assert "run_eval.py" not in text, (
+            f"{path} calls run_eval.py directly again — that is the duplicate "
+            "derivation run.sh was written to remove"
+        )
+
+
+def test_the_shared_script_still_does_what_the_callers_stopped_doing():
+    """run.sh has to own the four things the YAML used to spell out itself."""
+    text = (ROOT / "eval" / "run.sh").read_text(encoding="utf-8")
+    assert "uvicorn src.video_searching_agent.web.main:app" in text  # starts it
+    assert "api/v1/health" in text  # waits for it
+    assert "--resume" in text  # can skip what is paid for
+    assert "--score-only" in text  # leaves a readable scorecard either way
+
+
+def test_the_daily_slice_fires_at_one_hour_on_both_hosts():
+    """Two hosts on different schedules would bill twice for one series."""
+    import re
+
+    yaml_text = (ROOT / ".github" / "workflows" / "eval.yml").read_text(encoding="utf-8")
+    cron = re.search(r'cron:\s*"(\d+)\s+(\d+)', yaml_text)
+    assert cron, "the daily schedule disappeared from the workflow"
+    minute, hour = cron.group(1), cron.group(2)
+
+    timer = (ROOT / "deploy" / "runner" / "egoexo-eval.timer").read_text(encoding="utf-8")
+    on_calendar = re.search(r"OnCalendar=.*?(\d\d):(\d\d):", timer)
+    assert on_calendar, "the systemd timer has no wall-clock time"
+    assert (int(on_calendar.group(1)), int(on_calendar.group(2))) == (int(hour), int(minute))

@@ -135,3 +135,13 @@ public deployment; the UI is Vite + React on the Memories AI design language,
 with three views — search, collect, and the Library over the clean clips.
 Browser QA (`ui/qa/flow.mjs`, Playwright) drives the real app in demo mode
 across 14 steps.
+
+The eval runs somewhere else, and always through one script. `eval/run.sh` is the
+only definition of a measurement — key check, server start, health wait,
+`--resume`, scoring — and its three callers are `.github/workflows/eval.yml`
+(the daily 20-query slice), `.github/workflows/eval-chunk.yml` (the full 200 in
+four chunks, because a GitHub job is capped at 6 hours) and
+`deploy/runner/egoexo-eval.service` (an always-on VM, `bootstrap.sh` plus three
+systemd units, platform-neutral). A test asserts none of them calls
+`run_eval.py` directly again. Run only one host at a time: two would buy the
+same daily datapoint twice.

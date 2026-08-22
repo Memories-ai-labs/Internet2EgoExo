@@ -1,0 +1,14 @@
+# 06:50 UTC daily — the same time as the GitHub schedule, so whichever host is
+# in use produces one datapoint a day at the same hour and the series stays one
+# series. Run both and you pay twice for the same measurement.
+[Unit]
+Description=Run the eval slice once a day
+
+[Timer]
+OnCalendar=*-*-* 06:50:00 UTC
+# A host that was down at 06:50 still measures that day rather than skipping it.
+Persistent=true
+Unit=egoexo-eval.service
+
+[Install]
+WantedBy=timers.target

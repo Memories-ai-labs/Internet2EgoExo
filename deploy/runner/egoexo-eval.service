@@ -1,0 +1,29 @@
+# One day's measurement. Started by egoexo-eval.timer, not enabled directly.
+#
+# Records go to a dated file: --resume then means "continue today's run if the
+# host rebooted mid-way", never "silently do nothing because yesterday finished".
+# Each day is therefore its own comparable datapoint over the same 20 queries,
+# which is what the promotion rule reads (docs/autoresearch/README.md).
+[Unit]
+Description=egoexo daily eval slice
+After=egoexo-api.service
+Requires=egoexo-api.service
+
+[Service]
+Type=oneshot
+User=egoexo
+WorkingDirectory=/opt/egoexo/video-searching-agent
+EnvironmentFile=/etc/egoexo/env
+Environment=START_SERVER=0
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=QA_DEPLOYMENT=http://127.0.0.1:8099
+# 11 hours: enough for the full 200 if somebody raises --limit, and still a
+# ceiling, so a hung run cannot hold the timer's lock for a week.
+TimeoutStartSec=11h
+ExecStart=/bin/bash -lc '\
+    exec eval/run.sh --limit 20 --per-query 2 --resume \
+      --out "eval/results/slice-$(date -u +%%F).jsonl"'
+Nice=5
+
+[Install]
+WantedBy=multi-user.target

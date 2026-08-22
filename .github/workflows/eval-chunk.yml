@@ -57,37 +57,20 @@ jobs:
           name: ${{ inputs.previous }}-${{ github.run_id }}
           path: eval/results
 
-      - name: Start the API the eval measures
-        run: |
-          nohup uv run uvicorn src.video_searching_agent.web.main:app \
-            --host 127.0.0.1 --port 8099 > server.log 2>&1 &
-          for _ in $(seq 1 90); do
-            curl -sf http://127.0.0.1:8099/api/v1/health >/dev/null && break
-            sleep 1
-          done
-          curl -sf http://127.0.0.1:8099/api/v1/health >/dev/null \
-            || { echo "::error::server never became healthy"; tail -40 server.log; exit 1; }
-
+      # Server start, health wait, resume and scoring all live in eval/run.sh,
+      # so a chunk here cannot drift from the slice job or from the VM unit.
       - name: Run chunk ${{ inputs.chunk }}
         run: |
           set -o pipefail
-          before=0
-          [ -f eval/results/full.jsonl ] && before=$(wc -l < eval/results/full.jsonl)
-          echo "carried forward: $before records"
-
           # limit 0 means "no --limit", i.e. the tail of the set.
           limit_arg=""
           if [ "${{ inputs.limit }}" -gt 0 ]; then
             limit_arg="--limit ${{ inputs.limit }}"
           fi
-
-          uv run python eval/run_eval.py \
-            --queries "${{ inputs.queries || 'eval/queries-v1.1.json' }}" \
-            $limit_arg \
-            --per-query "${{ inputs.per_query || '2' }}" \
-            --resume eval/results/full.jsonl \
+          eval/run.sh $limit_arg --resume \
             --out eval/results/full.jsonl \
-            --yes 2>&1 | tee chunk.log
+            --queries "${{ inputs.queries || 'eval/queries-v1.1.json' }}" \
+            --per-query "${{ inputs.per_query || '2' }}" 2>&1 | tee chunk.log
 
       - name: What this chunk added
         if: always()
@@ -114,10 +97,11 @@ jobs:
             server.log
           retention-days: 30
 
-      - name: Score the whole set on the last chunk
+      # No scoring call here: run.sh already scored the records it wrote, so a
+      # second one would be the same duplicate derivation in miniature.
+      - name: Publish the whole set's scorecard on the last chunk
         if: always() && inputs.chunk == 4
         run: |
-          uv run python eval/run_eval.py --score-only eval/results/full.jsonl || true
           {
             echo "## Full eval — final scorecard"
             echo

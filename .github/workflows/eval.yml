@@ -103,26 +103,16 @@ jobs:
         with:
           enable-cache: true
       - run: uv sync --all-extras
-      - name: Start the API the eval measures
+      # One definition of the invocation, shared with the chunk job and the
+      # systemd unit in deploy/runner: see eval/run.sh.
+      - name: Run and score the slice
         run: |
-          nohup uv run uvicorn src.video_searching_agent.web.main:app \
-            --host 127.0.0.1 --port 8099 > server.log 2>&1 &
-          for _ in $(seq 1 90); do
-            curl -sf http://127.0.0.1:8099/api/v1/health >/dev/null && break
-            sleep 1
-          done
-          curl -sf http://127.0.0.1:8099/api/v1/health >/dev/null \
-            || { echo "::error::server never became healthy"; tail -40 server.log; exit 1; }
-      - name: Run the slice
-        run: |
-          uv run python eval/run_eval.py \
-            --queries "${{ inputs.queries || 'eval/queries-v1.1.json' }}" \
-            --limit 20 --per-query 2 --yes \
-            --out eval/results/slice.jsonl
-      - name: Score it
+          eval/run.sh --limit 20 --per-query 2 \
+            --out eval/results/slice.jsonl \
+            --queries "${{ inputs.queries || 'eval/queries-v1.1.json' }}"
+      - name: Report it
         if: always()
         run: |
-          uv run python eval/run_eval.py --score-only eval/results/slice.jsonl || true
           {
             echo "## Eval slice — 20 queries"
             echo
