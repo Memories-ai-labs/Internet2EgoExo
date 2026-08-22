@@ -62,7 +62,7 @@ from video_searching_agent.evaluation.scorecard import render  # noqa: E402
 
 QUERIES_PATH = ROOT / "eval" / "queries.json"
 RESULTS_DIR = ROOT / "eval" / "results"
-DEPLOYMENT = os.environ.get("QA_DEPLOYMENT", "https://internet-egoexo-video-search.vercel.app")
+DEPLOYMENT = os.environ.get("QA_DEPLOYMENT", "https://internet2egoexo.vercel.app")
 
 # The cleaning agent reads a clip's caption, transcription and summary back out
 # of the Datalake before it grades anything. Three derived reads, every clip,

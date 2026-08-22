@@ -42,7 +42,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 QUERIES = json.loads((ROOT / "qa" / "queries.json").read_text())["queries"]
-DEPLOYMENT = os.environ.get("QA_DEPLOYMENT", "https://internet-egoexo-video-search.vercel.app")
+DEPLOYMENT = os.environ.get("QA_DEPLOYMENT", "https://internet2egoexo.vercel.app")
 # An indexed video with real captions, for the judgement phase.
 JUDGEMENT_VIDEO = os.environ.get("QA_VIDEO_ID", "vid_5btyh22t6knevmlcks2ufonn5q")
 JUDGEMENT_COLLECTION = os.environ.get("QA_COLLECTION", "col_bngey4z7vxpqyimcogrolfnw5i")

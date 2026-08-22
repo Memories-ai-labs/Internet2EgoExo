@@ -44,7 +44,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 QUERIES = json.loads((ROOT / "qa" / "queries.json").read_text())["pipeline_queries"]
-DEPLOYMENT = os.environ.get("QA_DEPLOYMENT", "https://internet-egoexo-video-search.vercel.app")
+DEPLOYMENT = os.environ.get("QA_DEPLOYMENT", "https://internet2egoexo.vercel.app")
 
 
 def _sse(url: str, body: dict, timeout: float = 600.0) -> list[tuple[str, dict]]:
