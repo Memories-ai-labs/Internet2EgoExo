@@ -107,6 +107,50 @@ The final `AgentResponse` includes:
 - Usage metrics (token counts, API costs)
 - The parsed query with all extracted slots
 
+## Related Work
+
+This is not a model and not a dataset — it is the step in between: turning the
+open internet into ego/exo footage that is viewpoint-labelled, licence-checked,
+hands-verified, annotated, and priced per delivered hour. The literature it sits
+next to mostly does one of two other things.
+
+**Commissioned capture.** [Ego-Exo4D](https://arxiv.org/abs/2311.18259)
+(1,286 h, 740 participants, simultaneous ego + multi-exo),
+[Ego4D](https://ego4d-data.org/) (3,670+ h),
+[EPIC-KITCHENS-100](https://arxiv.org/pdf/1804.02748),
+[EgoExoLearn](https://github.com/OpenGVLab/EgoExoLearn) — recruited
+participants, consented sites, a fixed taxonomy. You get exactly the scenes you
+funded. Here the footage already exists, so the budget goes into *verification*
+instead of recording.
+
+**Consuming a pool somebody else built.** [EgoDex](https://arxiv.org/html/2505.11709v1)
+(829 h, SE(3) hand annotations), [EgoScale](https://rpl.cs.utexas.edu/publications/2026/02/18/zheng-arxiv26-egoscale/)
+(20,854 h), [HumanNet](https://arxiv.org/abs/2605.06747) (1 M h — where 1,000 h
+of egocentric human video beat 100 h of real-robot data under fixed validation).
+Those results are the economic case for collection; this repo is the collection.
+
+Two neighbours are worth calling out directly:
+
+- **[SiMDex](https://arxiv.org/abs/2608.04196)** reaches our thesis from the
+  other side of the pipe — mining <5 % of a 32 M-sample pool beats an equal-size
+  random draw. Selection, not volume, is the bottleneck.
+- **[NVIDIA Cosmos](https://arxiv.org/abs/2501.03575)** generates and evaluates
+  data; we source it. Cosmos Curator presupposes a 20 M-hour archive — this is
+  how a team without one gets to its first defensible thousand hours.
+
+And one gap that shapes the design. Retrieval over the indexed corpus is
+any-to-any across *modalities* — [OmniRetriever](https://arxiv.org/abs/2605.26641)
+does text/video/audio in one space — but the axes that decide whether a clip is
+usable training data are not modalities. Viewpoint, hands in frame, licence,
+usable length after trimming: none of them fall out of a similarity search. They
+have to be asserted by an agent, justified with evidence, and written back as
+metadata. That is what the viewpoint classifier, the hands gate, the annotation
+tree and the four hour measures are for. Retrieval finds candidates; it does not
+certify them.
+
+Full survey, with the positioning table and references:
+**[docs/RELATED_WORK.md](docs/RELATED_WORK.md)**.
+
 ## Installation
 
 ```bash
@@ -1305,6 +1349,7 @@ video-searching-agent/
 │   ├── tools/          # Gemini function calling tools
 │   └── web/            # FastAPI app, SSE streaming, middleware
 │       └── static/     # Zero-build web UI (index.html / styles.css / app.js)
+├── docs/               # RELATED_WORK.md — how this sits next to the literature
 ├── examples/           # Usage examples
 ├── tests/              # Test suite
 └── pyproject.toml      # Project configuration
