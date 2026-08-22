@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import unquote, urlparse
 
+from video_searching_agent.pipeline.media_probe import read_mp4_dimensions
 from video_searching_agent.pipeline.youtube_fetch import YouTubeFetcher, YouTubeFetchError
 from video_searching_agent.utils.youtube_urls import is_youtube_url
 
@@ -351,13 +352,20 @@ class ClipDownloader:
             warnings.append(f"file landed as {path.name}")
 
         licence = result.get("license")
+        width, height = result.get("width"), result.get("height")
+        if not (width and height):
+            # An extractor that reported one dimension or neither leaves
+            # orientation unjudgeable; the file on disk does not.
+            measured = read_mp4_dimensions(path)
+            if measured:
+                width, height = measured
         return DownloadedClip(
             url=url,
             path=path,
             duration_seconds=int(duration) if isinstance(duration, int | float) else None,
             filesize_bytes=path.stat().st_size,
-            width=result.get("width"),
-            height=result.get("height"),
+            width=width,
+            height=height,
             fps=result.get("fps"),
             title=result.get("title"),
             uploader=result.get("uploader") or result.get("channel"),
@@ -381,13 +389,19 @@ class ClipDownloader:
         written = self._stream_to_disk(stored, path, headers=headers)
 
         duration = info.get("duration")
+        # The Data API reports `hd`/`sd` and no dimensions, so the file itself is
+        # the only source of a width — and without one, orientation cannot be
+        # judged. A 9:16 phone video was being rejected on an uncertain hand
+        # density while "is it portrait", which is certain and decisive, went
+        # unmeasured.
+        measured = read_mp4_dimensions(path)
         return DownloadedClip(
             url=url,
             path=path,
             duration_seconds=int(duration) if isinstance(duration, int | float) else None,
             filesize_bytes=written,
-            width=info.get("width"),
-            height=info.get("height"),
+            width=measured[0] if measured else info.get("width"),
+            height=measured[1] if measured else info.get("height"),
             fps=info.get("fps"),
             title=info.get("title"),
             uploader=info.get("uploader") or info.get("channel"),
