@@ -199,10 +199,15 @@ The ideas live in `INSPIRATION.md`, each with the measurement that would settle 
 Pick from there. What stays here is the work that is *not* a question — known
 defects and structural jobs whose answer nobody doubts, only their cost:
 
-- **Annotation depth is the binding constraint on grade**, and everything in
-  `INSPIRATION.md` stage 5 exists to attack it. A real clip scored 25/100 with
-  `annotations: 0` after three span reads, landing at L0 where L2 is the minimum
-  trainable depth. Depth is 45 of the 100 points.
+- **Licence is the binding constraint on grade** (`LEARNINGS.md` L8, measured
+  2026-08-22). It is worth exactly 7 points and it is the C/B boundary: the same
+  L3 tree scores 75 → B on CC-BY and 68 → C on YouTube standard. A non-CC clip
+  can never be better than a C however well annotated. `INSPIRATION.md` Q-SRC4
+  is therefore the highest-leverage entry in the file.
+- **Annotation is *not* the constraint** — an earlier reading said it was, off a
+  single anomalous clip. It is producing L2/L3 with 7–9 annotations. Stage 5 of
+  `INSPIRATION.md` still matters for the tail (one clip in five returns nothing
+  at all), but it is not where the grade distribution is stuck.
 - **The five file moves that clear four import cycles** (`MODULES.md` §8 step 1)
   plus `scripts/check_layering.py`. Not a question — a job.
 - **Labels are null on the real clips in the store**; the annotation pass has

@@ -65,12 +65,13 @@ decimal point.
 **Evidence.** An activity rule rejected a genuine laundry video 3 runs out of 3,
 because its three sampled stills happened to show a cat and a bookshelf. Fixing
 it required making the answer three-way so only an affirmative wrong-kind
-verdict rejects. Currently the frame screen drops 77.5% of candidates (62 of 80).
+verdict rejects. Currently the frame screen keeps 7% of candidates (8 of 120).
 
 **Implies.** Where a gate's evidence is sparse, make its answers three-way —
 yes / no / cannot tell — and let only one value reject. And the standing
-uncertainty: we still do not know how much of that 77.5% is correct, which is
-why growing the calibration set is the highest-value measurement available.
+uncertainty: we still do not know how much of that 93% rejection is correct,
+which is why growing the calibration set is the highest-value measurement
+available.
 
 ## L5 · Vendor APIs lie by silence, so never guess a parameter name
 
@@ -113,7 +114,29 @@ be lost is the *reason* for each rejection, because the deliverable is the
 argument for the hours, not the hours. Check periodically that for any accepted
 clip we can still reconstruct what was rejected alongside it and why.
 
-## L8 · Refusing to label beats labelling badly
+## L8 · The licence is the C/B boundary, and it costs exactly 7 points
+
+**Evidence.** `2026-08-22` experiment 3. One fixed L3 tree of 9 annotations
+scored through `evaluate_clip` with only the licence varied: CC-BY **75 → B**,
+YouTube standard 68 → C, unknown 65 → C. Per-clip weights are annotation depth
+30 + tree structure 15 + media 20 + licensing 10, and Gate 3's diversity 25 is
+dataset-level, so **75 is the per-clip ceiling — which is a B**.
+
+**Implies.** A non-CC clip is capped at 68 and can never be better than a C
+however well it is annotated. So licence is not a downstream footnote, it is the
+grade: filtering search to Creative Commons is the highest-leverage change
+available, which promotes `INSPIRATION.md` Q-SRC4 from a curiosity to the top of
+the list. Grade A stays unreachable per clip at any licence — that part is Gate
+3's accounting and remains a product decision.
+
+Worth noting the shape of the mistake this corrects: the baseline read
+"annotation depth is the binding constraint" off **one** clip
+(`rdt-00003`, 0 anchors, score 7) and would have sent several iterations after a
+non-problem. Four of the next five clips reached L2/L3 with 7–9 annotations.
+**n=1 is not a bottleneck, it is an anecdote** — and the cheapest guard against
+it is to decompose a score before believing a story about it.
+
+## L9 · Refusing to label beats labelling badly
 
 **Evidence.** External, not yet tested here. Action100M discards segments under
 4 seconds and marks ~3.23% of segments `N/A` for non-action content. Panda-70M's
@@ -125,4 +148,6 @@ It excludes unmeasured checks from the score (same instinct), but its annotation
 agent currently returns *nothing* rather than `N/A` — which scores identically
 to "not measured" while meaning something quite different. And low annotator
 confidence should widen the panel, not drop the span. Both are open in
-`INSPIRATION.md` stage 5, which is where the binding constraint on grade lives.
+`INSPIRATION.md` stage 5 — not because the grade distribution is stuck there
+(L8 shows it is stuck on licence) but because one clip in five still returns no
+labels at all, and scoring 7 is not the same fact as scoring nothing.

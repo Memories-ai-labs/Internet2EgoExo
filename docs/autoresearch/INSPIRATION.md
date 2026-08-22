@@ -123,6 +123,13 @@ known way to find *the moment*". Also the Action100M corpus is 1.2 M
 
 ### Q-SRC4 · Licence as a search-time facet, not a downstream footnote
 
+> **Promoted to the top of this file, 2026-08-22.** No longer a hypothesis about
+> tidiness — the licence check is *measured* at 7 points and is the C/B boundary
+> (`LEARNINGS.md` L8). The same L3 tree scores 75 → B on CC-BY and 68 → C on
+> YouTube standard, and 75 is the per-clip ceiling. Every non-CC clip we collect
+> is a permanent C. This is the highest-leverage change available anywhere in the
+> pipeline; what remains open is only *what it costs in yield*.
+
 **Hypothesis.** Filtering for Creative Commons at search time changes the yield
 curve, and we would rather know the size of the CC-only corpus than discover
 per-clip that Gate 0 fails.
@@ -142,13 +149,13 @@ large curation pipelines treat licence as a downstream footnote (§7).
 
 ---
 
-## Stage 1 · Screening — the frame look that rejects 77%
+## Stage 1 · Screening — the frame look that keeps 7%
 
 ### Q-SCR1 · Is the screen over-rejecting? *(highest-value measurement in the repo)*
 
-**Hypothesis.** The frame screen currently drops ~77% of what search finds
-(62 of 80 over five live queries), almost all as "frames show exocentric
-footage". Either that is the honest yield of web video, or three stills are too
+**Hypothesis.** The frame screen keeps **7%** of what search finds (8 survivors
+of 120 videos over six live queries; the earlier five-query read of 22.5% was
+optimistic), almost all rejections being "frames show exocentric footage". Either that is the honest yield of web video, or three stills are too
 thin an evidence base and we are throwing away good footage. We already know
 this failure mode is real: an earlier activity rule rejected a genuine laundry
 video 3 runs out of 3 because its three stills happened to show a cat and a
@@ -281,10 +288,16 @@ checks from the score.
 
 ## Stage 5 · Annotate — the binding constraint
 
-Annotation depth is 45 of the 100 points and currently sits near zero: a real
-clip scored 25/100 with `annotations: 0` after the agent read three spans and
-returned nothing, landing at L0 where L2 is the minimum trainable depth. **No
-other change in this file can lift the grade distribution while this holds.**
+Annotation depth plus tree structure is 45 of the 100 points. **An earlier
+version of this section called it the binding constraint; that was wrong**, read
+off one anomalous clip (`rdt-00003`: 0 anchors, score 7). Measured over the next
+five, annotation reaches L2/L3 with 7–9 labels and 27.3 action anchors per usable
+hour. Licence is the actual constraint on grade — see Q-SRC4.
+
+What remains real here is the **tail**: roughly one clip in five returns nothing
+at all, and a clip with zero annotations scores 7. So these entries are about
+making the failure rarer and making it *legible* when it happens, not about
+lifting the whole distribution.
 
 ### Q-ANN1 · Why does the agent read spans and return no labels?
 
