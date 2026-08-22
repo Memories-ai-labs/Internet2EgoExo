@@ -391,3 +391,92 @@ class TestWaitingForTheCleanClipsToIndex:
                 raise AssertionError("should not be called")
 
         assert await wait_for_clean_clips(Lake(), RefineResult()) == {}
+
+
+class TestTheCleanCollectionIsFoundNotMultiplied:
+    """One clean collection, reused. Five duplicates say otherwise.
+
+    `ensure_clean_collection` asked for `limit=200`; the endpoint caps it at 100
+    and returns 400. A broad `except` turned that into an empty listing, an
+    empty listing read as "no collection of that name", and every call created a
+    fresh one — six collections named `egoexo-clean-clips` in ten minutes, each
+    holding a slice of the output.
+    """
+
+    @staticmethod
+    def _lake(rows, *, raise_on_list=False, limit_cap=100):
+        class Lake:
+            created: list[str] = []
+            asked_limit: int | None = None
+
+            async def list_collections(self, limit=100):
+                Lake.asked_limit = limit
+                if raise_on_list:
+                    raise RuntimeError("boom")
+                if limit > limit_cap:
+                    raise RuntimeError(f"limit must be between 1 and {limit_cap}")
+                return {"collections": rows}
+
+            async def create_collection(self, name):
+                Lake.created.append(name)
+                return {"collection_id": f"col_new{len(Lake.created)}"}
+
+        Lake.created = []
+        return Lake()
+
+    @pytest.mark.asyncio
+    async def test_an_existing_collection_is_reused(self):
+        from video_searching_agent.pipeline.refine import ensure_clean_collection
+
+        lake = self._lake([{"id": "col_old", "name": "egoexo-clean-clips"}])
+        got = await ensure_clean_collection(lake, "egoexo-clean-clips")
+        assert got == "col_old"
+        assert type(lake).created == [], "must not create when one already exists"
+
+    @pytest.mark.asyncio
+    async def test_the_limit_it_asks_for_is_inside_the_endpoints_range(self):
+        """The regression itself: 200 was rejected and the failure was hidden."""
+        from video_searching_agent.pipeline.refine import ensure_clean_collection
+
+        lake = self._lake([{"id": "col_old", "name": "egoexo-clean-clips"}])
+        await ensure_clean_collection(lake, "egoexo-clean-clips")
+        assert type(lake).asked_limit is not None
+        assert type(lake).asked_limit <= 100
+
+    @pytest.mark.asyncio
+    async def test_a_failed_lookup_creates_nothing(self):
+        """The consequence that actually cost something.
+
+        Not knowing whether a collection exists is not the same as knowing it
+        does not, and only one of those justifies a create.
+        """
+        from video_searching_agent.pipeline.refine import ensure_clean_collection
+
+        lake = self._lake([], raise_on_list=True)
+        got = await ensure_clean_collection(lake, "egoexo-clean-clips")
+        assert got is None
+        assert type(lake).created == []
+
+    @pytest.mark.asyncio
+    async def test_duplicates_resolve_to_the_oldest_every_time(self):
+        """So a name that already has duplicates stops scattering output."""
+        from video_searching_agent.pipeline.refine import ensure_clean_collection
+
+        lake = self._lake(
+            [
+                {"id": "col_newer", "name": "egoexo-clean-clips",
+                 "created_at": "2026-08-22T19:12:00Z"},
+                {"id": "col_oldest", "name": "egoexo-clean-clips",
+                 "created_at": "2026-08-22T09:03:00Z"},
+            ]
+        )
+        assert await ensure_clean_collection(lake, "egoexo-clean-clips") == "col_oldest"
+
+    @pytest.mark.asyncio
+    async def test_a_genuinely_absent_collection_is_created_once(self):
+        from video_searching_agent.pipeline.refine import ensure_clean_collection
+
+        lake = self._lake([{"id": "col_other", "name": "something-else"}])
+        got = await ensure_clean_collection(lake, "egoexo-clean-clips")
+        assert got == "col_new1"
+        assert type(lake).created == ["egoexo-clean-clips"]

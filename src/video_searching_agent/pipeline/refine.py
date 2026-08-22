@@ -165,20 +165,54 @@ def _writable_dir() -> str | None:
     return None
 
 
+# The endpoint caps `limit` at 100 and returns 400 for anything larger. Asking
+# for 200 cost five duplicate collections: the error was swallowed, the listing
+# came back empty, and "no collection of that name exists" is indistinguishable
+# from "the lookup failed" unless you keep them apart — which is what the
+# `looked` flag below is for.
+COLLECTIONS_PAGE = 100
+
+
 async def ensure_clean_collection(lake: Any, name: str) -> str | None:
-    """The collection cleaned clips go into, reusing it when it exists."""
+    """The collection cleaned clips go into, reusing it when it exists.
+
+    A lookup that *failed* must never fall through to creating a collection.
+    Doing so turned one clean collection into six in ten minutes, each holding a
+    slice of the output, because every call believed it was the first.
+    """
+    looked = False
     try:
-        listing = await lake.list_collections(limit=200)
+        listing = await lake.list_collections(limit=COLLECTIONS_PAGE)
+        looked = True
     except Exception as exc:  # noqa: BLE001
-        logger.info("could not list collections: %s", exc)
-        listing = {}
+        logger.warning(
+            "could not list collections, so not creating %r either: %s", name, exc
+        )
+        return None
+
     rows = listing.get("collections") or listing.get("data") or []
     if isinstance(rows, list):
-        for row in rows:
-            if isinstance(row, dict) and row.get("name") == name:
-                found = row.get("collection_id") or row.get("id")
-                if found:
-                    return str(found)
+        # Oldest first, so a name that already has duplicates resolves to the
+        # same one every time rather than drifting to the newest.
+        matches = [
+            row
+            for row in rows
+            if isinstance(row, dict) and row.get("name") == name
+        ]
+        matches.sort(key=lambda row: str(row.get("created_at") or ""))
+        if len(matches) > 1:
+            logger.warning(
+                "%d collections are named %r; using the oldest. Consolidate them.",
+                len(matches),
+                name,
+            )
+        for row in matches:
+            found = row.get("collection_id") or row.get("id")
+            if found:
+                return str(found)
+
+    if not looked:  # unreachable today, kept so the invariant is explicit
+        return None
     try:
         made = await lake.create_collection(name)
     except Exception as exc:  # noqa: BLE001
