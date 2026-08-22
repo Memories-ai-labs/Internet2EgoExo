@@ -274,9 +274,10 @@ def phase_structural(report: Report) -> None:
         report.add("structural", "local server starts", health.get("demo_mode") is True)
         report.add(
             "structural",
-            "health names the cap and auth",
-            "max_collect_urls" in health and "auth_required" in health,
-            f"cap={health.get('max_collect_urls')} auth={health.get('auth_required')}",
+            "health names the cap, the auth and the look",
+            {"max_collect_urls", "auth_required", "viewpoint_check"} <= set(health),
+            f"cap={health.get('max_collect_urls')} auth={health.get('auth_required')} "
+            f"look={health.get('viewpoint_check')}",
         )
 
         ui = urllib.request.urlopen(f"{base}/ui/", timeout=10).read().decode()
