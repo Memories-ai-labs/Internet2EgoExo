@@ -167,9 +167,9 @@ class Settings(BaseSettings):
         "stills, ~$0.002 a candidate); 'escalate' (frames, then a watch only "
         "for the ones they cannot call); or 'watch' (always watch, which costs "
         "whole-video money on a provider that ignores the frame-rate hint). "
-        "The two watching modes also need YouTube-URL ingestion enabled on the "
-        "Google key, which is a per-key entitlement; without it a watch is "
-        "discarded and the frames' verdict stands.",
+        "'frames' is the default because a watch measurably decided no more "
+        "than the frames did; the watching modes are for candidates the frames "
+        "genuinely cannot call.",
         validation_alias="VIEWPOINT_CHECK",
     )
 

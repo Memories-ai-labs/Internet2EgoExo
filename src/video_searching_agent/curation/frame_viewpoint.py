@@ -18,19 +18,28 @@ quarter, a half and three quarters of the way in. They are free, they are
 actual frames rather than designed cover art, and they are enough to see
 whether a camera is worn: measured at about $0.002 and 3.5s per candidate.
 
-**The video** (opt in, capped, and not available on every key). Gemini takes a
-YouTube URL directly and watches the whole thing. It is the better judgement,
-and it cost $0.26 for a single ten-minute video in testing — 140 times the
-frame check. Worth it for a handful of finalists, ruinous for twenty candidates
-a query on a hosted demo.
+**The video** (opt in, and capped). Gemini takes a YouTube URL directly and
+watches it, honouring ``fps``: a ten-minute video at one frame a minute is
+about 2,800 input tokens, where default sampling on an 89-minute video was
+488,504 and $0.367. So the price is not the reason it is not the default.
 
-The watch also needs YouTube-URL ingestion enabled on the key, which is a
-per-key entitlement rather than a model feature. Without it the failure is not
-an error you can see: ``gemini-3.1-pro-preview`` refuses with 403, but the 2.5
-models accept the request, silently drop the video part and answer from the
-prompt alone. So :func:`watch_video` checks the bill for media tokens and
-throws away a verdict that was reached without the video. What is left is the
-frame check, which is why it is the default.
+The reason is that it does not measurably decide more than the frames do.
+Escalated on four candidates the frames could not settle, a watch left two
+unchanged, read one better than the frames had — correctly calling a static
+composed shot of a finished build "not somebody doing this" — and read one
+*worse*, flipping a fixed camera pointed at a suitcase to egocentric when the
+frames had it right. One better, one worse, two the same, at ten to fourteen
+seconds each, is not an upgrade. It is offered because a deployment may have
+candidates the frames genuinely cannot call, and it is off by default.
+
+A watch also has a failure mode with no error in it. When the model cannot
+fetch the video — private, removed, region-locked, or simply gone —
+``gemini-3.1-pro-preview`` raises 403, but the 2.5 models accept the request,
+silently drop the video part, and answer from the URL and the prompt: one reply
+described a robot dog unlocking a door, billed as eight tokens of text. Those
+candidates are not exotic; a search hands them over every day. So
+:func:`watch_video` checks the bill for media tokens and throws away any verdict
+reached without the video.
 
 Two questions, not one, because the second is free. Whether the camera is worn
 and whether the frames show the activity that was asked for are independent,
@@ -336,13 +345,13 @@ async def watch_video(
         return SightVerdict(error=str(exc)[:200])
 
     # A model sent a video it could not fetch does not say so — it answers
-    # anyway, from the URL and the prompt. Asked to describe a YouTube video
-    # this deployment's key has no access to, one reply came back "A robot dog
-    # retrieves a key, inserts it into a door lock", with a normal STOP finish
-    # and a prompt bill of ten tokens, every one of them text. YouTube URL
-    # ingestion is a per-key entitlement, so this is not a rare failure: it is
-    # what every watch does on a key without it. An answer about a video that
-    # was never delivered is worse than no answer, so it is thrown away.
+    # anyway, from the URL and the prompt. Asked about a video that does not
+    # exist, one reply came back "A robot dog retrieves a key, inserts it into a
+    # door lock", with a normal STOP finish and a prompt bill of eight tokens,
+    # every one of them text. Private, removed and region-locked candidates
+    # reach this line every day, and 3.1-pro raises 403 where 2.5 invents an
+    # answer, so the guard cannot be a model-version assumption. An answer about
+    # a video that was never delivered is worse than no answer.
     if getattr(client, "saw_media", None) and client.saw_media(response) is False:
         logger.info("watch discarded for %s: the video never reached the model", video_url)
         return SightVerdict(

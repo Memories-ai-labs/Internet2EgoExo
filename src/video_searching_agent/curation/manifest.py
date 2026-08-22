@@ -176,7 +176,13 @@ async def verify_viewpoints(
 
     kept: list[VideoReference] = []
     spent = 0.0
+    unpriced = 0
     for reference, seen in zip(references, verdicts, strict=True):
+        # Gemini does not report cost, so a watch comes back with None. Counting
+        # that as zero would make the log read like a complete bill, which is
+        # the one thing it must not do.
+        if seen.cost_usd is None and seen.looked:
+            unpriced += 1
         spent += seen.cost_usd or 0.0
         if not seen.looked:
             kept.append(reference)
@@ -216,10 +222,11 @@ async def verify_viewpoints(
     dataset.clips = [clip for clip in dataset.clips if clip.url in {r.url for r in kept}]
     dataset.recompute_totals()
     logger.info(
-        "frame check: %d of %d candidates kept, $%.4f",
+        "frame check: %d of %d candidates kept, $%.4f%s",
         len(kept),
         len(references),
         spent,
+        f" (+{unpriced} looks whose provider reported no cost)" if unpriced else "",
     )
     return kept
 

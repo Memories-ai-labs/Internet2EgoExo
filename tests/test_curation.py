@@ -605,3 +605,49 @@ class TestTheActivityHalfOfTheLook:
 
         assert kept == []
         assert manifest.exclusion_reasons == {"frames show a different kind of video": 1}
+
+
+class TestTheSpendLogDoesNotInventNumbers:
+    """A provider that reports no cost must not read as a look that was free.
+
+    Gemini does not report cost, so every watch comes back with ``cost_usd`` of
+    None. Adding that to a running total as zero produces a number that looks
+    like a complete bill and is not one.
+    """
+
+    _refs = staticmethod(TestVerifyingViewpointsAtSearchTime._refs)
+    _manifest = staticmethod(TestVerifyingViewpointsAtSearchTime._manifest)
+
+    @pytest.mark.asyncio
+    async def test_an_unpriced_look_is_counted_as_unpriced(self, monkeypatch, caplog):
+        import logging
+
+        from video_searching_agent.curation import frame_viewpoint
+        from video_searching_agent.curation.frame_viewpoint import SightVerdict
+        from video_searching_agent.curation.manifest import verify_viewpoints
+        from video_searching_agent.curation.viewpoint import Viewpoint
+
+        refs = self._refs(("priced", "POV one"), ("unpriced", "POV two"))
+        manifest = self._manifest(refs)
+
+        async def check_many(client, candidates, *, task=None, mode="frames", concurrency=6):
+            return [
+                SightVerdict(
+                    viewpoint=Viewpoint.EGOCENTRIC,
+                    confidence=0.9,
+                    method="frames" if c["video_id"] == "priced" else "watch",
+                    cost_usd=0.002 if c["video_id"] == "priced" else None,
+                )
+                for c in candidates
+            ]
+
+        monkeypatch.setattr(frame_viewpoint, "check_many", check_many)
+        with caplog.at_level(logging.INFO, logger="video_searching_agent.curation.manifest"):
+            kept = await verify_viewpoints(
+                refs, manifest, wanted=Viewpoint.EGOCENTRIC, llm=object(), mode="frames"
+            )
+
+        assert len(kept) == 2
+        logged = " ".join(record.getMessage() for record in caplog.records)
+        assert "$0.0020" in logged
+        assert "1 looks whose provider reported no cost" in logged

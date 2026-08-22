@@ -289,11 +289,12 @@ async def test_an_answer_with_no_task_fields_abstains_rather_than_denies() -> No
 class _BlindClient(_FakeClient):
     """A client that answers about a video it was never actually shown.
 
-    This is not hypothetical. YouTube-URL ingestion is a per-key entitlement,
-    and on a key without it the 2.5 models accept the request, drop the video
-    part, and answer from the URL and the prompt — one reply invented a robot
-    dog unlocking a door, with a normal finish reason and a prompt bill of ten
-    tokens, every one of them text.
+    This is not hypothetical, and it is not rare. When the model cannot fetch
+    the video — private, removed, region-locked, gone — 3.1-pro raises 403 but
+    the 2.5 models accept the request, drop the video part, and answer from the
+    URL and the prompt. One reply invented a robot dog unlocking a door, with a
+    normal finish reason and a prompt bill of eight tokens, every one of them
+    text. A search hands over candidates like that every day.
     """
 
     def saw_media(self, response: dict) -> bool | None:
