@@ -1,3 +1,9 @@
+# Never ship local credentials: environment variables belong in the Vercel
+# project settings, not in the bundle.
+.env
+.env.*
+!.env.example
+
 # Keep the function bundle small: none of this is imported at runtime.
 ui/node_modules
 ui/src
