@@ -156,3 +156,131 @@ async def test_the_prompt_says_to_keep_the_subject_and_vary_the_angle():
     assert "Vary the angle" in system
     # Filters are applied elsewhere; a rewrite that adds them narrows twice.
     assert "Do not add a licence, duration or date filter" in system
+
+
+# --- the head phrase --------------------------------------------------------
+#
+# A fixed word count cuts through a clause. "packing a suitcase, folding and
+# placing clothes into luggage" truncated to eight words ends on "into", and
+# searching that returned "IMPOSSIBLE 💀🍷" and a Toca Boca clip. Every template
+# query for every request was damaged this way; it only surfaced when the model
+# reply failed to parse and the templates were the whole answer.
+
+
+@pytest.mark.parametrize(
+    ("request_text", "head"),
+    [
+        # The first clause names the task; the rest elaborates.
+        (
+            "packing a suitcase, folding and placing clothes into luggage",
+            "packing a suitcase",
+        ),
+        ("fixing a bike, hands on the chain and brakes", "fixing a bike"),
+        # One clause, so the word cap applies — and must not leave "and an".
+        (
+            "assembling flat-pack furniture with a screwdriver and an allen key",
+            "assembling flat-pack furniture with a screwdriver",
+        ),
+        # A leading category label is not a task. Searching "kitchen tasks"
+        # finds listicles.
+        ("kitchen tasks - chopping, stirring, washing up", "chopping"),
+        # Nothing but a category: there is no better clause to fall back to,
+        # so it stands rather than becoming empty.
+        ("household chores", "household chores"),
+        ("soldering", "soldering"),
+    ],
+)
+def test_the_head_phrase_ends_on_a_real_word(request_text: str, head: str) -> None:
+    from video_searching_agent.curation.query_rewrite import core_subject, head_phrase
+
+    assert head_phrase(core_subject(request_text)) == head
+
+
+def test_no_template_query_ends_on_a_function_word() -> None:
+    """The property that actually matters, over every request we run."""
+
+    from video_searching_agent.curation.query_rewrite import (
+        _DANGLING,
+        template_queries,
+    )
+    from video_searching_agent.curation.viewpoint import Viewpoint
+
+    requests = [
+        "packing a suitcase, folding and placing clothes into luggage",
+        "someone doing the laundry, loading a machine and folding clothes",
+        "assembling flat-pack furniture with a screwdriver and an allen key",
+        "kitchen tasks - chopping, stirring, washing up",
+        "fixing a bike, hands on the chain and brakes",
+        "welding a steel frame with a MIG torch and a grinder",
+    ]
+    for request_text in requests:
+        for query in template_queries(request_text, Viewpoint.EGOCENTRIC):
+            last = query.text.split()[-1].lower()
+            assert last not in _DANGLING, f"{request_text!r} -> {query.text!r}"
+
+
+@pytest.mark.asyncio
+async def test_an_unparseable_reply_is_asked_once_more() -> None:
+    """The templates are a floor, not an equal, so one bad reply is not the end."""
+
+    from video_searching_agent.curation.query_rewrite import rewrite_query
+    from video_searching_agent.curation.viewpoint import Viewpoint
+
+    replies = [
+        "Sure! Here are some queries you could try:",  # prose, unparseable
+        '{"queries": [{"text": "POV ranger roll packing cubes", "angle": "domain"}]}',
+    ]
+
+    class Flaky:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def new_conversation(self, text: str) -> list[dict]:
+            return [{"role": "user", "content": text}]
+
+        async def create_message_async(self, messages, **_):
+            self.calls += 1
+            return {"text": replies[min(self.calls - 1, len(replies) - 1)]}
+
+        def get_text_response(self, response) -> str:
+            return response["text"]
+
+        def get_cost_usd(self, response) -> float:
+            return 0.0005
+
+    llm = Flaky()
+    rewrite = await rewrite_query("packing a suitcase", viewpoint=Viewpoint.EGOCENTRIC, llm=llm)
+
+    assert llm.calls == 2
+    assert rewrite.error is None
+    assert "POV ranger roll packing cubes" in rewrite.texts
+    # Both calls are paid for, and both are counted.
+    assert rewrite.cost_usd == pytest.approx(0.001)
+
+
+@pytest.mark.asyncio
+async def test_two_unparseable_replies_fall_back_rather_than_loop() -> None:
+    from video_searching_agent.curation.query_rewrite import rewrite_query
+    from video_searching_agent.curation.viewpoint import Viewpoint
+
+    class Prose:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def new_conversation(self, text: str) -> list[dict]:
+            return [{"role": "user", "content": text}]
+
+        async def create_message_async(self, messages, **_):
+            self.calls += 1
+            return {"text": "I'd be happy to help you search for that!"}
+
+        def get_text_response(self, response) -> str:
+            return response["text"]
+
+    llm = Prose()
+    rewrite = await rewrite_query("packing a suitcase", viewpoint=Viewpoint.EGOCENTRIC, llm=llm)
+
+    assert llm.calls == 2, "one retry, not a loop"
+    assert rewrite.error == "the model returned no usable queries"
+    assert rewrite.texts, "the templates still answer"
+    assert all(q.source == "template" for q in rewrite.queries)

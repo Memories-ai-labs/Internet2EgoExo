@@ -683,6 +683,51 @@ figure that 44% of an agent's shortlist survives a frame-level check makes that
 roughly **$6.90/h**. Terms the run could not measure are reported as zero and
 called out, never filled with a guess.
 
+## Performance metrics
+
+`$3.05/h` is what a *collected* hour costs. It is not what a *usable* hour
+costs, and it says nothing about how many of those hours are worth having. Those
+are the questions `eval/` answers — see **[eval/README.md](eval/README.md)** for
+the full spec.
+
+Three numbers, on a frozen set of 200 task queries:
+
+1. **Yield.** Candidates found → collected → indexed → graded → accepted, each
+   step with the ratio it makes with the one before it, plus delivered hours
+   against usable hours and how many narration anchors came out.
+2. **Yield by grade.** The same output split across the quality standard's four
+   bands, because they have four different dispositions: **A** (≥85) is sellable
+   externally, **B** (70–84) is trainable but not sellable, **C** (55–69) may not
+   be counted as high-quality hours at all, **D** (<55) is not ingested.
+3. **Cost by grade.** What an A cost, what a B cost, what a C cost — twice, from
+   two angles that answer different questions: *attributed* (every dollar lands
+   on one clip; the bands sum to the run total) and *cost to obtain one* (the
+   whole run divided by that band's clips).
+
+The queries are drawn, not written: the standard forbids inventing task names,
+so all 200 come from the robotics downstream task map's controlled vocabulary,
+stratified 20/50/30 across easy / medium / hard and spread over 25 task
+families. Each keeps its `RDT-#####` id, so a scorecard is traceable back to the
+vocabulary.
+
+```bash
+python eval/run_eval.py --dry-run --limit 40       # free: the top of the funnel
+python eval/run_eval.py --limit 2 --per-query 1 --yes   # ~$1, end to end
+python eval/run_eval.py --yes                     # the whole set; hours, and $60-120
+python eval/run_eval.py --score-only eval/results/run-1.jsonl   # re-score, free
+```
+
+A run writes itself down as it goes, so an interruption costs the time and not
+the money, and `--resume` picks it up. `eval/sample-scorecard.md` is a real
+scorecard, committed so the output's shape is visible without spending anything.
+
+The scorecard also reports two things a total would hide: **where the pipeline
+contradicts the standard** (a clip accepted while graded D, or below L2, or
+carrying a blocking gate failure — the first live run found one), and **what the
+run could not measure** — model tokens inside curation, Gate 3's dataset-level
+diversity checks, and every metric that needs a human annotator rather than a
+script.
+
 ## Web UI
 
 The UI is a Vite + React app in `ui/`, built on the
@@ -1344,12 +1389,16 @@ video-searching-agent/
 │   ├── agent/          # Core agent logic
 │   ├── api/            # External API clients
 │   ├── config/         # Configuration
+│   ├── curation/       # Quality gates, scoring, cost, manifest
+│   ├── evaluation/     # Task vocabulary, yield/cost metrics, scorecard
 │   ├── models/         # Pydantic data models
 │   ├── router/         # Query classification
 │   ├── tools/          # Gemini function calling tools
 │   └── web/            # FastAPI app, SSE streaming, middleware
 │       └── static/     # Zero-build web UI (index.html / styles.css / app.js)
 ├── docs/               # RELATED_WORK.md — how this sits next to the literature
+├── eval/               # Frozen eval set + runner (see eval/README.md)
+├── qa/                 # Deployment sweep and whole-pipeline run
 ├── examples/           # Usage examples
 ├── tests/              # Test suite
 └── pyproject.toml      # Project configuration
