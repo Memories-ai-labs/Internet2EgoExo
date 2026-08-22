@@ -106,3 +106,9 @@ eval/results/
 
 # The annotation store is data, not code. Its rows come from runs.
 data/
+
+# `vercel link` writes an .env.local holding the project's OIDC token, and a
+# deployment's own pull writes further .env.* files. None of them belong in the
+# repository; .env.example does.
+.env*
+!.env.example
