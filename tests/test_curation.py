@@ -651,3 +651,78 @@ class TestTheSpendLogDoesNotInventNumbers:
         logged = " ".join(record.getMessage() for record in caplog.records)
         assert "$0.0020" in logged
         assert "1 looks whose provider reported no cost" in logged
+
+
+class TestRegradingMayOnlyTakeAcceptanceAway:
+    """A re-grade that lowers the grade must revoke acceptance with it.
+
+    The cleaning agent accepts a clip before there is anything to annotate, so
+    45 of the 100 points are unscored at that moment. `_regrade` re-runs the
+    gates once the tree exists — and used to overwrite `grade` and `score`
+    while revoking acceptance only on a blocking failure. A clip that re-graded
+    to D on depth alone therefore stayed accepted, and the eval reported
+    `grade: D, score: 25, accepted: true` on real footage: a clip the standard
+    says is not ingested, counted in the acceptance rate.
+    """
+
+    @staticmethod
+    def _clip_and_verdict():
+        from video_searching_agent.agent.cleaning_agent import CleaningVerdict
+        from video_searching_agent.agent.curation_agent import CuratedClip
+
+        clip = CuratedClip(video_id="vid_regrade", accepted=True, grade="B", score=72)
+        return clip, CleaningVerdict(video_id="vid_regrade", accepted=True)
+
+    # Provenance and media good enough that nothing blocks: what is left to
+    # fail on is annotation depth, which is the point of the re-grade.
+    FACTS = {
+        "license": "CC-BY",
+        "source_url": "https://example.com/v",
+        "uploader": "someone",
+        "width": 1920,
+        "height": 1080,
+        "fps": 30,
+        "duration_seconds": 154,
+        "container": "mp4",
+    }
+
+    def test_an_unannotated_clip_regraded_to_d_is_no_longer_accepted(self):
+        from video_searching_agent.agent.annotation_agent import AnnotationRun
+        from video_searching_agent.agent.curation_agent import (
+            CurationAgent,
+            CurationReport,
+        )
+
+        clip, verdict = self._clip_and_verdict()
+        clip.annotation = AnnotationRun(query="assembling the cabinet")
+        assert clip.annotation.annotations == []
+
+        report = CurationReport()
+        CurationAgent._regrade(clip, verdict, self.FACTS, report)
+
+        assert clip.grade == "D", "no annotations cannot score into a real band"
+        assert clip.blocking_failures == [], "the point is a D with nothing blocking"
+        assert clip.accepted is False
+        assert clip.rejection_reason and "re-graded D" in clip.rejection_reason
+
+    def test_a_regrade_never_resurrects_a_clip_cleaning_rejected(self):
+        """Acceptance is conjoined, so the cleaning stage keeps its veto.
+
+        Only cleaning knows about viewpoint and hands; the quality report does
+        not, so its `accepted` must never be able to overrule a rejection.
+        """
+        from video_searching_agent.agent.annotation_agent import AnnotationRun
+        from video_searching_agent.agent.curation_agent import (
+            CurationAgent,
+            CurationReport,
+        )
+
+        clip, verdict = self._clip_and_verdict()
+        clip.accepted = False
+        clip.rejection_reason = "frames show exocentric footage"
+        clip.annotation = AnnotationRun(query="assembling the cabinet")
+
+        CurationAgent._regrade(clip, verdict, self.FACTS, CurationReport())
+
+        assert clip.accepted is False
+        assert clip.rejection_reason == "frames show exocentric footage"

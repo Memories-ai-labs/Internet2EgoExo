@@ -418,11 +418,20 @@ class CurationAgent:
         clip.grade = regraded.grade.value
         clip.score = regraded.score
         clip.blocking_failures = list(regraded.blocking_failures)
-        if regraded.blocking_failures:
-            # A gate that only the annotations could fail still vetoes the clip.
-            clip.accepted = False
-            clip.rejection_reason = "blocking gate failure: " + ", ".join(
-                regraded.blocking_failures
+        # Acceptance is the re-graded verdict's own, never a second opinion
+        # assembled here: `evaluate_clip` refuses both a blocking failure and a
+        # grade of D, and re-deriving only the first half is how a clip scoring
+        # 25 with no annotations was reported as accepted. Conjoined with the
+        # cleaning stage's decision because that one knows things the quality
+        # report does not (viewpoint, hands), and a re-grade may only take
+        # acceptance away.
+        clip.accepted = clip.accepted and regraded.accepted
+        if not clip.accepted and not clip.rejection_reason:
+            clip.rejection_reason = (
+                "blocking gate failure: " + ", ".join(regraded.blocking_failures)
+                if regraded.blocking_failures
+                else f"re-graded {regraded.grade.value} at {regraded.score}/100 "
+                "once annotation depth was known"
             )
         report.trace.add(
             thought="Re-grade the clip now that its annotation depth is known.",
