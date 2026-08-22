@@ -21,6 +21,7 @@ printed before anything runs, and why a run writes itself down as it goes so an
 interruption costs nothing but the time.
 
     python eval/run_eval.py --limit 5                 # start here
+    python eval/run_eval.py --core --yes              # the recurring report's slice
     python eval/run_eval.py --difficulty easy --limit 20
     python eval/run_eval.py --dry-run --limit 40      # search only: the funnel's top
     python eval/run_eval.py --yes                     # the whole frozen set
@@ -38,9 +39,6 @@ import argparse
 import json
 import os
 import sys
-import time
-import urllib.error
-import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -52,209 +50,26 @@ from video_searching_agent.curation.cost import (  # noqa: E402
     SEARCH_PER_CALL,
 )
 from video_searching_agent.evaluation.metrics import (  # noqa: E402
-    ClipOutcome,
     QueryOutcome,
     outcome_as_dict,
     outcome_from_dict,
     score_run,
 )
+from video_searching_agent.evaluation.runner import run_query  # noqa: E402
 from video_searching_agent.evaluation.scorecard import render  # noqa: E402
 
 QUERIES_PATH = ROOT / "eval" / "queries.json"
 RESULTS_DIR = ROOT / "eval" / "results"
 DEPLOYMENT = os.environ.get("QA_DEPLOYMENT", "https://internet-egoexo-video-search.vercel.app")
 
-# The cleaning agent reads a clip's caption, transcription and summary back out
-# of the Datalake before it grades anything. Three derived reads, every clip,
-# every time — a fixed property of the code path rather than an estimate, which
-# is why it is counted rather than left unmeasured.
-DERIVED_READS_PER_CLIP = 3
-
 # Rough per-clip spend, used only for the estimate printed before a run.
 ESTIMATED_MINUTES_PER_CLIP = 8.0
 
 
-def _sse(url: str, body: dict, timeout: float = 600.0) -> list[tuple[str, dict]]:
-    """Read a whole SSE stream into (event, payload) pairs."""
-    request = urllib.request.Request(
-        url, data=json.dumps(body).encode(), headers={"Content-Type": "application/json"}
-    )
-    events: list[tuple[str, dict]] = []
-    event = None
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        for raw in response:
-            line = raw.decode("utf-8", "replace").rstrip("\r\n")
-            if line.startswith("event:"):
-                event = line[6:].strip()
-            elif line.startswith("data:"):
-                try:
-                    events.append((event or "", json.loads(line[5:].strip())))
-                except json.JSONDecodeError:
-                    continue
-    return events
-
-
-def _final(events: list[tuple[str, dict]], name: str = "complete") -> dict:
-    return next((payload for event, payload in reversed(events) if event == name), {})
-
-
-def run_one(case: dict, per_query: int, dry_run: bool, viewpoint: str) -> QueryOutcome:
-    """Search, collect and curate one eval query."""
-    outcome = QueryOutcome(
-        query_id=case["id"],
-        query=case["query"],
-        rdt_id=case.get("rdt_id", ""),
-        task_family=case.get("task_family", ""),
-        difficulty=case.get("difficulty", ""),
-    )
-    started = time.time()
-
-    # ---- 1. search ------------------------------------------------------
-    try:
-        events = _sse(
-            f"{DEPLOYMENT}/api/v1/queries/stream",
-            {"query": case["query"], "viewpoint": viewpoint},
-            timeout=300,
-        )
-    except (urllib.error.URLError, TimeoutError, OSError) as exc:
-        outcome.error = f"search failed: {exc}"
-        outcome.seconds = time.time() - started
-        return outcome
-
-    complete = _final(events)
-    manifest = complete.get("dataset") or {}
-    clips = manifest.get("clips") or []
-    outcome.candidates = len(clips)
-    # What the search found before the pre-download screen, and why the screen
-    # dropped what it dropped. Reported because "0 candidates" was being used to
-    # mean two opposite things: the search could not answer the query, and the
-    # search answered it with eighteen tripod-shot videos.
-    outcome.screened_out = int(manifest.get("excluded_clips") or 0)
-    outcome.screen_reasons = dict(manifest.get("exclusion_reasons") or {})
-    outcome.found = outcome.candidates + outcome.screened_out
-    # The search reports its own spend — model tokens plus per-call search fees.
-    outcome.discovery_usd = float(((manifest.get("cost") or {}).get("discovery_usd")) or 0.0)
-
-    urls = [clip["url"] for clip in clips if clip.get("url")][:per_query]
-    # A dry run attempted nothing, and saying otherwise would report a 0% index
-    # rate against candidates that were never collected.
-    outcome.dry_run = dry_run
-    outcome.attempted = 0 if dry_run else len(urls)
-    if dry_run or not urls:
-        if not urls:
-            if outcome.screened_out:
-                top = ", ".join(
-                    f"{reason} ×{count}"
-                    for reason, count in sorted(
-                        outcome.screen_reasons.items(), key=lambda kv: -kv[1]
-                    )[:2]
-                )
-                outcome.error = outcome.error or (
-                    f"{outcome.found} found, all screened out ({top})"
-                )
-            else:
-                outcome.error = outcome.error or "search found nothing"
-        outcome.seconds = time.time() - started
-        return outcome
-
-    # ---- 2. collect, one URL per request --------------------------------
-    #
-    # One request per clip because a serverless function has 300s and a long
-    # video spends most of that being downloaded and indexed; two in one request
-    # means the stream is cut before the summary arrives.
-    indexed: list[str] = []
-    failures: list[str] = []
-    for url in urls:
-        try:
-            events = _sse(
-                f"{DEPLOYMENT}/api/v1/collect/stream",
-                {
-                    "urls": [url],
-                    "viewpoint": viewpoint,
-                    "require_hands": True,
-                    "annotate": True,
-                    "viewpoint_verified_urls": [url],
-                },
-                timeout=900,
-            )
-        except (urllib.error.URLError, TimeoutError, OSError) as exc:
-            failures.append(f"collect cut off: {exc}")
-            continue
-        last: dict = {}
-        for event, payload in events:
-            if event in ("clip_stage", "clip_done"):
-                last = payload.get("clip") or {}
-        if last.get("video_id"):
-            indexed.append(str(last["video_id"]))
-        else:
-            failures.append(
-                str(
-                    last.get("rejection_reason")
-                    or last.get("error")
-                    or f"stopped at {last.get('stage') or 'nothing streamed'}"
-                )[:90]
-            )
-    outcome.indexed = len(indexed)
-    if not indexed:
-        outcome.error = f"nothing reached the Datalake: {sorted(set(failures)) or ['no events']}"
-        outcome.seconds = time.time() - started
-        return outcome
-
-    # ---- 3. curate: clean, annotate, grade ------------------------------
-    try:
-        events = _sse(
-            f"{DEPLOYMENT}/api/v1/curate/stream",
-            {"video_ids": indexed, "query": case["query"], "viewpoint": viewpoint},
-            timeout=900,
-        )
-    except (urllib.error.URLError, TimeoutError, OSError) as exc:
-        outcome.error = f"curation failed: {exc}"
-        outcome.seconds = time.time() - started
-        return outcome
-
-    curation = _final(events)
-    for clip in curation.get("clips") or []:
-        outcome.clips.append(_clip_outcome(outcome.query_id, clip))
-    if not outcome.clips:
-        outcome.error = "curation returned no graded clips"
-    outcome.seconds = time.time() - started
-    return outcome
-
-
-def _clip_outcome(query_id: str, clip: dict) -> ClipOutcome:
-    """Read one curated clip into the record, in billable units."""
-    cleaning = clip.get("cleaning") or {}
-    annotation = clip.get("annotation") or {}
-    anchors = cleaning.get("segments") or []
-    labels = annotation.get("annotations") or []
-    duration = int(clip.get("duration_seconds") or 0)
-    spans_read = int(annotation.get("spans_considered") or 0)
-
-    return ClipOutcome(
-        query_id=query_id,
-        video_id=str(clip.get("video_id") or ""),
-        grade=str(clip.get("grade") or "D"),
-        score=int(clip.get("score") or 0),
-        accepted=bool(clip.get("accepted")),
-        annotation_level=str(clip.get("annotation_level") or "L0"),
-        duration_seconds=duration,
-        usable_seconds=int(clip.get("usable_seconds") or 0),
-        idle_seconds=int(clip.get("idle_seconds") or 0),
-        action_anchors=sum(1 for a in anchors if a.get("hier_level") == "action"),
-        total_anchors=len(anchors),
-        annotations=len(labels),
-        blocking_failures=list(clip.get("blocking_failures") or []),
-        indexed_minutes=duration / 60,
-        # One moment search per video, then one read per span it shortlisted.
-        moment_search_calls=1 if annotation else 0,
-        moment_read_calls=spans_read,
-        derived_reads=DERIVED_READS_PER_CLIP,
-        look_usd=float(annotation.get("look_cost_usd") or 0.0),
-    )
-
-
 def select(cases: list[dict], args: argparse.Namespace) -> list[dict]:
     """Narrow the frozen set without reordering it."""
+    if args.core:
+        cases = [c for c in cases if c.get("core")]
     if args.query:
         wanted = set(args.query)
         cases = [c for c in cases if c["id"] in wanted or c.get("rdt_id") in wanted]
@@ -287,6 +102,11 @@ def estimate_usd(cases: int, per_query: int, dry_run: bool) -> float:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--limit", type=int, help="run only the first N queries of the set")
+    parser.add_argument(
+        "--core",
+        action="store_true",
+        help="the fixed slice the recurring report uses — same queries every time",
+    )
     parser.add_argument(
         "--difficulty",
         action="append",
@@ -366,7 +186,12 @@ def main() -> int:
     with record.open("a", encoding="utf-8") as handle:
         for index, case in enumerate(todo, start=1):
             print(f"--- [{index}/{len(todo)}] {case['id']}: {case['query']}", flush=True)
-            outcome = run_one(case, args.per_query, args.dry_run, viewpoint="egocentric")
+            outcome = run_query(
+                case,
+                deployment=DEPLOYMENT,
+                per_query=args.per_query,
+                dry_run=args.dry_run,
+            )
             handle.write(json.dumps(outcome_as_dict(outcome), ensure_ascii=False) + "\n")
             handle.flush()
             outcomes.append(outcome)

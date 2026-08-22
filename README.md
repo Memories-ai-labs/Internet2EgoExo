@@ -641,6 +641,14 @@ called out, never filled with a guess.
 
 ## Performance metrics
 
+<!-- performance-metrics:start -->
+_No recurring run has reported yet._
+<!-- performance-metrics:end -->
+
+The block above is rewritten by `eval/publish.py` every eight hours and committed
+to `main`, so the latest numbers are the first thing this file says about how the
+pipeline is doing. Everything below explains what they mean.
+
 `$3.05/h` is what a *collected* hour costs. It is not what a *usable* hour
 costs, and it says nothing about how many of those hours are worth having. Those
 are the questions `eval/` answers — see **[eval/README.md](eval/README.md)** for
@@ -676,6 +684,38 @@ python eval/run_eval.py --score-only eval/results/run-1.jsonl   # re-score, free
 A run writes itself down as it goes, so an interruption costs the time and not
 the money, and `--resume` picks it up. `eval/sample-scorecard.md` is a real
 scorecard, committed so the output's shape is visible without spending anything.
+
+### How often it runs, and why not the whole set
+
+```bash
+python eval/publish.py --yes          # the recurring job: run, report, commit, push
+```
+
+**Every eight hours**, on the `core` slice — 12 queries marked in
+`eval/queries.json`, stratified across difficulty and family — for about $6 a
+tick. The full 200 queries three times a day would be $180–360 daily, which is
+not a price worth paying to watch a number move. The slice is *fixed* rather than
+rotating, because a trend line over a changing slice measures the slice.
+
+That buys comparability at the cost of resolution, and the report says so rather
+than pretending otherwise: twelve clips put a **±25-point** 95% interval around
+an acceptance rate. So every rate is printed with its interval and its
+denominator, next to a **rolling nine-tick window** — about three days, a
+hundred-odd clips — which is where a real change first becomes visible. Every
+comparison is drawn from ticks that ran *the same* slice; a full run starts its
+own lineage rather than being pooled into the core one. The number to quote
+externally is a full 200-query run, not a tick.
+
+Each tick appends to [`eval/history.jsonl`](eval/history.jsonl) (append-only —
+it *is* the trend), writes a dated report to [`eval/reports/`](eval/reports/),
+copies it to [`eval/REPORT.md`](eval/REPORT.md), and rewrites the block at the
+top of this section. Every snapshot records the deployment's own `/health`
+payload — version, model, `viewpoint_check` — alongside the harness commit,
+because the two settings that most move yield and cost can change without a
+commit, and a step in the trend with nothing behind it is unattributable.
+
+The publisher refuses to run on a dirty tree or a branch behind `origin/main`,
+and only ever commits the four report paths.
 
 The scorecard also reports two things a total would hide: **where the pipeline
 contradicts the standard** (a clip accepted while graded D, or below L2, or

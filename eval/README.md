@@ -17,13 +17,18 @@ eval/
   queries.json           ← the frozen eval set, v1.0, 200 queries
   build_query_set.py     ← rebuilds queries.json from task_map.csv
   run_eval.py            ← runs the set through the pipeline, writes a scorecard
+  publish.py             ← the eight-hourly job: run, report, commit, push
   sample-scorecard.md    ← a real scorecard, so the shape is visible without spending
-  results/               ← run records and scorecards (git-ignored)
+  history.jsonl          ← one line per recurring run, append-only: the trend
+  REPORT.md              ← the latest report
+  reports/               ← every dated report
+  results/               ← raw run records (git-ignored)
 ```
 
 The parts worth testing live in `src/video_searching_agent/evaluation/`:
-`task_map.py` (the vocabulary and the sampling), `metrics.py` (the arithmetic)
-and `scorecard.py` (the rendering). 68 tests cover them.
+`task_map.py` (the vocabulary and the sampling), `runner.py` (driving the
+deployment), `metrics.py` (the arithmetic), `scorecard.py` (the rendering) and
+`report.py` (the trend). 95 tests cover them.
 
 ---
 
@@ -247,7 +252,68 @@ correct and it exists so a resize cannot quietly introduce a query like
 
 ---
 
-## 5. What the scorecard also reports
+## 5. The recurring report
+
+```bash
+python eval/publish.py --yes            # run, report, commit, push to main
+python eval/publish.py --yes --no-push  # everything but the push
+python eval/publish.py --from eval/results/run-3.jsonl   # publish a finished run, free
+python eval/publish.py --slice all --yes                 # the full 200
+```
+
+**Every eight hours**, against whatever is deployed. Each tick runs the `core`
+slice, scores it, appends `history.jsonl`, writes a dated report to `reports/`,
+copies it to `REPORT.md`, rewrites the metrics block in the top-level README, and
+pushes the four report paths to `main`. It refuses to run on a dirty tree or a
+branch behind `origin/main`.
+
+### Why a 12-query slice
+
+The full set is hours and $60–120. Three times a day is $180–360 daily, which is
+not a price worth paying to watch a number move. So the recurring run uses the
+`core` slice — 12 queries marked `"core": true` in `queries.json`, four per
+difficulty tier, spread across families, drawn at a stride through the set rather
+than off its head (the low `RDT` ids are the robot-benchmark rows the vocabulary
+was seeded from, so the first four of any tier are the four least footage-like
+queries in it). About $6 a tick.
+
+The slice is **fixed, not rotating**. A rotating slice would confound "the
+pipeline changed" with "the queries changed", which is the one thing a trend line
+must not do.
+
+### What that costs in resolution, and what the report does about it
+
+Twelve clips put a **±25-point** 95% interval around an acceptance rate. A tick
+cannot resolve a small improvement, and a report that printed `58%` as though it
+could would be worse than no report. So:
+
+* every rate is printed with its **Wilson interval** and its **denominator**;
+* next to a **rolling nine-tick window** — about three days, a hundred-odd clips,
+  roughly ±9 points — which is where a real change first shows;
+* windows **sum counts, never average rates**, so a 2-clip tick does not weigh as
+  much as a 100-clip one;
+* every comparison is drawn from ticks that ran **the same slice** — a
+  `--slice all` run starts its own lineage rather than being pooled into the core
+  one;
+* and the caveat is in the report, in words, every time.
+
+The number to quote externally is a full 200-query run. The tick is for noticing.
+
+### What each snapshot records
+
+The pipeline under test is a *deployment*, not this checkout, and the two
+settings that most move yield and cost — the model, and how hard it looks before
+downloading — change without a commit. So every snapshot carries the
+deployment's own `/health` payload (`version`, `model`, `viewpoint_check`,
+`max_collect_urls`) alongside the harness commit. A step in the trend with
+nothing behind it is unattributable, which makes it useless.
+
+`history.jsonl` is append-only and committed. A trend that lives in a build
+artifact is a trend nobody looks at.
+
+---
+
+## 6. What the scorecard also reports
 
 **Contradictions.** An eval that only totals up what the pipeline says about
 itself is a self-report. So the scorecard checks the pipeline's verdicts against
