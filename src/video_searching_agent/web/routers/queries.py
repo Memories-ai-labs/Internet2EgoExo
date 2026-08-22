@@ -11,6 +11,7 @@ from sse_starlette.sse import EventSourceResponse
 
 from video_searching_agent.config.settings import get_settings
 from video_searching_agent.web import demo
+from video_searching_agent.web.credentials import RequestCredentials
 from video_searching_agent.web.dependencies import get_agent
 from video_searching_agent.web.schemas.events import ErrorEvent
 from video_searching_agent.web.schemas.requests import QueryRequest
@@ -18,6 +19,21 @@ from video_searching_agent.web.schemas.requests import QueryRequest
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1", tags=["queries"])
+
+
+def _agent_for(credentials: RequestCredentials) -> Any:
+    """The shared agent, or a private one when the caller brought a key.
+
+    Built per request in that case: putting a caller's key into the shared
+    agent would serve it to everyone else too.
+    """
+    client = credentials.llm_client()
+    if client is None:
+        return get_agent()
+
+    from video_searching_agent.web.streaming.agent_stream import StreamingAgentWrapper
+
+    return StreamingAgentWrapper(llm_client=client)
 
 
 async def generate_events(
@@ -39,7 +55,10 @@ async def generate_events(
             yield frame
         return
 
-    agent = get_agent()
+    credentials = RequestCredentials.from_headers(request.headers)
+    agent = _agent_for(credentials)
+    if credentials.supplied:
+        logger.info("serving with caller-supplied credentials: %s", credentials.describe())
 
     try:
         # Create generator for streaming events

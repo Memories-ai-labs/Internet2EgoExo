@@ -12,9 +12,19 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
 from video_searching_agent.config.settings import get_settings
+from video_searching_agent.web.credentials import RequestCredentials
 from video_searching_agent.web.schemas.errors import APIError, ErrorCode
 
 logger = logging.getLogger(__name__)
+
+
+def _client_address(request: Request) -> str:
+    """The caller's address, honouring the proxy header a platform sets."""
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    client = request.client
+    return client.host if client else "unknown"
 
 
 @dataclass
@@ -84,9 +94,16 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if path in self.EXEMPT_PATHS or path.startswith(self.EXEMPT_PREFIXES):
             return await call_next(request)
 
-        # Get API key from request state (set by auth middleware)
-        api_key = getattr(request.state, "api_key", "anonymous")
-        bucket = self._buckets[api_key]
+        # A caller who brought their own keys is spending their own money, so
+        # the shared quota does not apply to them. That is the whole point of
+        # the bring-your-own-key path.
+        if RequestCredentials.from_headers(request.headers).supplied:
+            return await call_next(request)
+
+        # One bucket per API key, or per client address when there is none —
+        # otherwise a single anonymous caller starves every other visitor.
+        api_key = getattr(request.state, "api_key", None)
+        bucket = self._buckets[api_key or f"ip:{_client_address(request)}"]
 
         if not bucket.consume(1):
             retry_after = bucket.time_until_available(1)

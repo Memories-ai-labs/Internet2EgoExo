@@ -14,6 +14,7 @@
 import { useRef, useState } from "react";
 
 import { hours, percent, timecode } from "../lib/format";
+import type { OwnKeys } from "../App";
 import { streamRequest } from "../lib/sse";
 import type { CurationResult, GateCheck, IngestClip } from "../lib/types";
 import { AnnotationTreeFor } from "./AnnotationTree";
@@ -216,11 +217,12 @@ function ClipResult({ clip }: { clip: IngestClip }) {
 }
 
 export interface CollectViewProps {
+  ownKeys: OwnKeys;
   apiKey: string;
   queuedUrls: string[];
 }
 
-export function CollectView({ apiKey, queuedUrls }: CollectViewProps) {
+export function CollectView({ apiKey, ownKeys, queuedUrls }: CollectViewProps) {
   const [urlText, setUrlText] = useState(queuedUrls.join("\n"));
   const [requireHands, setRequireHands] = useState(true);
   const [viewpoint, setViewpoint] = useState("egocentric");
@@ -286,7 +288,7 @@ export function CollectView({ apiKey, queuedUrls }: CollectViewProps) {
         onError: setError,
         onDone: () => setCollecting(false),
       },
-      { apiKey, signal: controller.current.signal },
+      { apiKey, keys: ownKeys, signal: controller.current.signal },
     );
   }
 
@@ -309,7 +311,7 @@ export function CollectView({ apiKey, queuedUrls }: CollectViewProps) {
         onError: setError,
         onDone: () => setCurating(false),
       },
-      { apiKey },
+      { apiKey, keys: ownKeys },
     );
   }
 

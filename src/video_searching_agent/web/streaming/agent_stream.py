@@ -70,6 +70,7 @@ class StreamingAgentWrapper:
         max_steps: int | None = None,
         enable_clarification: bool = True,
         enable_retry: bool = True,
+        llm_client: Any | None = None,
     ):
         """Initialize the streaming agent wrapper.
 
@@ -79,6 +80,8 @@ class StreamingAgentWrapper:
             max_steps: Maximum agent steps per query. Defaults to settings.
             enable_clarification: Whether to enable clarification flow.
             enable_retry: Whether to enable retry with exponential backoff.
+            llm_client: A model client to use instead of the configured one —
+                how a request that brought its own key gets served.
         """
         settings = get_settings()
         self.max_steps = max_steps or settings.max_agent_steps
@@ -95,7 +98,7 @@ class StreamingAgentWrapper:
         # Gemini or OpenRouter, decided by configuration. `gemini` is the
         # historical name for it and is kept because the query parser and the
         # tests reach for that attribute.
-        self.llm = get_llm_client(google_api_key=google_api_key)
+        self.llm = llm_client or get_llm_client(google_api_key=google_api_key)
         self.gemini = self.llm
 
         # Initialize query parser for slot extraction

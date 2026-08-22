@@ -571,6 +571,40 @@ which hand).
 DEMO_MODE=1 uvicorn video_searching_agent.web.main:app --port 8000
 ```
 
+### Bring your own key
+
+A hosted deployment runs on its owner's keys, so it is rate limited — one shared
+budget cannot absorb everyone's indexing bills. A caller can send their own keys
+instead and be served without touching the shared quota:
+
+| Header | What it replaces |
+|--------|------------------|
+| `X-OpenRouter-Key` | The model, for that request |
+| `X-Google-Key` | The model, if you would rather use Gemini |
+| `X-Memories-Key` | The Video Datalake, for that request |
+| `X-Memories-Collection` | Index into your own collection |
+
+```bash
+curl -N https://<deployment>/api/v1/curate/stream \
+  -H 'Content-Type: application/json' \
+  -H "X-Memories-Key: $MEMORIES_API_KEY" \
+  -H "X-OpenRouter-Key: $OPENROUTER_API_KEY" \
+  -d '{"tag":"clean_pass"}'
+```
+
+The UI has the same thing behind **Use your own keys** in the sidebar: the keys
+live in that browser's `localStorage`, ride along as headers on that visitor's
+own requests, and are never stored server-side.
+
+Three properties hold, and the last is the one that would be a security bug if
+it broke: a supplied key is used for that request; it skips the shared rate
+limit; and it never reaches anything global — not the settings, not the cached
+agent, not the next caller. Clients are built per request, and there are tests
+that assert exactly that.
+
+Anonymous callers are rate limited per address rather than as one pool, so a
+single heavy visitor cannot starve everyone else.
+
 ### Vercel
 
 `vercel.json` and `api/index.py` are in the repo, and `api/requirements.txt`

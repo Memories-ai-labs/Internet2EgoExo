@@ -14,6 +14,7 @@ type View = "search" | "collect";
 
 const API_KEY_STORAGE = "ivs.apiKey";
 const THEME_STORAGE = "ivs.theme";
+const OWN_KEYS_STORAGE = "ivs.ownKeys";
 
 function readStored(key: string, fallback = ""): string {
   try {
@@ -38,6 +39,13 @@ interface Health {
   version?: string;
 }
 
+/** Keys the viewer brings themselves. Kept in this browser, nowhere else. */
+export interface OwnKeys {
+  openrouter?: string;
+  memories?: string;
+  collection?: string;
+}
+
 export function App() {
   const [view, setView] = useState<View>("search");
   const [health, setHealth] = useState<Health | null>(null);
@@ -45,6 +53,14 @@ export function App() {
   const [queued, setQueued] = useState<string[]>([]);
   const [apiKey, setApiKey] = useState(() => readStored(API_KEY_STORAGE));
   const [theme, setTheme] = useState(() => readStored(THEME_STORAGE, "dark"));
+  const [ownKeys, setOwnKeys] = useState<OwnKeys>(() => {
+    try {
+      return JSON.parse(readStored(OWN_KEYS_STORAGE, "{}")) as OwnKeys;
+    } catch {
+      return {};
+    }
+  });
+  const [keysOpen, setKeysOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -54,6 +70,10 @@ export function App() {
   useEffect(() => {
     store(API_KEY_STORAGE, apiKey);
   }, [apiKey]);
+
+  useEffect(() => {
+    store(OWN_KEYS_STORAGE, JSON.stringify(ownKeys));
+  }, [ownKeys]);
 
   useEffect(() => {
     // Which mode this deployment is in decides what the numbers mean, so it is
@@ -69,6 +89,8 @@ export function App() {
       cancelled = true;
     };
   }, []);
+
+  const usingOwnKeys = Boolean(ownKeys.openrouter || ownKeys.memories);
 
   const toggleSelected = (url: string) =>
     setSelected((current) =>
@@ -109,6 +131,69 @@ export function App() {
         </div>
 
         <div className="sidebar__footer">
+          <div className="field">
+            <button
+              type="button"
+              className="button button--small button--ghost"
+              onClick={() => setKeysOpen(!keysOpen)}
+            >
+              {usingOwnKeys ? "Your keys · no rate limit" : "Use your own keys"}
+            </button>
+            {keysOpen ? (
+              <>
+                <span className="sidebar__note">
+                  This deployment runs on its owner&apos;s keys and is rate limited.
+                  Paste your own to be served without the queue — they stay in this
+                  browser, are sent only with your own requests, and are never stored
+                  on the server.
+                </span>
+                <label className="field">
+                  <span className="field__label">OpenRouter key</span>
+                  <input
+                    className="input"
+                    type="password"
+                    value={ownKeys.openrouter ?? ""}
+                    onChange={(event) =>
+                      setOwnKeys({ ...ownKeys, openrouter: event.target.value })
+                    }
+                    placeholder="sk-or-…"
+                  />
+                </label>
+                <label className="field">
+                  <span className="field__label">Video Datalake key</span>
+                  <input
+                    className="input"
+                    type="password"
+                    value={ownKeys.memories ?? ""}
+                    onChange={(event) =>
+                      setOwnKeys({ ...ownKeys, memories: event.target.value })
+                    }
+                    placeholder="sk-mai-…"
+                  />
+                </label>
+                <label className="field">
+                  <span className="field__label">Collection id (optional)</span>
+                  <input
+                    className="input"
+                    value={ownKeys.collection ?? ""}
+                    onChange={(event) =>
+                      setOwnKeys({ ...ownKeys, collection: event.target.value })
+                    }
+                    placeholder="col_…"
+                  />
+                </label>
+                {usingOwnKeys ? (
+                  <button
+                    type="button"
+                    className="button button--small button--ghost"
+                    onClick={() => setOwnKeys({})}
+                  >
+                    Clear my keys
+                  </button>
+                ) : null}
+              </>
+            ) : null}
+          </div>
           <label className="field">
             <span className="field__label">API key — only if the server sets one</span>
             <input
@@ -148,6 +233,7 @@ export function App() {
         {view === "search" ? (
           <SearchView
             apiKey={apiKey}
+            ownKeys={ownKeys}
             selected={selected}
             onToggleSelected={toggleSelected}
             onSendToCollection={() => {
@@ -156,7 +242,7 @@ export function App() {
             }}
           />
         ) : (
-          <CollectView apiKey={apiKey} queuedUrls={queued} />
+          <CollectView apiKey={apiKey} ownKeys={ownKeys} queuedUrls={queued} />
         )}
       </main>
     </div>

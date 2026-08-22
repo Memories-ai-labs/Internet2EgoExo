@@ -30,6 +30,7 @@ from video_searching_agent.agent.curation_agent import CurationAgent
 from video_searching_agent.config.settings import get_settings
 from video_searching_agent.pipeline.ingest import IngestPipeline
 from video_searching_agent.web import demo
+from video_searching_agent.web.credentials import RequestCredentials
 from video_searching_agent.web.schemas.events import ErrorEvent
 from video_searching_agent.web.schemas.requests import CollectRequest, CurateRequest
 
@@ -39,6 +40,46 @@ router = APIRouter(prefix="/api/v1", tags=["pipeline"])
 
 # A sentinel that closes the progress queue.
 _DONE = object()
+
+
+def _pipeline_for(credentials: RequestCredentials) -> IngestPipeline:
+    """A pipeline wired to the caller's keys where they supplied them.
+
+    Built per request: the whole point of bring-your-own-key is that the
+    caller's key is used for their run and nobody else's.
+    """
+    datalake = credentials.datalake_client()
+    llm = credentials.llm_client()
+    if datalake is None and llm is None:
+        return IngestPipeline()
+
+    from video_searching_agent.agent.annotation_agent import AnnotationAgent
+    from video_searching_agent.agent.cleaning_agent import CleaningAgent
+
+    # A None client means "resolve from settings on first use", which is what
+    # a caller who brought only a model key should get for the Datalake.
+    return IngestPipeline(
+        client=datalake,
+        cleaning_agent=CleaningAgent(client=datalake),
+        annotation_agent=AnnotationAgent(client=datalake, gemini=llm),
+    )
+
+
+def _curation_agent_for(credentials: RequestCredentials) -> CurationAgent:
+    """A curation agent wired to the caller's keys where they supplied them."""
+    datalake = credentials.datalake_client()
+    llm = credentials.llm_client()
+    if datalake is None and llm is None:
+        return CurationAgent()
+
+    from video_searching_agent.agent.annotation_agent import AnnotationAgent
+    from video_searching_agent.agent.cleaning_agent import CleaningAgent
+
+    return CurationAgent(
+        client=datalake,
+        cleaning_agent=CleaningAgent(client=datalake),
+        annotation_agent=AnnotationAgent(client=datalake, gemini=llm),
+    )
 
 
 async def _pump(
@@ -84,7 +125,7 @@ async def _collect_events(
             yield frame
         return
 
-    pipeline = IngestPipeline()
+    pipeline = _pipeline_for(RequestCredentials.from_headers(request.headers))
     accepted: list[dict[str, Any]] = []
     rejected: list[dict[str, Any]] = []
 
@@ -171,7 +212,7 @@ async def _curate_events(
             yield frame
         return
 
-    agent = CurationAgent()
+    agent = _curation_agent_for(RequestCredentials.from_headers(request.headers))
 
     yield {
         "event": "started",

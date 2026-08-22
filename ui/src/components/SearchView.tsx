@@ -8,8 +8,9 @@
 
 import { useRef, useState } from "react";
 
-import { streamRequest } from "../lib/sse";
+import type { OwnKeys } from "../App";
 import { toolLabel } from "../lib/format";
+import { streamRequest } from "../lib/sse";
 import type { ActivityEntry, AgentResponse, Clip, Manifest } from "../lib/types";
 import { Activity } from "./Activity";
 import { ClipCard } from "./ClipCard";
@@ -25,6 +26,7 @@ const SOURCES = [
 ] as const;
 
 export interface SearchViewProps {
+  ownKeys: OwnKeys;
   apiKey: string;
   selected: string[];
   onToggleSelected: (url: string) => void;
@@ -33,6 +35,7 @@ export interface SearchViewProps {
 
 export function SearchView({
   apiKey,
+  ownKeys,
   selected,
   onToggleSelected,
   onSendToCollection,
@@ -140,7 +143,7 @@ export function SearchView({
         onError: setError,
         onDone: () => setRunning(false),
       },
-      { apiKey, signal: controller.current.signal },
+      { apiKey, keys: ownKeys, signal: controller.current.signal },
     );
   }
 

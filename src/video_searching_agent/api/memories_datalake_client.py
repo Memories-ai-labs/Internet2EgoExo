@@ -53,11 +53,14 @@ class MemoriesDatalakeClient:
         api_key: str | None = None,
         base_url: str | None = None,
         timeout: float | None = None,
+        collection_id: str | None = None,
     ) -> None:
         """Initialize the client.
 
         Args:
             api_key: Datalake API key (``sk-mai-...``). Defaults to settings.
+            collection_id: Index into this collection instead of the configured
+                one — used when a request brings its own key.
             base_url: API base URL. Defaults to settings.
             timeout: Per-request timeout in seconds. Defaults to settings.
         """
@@ -66,7 +69,11 @@ class MemoriesDatalakeClient:
         self.base_url = (base_url or settings.memories_base_url).rstrip("/")
         self.timeout = float(timeout or settings.api_timeout_seconds)
         # Resolved lazily by ensure_collection() and cached per client instance.
-        self._collection_id: str | None = settings.memories_collection_id or None
+        # A caller-supplied collection wins: a request that brings its own key
+        # must index into its own collection, not the server's.
+        self._collection_id: str | None = (
+            collection_id or settings.memories_collection_id or None
+        )
 
     # ------------------------------------------------------------------ plumbing
 

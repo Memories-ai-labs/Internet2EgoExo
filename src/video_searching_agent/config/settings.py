@@ -250,12 +250,15 @@ class Settings(BaseSettings):
             return values
 
         # Either the app is serving canned data, or OpenRouter is driving the
-        # models — in both cases a Google project is not required to boot. Tools
-        # that need a key of their own still report themselves unavailable.
-        placeholder = "demo-mode-no-key" if not openrouter else "unset-using-openrouter"
+        # models — in both cases a Google project is not required to boot.
+        #
+        # The filler is an *empty string*, not a sentinel: a tool that checks
+        # whether its key is configured would report itself healthy on a
+        # sentinel and then fail at call time, which is worse than saying up
+        # front that it has no key.
         for alias in ("GOOGLE_API_KEY", "YOUTUBE_API_KEY"):
             if not values.get(alias):
-                values[alias] = placeholder
+                values[alias] = ""
         return values
 
     @model_validator(mode="after")

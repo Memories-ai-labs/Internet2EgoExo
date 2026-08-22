@@ -20,8 +20,16 @@ const base = process.env.QA_BASE || "http://127.0.0.1:8821/ui/";
 const out = process.argv[2] || ".";
 const problems = [];
 
+// PW_PROXY (or HTTPS_PROXY) lets this run against a deployed URL from a
+// sandbox whose only route out is a proxy. The proxy's CA is trusted by the
+// browser's own store, so nothing here weakens certificate checking.
+const proxyServer = process.env.PW_PROXY || process.env.HTTPS_PROXY;
 const browser = await chromium.launch({
   executablePath: process.env.PW_CHROMIUM || undefined,
+  // localhost must bypass it, or a proxied browser cannot reach the local app.
+  ...(proxyServer
+    ? { proxy: { server: proxyServer, bypass: "localhost,127.0.0.1,::1" } }
+    : {}),
 });
 const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
 
@@ -65,7 +73,10 @@ const noHorizontalScroll = async (name) => {
   }
 };
 
-await page.goto(base, { waitUntil: "networkidle" });
+// domcontentloaded, not networkidle: against a real deployment the network
+// never goes idle (fonts, analytics), and the app renders before it would.
+await page.goto(base, { waitUntil: "domcontentloaded" });
+await page.waitForSelector(".shell", { timeout: 15000 });
 await step("01-search-empty");
 await noHorizontalScroll("search-empty");
 console.log("title:", await page.title());
