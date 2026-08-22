@@ -11,7 +11,7 @@
  *   diversity checks, the duplicate groups, the batch grade.
  */
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { hours, percent, timecode } from "../lib/format";
 import type { OwnKeys } from "../App";
@@ -224,6 +224,8 @@ export interface CollectViewProps {
   ownKeys: OwnKeys;
   apiKey: string;
   queuedUrls: string[];
+  /** The viewpoint the search checked the queue against, if it checked one. */
+  queuedViewpoint?: string;
   /** What the server accepts per request; the queue is sent in batches of it. */
   maxUrlsPerRequest: number;
 }
@@ -232,6 +234,7 @@ export function CollectView({
   apiKey,
   ownKeys,
   queuedUrls,
+  queuedViewpoint = "",
   maxUrlsPerRequest,
 }: CollectViewProps) {
   const [urlText, setUrlText] = useState(queuedUrls.join("\n"));
@@ -251,6 +254,16 @@ export function CollectView({
   const [curation, setCuration] = useState<CurationResult | null>(null);
 
   const controller = useRef<AbortController | null>(null);
+
+  // A queued URL carries a frame verdict only if the search asked the same
+  // question this panel is asking. Searching with no viewpoint and then
+  // collecting with one would mean nothing was ever checked, so the pipeline
+  // has to look for itself.
+  const verifiedUrls = useMemo(
+    () =>
+      viewpoint && viewpoint === queuedViewpoint ? new Set(queuedUrls) : new Set<string>(),
+    [viewpoint, queuedViewpoint, queuedUrls],
+  );
 
   // The queue changes when part one sends a selection over; only adopt it while
   // the box is untouched, so a typed list is never overwritten.
@@ -301,6 +314,9 @@ export function CollectView({
           viewpoint: viewpoint || undefined,
           min_duration_seconds: minDuration ? Number(minDuration) : undefined,
           annotate,
+          // Anything queued from the search has already had its frames looked
+          // at, so the pipeline carries that verdict instead of re-buying it.
+          viewpoint_verified_urls: group.filter((url) => verifiedUrls.has(url)),
         },
         {
           onEvent: (event, data) => {

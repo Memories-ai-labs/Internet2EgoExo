@@ -134,6 +134,8 @@ async def _collect_events(
         "data": json.dumps({"urls": len(body.urls), "annotate": body.annotate}),
     }
 
+    already_looked = set(body.viewpoint_verified_urls)
+
     for index, url in enumerate(body.urls, start=1):
         if await request.is_disconnected():
             logger.info("client disconnected, stopping collection")
@@ -150,6 +152,7 @@ async def _collect_events(
                 min_duration_seconds=body.min_duration_seconds,
                 annotate=body.annotate,
                 on_stage=on_stage,
+                viewpoint_verified=url in already_looked,
             )
 
         try:

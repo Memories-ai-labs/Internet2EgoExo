@@ -177,6 +177,7 @@ class IngestPipeline:
         wait_seconds: float | None = None,
         annotate: bool = True,
         on_stage: StageCallback | None = None,
+        viewpoint_verified: bool = False,
     ) -> IngestResult:
         """Run one candidate through the whole pipeline.
 
@@ -188,6 +189,9 @@ class IngestPipeline:
             wait_seconds: Indexing wait budget. Defaults to settings.
             annotate: Run the annotation agent on what survives cleaning.
             on_stage: Awaited as each stage begins, for progress streaming.
+            viewpoint_verified: The search already looked at this candidate's
+                frames and it survived, so the look is skipped rather than
+                paid for twice. A URL pasted by hand never has this.
 
         Returns:
             An IngestResult; `accepted` is True only for a clip that is indexed
@@ -219,7 +223,7 @@ class IngestPipeline:
             min_duration_seconds=min_duration_seconds,
         )
         result.screening = screening
-        if screening.accepted:
+        if screening.accepted and not viewpoint_verified:
             # Everything above read words about the video. This looks at it.
             await stage("looking")
             screening = await self.cleaning.look(
@@ -227,6 +231,10 @@ class IngestPipeline:
                 {**info, "url": url},
                 wanted_viewpoint=wanted_viewpoint,
             )
+        elif screening.accepted:
+            # The search already looked and this survived it. Looking again
+            # would cost the same money to reach the same verdict.
+            screening.notes.append("viewpoint checked at search time")
         if not screening.accepted:
             await stage("skipped")
             result.rejection_reason = "; ".join(screening.reasons)

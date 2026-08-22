@@ -1,5 +1,6 @@
 """Tests for the collection and curation streaming endpoints."""
 
+import contextlib
 import json
 from typing import Any
 from unittest.mock import patch
@@ -326,3 +327,84 @@ class TestHowManyVideosCanBeCuratedAtOnce:
         )
 
         assert MAX_VIDEOS_PER_CURATION > MAX_URLS_PER_REQUEST
+
+
+class TestNotLookingTwiceAtTheSameFrames:
+    """A verdict the search already bought is carried, not re-bought.
+
+    The frame check now runs at search time, so a candidate queued from the
+    results has already been looked at. Paying $0.002 to reach the same verdict,
+    and showing a "looking" stage for work that was already settled, is waste
+    on both counts.
+    """
+
+    def test_the_request_can_name_what_was_already_checked(self):
+        from video_searching_agent.web.schemas.requests import CollectRequest
+
+        body = CollectRequest(
+            urls=["https://www.youtube.com/watch?v=a", "https://www.youtube.com/watch?v=b"],
+            viewpoint_verified_urls=["https://www.youtube.com/watch?v=a"],
+        )
+        assert body.viewpoint_verified_urls == ["https://www.youtube.com/watch?v=a"]
+
+    def test_it_defaults_to_nothing_checked(self):
+        """A URL pasted by hand never came through a search."""
+
+        from video_searching_agent.web.schemas.requests import CollectRequest
+
+        body = CollectRequest(urls=["https://www.youtube.com/watch?v=a"])
+        assert body.viewpoint_verified_urls == []
+
+    @pytest.mark.asyncio
+    async def test_a_verified_url_skips_the_look(self, monkeypatch):
+        from video_searching_agent.curation.viewpoint import Viewpoint
+        from video_searching_agent.pipeline.ingest import IngestPipeline
+
+        looked: list[str] = []
+
+        pipeline = IngestPipeline.__new__(IngestPipeline)
+
+        class Cleaning:
+            def screen(self, info, **kwargs):
+                from video_searching_agent.agent.cleaning_agent import ScreeningVerdict
+
+                return ScreeningVerdict(url=info.get("url"), accepted=True)
+
+            async def look(self, verdict, info, **kwargs):
+                looked.append(str(info.get("url")))
+                return verdict
+
+        class Downloader:
+            async def probe_async(self, url):
+                return {"id": "x", "title": "a clip", "duration": 120}
+
+            async def download_async(self, url):
+                raise RuntimeError("stop here; the look is what is under test")
+
+        pipeline._cleaning = Cleaning()
+        pipeline._downloader = Downloader()
+
+        stages: list[str] = []
+
+        async def on_stage(result):
+            stages.append(result.stage)
+
+        url = "https://www.youtube.com/watch?v=a"
+        with contextlib.suppress(Exception):
+            await pipeline.ingest(
+                url,
+                wanted_viewpoint=Viewpoint.EGOCENTRIC,
+                on_stage=on_stage,
+                viewpoint_verified=True,
+            )
+        assert looked == []
+        assert "looking" not in stages
+
+        with contextlib.suppress(Exception):
+            await pipeline.ingest(
+                url,
+                wanted_viewpoint=Viewpoint.EGOCENTRIC,
+                on_stage=on_stage,
+                viewpoint_verified=False,
+            )
+        assert looked == [url]

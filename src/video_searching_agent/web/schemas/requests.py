@@ -169,6 +169,12 @@ class CollectRequest(BaseModel):
         description="Run the annotation agent on what survives cleaning. "
         "False is a cleaning-only pass, which is much cheaper.",
     )
+    viewpoint_verified_urls: list[str] = Field(
+        default_factory=list,
+        max_length=MAX_URLS_PER_REQUEST,
+        description="URLs whose frames a search already checked. The pipeline "
+        "does not look again — the verdict is carried, not re-bought.",
+    )
 
     @field_validator("urls")
     @classmethod

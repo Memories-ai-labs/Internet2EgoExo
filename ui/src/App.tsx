@@ -53,6 +53,9 @@ export function App() {
   const [health, setHealth] = useState<Health | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [queued, setQueued] = useState<string[]>([]);
+  // The viewpoint the search checked the queued candidates against. Part two
+  // only trusts the search's frame check when it is asking the same question.
+  const [queuedViewpoint, setQueuedViewpoint] = useState("");
   const [apiKey, setApiKey] = useState(() => readStored(API_KEY_STORAGE));
   const [theme, setTheme] = useState(() => readStored(THEME_STORAGE, "dark"));
   const [ownKeys, setOwnKeys] = useState<OwnKeys>(() => {
@@ -248,8 +251,9 @@ export function App() {
             onToggleSelected={toggleSelected}
             onSelectAll={selectAll}
             onClearSelection={() => setSelected([])}
-            onSendToCollection={() => {
+            onSendToCollection={(checkedViewpoint) => {
               setQueued(selected);
+              setQueuedViewpoint(checkedViewpoint);
               setView("collect");
             }}
           />
@@ -258,6 +262,7 @@ export function App() {
             apiKey={apiKey}
             ownKeys={ownKeys}
             queuedUrls={queued}
+            queuedViewpoint={queuedViewpoint}
             maxUrlsPerRequest={health?.max_collect_urls ?? 25}
           />
         )}

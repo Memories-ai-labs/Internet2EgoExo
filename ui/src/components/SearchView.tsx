@@ -32,7 +32,8 @@ export interface SearchViewProps {
   onToggleSelected: (url: string) => void;
   onSelectAll: (urls: string[]) => void;
   onClearSelection: () => void;
-  onSendToCollection: () => void;
+  /** The viewpoint the search ran with, so part two knows what was checked. */
+  onSendToCollection: (checkedViewpoint: string) => void;
 }
 
 export function SearchView({
@@ -299,7 +300,7 @@ export function SearchView({
               type="button"
               className="button button--small button--primary"
               disabled={!selected.length}
-              onClick={onSendToCollection}
+              onClick={() => onSendToCollection(viewpoint)}
             >
               Send to the Datalake
             </button>
