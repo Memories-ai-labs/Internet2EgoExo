@@ -14,6 +14,7 @@ ui/tsconfig.json
 ui/vite.config.ts
 ui/index.html
 tests
+eval
 docs
 htmlcov
 .venv
