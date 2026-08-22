@@ -3,6 +3,7 @@
 import pytest
 
 from video_searching_agent.curation.quality_gates import (
+    PER_CLIP_CEILING,
     AnnotationLevel,
     Grade,
     build_hours_ledger,
@@ -452,3 +453,84 @@ class TestWhatCountsAsHandsInOneSegment:
             anchored = bool(mentions_hands(text)[0])
             if segment_shows_hands(text):
                 assert anchored, f"the gate counts it but no anchor would: {text!r}"
+
+
+class TestLicenceDoesNotMoveTheGrade:
+    """A clip is exactly as trainable whether or not its uploader ticked CC.
+
+    Licence used to be worth 7 points, which was precisely the C/B boundary, so
+    every non-Creative-Commons clip was capped at a C however well it was shot
+    and annotated. It was then still reaching the grade through G0-PROV, which
+    counted licence as one of three provenance fields — the same rights question
+    leaking back in under another name.
+    """
+
+    ANNOTATIONS = [
+        {
+            "hier_level": level,
+            "label": f"step {i}",
+            "narration": "the left hand grips the rail and lifts",
+            "span_start": i * 10.0,
+            "span_end": i * 10.0 + 8.0,
+            "hands_visible": True,
+            "left_hand": "grips the rail",
+            "right_hand": "steadies the panel",
+            "objects": ["rail"],
+        }
+        for i, level in enumerate(["task"] + ["action"] * 7 + ["event"])
+    ]
+    FACTS = {
+        "source_url": "https://example.com/v",
+        "uploader": "someone",
+        "width": 1920,
+        "height": 1080,
+        "fps": 30,
+        "duration_seconds": 660,
+        "container": "mp4",
+        "caption": "assembling a desk",
+        "caption_segments": [
+            {"text": "the left hand grips the rail"},
+            {"text": "fingers seat the dowel"},
+            {"text": "the right hand steadies the panel"},
+        ],
+        "annotations": ANNOTATIONS,
+    }
+
+    @pytest.mark.parametrize("licence", ["CC-BY", "standard", None])
+    def test_the_same_footage_scores_the_same_on_any_licence(self, licence):
+        report = evaluate_clip(
+            license_value=licence, require_commercial_use=False, **self.FACTS
+        )
+        assert report.score == 75, "the per-clip ceiling, unmoved by licence"
+        assert report.grade.value == "B"
+
+    def test_the_ceiling_is_seventy_five_because_gate_three_is_dataset_level(self):
+        """Not 100: diversity and dedup cannot be earned by one clip.
+
+        Pinned so a re-weighting cannot quietly change what a per-clip score
+        means. Gate 3 does not appear among this function's checks at all —
+        G3-DUP asks whether a batch holds the same footage twice, which is
+        unanswerable by looking at one clip, so it is scored over a dataset and
+        only noted here.
+        """
+        report = evaluate_clip(
+            license_value="CC-BY", require_commercial_use=False, **self.FACTS
+        )
+        assert report.score == PER_CLIP_CEILING
+        assert not [c for c in report.checks if c.check_id.startswith("G3-")]
+        assert any("dataset, not per clip" in note for note in report.notes)
+
+    def test_licence_still_vetoes_when_commercial_use_is_required(self):
+        """Out of the score is not out of the gates: rights are still rights."""
+        report = evaluate_clip(
+            license_value=None, require_commercial_use=True, **self.FACTS
+        )
+        assert "G0-LIC" in report.blocking_failures
+        assert report.accepted is False
+
+    def test_provenance_no_longer_counts_licence_as_a_field(self):
+        check = evaluate_clip(
+            license_value=None, require_commercial_use=False, **self.FACTS
+        ).check("G0-PROV")
+        assert check.passed is True, "source_url and uploader are the whole test"
+        assert "licence" not in (check.threshold or "")

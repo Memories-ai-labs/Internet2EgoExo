@@ -46,6 +46,14 @@ class AnnotationLevel(StrEnum):
     L3 = "L3"  # + events, objects, hand state, error/rework samples
 
 
+# The most a single clip can score. Gate 3 (diversity, dedup) is worth 25 and is
+# a property of a whole batch — you cannot tell whether a clip is a duplicate by
+# looking only at it — so those points are never creditable per clip.
+PER_CLIP_CEILING = 75
+# What the per-clip checks sum to once licence is out of the scoring: annotation
+# depth 30 + tree structure 15 + media 20 + provenance 3.
+CREDITABLE_PER_CLIP = 68
+
 LEVEL_POINTS = {
     AnnotationLevel.L0: 0,
     AnnotationLevel.L1: 10,
@@ -392,7 +400,12 @@ def evaluate_clip(
         )
     )
 
-    provenance_fields = {"source_url": source_url, "uploader": uploader, "license": license_value}
+    # Traceability only: where the clip came from and who put it there. Licence
+    # used to be counted here as a third field, which meant it kept moving the
+    # grade through provenance after being taken out of the scoring — the same
+    # rights question leaking back in under another name. Rights are G0-LIC's
+    # job and G0-LIC's alone.
+    provenance_fields = {"source_url": source_url, "uploader": uploader}
     missing = [name for name, value in provenance_fields.items() if not value]
     present = len(provenance_fields) - len(missing)
     report.checks.append(
@@ -408,7 +421,7 @@ def evaluate_clip(
             # bars external delivery there, rather than being two vetoes.
             blocking=False,
             value=f"{present}/{len(provenance_fields)} fields",
-            threshold="source_url, uploader and licence all present",
+            threshold="source_url and uploader both present",
             detail=f"missing: {', '.join(missing)}" if missing else None,
         )
     )
@@ -869,9 +882,19 @@ def _score(report: QualityReport) -> None:
     if integrity:
         score += round(4 * sum(integrity) / len(integrity))
 
-    # --- licensability and provenance: 10 -------------------------------
-    if passed("G0-LIC"):
-        score += 7
+    # --- provenance: 3 --------------------------------------------------
+    #
+    # Licence is deliberately NOT scored. It is a rights question, not a quality
+    # one: a clip is exactly as trainable whether or not its uploader ticked
+    # Creative Commons. Scoring it made licence the single biggest lever on the
+    # grade — measured at 7 points, which was precisely the C/B boundary, so
+    # every non-CC clip was capped at a C however well it was shot and
+    # annotated. The check still runs, still appears in the report, and still
+    # blocks outright when `require_commercial_use` is set; it just no longer
+    # moves the number that describes the footage.
+    #
+    # Provenance stays, because it is not the same thing: it says whether we can
+    # trace where a clip came from, which is a property of our own record-keeping.
     if passed("G0-PROV"):
         score += 3
 
@@ -879,7 +902,15 @@ def _score(report: QualityReport) -> None:
     # noted so a single clip can never read as an A on its own.
     report.notes.append("Gate 3 (diversity/dedup) is scored per dataset, not per clip")
 
-    report.score = min(score, 100)
+    # Rescale to the per-clip ceiling. Dropping the licence points left the
+    # creditable weights summing to 68 while the bands below are expressed on a
+    # 100-point scale where 75 is the per-clip maximum (Gate 3's 25 diversity
+    # points are a dataset property and cannot be earned by one clip). Scaling
+    # by 75/68 preserves every relative weight exactly — no constant is invented
+    # here — and keeps a perfect clip at the same 75 it was worth before, so
+    # published bands stay comparable across this change.
+    scaled = score * PER_CLIP_CEILING / CREDITABLE_PER_CLIP
+    report.score = min(round(scaled), 100)
     report.grade = (
         Grade.A
         if report.score >= 85
