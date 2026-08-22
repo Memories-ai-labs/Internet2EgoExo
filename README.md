@@ -594,15 +594,15 @@ minimum, no clip is excluded without a reason, and **the answer may not state
 hours the manifest does not have**. An expectation the runner does not know how
 to check is a failure, not a shrug.
 
-**It is allowed to cost the deployment very little.** `search.list` on the
-YouTube Data API costs 100 units of a 10,000-a-day allowance, and one example
-query fires about two searches. Running the query at every half-hourly sweep
-came to 9,600 units a day — 96% of the allowance, leaving four searches for the
-people actually using the deployment, which is how a user came to see nothing
-but TikTok. So the example query runs every fourth hour: still six real runs a
-day, still rotating through all ten, and 88% of the quota left for its intended
-purpose. `--light` skips it entirely, and everything else — including the real
-collect against the deployment — still runs.
+**How often it runs is a quota decision.** `search.list` on the YouTube Data API
+costs 100 units of a 10,000-a-day allowance, and one example query fires about
+two searches. Running the sweep every half hour came to 9,600 units a day — 96%
+of the allowance, leaving four searches for the people actually using the
+deployment, which is how a user came to see nothing but TikTok results. It runs
+**every eight hours** instead: three sweeps a day, 600 units, 6% of the quota,
+and the ten queries still get covered over a few days. `--light` skips the
+example query for a run that spends nothing, and everything else — including the
+real collect against the deployment — still runs.
 
 ### Browser QA
 

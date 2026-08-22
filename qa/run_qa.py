@@ -338,20 +338,12 @@ def phase_structural(report: Report) -> None:
 
 
 # The example queries are the only part of the sweep that spends YouTube quota,
-# and they spend it fast: search.list costs 100 units of a 10,000/day allowance,
-# and one query fires about two searches. Run at every sweep that is 9,600 units
-# a day — 96% of the allowance, leaving roughly four searches for the people
-# actually using the deployment, which is exactly how a user came to see nothing
-# but TikTok. So the query runs every fourth hour rather than every sweep: still
-# six real runs a day, still rotating through all ten, and 88% of the quota left
-# for its intended purpose.
-LIVE_QUERY_EVERY_N_HOURS = 4
-
-
-def _should_run_example_query(now: datetime) -> bool:
-    """Whether this sweep is one of the six a day that spends search quota."""
-
-    return now.hour % LIVE_QUERY_EVERY_N_HOURS == 0 and now.minute < 30
+# and they spend it fast: search.list costs 100 units of a 10,000-a-day
+# allowance and one query fires about two searches. Running this every half hour
+# came to 96% of the allowance and left real users with four searches a day, so
+# the schedule is the throttle now — three sweeps a day, 600 units, 6%. Nothing
+# here is skipped on a clock, because a sweep that silently does less than it
+# says is worse than one that costs a little.
 
 
 def phase_live(
@@ -379,13 +371,8 @@ def phase_live(
         report.skip("live", "example queries", "deployment is in demo mode")
         return
 
-    if light or not (full or only or _should_run_example_query(datetime.now(UTC))):
-        report.skip(
-            "live",
-            "example query",
-            "skipped to leave YouTube search quota for real users; "
-            f"runs every {LIVE_QUERY_EVERY_N_HOURS}h",
-        )
+    if light:
+        report.skip("live", "example query", "--light: no YouTube search quota spent")
         return
 
     # Rotate through the ten so the whole set is covered across a day.
