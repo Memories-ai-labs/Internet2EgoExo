@@ -101,7 +101,7 @@ export function App() {
     <div className="shell">
       <nav className="sidebar">
         <div className="brand">
-          <span className="brand__mark">Internet Video Search</span>
+          <span className="brand__mark">Internet EgoExo Video Search</span>
           <span className="brand__sub">memories.ai · training-data collection</span>
         </div>
 

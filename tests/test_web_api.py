@@ -541,7 +541,7 @@ class TestWebUI:
         client = TestClient(create_app())
         response = client.get("/ui/")
         assert response.status_code == 200
-        assert "Internet Video Search" in response.text
+        assert "Internet EgoExo Video Search" in response.text
         assert '<div id="root">' in response.text
 
     def test_assets_served(self):
