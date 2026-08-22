@@ -7,6 +7,20 @@ verifiable modules, a defined metric set with an eval report, a settled
 architecture, and this methodology itself — plus a final report and a UI that
 browser QA has verified.
 
+**The objective is the scoreboard.** The first eight iterations aimed at making
+modules verifiable, and that groundwork is largely in place. From here an
+iteration exists to move a measured number in the newest
+`eval/results/*.scorecard.md` — acceptance rate, A/B share, usable hours per
+query, anchors per usable hour, cost per accepted clip — or to establish with
+evidence why a number *cannot* move. Verifiability is the means now, not the
+end: make a module verifiable when that is what blocks a measurement.
+
+One corollary, because it is the tempting shortcut: **never move a threshold, a
+gate weight or a grade band to make a number look better.** Improving the
+pipeline is in scope; improving the instrument's flattery is not. A metric that
+is genuinely wrong gets fixed with an argument in the log and old records
+re-scored via `--score-only`, so history stays comparable.
+
 The companion documents:
 
 - `docs/MODULES.md` — the architecture target: eight stages, core types
@@ -106,7 +120,35 @@ Current status (update this table each iteration):
    plus `scripts/check_layering.py`.
 6. Labels are null on the real clips in the store — the annotation pass has
    not run over the clean collection. Wire `label_span` over clean clips and
-   store the trees (task #13).
+   store the trees (task #13). This is the same defect as (0) below seen from
+   the product side rather than the scoreboard side.
+
+Ranked above all of those, from the first live queries of the full run:
+
+0. **Annotation depth is the binding constraint on grade.** A real clip scored
+   25/100 with `annotations: 0` after the annotation agent read three spans and
+   returned no labels, landing at L0 where L2 is the minimum trainable depth.
+   Depth is 45 of the 100 points, so no other change can lift the grade
+   distribution while this sits near zero. Measure *why* the reads produce
+   nothing before touching the agent.
+
+Two defects in the measuring instrument itself, both found while scoring the
+full run and both deliberately not yet fixed:
+
+- **6% of the frozen query set is un-filmable.** 12 of the 200 name robot
+  hardware or render artifacts — `picking cube so100`, `picking cube widow
+  xai`, `stacking green cube on yellow cube baked tex in scene`, `blocks
+  ranking rgb`, `drawing svg`, `sweeping the target to its goal without
+  touching the forbidden object`, plus six alike. They can only ever return
+  zero candidates, so every acceptance rate carries a 6% floor loss
+  concentrated in easy/medium. v1.0 is frozen and those 12 must not be edited;
+  the fix is to tighten `usable_as_query` in `eval/build_query_set.py` and cut
+  a v1.1, leaving v1.0 intact so published scorecards stay comparable.
+- **`eval/run_eval.py:236` records a missing grade as `"D"`** (`str(clip.get(
+  "grade") or "D")`), which is this document's own "unmeasured is not zero"
+  rule broken in the one place it is most expensive. Fix it only when no run is
+  in flight: a running process holds its launch-time code, so editing mid-run
+  desynchronises the code from the records it is writing.
 
 ## Iteration log
 
