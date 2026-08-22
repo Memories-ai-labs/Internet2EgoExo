@@ -180,12 +180,19 @@ early; a partial run compared against a complete one; or a green suite alone,
 with no eval datapoint at all. Absent a comparable measurement the change stays
 on the branch, and the entry says why.
 
-**One case needs Shawn, not this rule.** The *first* landing has no previous
-datapoint, so it cannot be an improvement over anything — and for
-`video-searching-agent` it means merging the whole open PR into `main` at once.
-That is a decision, not a promotion. Ask. (The public mirror is different: the
-loop already pushes `public HEAD:main` every iteration, so that main is always
-current.)
+**The first landing has happened.** Shawn asked for it directly on 2026-08-22
+and `main` was fast-forwarded to the branch (PR #2, 75 commits, merged at
+`8a0d4c7`). So there is no longer an "open PR" to merge, and both mains —
+`origin/main` and the public mirror — track the branch.
+
+What that changes for an iteration: after pushing the branch, **fast-forward
+`origin/main` too** when the promotion rule above is satisfied. `git push origin
+HEAD:main` is the whole operation while main stays an ancestor of the branch,
+which it does as long as nothing else writes to main. If that push is ever
+rejected as non-fast-forward, somebody else has committed to main: stop, do not
+force, merge main into the branch and open a fresh PR for the result. PR #2 is
+merged and cannot track new work — a merged PR is finished, and reusing it is
+not possible even if it looks convenient.
 
 ## What "verifiable module" means here
 
