@@ -125,6 +125,13 @@ def run_one(case: dict, per_query: int, dry_run: bool, viewpoint: str) -> QueryO
     manifest = complete.get("dataset") or {}
     clips = manifest.get("clips") or []
     outcome.candidates = len(clips)
+    # What the search found before the pre-download screen, and why the screen
+    # dropped what it dropped. Reported because "0 candidates" was being used to
+    # mean two opposite things: the search could not answer the query, and the
+    # search answered it with eighteen tripod-shot videos.
+    outcome.screened_out = int(manifest.get("excluded_clips") or 0)
+    outcome.screen_reasons = dict(manifest.get("exclusion_reasons") or {})
+    outcome.found = outcome.candidates + outcome.screened_out
     # The search reports its own spend — model tokens plus per-call search fees.
     outcome.discovery_usd = float(((manifest.get("cost") or {}).get("discovery_usd")) or 0.0)
 
@@ -135,7 +142,18 @@ def run_one(case: dict, per_query: int, dry_run: bool, viewpoint: str) -> QueryO
     outcome.attempted = 0 if dry_run else len(urls)
     if dry_run or not urls:
         if not urls:
-            outcome.error = outcome.error or "search returned no candidates"
+            if outcome.screened_out:
+                top = ", ".join(
+                    f"{reason} ×{count}"
+                    for reason, count in sorted(
+                        outcome.screen_reasons.items(), key=lambda kv: -kv[1]
+                    )[:2]
+                )
+                outcome.error = outcome.error or (
+                    f"{outcome.found} found, all screened out ({top})"
+                )
+            else:
+                outcome.error = outcome.error or "search found nothing"
         outcome.seconds = time.time() - started
         return outcome
 
@@ -261,9 +279,7 @@ def estimate_usd(cases: int, per_query: int, dry_run: bool) -> float:
     if dry_run:
         return discovery
     per_clip = (
-        ESTIMATED_MINUTES_PER_CLIP * INDEX_PER_VIDEO_MINUTE
-        + SEARCH_PER_CALL
-        + 6 * MOMENT_PER_CALL
+        ESTIMATED_MINUTES_PER_CLIP * INDEX_PER_VIDEO_MINUTE + SEARCH_PER_CALL + 6 * MOMENT_PER_CALL
     )
     return discovery + cases * per_query * per_clip
 
@@ -272,7 +288,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--limit", type=int, help="run only the first N queries of the set")
     parser.add_argument(
-        "--difficulty", action="append", choices=["easy", "medium", "hard"],
+        "--difficulty",
+        action="append",
+        choices=["easy", "medium", "hard"],
         help="restrict to a difficulty tier; repeatable",
     )
     parser.add_argument("--family", action="append", help="substring match on task family")
@@ -397,8 +415,10 @@ def _report(outcomes: list[QueryOutcome], version: str, record: Path) -> int:
             f"${band.usd_per_clip:6.2f}/clip attributed  "
             f"${band.usd_per_clip_obtained:6.2f} to obtain one"
         )
-    print(f"spent ${card.cost.total_usd:.2f}, of which "
-          f"${card.cost.stranded_discovery_usd:.2f} on queries that yielded nothing")
+    print(
+        f"spent ${card.cost.total_usd:.2f}, of which "
+        f"${card.cost.stranded_discovery_usd:.2f} on queries that yielded nothing"
+    )
     for item in card.contradictions:
         print(f"  ! {item}")
     print(f"\nscorecard: {md_path}")

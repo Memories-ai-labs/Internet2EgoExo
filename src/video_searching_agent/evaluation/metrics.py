@@ -122,6 +122,15 @@ class QueryOutcome:
     task_family: str = ""
     difficulty: str = ""
     rdt_id: str = ""
+    # What the search turned up before the pre-download screen, and what the
+    # screen did with it. Without these, a query whose footage all existed but
+    # was all tripod-shot is indistinguishable from a query the search could
+    # not answer, and the two say opposite things about the pipeline. Measured:
+    # "someone assembling the cabinet" finds 18 videos, 14 of which genuinely
+    # show cabinet assembly, and every one is exocentric.
+    found: int = 0
+    screened_out: int = 0
+    screen_reasons: dict[str, int] = field(default_factory=dict)
     candidates: int = 0
     attempted: int = 0
     indexed: int = 0
@@ -151,6 +160,13 @@ class YieldChain:
     queries_with_an_accepted_clip: int = 0
     queries_errored: int = 0
     queries_dry_run: int = 0
+    # A query the search answered and the screen emptied. Its own row, because
+    # "the footage does not exist" and "the footage exists and is the wrong
+    # viewpoint" are different findings and only one of them is about us.
+    queries_screened_to_nothing: int = 0
+    found: int = 0
+    screened_out: int = 0
+    screen_reasons: dict[str, int] = field(default_factory=dict)
     candidates: int = 0
     attempted: int = 0
     indexed: int = 0
@@ -164,6 +180,16 @@ class YieldChain:
     delivered_hours: float = 0.0
     usable_hours: float = 0.0
     idle_hours: float = 0.0
+
+    @property
+    def screen_survival_rate(self) -> float:
+        """Of what the search found, how much the pre-download screen let through.
+
+        The first ratio in the funnel, and on a robot-derived query set it is
+        the smallest one: the footage of a named task usually exists and is
+        usually shot on a tripod.
+        """
+        return _ratio(self.candidates, self.found)
 
     @property
     def index_rate(self) -> float:
@@ -396,7 +422,16 @@ def score_run(
             chain.queries_with_candidates += 1
         if outcome.accepted:
             chain.queries_with_an_accepted_clip += 1
+        # Found something, kept nothing. Counted apart from queries_errored,
+        # because this is the pipeline working: it says the footage of this task
+        # is the wrong viewpoint, not that the search failed.
+        if outcome.found and not outcome.candidates:
+            chain.queries_screened_to_nothing += 1
 
+        chain.found += outcome.found
+        chain.screened_out += outcome.screened_out
+        for reason, count in (outcome.screen_reasons or {}).items():
+            chain.screen_reasons[reason] = chain.screen_reasons.get(reason, 0) + count
         chain.candidates += outcome.candidates
         chain.attempted += outcome.attempted
         chain.indexed += outcome.indexed
@@ -503,8 +538,7 @@ def contradictions(clips: list[ClipOutcome]) -> list[str]:
     vetoed = [clip.video_id for clip in accepted if clip.blocking_failures]
     if vetoed:
         found.append(
-            f"{len(vetoed)} accepted clip(s) carry a blocking gate failure: "
-            f"{', '.join(vetoed[:5])}"
+            f"{len(vetoed)} accepted clip(s) carry a blocking gate failure: {', '.join(vetoed[:5])}"
         )
 
     shallow = [clip.video_id for clip in accepted if clip.annotation_level in ("L0", "L1")]

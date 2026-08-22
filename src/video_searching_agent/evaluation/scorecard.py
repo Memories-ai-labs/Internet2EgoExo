@@ -41,13 +41,14 @@ def render(card: Scorecard, *, title: str = "Eval scorecard") -> str:
         f"| queries asked | {chain.queries} | — |",
         f"| queries that found candidates | {chain.queries_with_candidates} | "
         f"{_pct(chain.queries_with_candidates, chain.queries)} |",
-        f"| candidates found | {chain.candidates} | — |",
+        f"| videos the search found | {chain.found or chain.candidates} | — |",
+        f"| survived the pre-download screen | {chain.candidates} | "
+        f"{_pct(chain.candidates, chain.found or chain.candidates)} |",
         f"| candidates we tried to collect | {chain.attempted} | "
         f"{_pct(chain.attempted, chain.candidates)} |",
         f"| reached the Datalake | {chain.indexed} | {_pct(chain.indexed, chain.attempted)} |",
         f"| graded by the gates | {chain.graded} | {_pct(chain.graded, chain.indexed)} |",
-        f"| **accepted** | **{chain.accepted}** | "
-        f"**{_pct(chain.accepted, chain.graded)}** |",
+        f"| **accepted** | **{chain.accepted}** | **{_pct(chain.accepted, chain.graded)}** |",
         f"| of those, an A or a B | {chain.high_quality} | "
         f"{_pct(chain.high_quality, chain.graded)} |",
         f"| queries with at least one accepted clip | "
@@ -63,6 +64,30 @@ def render(card: Scorecard, *, title: str = "Eval scorecard") -> str:
         f"| action anchors produced | {chain.action_anchors} |",
         f"| anchors per accepted clip | {chain.anchors_per_accepted_clip:.1f} |",
         f"| anchors per usable hour | {chain.anchors_per_usable_hour:.1f} |",
+    ]
+
+    # Where the pre-download screen spent its rejections. On a robot-derived
+    # query set this is the largest loss in the funnel and the most informative:
+    # a query whose footage all exists and is all tripod-shot is a fact about
+    # the web, not a fault in the search, and only this table distinguishes them.
+    if chain.screened_out:
+        lines += [
+            "",
+            "| screened out before download | videos |",
+            "| --- | --- |",
+        ]
+        for reason, count in sorted(chain.screen_reasons.items(), key=lambda kv: -kv[1]):
+            lines.append(f"| {reason} | {count} |")
+        lines.append(f"| **total** | **{chain.screened_out}** |")
+        if chain.queries_screened_to_nothing:
+            lines += [
+                "",
+                f"{chain.queries_screened_to_nothing} of {chain.queries} queries found "
+                "footage and kept none of it. That is the pipeline working: the footage "
+                "of a named task usually exists and is usually shot on a tripod.",
+            ]
+
+    lines += [
         "",
         "## 2. Grade bands — the same output, split four ways",
         "",
@@ -87,7 +112,7 @@ def render(card: Scorecard, *, title: str = "Eval scorecard") -> str:
         "`$ attributed` splits the run so every dollar lands on one clip; the "
         "column sums to the run total less stranded discovery spend. "
         "`$ to obtain one` is the whole run divided by that band's clips — it "
-        "answers \"if this grade is all we wanted, what did each one cost\", and "
+        'answers "if this grade is all we wanted, what did each one cost", and '
         "deliberately does not sum.",
         "",
         "| grade | what the standard allows |",
@@ -105,12 +130,10 @@ def render(card: Scorecard, *, title: str = "Eval scorecard") -> str:
         f"| discovery (measured: model + search tools) | ${cost.discovery_usd:.2f} |",
         f"| indexing (Datalake, per video-minute) | ${cost.indexing_usd:.2f} |",
         f"| annotation (moment search + read per anchor) | ${cost.annotation_usd:.2f} |",
-        f"| derived reads (caption / transcription / summary) | "
-        f"${cost.derived_read_usd:.4f} |",
+        f"| derived reads (caption / transcription / summary) | ${cost.derived_read_usd:.4f} |",
         f"| looking at frames (measured by the agents) | ${cost.look_usd:.4f} |",
         f"| **total** | **${cost.total_usd:.2f}** |",
-        f"| of which paid for queries that yielded nothing | "
-        f"${cost.stranded_discovery_usd:.2f} |",
+        f"| of which paid for queries that yielded nothing | ${cost.stranded_discovery_usd:.2f} |",
         "",
         f"Cost per usable hour delivered: "
         f"**{_usd(_div(cost.total_usd, chain.usable_hours), chain.usable_hours)}/h**. "
