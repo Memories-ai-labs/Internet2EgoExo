@@ -528,6 +528,26 @@ def _asset_paths() -> list[str]:
     return [f"/ui/{match}" for match in re.findall(r'(?:src|href)="/ui/(assets/[^"]+)"', html)]
 
 
+class TestHealthReportsWhetherAKeyIsNeeded:
+    """The UI hides its access-key field unless the server wants one.
+
+    An unused key box labelled `X-API-Key`, in an app whose sources include X,
+    reads as "the X API key" — which it is not. So the server has to say.
+    """
+
+    def test_no_keys_configured_means_no_auth_required(self):
+        client = TestClient(create_app())
+        assert client.get("/api/v1/health").json()["auth_required"] is False
+
+    def test_configured_keys_are_reported(self):
+        with patch("video_searching_agent.web.routers.health.get_settings") as settings:
+            settings.return_value = MagicMock(
+                demo_mode=True, api_keys="a-key", rate_limit_enabled=False
+            )
+            client = TestClient(create_app())
+            assert client.get("/api/v1/health").json()["auth_required"] is True
+
+
 class TestWebUI:
     """Test the bundled static UI (built from ui/ by Vite, output committed)."""
 

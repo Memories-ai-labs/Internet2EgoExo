@@ -24,12 +24,18 @@ async def health_check() -> dict[str, Any]:
     """
     settings = get_settings()
 
+    # Whether callers need a key of this server's own. The UI asks so it can
+    # hide the field when nobody needs it — an unused key box in an app whose
+    # sources include X reads as "the X API key", which it is not.
+    auth_required = bool(settings.api_keys.strip())
+
     if settings.demo_mode:
         # Nothing is configured in demo mode, so there is nothing to probe.
         return {
             "status": "healthy",
             "version": __version__,
             "demo_mode": True,
+            "auth_required": auth_required,
             "model": "none — demo payloads",
             "tools": {"total": 0, "healthy": 0, "details": {}},
         }
@@ -45,6 +51,7 @@ async def health_check() -> dict[str, Any]:
         "status": "healthy",
         "version": __version__,
         "demo_mode": False,
+        "auth_required": auth_required,
         "model": llm_label(),
         "tools": {
             "total": total_count,

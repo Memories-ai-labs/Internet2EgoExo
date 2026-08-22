@@ -35,6 +35,7 @@ function store(key: string, value: string): void {
 
 interface Health {
   demo_mode?: boolean;
+  auth_required?: boolean;
   model?: string;
   version?: string;
 }
@@ -194,16 +195,21 @@ export function App() {
               </>
             ) : null}
           </div>
-          <label className="field">
-            <span className="field__label">API key — only if the server sets one</span>
-            <input
-              className="input"
-              type="password"
-              value={apiKey}
-              onChange={(event) => setApiKey(event.target.value)}
-              placeholder="X-API-Key"
-            />
-          </label>
+          {health?.auth_required ? (
+            // Only when this deployment actually requires one. This is the
+            // server's own access key — nothing to do with X/Twitter, which
+            // needs no key of its own.
+            <label className="field">
+              <span className="field__label">Access key for this deployment</span>
+              <input
+                className="input"
+                type="password"
+                value={apiKey}
+                onChange={(event) => setApiKey(event.target.value)}
+                placeholder="required by this server"
+              />
+            </label>
+          ) : null}
           <button
             type="button"
             className="button button--small button--ghost"
