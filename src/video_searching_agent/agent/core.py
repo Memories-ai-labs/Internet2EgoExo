@@ -214,7 +214,8 @@ class VideoSearchingAgent:
         session.start()
 
         # Build enhanced query with extracted slots for Gemini
-        enhanced_query = self._build_enhanced_query(user_query, parsed_query)
+        rewrite = await self._rewrite_searches(user_query, parsed_query)
+        enhanced_query = self._build_enhanced_query(user_query, parsed_query, rewrite)
 
         # Initialize messages with enhanced query
         messages: list[Any] = self.llm.new_conversation(enhanced_query)
@@ -473,12 +474,43 @@ class VideoSearchingAgent:
             await asyncio.gather(*tasks, return_exceptions=True)
             raise
 
-    def _build_enhanced_query(self, user_query: str, parsed_query: ParsedQuery) -> str:
+    async def _rewrite_searches(self, user_query: str, parsed_query: ParsedQuery) -> Any:
+        """Turn the request into searches that find footage rather than lessons.
+
+        A request describes a task; the footage that shows it is titled by
+        whoever recorded it, in different words. Measured on real YouTube
+        results judged by their frames: a plain search for "packing a suitcase,
+        folding and placing clothes into luggage" returned 0 of 6 first-person
+        videos, and the rewritten searches returned 5 of 11. Costs about $0.001.
+        """
+        from video_searching_agent.curation.query_rewrite import rewrite_query
+
+        try:
+            return await rewrite_query(
+                user_query,
+                viewpoint=parsed_query.viewpoint,
+                # `self.gemini`, not `self.llm`: they alias the same object in
+                # production, but the loop calls this one and so do the tests
+                # that replace it. Using the other reached the real network from
+                # a unit test and took it from 0.4s to 4.7.
+                llm=self.gemini,
+            )
+        except Exception as exc:  # noqa: BLE001 - the plain query still works
+            logger.info("query rewrite unavailable: %s", exc)
+            return None
+
+    def _build_enhanced_query(
+        self,
+        user_query: str,
+        parsed_query: ParsedQuery,
+        rewrite: Any | None = None,
+    ) -> str:
         """Build enhanced query string with extracted slots for Gemini.
 
         Args:
             user_query: Original user query.
             parsed_query: Parsed query with extracted slots.
+            rewrite: Footage-shaped searches to suggest, when one was made.
 
         Returns:
             Enhanced query string with slot context.
@@ -518,6 +550,16 @@ class VideoSearchingAgent:
         if slot_context:
             parts.append("\nExtracted Parameters:")
             parts.extend([f"- {ctx}" for ctx in slot_context])
+
+        queries = getattr(rewrite, "queries", None) if rewrite else None
+        if queries:
+            parts.append(
+                "\nSuggested searches. The request's own words select for tutorials "
+                "and reviews; these are how the footage is actually titled. Run "
+                "several of them and merge the results — one phrasing does not "
+                "cover the space:"
+            )
+            parts.extend(f"- [{q.angle}] {q.text}" for q in queries[:6])
 
         return "\n".join(parts)
 
