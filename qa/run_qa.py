@@ -337,7 +337,26 @@ def phase_structural(report: Report) -> None:
         server.wait(timeout=10)
 
 
-def phase_live(report: Report, full: bool, only: str | None = None) -> None:
+# The example queries are the only part of the sweep that spends YouTube quota,
+# and they spend it fast: search.list costs 100 units of a 10,000/day allowance,
+# and one query fires about two searches. Run at every sweep that is 9,600 units
+# a day — 96% of the allowance, leaving roughly four searches for the people
+# actually using the deployment, which is exactly how a user came to see nothing
+# but TikTok. So the query runs every fourth hour rather than every sweep: still
+# six real runs a day, still rotating through all ten, and 88% of the quota left
+# for its intended purpose.
+LIVE_QUERY_EVERY_N_HOURS = 4
+
+
+def _should_run_example_query(now: datetime) -> bool:
+    """Whether this sweep is one of the six a day that spends search quota."""
+
+    return now.hour % LIVE_QUERY_EVERY_N_HOURS == 0 and now.minute < 30
+
+
+def phase_live(
+    report: Report, full: bool, only: str | None = None, light: bool = False
+) -> None:
     print(f"\n3. live — {DEPLOYMENT}")
     try:
         health = _get(f"{DEPLOYMENT}/api/v1/health")
@@ -358,6 +377,15 @@ def phase_live(report: Report, full: bool, only: str | None = None) -> None:
     )
     if health.get("demo_mode"):
         report.skip("live", "example queries", "deployment is in demo mode")
+        return
+
+    if light or not (full or only or _should_run_example_query(datetime.now(UTC))):
+        report.skip(
+            "live",
+            "example query",
+            "skipped to leave YouTube search quota for real users; "
+            f"runs every {LIVE_QUERY_EVERY_N_HOURS}h",
+        )
         return
 
     # Rotate through the ten so the whole set is covered across a day.
@@ -572,6 +600,12 @@ def main() -> int:
     parser.add_argument("--full", action="store_true", help="run all ten example queries")
     parser.add_argument("--offline", action="store_true", help="phases 1-2 only; spends nothing")
     parser.add_argument("--query", help="run only this example query id, to re-check one failure")
+    parser.add_argument(
+        "--light",
+        action="store_true",
+        help="skip the example query; everything else, including the real "
+        "collect against the deployment, still runs",
+    )
     args = parser.parse_args()
 
     started = datetime.now(UTC)
@@ -581,7 +615,7 @@ def main() -> int:
     phase_offline(report)
     phase_structural(report)
     if not args.offline:
-        phase_live(report, full=args.full, only=args.query)
+        phase_live(report, full=args.full, only=args.query, light=args.light)
         check_live_collect(report)
         phase_judgement(report)
 
