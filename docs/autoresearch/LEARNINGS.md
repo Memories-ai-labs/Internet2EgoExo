@@ -151,3 +151,22 @@ confidence should widen the panel, not drop the span. Both are open in
 `INSPIRATION.md` stage 5 — not because the grade distribution is stuck there
 (L8 shows it is stuck on licence) but because one clip in five still returns no
 labels at all, and scoring 7 is not the same fact as scoring nothing.
+
+## L10 · A partial result from an ordered run measures the ordering
+
+**Evidence.** `2026-08-22` experiment 4. The frozen 200 are stored in RDT id
+order, and RDT id correlates with task granularity: the first 21 are 62%
+Atomic/Primitive against 20% across the set. Read at n=21 the find rate is 29%;
+the 40-query stratified dry run measured 70%. Nothing regressed — the prefix is
+three times as dense in single-verb tasks that do not exist as web video.
+
+**Implies.** Two things. Every partial scorecard must state what its prefix is
+biased toward, or it will be quoted as a trend. And a run whose progress anybody
+will read early should walk the set in a **deterministically shuffled** order —
+the frozen set is *which* 200 queries, not what order they run in, so seeded
+shuffling costs nothing and makes every prefix representative. See
+`INSPIRATION.md` Q-EVAL1.
+
+The general form, which has now bitten twice in one day: **a sample chosen by
+convenience measures the convenience.** L8 was n=1 mistaken for a bottleneck;
+this is a biased prefix mistaken for a regression.

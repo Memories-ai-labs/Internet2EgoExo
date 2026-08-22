@@ -472,6 +472,29 @@ full list of what was rejected alongside it and why?
 "the most direct intellectual neighbour to this project, arrived at from the
 other end of the pipe".
 
+### Q-EVAL1 · Walk the frozen set in a deterministically shuffled order
+
+**Hypothesis.** `eval/queries.json` is stored in RDT id order and the runner
+walks it in that order, so every partial scorecard measures the ordering as much
+as the pipeline. Measured: the first 21 queries are 62% Atomic/Primitive against
+20% across the set, which made the find rate read 29% where the stratified
+40-query dry run measured 70% (`LEARNINGS.md` L10). A seeded shuffle of the *run
+order* fixes this. The frozen set is *which* 200 queries, not what order they
+run in, so this changes no published number.
+
+**Measure.** Shuffle with a fixed seed in `select()`, then compare the
+granularity and difficulty mix of the first 20 against the full set — they
+should match within a couple of points. Re-score an existing run with
+`--score-only` to confirm final numbers are byte-identical, since order cannot
+change which queries ran.
+
+**Falsifier.** If final numbers move at all, the runner has an order dependency
+that is a bug in its own right and needs finding first.
+
+**Cost.** $0, offline, plus one test asserting the prefix is representative.
+
+**Provenance.** `LEARNINGS.md` L10, 2026-08-22.
+
 ### Q-X3 · Where does the money actually go?
 
 **Hypothesis.** We attribute cost per clip and per grade, but the largest line
