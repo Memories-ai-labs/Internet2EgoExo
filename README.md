@@ -148,7 +148,36 @@ metadata. That is what the viewpoint classifier, the hands gate, the annotation
 tree and the four hour measures are for. Retrieval finds candidates; it does not
 certify them.
 
-Full survey, with the positioning table and references:
+### What already exists in open source
+
+The chain here — crawl → decide viewpoint → clip → annotate — exists stage by
+stage as downloadable code, and the survey maps each one:
+[`video2dataset`](https://github.com/iejMac/video2dataset) and
+[LAION BVD](https://github.com/LAION-AI/BVD) for bulk fetch,
+[Panda-70M](https://github.com/snap-research/Panda-70M)'s `splitting/` for
+semantic cuts, [`cosmos-curate`](https://github.com/nvidia-cosmos/cosmos-curate)
+as an industrial skeleton. Three things are worth knowing before planning around
+them:
+
+- **Generative exo → ego does not scale.** [Exo2Ego-V](https://github.com/showlab/Exo2Ego-V)
+  needs four synchronised 360°-surround views; the web has none. What works is
+  *filtering* — [RynnVLA-001](https://arxiv.org/pdf/2509.15212)'s rule (face
+  keypoints → discard, hand keypoints → keep) is independent corroboration of the
+  viewpoint and hands gates here — or *lifting to 4D and re-rendering*, which
+  [EgoInfinity](https://arxiv.org/abs/2606.17385) does at 142 M clips.
+- **The licence trap.** EgoInfinity's own code is MIT, but WiLoR is CC-BY-NC-ND,
+  Ultralytics YOLO is AGPL-3.0 and MANO is non-commercial — the repo states that
+  commercial use *as a whole* is restricted. A dataset inherits the restrictions
+  of the pipeline that built it, which is the same per-clip rights discipline
+  this project applies to footage, pointed at the toolchain.
+- **Hours are being commoditised.** Build AI released
+  [Egocentric-10K](https://www.humanoidsdaily.com/news/build-ai-open-sources-10-000-hours-of-factory-worker-video-to-scale-robot-learning)
+  — 10,000 h of real factory first-person video, 2,138 workers, Apache 2.0. A
+  system whose pitch is "we can get you N hours" is standing on ground that keeps
+  vanishing. What does not commoditise is whether an hour is *provably* the right
+  viewpoint, hands-visible, licensed, and annotated deeply enough to train on.
+
+Full survey — both halves, the positioning table and references:
 **[docs/RELATED_WORK.md](docs/RELATED_WORK.md)**.
 
 ## Installation
