@@ -861,3 +861,98 @@ class TestCurationAgent:
         assert report.clips == []
         assert report.batch_grade == "D"
         assert report.errors == []
+
+
+class TestCurationReadsWhatTheLakeAlreadyKnows:
+    """A curation run has no download behind it, and used to admit nothing.
+
+    The upload writes provenance and media properties into the video's own
+    metadata. Curation ignored them, so licence, provenance and resolution came
+    back "not measured" for facts that were sitting in the Datalake — put there
+    by the upload that indexed the video.
+    """
+
+    class _Lake:
+        """Enough of the client to answer get_video, with a real record shape."""
+
+        def __init__(self, record: dict[str, Any]) -> None:
+            self.record = record
+            self.asked: list[str] = []
+
+        async def get_video(self, video_id: str) -> dict[str, Any]:
+            self.asked.append(video_id)
+            return self.record
+
+    @pytest.mark.asyncio
+    async def test_stored_provenance_and_media_are_read_back(self):
+        from video_searching_agent.agent.curation_agent import CurationAgent, CurationReport
+
+        lake = self._Lake(
+            {
+                "video_id": "vid_1",
+                "duration_seconds": 740.0,
+                "fps": 1,
+                "metadata": {
+                    "title": "POV Wash and Fold",
+                    "custom": {
+                        "source_url": "https://www.youtube.com/watch?v=UvEpBlU-KBw",
+                        "uploader": "Mama Coco At Home",
+                        "license_note": "youtube",
+                        "height": 720,
+                        "width": None,
+                    },
+                },
+            }
+        )
+        agent = CurationAgent(client=lake)
+        facts = await agent._stored_facts("vid_1", CurationReport())
+
+        assert facts["duration_seconds"] == 740.0
+        assert facts["title"] == "POV Wash and Fold"
+        assert facts["source_url"].endswith("UvEpBlU-KBw")
+        assert facts["uploader"] == "Mama Coco At Home"
+        assert facts["license"] == "youtube"
+        assert facts["height"] == 720
+        assert "width" not in facts, "a null field is not a fact"
+
+    @pytest.mark.asyncio
+    async def test_the_index_sampling_rate_is_never_read_as_the_frame_rate(self):
+        """record["fps"] is how often the Datalake sampled the video — 1 —
+        not the video's frame rate. Feeding it to G1-FPS (>=30) would fail
+        good footage on a number nobody measured."""
+
+        from video_searching_agent.agent.curation_agent import CurationAgent, CurationReport
+
+        lake = self._Lake({"video_id": "vid_1", "duration_seconds": 100.0, "fps": 1})
+        facts = await CurationAgent(client=lake)._stored_facts("vid_1", CurationReport())
+        assert "fps" not in facts
+
+    @pytest.mark.asyncio
+    async def test_what_the_caller_knows_wins_over_what_was_stored(self):
+        """A download saw the file itself; the stored record is second best."""
+
+        from video_searching_agent.agent.curation_agent import CurationAgent, CurationReport
+
+        lake = self._Lake(
+            {"video_id": "vid_1", "duration_seconds": 100.0,
+             "metadata": {"custom": {"uploader": "stored"}}}
+        )
+        agent = CurationAgent(client=lake)
+        stored = await agent._stored_facts("vid_1", CurationReport())
+        merged = {**stored, **{"uploader": "from the download"}}
+        assert merged["uploader"] == "from the download"
+        assert merged["duration_seconds"] == 100.0
+
+    @pytest.mark.asyncio
+    async def test_an_unreachable_record_is_reported_not_fatal(self):
+        from video_searching_agent.agent.curation_agent import CurationAgent, CurationReport
+        from video_searching_agent.api.memories_datalake_client import MemoriesDatalakeError
+
+        class Broken:
+            async def get_video(self, video_id: str) -> dict[str, Any]:
+                raise MemoriesDatalakeError("503 upstream")
+
+        report = CurationReport()
+        facts = await CurationAgent(client=Broken())._stored_facts("vid_1", report)
+        assert facts == {}
+        assert any("stored facts unavailable" in e for e in report.errors)

@@ -247,7 +247,13 @@ class CurationAgent:
             return report
 
         for video_id in ids[:limit]:
-            facts = media.get(video_id, {})
+            # What the caller knows, over what the Datalake already stored. A
+            # collection run hands in the download's facts; a curation run over
+            # already-indexed videos hands in nothing — and then reported
+            # licence, provenance, resolution and frame rate as "not measured"
+            # for facts sitting in the video's own metadata, put there by the
+            # upload that indexed it.
+            facts = {**await self._stored_facts(video_id, report), **media.get(video_id, {})}
             clip = CuratedClip(
                 video_id=video_id,
                 duration_seconds=int(facts.get("duration_seconds") or 0),
@@ -413,6 +419,50 @@ class CurationAgent:
                 f"level {clip.annotation_level}"
             ),
         )
+
+    async def _stored_facts(
+        self, video_id: str, report: CurationReport
+    ) -> dict[str, Any]:
+        """The media facts the Datalake is already holding for a video.
+
+        The upload writes provenance and media properties into the video's
+        metadata, so reading them back costs one free call and turns four gates
+        from "not measured" into measured. Anything missing stays missing — this
+        fills in what was recorded, it does not invent what was not.
+        """
+        try:
+            record = await self.client.get_video(video_id)
+        except MemoriesDatalakeError as exc:
+            report.errors.append(f"stored facts unavailable for {video_id}: {exc}")
+            return {}
+        if not isinstance(record, dict):
+            return {}
+
+        metadata = record.get("metadata") if isinstance(record.get("metadata"), dict) else {}
+        custom = metadata.get("custom") if isinstance(metadata.get("custom"), dict) else {}
+
+        facts: dict[str, Any] = {}
+        duration = record.get("duration_seconds") or record.get("duration")
+        if isinstance(duration, int | float) and duration > 0:
+            facts["duration_seconds"] = float(duration)
+        if metadata.get("title"):
+            facts["title"] = metadata["title"]
+        # Deliberately *not* mapped: record["fps"] is the rate the Datalake
+        # sampled the video at while indexing — 1, normally — and not the
+        # video's own frame rate. Feeding it to G1-FPS (>=30) would report 1 fps
+        # and fail footage that is fine. A wrong measurement is worse than an
+        # honest "not measured", so the frame rate stays unmeasured unless a
+        # download reports it.
+
+        # The upload's own record of where this came from.
+        for key in ("source_url", "uploader", "width", "height", "extractor"):
+            value = custom.get(key)
+            if value not in (None, ""):
+                facts[key] = value
+        licence = custom.get("license_note") or custom.get("license")
+        if licence:
+            facts["license"] = licence
+        return facts
 
     async def _worklist(
         self, tag: str, report: CurationReport, limit: int
