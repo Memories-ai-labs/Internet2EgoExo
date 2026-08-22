@@ -73,6 +73,7 @@ DEPLOYMENT = os.environ.get("QA_DEPLOYMENT", "https://internet-egoexo-video-sear
 # of the Datalake before it grades anything. Three derived reads, every clip,
 # every time — a fixed property of the code path rather than an estimate, which
 # is why it is counted rather than left unmeasured.
+MAX_REFINE_PER_QUERY = 3
 DERIVED_READS_PER_CLIP = 3
 
 # Rough per-clip spend, used only for the estimate printed before a run.
@@ -103,7 +104,14 @@ def _final(events: list[tuple[str, dict]], name: str = "complete") -> dict:
     return next((payload for event, payload in reversed(events) if event == name), {})
 
 
-def run_one(case: dict, per_query: int, dry_run: bool, viewpoint: str) -> QueryOutcome:
+def run_one(
+    case: dict,
+    per_query: int,
+    dry_run: bool,
+    viewpoint: str,
+    *,
+    refine: bool = True,
+) -> QueryOutcome:
     """Search, collect and curate one eval query."""
     outcome = QueryOutcome(
         query_id=case["id"],
@@ -222,8 +230,88 @@ def run_one(case: dict, per_query: int, dry_run: bool, viewpoint: str) -> QueryO
         outcome.clips.append(_clip_outcome(outcome.query_id, clip))
     if not outcome.clips:
         outcome.error = "curation returned no graded clips"
+
+    # ---- 4. refine: cut the accepted spans into the clean collection -----
+    #
+    # The last step, and the one that makes this a pipeline rather than an
+    # opinion: a graded clip is a verdict, and a cut clip in the clean
+    # collection is the deliverable. Skipped with --no-refine when the point of
+    # a run is only to measure the funnel.
+    if refine:
+        _refine_accepted(outcome, curation)
+
     outcome.seconds = time.time() - started
     return outcome
+
+
+def _refine_accepted(outcome: QueryOutcome, curation: dict) -> None:
+    """Cut every accepted clip's action anchors and re-house them.
+
+    Runs in-process rather than over the API: refine needs a writable directory
+    to hold the cut before uploading it, which the deployment may not have, and
+    the local runner always does.
+    """
+    import asyncio
+
+    anchors: list[dict] = []
+    for clip in curation.get("clips") or []:
+        if not clip.get("accepted"):
+            continue
+        segments = (clip.get("cleaning") or {}).get("segments") or []
+        for segment in segments:
+            if segment.get("hier_level") != "action":
+                continue
+            start, end = segment.get("span_start"), segment.get("span_end")
+            if start is None or end is None or end <= start:
+                continue
+            anchors.append(
+                {
+                    "video_id": clip.get("video_id"),
+                    "start": float(start),
+                    "end": float(end),
+                    "title": segment.get("label") or outcome.query,
+                }
+            )
+    if not anchors:
+        return
+
+    try:
+        from video_searching_agent.api.memories_datalake_client import (
+            MemoriesDatalakeClient,
+        )
+        from video_searching_agent.config.settings import get_settings
+        from video_searching_agent.pipeline.refine import record_refined, refine_anchors
+    except Exception as exc:  # noqa: BLE001 - refine is not load-bearing for a measurement
+        print(f"    refine unavailable: {str(exc)[:100]}")
+        return
+
+    async def run() -> None:
+        lake = MemoriesDatalakeClient(api_key=get_settings().memories_api_key)
+        result = await refine_anchors(lake, anchors, max_clips=MAX_REFINE_PER_QUERY)
+        record_refined(result, query=outcome.query)
+        by_source: dict[str, list] = {}
+        for clip in result.clips:
+            # `uploaded_video_id`, not `video_id`: RefinedClip carries the id of
+            # the clip it *created*, and the source it was cut from, separately.
+            # Getting this wrong raised an AttributeError inside the broad
+            # `except` below, which reported "refine failed" and lost every clip
+            # it had already paid to cut and upload.
+            if clip.uploaded:
+                by_source.setdefault(clip.source_video_id, []).append(clip)
+        for graded in outcome.clips:
+            made = by_source.get(graded.video_id) or []
+            graded.refined_video_ids = [c.uploaded_video_id for c in made]
+            graded.refined_seconds = sum(c.seconds for c in made)
+        if result.skipped_reason:
+            print(f"    refine skipped: {result.skipped_reason}")
+        else:
+            made = sum(1 for c in result.clips if c.uploaded)
+            print(f"    refined {made}/{len(result.clips)} clip(s) into {result.collection_name}")
+
+    try:
+        asyncio.run(run())
+    except Exception as exc:  # noqa: BLE001
+        print(f"    refine failed: {str(exc)[:120]}")
 
 
 def _clip_outcome(query_id: str, clip: dict) -> ClipOutcome:
@@ -345,6 +433,11 @@ def main() -> int:
         help="the query set to run (default eval/queries.json, which is v1.0)",
     )
     parser.add_argument("--out", type=Path, help="where to write the run record (.jsonl)")
+    parser.add_argument(
+        "--no-refine",
+        action="store_true",
+        help="grade only; do not cut accepted spans into the clean collection",
+    )
     parser.add_argument("--yes", action="store_true", help="do not ask before spending")
     args = parser.parse_args()
 
@@ -397,7 +490,13 @@ def main() -> int:
     with record.open("a", encoding="utf-8") as handle:
         for index, case in enumerate(todo, start=1):
             print(f"--- [{index}/{len(todo)}] {case['id']}: {case['query']}", flush=True)
-            outcome = run_one(case, args.per_query, args.dry_run, viewpoint="egocentric")
+            outcome = run_one(
+                case,
+                args.per_query,
+                args.dry_run,
+                viewpoint="egocentric",
+                refine=not args.no_refine,
+            )
             handle.write(json.dumps(outcome_as_dict(outcome), ensure_ascii=False) + "\n")
             handle.flush()
             outcomes.append(outcome)

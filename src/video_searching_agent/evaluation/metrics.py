@@ -98,6 +98,12 @@ class ClipOutcome:
     # `hands_gate` is "passed" / "failed" / "unmeasured" — never a bool, since
     # a clip whose captions could not settle it has not failed anything.
     hands_gate: str = "unmeasured"
+    # The clean clips this one was cut into and re-housed in the clean
+    # collection. Empty means refine did not run or produced nothing — the
+    # deliverable is a clip in the Datalake, so a run that grades and never cuts
+    # has measured an intention rather than an output.
+    refined_video_ids: list[str] = field(default_factory=list)
+    refined_seconds: float = 0.0
     # Annotated action spans that name at least one hand, and that name at
     # least one object. An action span with neither is a label, not a
     # demonstration.
@@ -235,6 +241,10 @@ class YieldChain:
     valid: int = 0
     queries_with_a_valid_clip: int = 0
     valid_hours: float = 0.0
+    # What actually reached the clean collection. The deliverable, as opposed to
+    # the verdict about it.
+    refined_clips: int = 0
+    refined_hours: float = 0.0
     # Clips whose records predate the validity fields. Excluded from the rate's
     # denominator rather than counted against it.
     validity_unmeasured: int = 0
@@ -428,6 +438,10 @@ class Stratum:
     valid: int = 0
     queries_with_a_valid_clip: int = 0
     valid_hours: float = 0.0
+    # What actually reached the clean collection. The deliverable, as opposed to
+    # the verdict about it.
+    refined_clips: int = 0
+    refined_hours: float = 0.0
     # Clips whose records predate the validity fields. Excluded from the rate's
     # denominator rather than counted against it.
     validity_unmeasured: int = 0
@@ -552,6 +566,8 @@ def score_run(
         for clip in outcome.clips:
             chain.accepted += 1 if clip.accepted else 0
             chain.high_quality += 1 if clip.high_quality else 0
+            chain.refined_clips += len(clip.refined_video_ids)
+            chain.refined_hours += clip.refined_seconds / 3600
             if not clip.validity_measured:
                 chain.validity_unmeasured += 1
             elif clip.valid:
