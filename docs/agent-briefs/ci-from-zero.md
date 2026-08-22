@@ -1,107 +1,94 @@
 # Brief — CI from zero, and the ten red tests
 
-**Branch** `claude/ci-from-zero` · **Owns** `.github/`, `scripts/`, the
-`README.md` metrics block, `tests/conftest.py`,
+**Branch** `claude/ci-from-zero` · **Owns** `.github/`, `scripts/` except
+`check_layering.py`, the `README.md` metrics block, `tests/conftest.py`,
 `tests/test_tool_policy_integration.py`, `tests/test_streaming_performance.py` ·
 **Blocked by** nothing
 
 ---
 
-You are the CI agent. Work autonomously; no human is watching. Develop on branch
-`claude/ci-from-zero`, commit, push with `git push -u origin
-claude/ci-from-zero`, and open a DRAFT pull request when done.
+Work autonomously; no human is watching. Develop on `claude/ci-from-zero` cut
+from `main`, commit as you go, push with `git push -u origin
+claude/ci-from-zero`, and open a DRAFT pull request.
 
 ## Context
 
-This repository has **no CI at all** — `.github/` does not exist. It has 900+
-tests, a strict mypy config and a ruff config, none of which run on a pull
-request. A refactor is about to move most of the source tree (branch
-`claude/phase0-carve-core`, running in parallel with you), and it will be far
-safer to land with a green light than without one.
+This repository has **no CI at all** — `.github/` does not exist — while carrying
+900+ tests, a strict mypy config and a ruff config that never run on a pull
+request. A refactor of most of the source tree is starting in parallel
+(`claude/core-move-and-types`, implementing §8 steps 1–2 of
+[`docs/MODULES.md`](../MODULES.md)), and it is far safer to land with a green
+light than without one.
 
-Read `docs/ARCHITECTURE.md` on branch
-`claude/multi-agent-parallel-architecture-822z3w` for the target package layout —
-§5 and §6 describe the jobs proposed here:
-
-```
-git fetch origin claude/multi-agent-parallel-architecture-822z3w
-git show origin/claude/multi-agent-parallel-architecture-822z3w:docs/ARCHITECTURE.md
-```
+Read §7 of `docs/MODULES.md` for the mechanics these jobs enforce.
 
 ## What to build
 
 **1. `.github/workflows/ci.yml` — the basics, on every PR and push to `main`.**
 `uv sync`, then `ruff check`, `mypy` under the project's strict config, and
-`pytest`. Cache the uv environment. Python 3.11 per `requires-python`. No secrets
-and no network-dependent tests: the suite must pass on a fork PR with no API
-keys configured.
+`pytest`. Cache the uv environment. Python 3.11 per `requires-python`. It must
+pass on a fork PR with no API keys configured: no secrets, no network-dependent
+tests.
 
-**2. The ten red tests — this is the substantial part.**
-`main` has roughly ten failures, all in
-`tests/test_tool_policy_integration.py` and
-`tests/test_streaming_performance.py`, reported as missing-key environment
-issues. Diagnose each one properly and fix it at the root:
+**2. The ten red tests — the substantial part.**
+`main` has roughly ten failures, all in `tests/test_tool_policy_integration.py`
+and `tests/test_streaming_performance.py`, reported as missing-key environment
+issues. Diagnose each and fix it at the root:
 
-- A test that needs a real API key should **skip** with a clear reason when the
-  key is absent (`pytest.mark.skipif`), and run when it is present. A skip that
-  states its condition is honest; a silently absent test is not.
+- A test that needs a real API key should **skip** with a stated reason when the
+  key is absent, and run when it is present. A skip that names its condition is
+  honest; a silently absent test is not.
 - A test that only needs *some* value in the environment should get one from a
-  fixture in `tests/conftest.py`, not from the developer's shell.
+  `tests/conftest.py` fixture, not from the developer's shell.
 - A test that is genuinely broken should be fixed.
 
 **Never delete, `xfail`, or quarantine a test to get the suite green.** If one of
 the ten turns out to be a real product bug rather than an environment problem,
-leave the test failing, mark the workflow's expectations honestly, and say so
-prominently in the PR body — a red CI that tells the truth is worth more than a
-green one that does not. State in the PR exactly how many of the ten now pass,
-how many skip and why, and how many remain failing.
+leave it failing and say so prominently in the PR body — a red CI that tells the
+truth is worth more than a green one that does not. State exactly how many now
+pass, how many skip and why, and how many remain red.
 
-**3. `scripts/check_layering.py` — the guard that keeps the refactor honest.**
-Walks the AST of every file under `packages/` and `src/` and fails if a stage
-package imports a sibling stage package. Read the package list and the allowed
-edges from a small declarative config (`scripts/layering.toml` or similar) rather
-than hard-coding them, because the package set arrives incrementally over the
-next several PRs. It must **pass trivially today** — `packages/` does not exist
-yet — and start biting as soon as it does. Add it to the workflow as its own job.
+**3. `scripts/check_paths.py` — the ownership guard.**
+Given a branch named `agent/PKG/topic`, fail if the diff touches anything outside
+`packages/PKG/**`. A no-op for every other branch name, with a documented
+label-based escape hatch (`contract-change`) for PRs that must touch
+`packages/core`.
 
-**4. `scripts/check_paths.py` — the ownership guard.**
-Given a branch named `agent/PKG/topic`, fail if the PR's diff touches anything
-outside `packages/PKG/**`. Make it a no-op for every other branch name, and give
-it a documented label-based escape hatch (`contract-change`) for PRs that must
-touch `packages/core`.
+**4. Wire `scripts/check_layering.py` as its own job.** You do not write it — the
+core agent does, because it is the proof its move worked. Add the job that runs
+it, and expect it to report two remaining cycles rather than zero.
 
 **5. The README metrics table, generated rather than hand-written.**
-`eval/run_eval.py` writes a scorecard; `eval/sample-scorecard.md` shows its
-shape. Add `scripts/rollup_scorecard.py` that reads the scorecard JSON and
-rewrites a marked block in `README.md` between `<!-- METRICS:START -->` and
-`<!-- METRICS:END -->`, with a `--check` mode for CI that fails if the block is
-stale. Then a scheduled workflow that runs the eval and commits the refreshed
-block — the eval costs real money, so read `eval/README.md` for the cost model
-first and default the schedule to something modest and clearly stated. If the
-full 200-query set is too expensive to run on a schedule, wire the job up
-against `--dry-run` or a small `--limit` and say plainly in the PR what the
-scheduled run does and does not measure.
+`eval/run_eval.py` writes a scorecard and `eval/sample-scorecard.md` shows its
+shape. Add `scripts/rollup_scorecards.py` reading the scorecard JSON and
+rewriting a marked block in `README.md` between `<!-- METRICS:START -->` and
+`<!-- METRICS:END -->`, with a `--check` mode that fails CI if the block is
+stale. Then a scheduled workflow that refreshes and commits it.
 
-The point of that block: **no agent ever hand-edits the metrics table.**
-`README.md` is 60k and one file, and it is the hottest merge-conflict surface in
-the repository.
+The eval spends real money — read `eval/README.md` for the cost model before
+choosing a schedule, keep it modest, and state plainly in the PR what the
+scheduled run does and does not measure. If the full 200-query set is too
+expensive to run on a schedule, wire it to `--dry-run` or a small `--limit` and
+say so.
 
-## Stay inside your boundary
+The point of the marked block: **no agent ever hand-edits the metrics table.**
+`README.md` is 60k in one file and the hottest merge-conflict surface here.
 
-You own `.github/`, `scripts/`, the `README.md` metrics block, and the three test
-files named at the top. Do **not** touch anything else under `src/`,
-`packages/`, `pyproject.toml`, `uv.lock`, `docs/` or `eval/` — the Phase 0 agent
-is rewriting most of `src/` right now and will conflict with you. If a CI fix
-seems to require a source change, say so in the PR body and leave it.
+## Boundary
 
-Two exceptions, both narrow: you may add `[tool.pytest.ini_options]` markers or
-similar test-only configuration to `pyproject.toml` if a skip condition needs
-it — keep that diff to a few lines and flag it, since Phase 0 also edits that
-file. And `uv.lock` must not be regenerated by you at all.
+You own `.github/`, everything in `scripts/` except `check_layering.py` and its
+config, the `README.md` metrics block, and the three test files named at the top.
+Touch nothing else under `src/`, `packages/`, `docs/` or `eval/` — the core agent
+is moving files across `src/` right now. Do not regenerate `uv.lock`. If a CI fix
+appears to need a source change, say so in the PR body and leave it.
+
+One narrow exception: you may add test-only configuration to `pyproject.toml`
+(markers, options) if a skip condition needs it. Keep that diff to a few lines
+and flag it, since the core agent edits that file too.
 
 ## Done means
 
 A PR opens CI on itself, and the run is green or red for reasons the PR body
-states exactly. The layering and paths guards pass trivially today and are wired
-to bite later. The README metrics block is generated, with a `--check` job
-proving it stays fresh.
+states exactly. The paths guard is wired and no-ops on normal branches; the
+layering job runs and reports what remains. The README metrics block is
+generated, with a `--check` job proving it stays fresh.
