@@ -432,3 +432,98 @@ class TestNothingToAuditIsNotNothingWrong:
             "SET-NO-ANCHORS",
             "SET-THIN-ANCHORS",
         }
+
+
+class TestTheAuditsOwnArithmetic:
+    """Two false positives the audit produced on real runs.
+
+    A video with one action in it has a task anchor and an action anchor over
+    the same seconds — that is the design, not a duplicate — and adding the
+    lengths of a nested hierarchy counts the same footage twice. Sixteen seconds
+    of footage was reported as a duplicate span and as 32 seconds.
+    """
+
+    @pytest.mark.asyncio
+    async def test_a_task_and_its_only_action_are_not_a_duplicate(self):
+        agent = QualityCheckAgent(llm=False)
+        audit = await agent.audit(
+            [
+                clip(
+                    segments=[
+                        anchor("t1", 0.0, 16.0, level="task", label="pack a suitcase"),
+                        anchor("a1", 0.0, 16.0, parent="t1", label="pack a suitcase"),
+                    ]
+                )
+            ],
+            verify_evidence=False,
+        )
+        assert "SET-DUPLICATE" not in {f.check for f in audit.set_findings}
+
+    @pytest.mark.asyncio
+    async def test_the_same_span_at_the_same_level_still_is_a_duplicate(self):
+        agent = QualityCheckAgent(llm=False)
+        audit = await agent.audit(
+            [
+                clip(video_id="vid_1", segments=[anchor("a1", 0.0, 16.0, label="folds")]),
+                clip(video_id="vid_1", segments=[anchor("a2", 0.0, 16.0, label="folds")]),
+            ],
+            verify_evidence=False,
+        )
+        assert "SET-DUPLICATE" in {f.check for f in audit.set_findings}
+
+    @pytest.mark.asyncio
+    async def test_nested_anchors_are_counted_once_against_the_hours(self):
+        """16s of footage with one action in it is 16s, not 32."""
+
+        agent = QualityCheckAgent(llm=False)
+        audit = await agent.audit(
+            [
+                clip(
+                    duration_seconds=16,
+                    segments=[
+                        anchor("t1", 0.0, 16.0, level="task"),
+                        anchor("a1", 0.0, 16.0, parent="t1"),
+                        anchor("e1", 2.0, 6.0, level="event", parent="a1"),
+                    ],
+                )
+            ],
+            claimed_hours=16 / 3600,
+            verify_evidence=False,
+        )
+        assert "SET-HOURS" not in {f.check for f in audit.set_findings}
+
+    @pytest.mark.asyncio
+    async def test_overlapping_actions_are_merged_not_added(self):
+        from video_searching_agent.agent.quality_check_agent import _covered_seconds
+
+        # 0–30 and 20–50 cover 50 seconds between them, not 60.
+        covered = _covered_seconds(
+            {"segments": [anchor("a1", 0.0, 30.0), anchor("a2", 20.0, 50.0)]}
+        )
+        assert covered == pytest.approx(50.0)
+
+    @pytest.mark.asyncio
+    async def test_disjoint_actions_are_added(self):
+        from video_searching_agent.agent.quality_check_agent import _covered_seconds
+
+        covered = _covered_seconds(
+            {"segments": [anchor("a1", 0.0, 30.0), anchor("a2", 100.0, 140.0)]}
+        )
+        assert covered == pytest.approx(70.0)
+
+    @pytest.mark.asyncio
+    async def test_real_double_counting_is_still_caught(self):
+        """The check has to keep working, not just stop crying wolf."""
+
+        agent = QualityCheckAgent(llm=False)
+        audit = await agent.audit(
+            [
+                clip(
+                    duration_seconds=7200,
+                    segments=[anchor("a1", 0.0, 3600.0), anchor("a2", 3600.0, 7200.0)],
+                )
+            ],
+            claimed_hours=0.5,
+            verify_evidence=False,
+        )
+        assert "SET-HOURS" in {f.check for f in audit.set_findings}

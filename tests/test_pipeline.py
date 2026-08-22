@@ -1,5 +1,6 @@
 """Tests for the collection pipeline: download bounds and ingest orchestration."""
 
+import contextlib
 from pathlib import Path
 from typing import Any
 
@@ -157,9 +158,9 @@ class TestIngestPipeline:
     @pytest.mark.asyncio
     async def test_screening_stops_a_short_clip_before_any_download(self, tmp_path):
         downloader = _StubDownloader({"title": "quick clip", "duration": 8})
-        result = await _pipeline(
-            downloader, _StubUploader(), _FakeGemini([])
-        ).ingest("https://x/1", min_duration_seconds=60)
+        result = await _pipeline(downloader, _StubUploader(), _FakeGemini([])).ingest(
+            "https://x/1", min_duration_seconds=60
+        )
 
         assert result.stage == "skipped"
         assert downloader.downloads == 0
@@ -193,9 +194,7 @@ class TestIngestPipeline:
 
     @pytest.mark.asyncio
     async def test_indexing_still_running_is_reported_not_failed(self, tmp_path):
-        downloader = _StubDownloader(
-            {"title": "POV", "duration": 300}, clip=_clip(tmp_path)
-        )
+        downloader = _StubDownloader({"title": "POV", "duration": 300}, clip=_clip(tmp_path))
         datalake = _StubUploader(caption="hands", done=False)
         result = await _pipeline(downloader, datalake, _FakeGemini([])).ingest("https://x/1")
 
@@ -210,9 +209,7 @@ class TestIngestPipeline:
     @pytest.mark.asyncio
     async def test_a_failed_probe_never_spends_anything(self):
         downloader = _StubDownloader({}, probe_error="video unavailable")
-        result = await _pipeline(
-            downloader, _StubUploader(), _FakeGemini([])
-        ).ingest("https://x/1")
+        result = await _pipeline(downloader, _StubUploader(), _FakeGemini([])).ingest("https://x/1")
 
         assert result.stage == "failed"
         assert result.error == "video unavailable"
@@ -238,17 +235,13 @@ class TestIngestPipeline:
 
     @pytest.mark.asyncio
     async def test_annotation_can_be_turned_off_for_a_cheap_pass(self, tmp_path):
-        downloader = _StubDownloader(
-            {"title": "POV", "duration": 300}, clip=_clip(tmp_path)
-        )
+        downloader = _StubDownloader({"title": "POV", "duration": 300}, clip=_clip(tmp_path))
         datalake = _StubUploader(
             caption="Both hands fold the dough.",
             segments=[{"start": 0.0, "end": 60.0, "text": "both hands fold the dough"}],
         )
         gemini = _FakeGemini([])  # any model call would raise
-        result = await _pipeline(downloader, datalake, gemini).ingest(
-            "https://x/1", annotate=False
-        )
+        result = await _pipeline(downloader, datalake, gemini).ingest("https://x/1", annotate=False)
 
         assert result.accepted is True
         assert result.annotation is None
@@ -258,9 +251,7 @@ class TestIngestPipeline:
     async def test_the_payload_is_json_safe_end_to_end(self, tmp_path):
         import json
 
-        downloader = _StubDownloader(
-            {"title": "POV", "duration": 300}, clip=_clip(tmp_path)
-        )
+        downloader = _StubDownloader({"title": "POV", "duration": 300}, clip=_clip(tmp_path))
         datalake = _StubUploader(
             caption="The right hand moves the knife.",
             segments=[{"start": 0.0, "end": 60.0, "text": "the right hand moves the knife"}],
@@ -385,3 +376,100 @@ class TestAClipThatIsNeitherAcceptedNorRejected:
         assert result.video_id == "vid_1", "the id has to come back, or the work is lost"
         assert "pending" in stages
         assert result.as_dict()["pending_reason"] == result.pending_reason
+
+
+class TestStoppingBeforeTheHostDoes:
+    """A serverless request has a hard wall, and being killed at it is silent.
+
+    A collect run against the deployment reported a clip "stopped at
+    downloading" with no error and no reason — the 300s limit had cut the stream
+    before any summary event. Indistinguishable from a crash. Knowing the budget
+    lets the pipeline stop itself, say which stage it declined to start, and hand
+    back the video_id so curation can finish.
+    """
+
+    @staticmethod
+    def _pipeline(spent: dict):
+        import time as time_module
+
+        from video_searching_agent.pipeline.ingest import IngestPipeline
+
+        pipeline = IngestPipeline.__new__(IngestPipeline)
+        pipeline.keep_files = False
+
+        class Cleaning:
+            def screen(self, info, **kwargs):
+                from video_searching_agent.agent.cleaning_agent import ScreeningVerdict
+
+                return ScreeningVerdict(url=info.get("url"), accepted=True)
+
+            async def look(self, verdict, info, **kwargs):
+                return verdict
+
+            async def clean(self, *a, **k):
+                spent["cleaned"] = True
+                raise AssertionError("should not have been reached")
+
+        class Downloader:
+            async def probe_async(self, url):
+                return {"id": "x", "title": "a clip", "duration": 700}
+
+            async def download_async(self, url):
+                spent["downloaded"] = True
+                raise AssertionError("should not have been reached")
+
+            def discard(self, clip):
+                return None
+
+        pipeline._cleaning = Cleaning()
+        pipeline._downloader = Downloader()
+        pipeline._client = None
+        pipeline._annotation = None
+        return pipeline, time_module
+
+    @pytest.mark.asyncio
+    async def test_no_time_to_download_means_nothing_is_spent(self):
+        spent: dict = {}
+        pipeline, time_module = self._pipeline(spent)
+
+        stages: list[str] = []
+
+        async def on_stage(result):
+            stages.append(result.stage)
+
+        # A deadline already in the past: the probe is free, the download is not.
+        result = await pipeline.ingest(
+            "https://www.youtube.com/watch?v=a",
+            on_stage=on_stage,
+            deadline=time_module.monotonic() - 1,
+        )
+
+        assert spent == {}, "not a byte was downloaded"
+        assert result.stage == "pending"
+        assert result.accepted is False
+        assert result.error is None, "a budget is not a fault"
+        assert result.rejection_reason is None, "and it is not a judgement"
+        assert "stopped before the download" in (result.pending_reason or "")
+        assert "Nothing was spent" in (result.pending_reason or "")
+        assert stages[-1] == "pending"
+
+    @pytest.mark.asyncio
+    async def test_no_deadline_means_no_limit(self):
+        """Locally there is no wall, and the pipeline must not invent one."""
+
+        spent: dict = {}
+        pipeline, _ = self._pipeline(spent)
+        with contextlib.suppress(AssertionError):
+            await pipeline.ingest("https://www.youtube.com/watch?v=a", deadline=None)
+        assert spent.get("downloaded") is True, "it tried, which is the point"
+
+    @pytest.mark.asyncio
+    async def test_a_generous_deadline_does_not_stop_anything(self):
+        spent: dict = {}
+        pipeline, time_module = self._pipeline(spent)
+        with contextlib.suppress(AssertionError):
+            await pipeline.ingest(
+                "https://www.youtube.com/watch?v=a",
+                deadline=time_module.monotonic() + 600,
+            )
+        assert spent.get("downloaded") is True

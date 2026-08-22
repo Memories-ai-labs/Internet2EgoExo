@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any
@@ -53,6 +54,21 @@ RESUMABLE_THRESHOLD_MB = 100
 # in `indexing` for minutes; without this the UI would show nothing until the
 # whole pipeline finished.
 StageCallback = Callable[["IngestResult"], Awaitable[None]]
+
+# What each remaining stage needs, roughly, so the pipeline can tell whether
+# starting one is honest. These are floors, not estimates: a download of a
+# forty-minute video takes far longer than 45s, but starting one with less than
+# that left is certainly pointless.
+#
+# The reason any of this exists: a serverless request has a hard wall (300s on
+# this deployment), and being killed at it means the stream is cut with no
+# summary event — the caller sees a clip stopped at "downloading" with no error,
+# which is indistinguishable from a crash. Knowing the budget lets the pipeline
+# stop *itself* and say what happened, handing back the video_id so curation can
+# finish the job.
+DOWNLOAD_FLOOR_SECONDS = 45.0
+INDEX_FLOOR_SECONDS = 20.0
+JUDGEMENT_FLOOR_SECONDS = 25.0
 
 
 @dataclass
@@ -183,6 +199,7 @@ class IngestPipeline:
         annotate: bool = True,
         on_stage: StageCallback | None = None,
         viewpoint_verified: bool = False,
+        deadline: float | None = None,
     ) -> IngestResult:
         """Run one candidate through the whole pipeline.
 
@@ -197,6 +214,11 @@ class IngestPipeline:
             viewpoint_verified: The search already looked at this candidate's
                 frames and it survived, so the look is skipped rather than
                 paid for twice. A URL pasted by hand never has this.
+            deadline: A `time.monotonic()` value this run must finish by,
+                usually the host's request limit minus a margin. The pipeline
+                stops at the last stage it can honestly start and returns
+                `pending` with the video_id, instead of being killed mid-stage
+                with nothing reported.
 
         Returns:
             An IngestResult; `accepted` is True only for a clip that is indexed
@@ -208,6 +230,32 @@ class IngestPipeline:
             result.stage = name
             if on_stage is not None:
                 await on_stage(result)
+
+        def remaining() -> float:
+            """Seconds left in the budget, or infinity when there is none."""
+
+            if deadline is None:
+                return float("inf")
+            return deadline - time.monotonic()
+
+        async def out_of_time(what: str, floor: float) -> bool:
+            """Stop before a stage that cannot finish, and say so."""
+
+            left = remaining()
+            if left >= floor:
+                return False
+            await stage("pending")
+            result.pending_reason = (
+                f"stopped before {what}: {max(0.0, left):.0f}s left of the request "
+                f"budget and it needs at least {floor:.0f}s. "
+                + (
+                    f"Curate {result.video_id} later — the footage is in the lake."
+                    if result.video_id
+                    else "Nothing was spent; send this URL again with more headroom."
+                )
+            )
+            result.notes.append(result.pending_reason)
+            return True
 
         # --- 1. probe and screen before spending disk or money -------------
         await stage("probing")
@@ -246,6 +294,8 @@ class IngestPipeline:
             return result
 
         # --- 2. download ---------------------------------------------------
+        if await out_of_time("the download", DOWNLOAD_FLOOR_SECONDS):
+            return result
         await stage("downloading")
         try:
             clip = await self.downloader.download_async(url)
@@ -260,6 +310,13 @@ class IngestPipeline:
         result.notes.extend(clip.warnings)
 
         # --- 3. upload and index ------------------------------------------
+        # The file is on disk and paid for by now, so this check is about not
+        # starting an upload that will be cut halfway — which leaves a partial
+        # video in the lake with no id handed back.
+        if await out_of_time("the upload", INDEX_FLOOR_SECONDS):
+            if not self.keep_files:
+                self.downloader.discard(clip)
+            return result
         await stage("uploading")
         try:
             uploaded = await self._upload(clip)
@@ -278,8 +335,16 @@ class IngestPipeline:
         await stage("indexing")
         try:
             if result.operation:
+                # Wait for as long as there is, not for a fixed budget that may
+                # outlast the request. Leaving room for the judgement stages
+                # means a clip that indexes in time still gets cleaned.
+                budget = wait_seconds
+                left = remaining()
+                if left != float("inf"):
+                    allowed = max(0.0, left - JUDGEMENT_FLOOR_SECONDS)
+                    budget = allowed if budget is None else min(budget, allowed)
                 operation = await self.client.wait_for_operation(
-                    result.operation, max_wait_seconds=wait_seconds
+                    result.operation, max_wait_seconds=budget
                 )
                 if not operation.get("done"):
                     # Neither accepted nor rejected: the footage is fine, the
@@ -310,6 +375,8 @@ class IngestPipeline:
             return result
 
         # --- 4. clean: filter on the frames, then find the anchors ---------
+        if await out_of_time("the cleaning pass", JUDGEMENT_FLOOR_SECONDS):
+            return result
         await stage("cleaning")
         verdict = await self.cleaning.clean(
             str(result.video_id),

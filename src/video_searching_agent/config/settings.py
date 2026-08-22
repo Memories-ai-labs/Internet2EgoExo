@@ -131,6 +131,18 @@ class Settings(BaseSettings):
         validation_alias="APIFY_API_TOKEN",
     )
 
+    # How long one HTTP request may run before the host kills it. 0 means no
+    # limit, which is the truth locally. On a serverless host it is the
+    # function's maxDuration minus a margin: without it the pipeline is killed
+    # mid-stage and the caller sees a clip that stopped for no stated reason.
+    request_budget_seconds: float = Field(
+        default=0.0,
+        ge=0.0,
+        description="Seconds one request may run before the host cuts it "
+        "(0 = no limit). Set it below the platform's own timeout.",
+        validation_alias="REQUEST_BUDGET_SECONDS",
+    )
+
     # Looking at the footage before downloading it
     viewpoint_check: str = Field(
         default="frames",

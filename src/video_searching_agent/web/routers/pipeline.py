@@ -20,6 +20,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import time
 from collections.abc import AsyncGenerator, Awaitable, Callable
 from typing import Any
 
@@ -136,6 +137,14 @@ async def _collect_events(
 
     already_looked = set(body.viewpoint_verified_urls)
 
+    # One deadline for the whole request, shared across the clips. A clip that
+    # cannot be finished inside it returns `pending` with its video_id rather
+    # than being cut off mid-stage — and once the budget is gone, the clips
+    # behind it say so immediately instead of spending on work that will be
+    # killed.
+    budget = get_settings().request_budget_seconds
+    deadline = (time.monotonic() + budget) if budget else None
+
     for index, url in enumerate(body.urls, start=1):
         if await request.is_disconnected():
             logger.info("client disconnected, stopping collection")
@@ -153,6 +162,7 @@ async def _collect_events(
                 annotate=body.annotate,
                 on_stage=on_stage,
                 viewpoint_verified=url in already_looked,
+                deadline=deadline,
             )
 
         try:

@@ -639,8 +639,11 @@ class QualityCheckAgent:
             )
 
         # The same action described twice at the same seconds of the same video
-        # is one anchor delivered twice.
-        seen: set[tuple[str, int, int, frozenset[str]]] = set()
+        # is one anchor delivered twice. The *level* is part of that identity: a
+        # video with one action has a task anchor and an action anchor over the
+        # same seconds, by design, and calling that a duplicate cried wolf on
+        # every short clip.
+        seen: set[tuple[str, str, int, int, frozenset[str]]] = set()
         for clip in clips:
             video_id = str(clip.get("video_id") or "")
             for anchor in clip.get("segments") or []:
@@ -651,6 +654,7 @@ class QualityCheckAgent:
                     continue
                 key = (
                     video_id,
+                    str(anchor.get("hier_level") or ""),
                     int(start),
                     int(end),
                     frozenset(action_signature(str(anchor.get("label") or ""))),
@@ -667,14 +671,12 @@ class QualityCheckAgent:
                 seen.add(key)
 
         if claimed_hours is not None:
-            anchored = sum(
-                (end - start)
-                for clip in clips
-                for start, end in (
-                    _span(a) for a in (clip.get("segments") or []) if isinstance(a, dict)
-                )
-                if start is not None and end is not None
-            )
+            # Summing every anchor double-counts, because a task anchor contains
+            # its actions and an action contains its events — 16 seconds of
+            # footage with one action in it totalled 32. The honest figure is the
+            # union of the action-level spans: the seconds actually covered,
+            # counted once.
+            anchored = sum(_covered_seconds(clip) for clip in clips)
             anchored_hours = anchored / 3600
             # Anchors are a subset of the footage, so they should never exceed
             # the hours claimed. Exceeding it means something is double counted.
@@ -706,6 +708,39 @@ class QualityCheckAgent:
 
 
 # ----------------------------------------------------------------- helpers
+
+
+def _covered_seconds(clip: dict[str, Any]) -> float:
+    """Seconds of footage a clip's anchors cover, counted once.
+
+    Anchors nest — a task contains its actions, an action contains its events —
+    so adding their lengths counts the same footage two or three times. This
+    merges the action-level spans and measures the union, falling back to
+    whatever level is present when there are no actions.
+    """
+    anchors = [a for a in (clip.get("segments") or []) if isinstance(a, dict)]
+    actions = [a for a in anchors if str(a.get("hier_level") or "") == "action"]
+    chosen = actions or anchors
+    spans = sorted(
+        (
+            (start, end)
+            for start, end in (_span(a) for a in chosen)
+            if start is not None and end is not None and end > start
+        ),
+        key=lambda pair: pair[0],
+    )
+    if not spans:
+        return 0.0
+
+    total = 0.0
+    current_start, current_end = spans[0]
+    for start, end in spans[1:]:
+        if start <= current_end:
+            current_end = max(current_end, end)
+        else:
+            total += current_end - current_start
+            current_start, current_end = start, end
+    return total + (current_end - current_start)
 
 
 def _span(entry: dict[str, Any]) -> tuple[float | None, float | None]:
