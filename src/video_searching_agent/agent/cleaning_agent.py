@@ -461,8 +461,20 @@ class CleaningAgent:
         verdict = CleaningVerdict(video_id=video_id)
         media = media or {}
 
+        # Resolved once, here, and used everywhere below. It decides three
+        # separate things — whether the caption read returns timings at all,
+        # what the media gates measure, and where anchors get clamped — so
+        # reading it from `media` in three places meant a curation run with no
+        # download behind it silently lost all three. The clamp was the last to
+        # notice: an anchor came back ending at 1229.0s on a 1228.0s video.
+        duration = media.get("duration_seconds")
+        if not duration:
+            duration = await self._duration_of(video_id, verdict)
+        if duration:
+            media = {**media, "duration_seconds": duration}
+
         caption, caption_segments, transcription, summary = await self._read_derived(
-            video_id, verdict, duration_seconds=media.get("duration_seconds")
+            video_id, verdict, duration_seconds=duration
         )
 
         # --- the frame check: does the footage show what we need? ----------
