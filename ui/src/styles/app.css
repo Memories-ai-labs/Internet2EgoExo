@@ -1042,3 +1042,7 @@ code,
 .ltree__label { font-weight: 500; }
 .ltree__narration { color: var(--muted); flex: 1 1 100%; min-width: 0; overflow-wrap: anywhere; }
 .ltree__hands { flex: 1 1 100%; min-width: 0; overflow-wrap: anywhere; font-size: 0.75rem; color: var(--muted); }
+/* What was handled, set apart from what the hands did: the objects are the
+   facet somebody browses by, so they read as data rather than prose. */
+.ltree__objects { flex: 1 1 100%; min-width: 0; overflow-wrap: anywhere; font-size: 0.72rem; color: var(--muted); font-variant: all-small-caps; letter-spacing: 0.04em; }
+.library__facetLabel { font-size: 0.72rem; color: var(--muted); font-variant: all-small-caps; letter-spacing: 0.06em; align-self: center; margin-right: 0.25rem; }

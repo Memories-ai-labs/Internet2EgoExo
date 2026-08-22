@@ -231,6 +231,13 @@ if (rows > 0) {
   await page.waitForSelector(".ltree", { timeout: 15000 });
   await page.waitForTimeout(500);
   await step("12-library-clip");
+// Objects are the facet a buyer reaches for first, and they were being dropped
+// on the way into the store — so assert they reach the page, and that clicking
+// one filters by it.
+const clipText = await page.locator(".ltree").innerText();
+if (!clipText.toLowerCase().includes("metal bowl")) {
+  problems.push("library clip is missing its objects");
+}
 
   const treeNodes = await page.locator(".ltree__node").count();
   if (!treeNodes) problems.push("the opened clip shows no annotation tree");

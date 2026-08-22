@@ -608,6 +608,7 @@ LIBRARY_CLIPS: list[dict[str, Any]] = [
                 "hands_visible": True,
                 "left_hand": "steadies the metal bowl",
                 "right_hand": "cracks the eggs against the rim",
+                "objects": ["metal bowl", "eggs"],
                 "evidence": ["frames"],
             },
             {
@@ -707,7 +708,14 @@ def library_page(
             for c in rows
             if needle in (c["title"] or "").lower()
             or any(
-                needle in (str(s.get("label") or "") + str(s.get("narration") or "")).lower()
+                needle
+                in (
+                    str(s.get("label") or "")
+                    + str(s.get("narration") or "")
+                    + str(s.get("left_hand") or "")
+                    + str(s.get("right_hand") or "")
+                    + " ".join(s.get("objects") or [])
+                ).lower()
                 for s in c["segments"]
             )
         ]
@@ -739,6 +747,16 @@ def library_facets() -> dict[str, Any]:
             )
             row["segments"] += 1
             row["clips"] += 1
+    objects: dict[str, dict[str, Any]] = {}
+    for clip in LIBRARY_CLIPS:
+        for segment in clip["segments"]:
+            for name in segment.get("objects") or []:
+                key = str(name).strip().lower()
+                if not key:
+                    continue
+                row = objects.setdefault(key, {"object": key, "segments": 0, "clips": 0})
+                row["segments"] += 1
+                row["clips"] += 1
     seconds = sum(c["duration_seconds"] for c in LIBRARY_CLIPS)
     by_viewpoint: dict[str, int] = {}
     for clip in LIBRARY_CLIPS:
@@ -756,6 +774,7 @@ def library_facets() -> dict[str, Any]:
         },
         "action_labels": sorted(labels.values(), key=lambda r: -r["segments"]),
         "task_labels": [],
+        "objects": sorted(objects.values(), key=lambda r: (-r["segments"], r["object"])),
     }
 
 

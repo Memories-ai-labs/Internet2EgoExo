@@ -98,6 +98,9 @@ async def clip_facets() -> dict[str, Any]:
         "totals": store.totals(),
         "action_labels": store.labels(hier_level="action"),
         "task_labels": store.labels(hier_level="task", limit=30),
+        # What was actually handled. The facet a buyer reaches for first: they
+        # ask for footage of a drill, not for footage labelled "drive the screw".
+        "objects": store.object_vocabulary(),
     }
 
 

@@ -85,6 +85,10 @@ CREATE TABLE IF NOT EXISTS segments (
     hands_visible     INTEGER,
     left_hand         TEXT,
     right_hand        TEXT,
+    -- What was manipulated. Part of the spec for an atomic action alongside the
+    -- two hands, and the thing a buyer searches by: "footage of somebody
+    -- handling a drill" is a question about objects, not about labels.
+    objects           TEXT,
     evidence          TEXT,
     UNIQUE(video_id, segment_id)
 );
@@ -110,6 +114,7 @@ class Segment:
     hands_visible: bool | None = None
     left_hand: str | None = None
     right_hand: str | None = None
+    objects: list[str] = field(default_factory=list)
     evidence: list[str] = field(default_factory=list)
 
     @property
@@ -129,6 +134,7 @@ class Segment:
             "hands_visible": self.hands_visible,
             "left_hand": self.left_hand,
             "right_hand": self.right_hand,
+            "objects": self.objects,
             "evidence": self.evidence,
         }
 
@@ -206,10 +212,32 @@ class AnnotationStore:
         self._lock = threading.Lock()
         with self._tx() as cur:
             cur.executescript(_SCHEMA)
+            self._migrate(cur)
             cur.execute(
                 "INSERT OR REPLACE INTO meta(key, value) VALUES('schema_version', ?)",
                 (str(SCHEMA_VERSION),),
             )
+
+    @staticmethod
+    def _migrate(cur: sqlite3.Cursor) -> None:
+        """Bring an existing database up to the current schema.
+
+        `CREATE TABLE IF NOT EXISTS` is a no-op on a table that already exists,
+        so a new column never reaches a store somebody already has — and this
+        store holds the only copy of every tree we have paid to produce, so
+        dropping and recreating it is not an option. Additive only: a column
+        that is missing gets added, and nothing is ever removed or retyped.
+        """
+        wanted = {
+            "segments": {"objects": "TEXT"},
+        }
+        for table, columns in wanted.items():
+            cur.execute(f"PRAGMA table_info({table})")
+            have = {row["name"] for row in cur.fetchall()}
+            for column, kind in columns.items():
+                if column not in have:
+                    logger.info("migrating %s: adding %s", table, column)
+                    cur.execute(f"ALTER TABLE {table} ADD COLUMN {column} {kind}")
 
     @contextmanager
     def _tx(self) -> Iterator[sqlite3.Cursor]:
@@ -282,8 +310,8 @@ class AnnotationStore:
             cur.executemany(
                 """INSERT INTO segments (video_id, segment_id, parent_segment_id,
                        hier_level, span_start, span_end, label, narration,
-                       hands_visible, left_hand, right_hand, evidence)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+                       hands_visible, left_hand, right_hand, objects, evidence)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 [
                     (
                         clip.video_id,
@@ -297,6 +325,7 @@ class AnnotationStore:
                         None if s.hands_visible is None else int(s.hands_visible),
                         s.left_hand,
                         s.right_hand,
+                        json.dumps(s.objects, ensure_ascii=False),
                         json.dumps(s.evidence, ensure_ascii=False),
                     )
                     for s in clip.segments
@@ -360,10 +389,11 @@ class AnnotationStore:
     ) -> tuple[list[Clip], int]:
         """Find clips. Returns the page and the total that matched.
 
-        `text` matches a clip's title or any of its segments' labels and
-        narrations, so searching "fold" finds a clip whose *action* is folding
-        even when its title never says so — which is the whole reason the tree
-        is in a database instead of a blob.
+        `text` matches a clip's title or any of its segments' labels,
+        narrations, hand descriptions and objects, so searching "fold" finds a
+        clip whose *action* is folding even when its title never says so, and
+        "drill" finds one where a drill is the object being handled. That is the
+        whole reason the tree is in a database instead of a blob.
         """
         where: list[str] = []
         params: list[Any] = []
@@ -380,13 +410,23 @@ class AnnotationStore:
             params.append(source_video_id)
         if text:
             like = f"%{text.lower()}%"
+            # Objects and hands are searched as well as labels: a buyer asks
+            # "footage of somebody handling a drill", which names the object,
+            # and "footage where the left hand steadies something", which names
+            # a hand. `objects` is stored as a JSON array, so a LIKE over the
+            # serialised text is the honest cheap match — it can hit a substring
+            # inside a longer word, which is the same behaviour the label search
+            # already has and the same behaviour a user expects from a search box.
             clause = (
                 "(LOWER(COALESCE(c.title,'')) LIKE ? OR c.video_id IN ("
                 "SELECT video_id FROM segments WHERE LOWER(COALESCE(label,'')) LIKE ? "
-                "OR LOWER(COALESCE(narration,'')) LIKE ?))"
+                "OR LOWER(COALESCE(narration,'')) LIKE ? "
+                "OR LOWER(COALESCE(objects,'')) LIKE ? "
+                "OR LOWER(COALESCE(left_hand,'')) LIKE ? "
+                "OR LOWER(COALESCE(right_hand,'')) LIKE ?))"
             )
             where.append(clause)
-            params.extend([like, like, like])
+            params.extend([like] * 6)
         if hier_level:
             where.append("c.video_id IN (SELECT video_id FROM segments WHERE hier_level = ?)")
             params.append(hier_level)
@@ -412,6 +452,40 @@ class AnnotationStore:
                 )
                 clips.append(_clip_from_row(row, [_segment_from_row(r) for r in cur.fetchall()]))
         return clips, total
+
+    def object_vocabulary(self, *, limit: int = 40) -> list[dict[str, Any]]:
+        """The objects actually handled across the store, commonest first.
+
+        A facet list for browsing by what was manipulated. Counted in Python
+        rather than SQL because `objects` is a JSON array per segment and
+        SQLite's json1 extension is not guaranteed to be compiled in — and a
+        facet list that silently returns nothing on some hosts is worse than a
+        loop over a few thousand rows.
+        """
+        counts: dict[str, int] = {}
+        clips: dict[str, set[str]] = {}
+        with self._tx() as cur:
+            cur.execute(
+                "SELECT video_id, objects FROM segments "
+                "WHERE objects IS NOT NULL AND objects != '' AND objects != '[]'"
+            )
+            rows = cur.fetchall()
+        for row in rows:
+            try:
+                names = json.loads(row["objects"] or "[]")
+            except json.JSONDecodeError:
+                continue
+            for name in names:
+                key = str(name).strip().lower()
+                if not key:
+                    continue
+                counts[key] = counts.get(key, 0) + 1
+                clips.setdefault(key, set()).add(row["video_id"])
+        ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+        return [
+            {"object": name, "segments": n, "clips": len(clips[name])}
+            for name, n in ranked[: max(1, limit)]
+        ]
 
     def labels(self, *, hier_level: str = "action", limit: int = 60) -> list[dict[str, Any]]:
         """The label vocabulary actually in the store, commonest first.
@@ -471,6 +545,12 @@ def _segment_from_row(row: sqlite3.Row) -> Segment:
         evidence = json.loads(row["evidence"] or "[]")
     except json.JSONDecodeError:
         evidence = []
+    # `objects` is absent from rows written before the column existed, and
+    # sqlite3.Row raises IndexError rather than returning None for a missing key.
+    try:
+        objects = json.loads(row["objects"] or "[]")
+    except (json.JSONDecodeError, IndexError):
+        objects = []
     hands = row["hands_visible"]
     return Segment(
         segment_id=row["segment_id"],
@@ -483,6 +563,7 @@ def _segment_from_row(row: sqlite3.Row) -> Segment:
         hands_visible=None if hands is None else bool(hands),
         left_hand=row["left_hand"],
         right_hand=row["right_hand"],
+        objects=objects if isinstance(objects, list) else [],
         evidence=evidence if isinstance(evidence, list) else [],
     )
 

@@ -22,6 +22,7 @@ type Segment = {
   hands_visible: boolean | null;
   left_hand: string | null;
   right_hand: string | null;
+  objects: string[];
   evidence: string[];
 };
 
@@ -54,6 +55,7 @@ type Facets = {
     by_viewpoint: Record<string, number>;
   };
   action_labels: { label: string; segments: number; clips: number }[];
+  objects?: { object: string; segments: number; clips: number }[];
 };
 
 const PAGE = 24;
@@ -156,7 +158,7 @@ export function LibraryView({ apiBase }: { apiBase: string }) {
             className="input"
             type="search"
             value={query}
-            placeholder="Search a title, an action label or a narration"
+            placeholder="Search a title, an action, an object or what a hand did"
             onChange={(event) => setQuery(event.target.value)}
             aria-label="Search the clean clips"
           />
@@ -203,6 +205,26 @@ export function LibraryView({ apiBase }: { apiBase: string }) {
             not annotated. Searching matches titles until the labelling pass runs
             over this collection.
           </p>
+        ) : null}
+
+        {/* What was actually handled. The facet a buyer reaches for first:
+            they ask for footage of a drill, not for footage labelled
+            "drive-the-screw". */}
+        {facets?.objects?.length ? (
+          <div className="library__labels">
+            <span className="library__facetLabel">Objects</span>
+            {facets.objects.slice(0, 12).map((row) => (
+              <button
+                key={row.object}
+                type="button"
+                className="chip"
+                onClick={() => setQuery(row.object)}
+              >
+                {row.object}
+                <span className="chip__count">{row.clips}</span>
+              </button>
+            ))}
+          </div>
         ) : null}
 
         {error ? <p className="library__warning">{error}</p> : null}
@@ -297,6 +319,9 @@ export function LibraryView({ apiBase }: { apiBase: string }) {
                     {segment.left_hand && segment.right_hand ? " · " : ""}
                     {segment.right_hand ? `R: ${segment.right_hand}` : ""}
                   </span>
+                ) : null}
+                {segment.objects?.length ? (
+                  <span className="ltree__objects">{segment.objects.join(" · ")}</span>
                 ) : null}
               </li>
             ))}

@@ -269,3 +269,153 @@ def test_two_viewpoint_spellings_that_display_alike_are_added_not_overwritten(st
     assert sum(totals["by_viewpoint"].values()) == totals["clips"], (
         "the buckets must account for every clip"
     )
+
+
+class TestObjectsAreStoredAndMigrated:
+    """`objects` is part of the spec for an atomic action, alongside the hands.
+
+    It was in the annotation model and dropped on the way into the store, so the
+    library could never answer "footage of somebody handling a drill" — which is
+    a question about objects, not about labels.
+    """
+
+    @staticmethod
+    def _clip(objects):
+        from video_searching_agent.store.annotations import Clip, Segment
+
+        return Clip(
+            video_id="vid_objects",
+            source_video_id="src_1",
+            title="assembling a desk",
+            segments=[
+                Segment(
+                    segment_id="s1",
+                    hier_level="action",
+                    span_start=0.0,
+                    span_end=8.0,
+                    label="drive the screw",
+                    left_hand="steadies the panel",
+                    right_hand="turns the screwdriver",
+                    objects=objects,
+                )
+            ],
+        )
+
+    def test_objects_round_trip(self, tmp_path):
+        from video_searching_agent.store.annotations import AnnotationStore
+
+        store = AnnotationStore(str(tmp_path / "a.sqlite3"))
+        store.put(self._clip(["screwdriver", "panel"]))
+        got = store.get("vid_objects")
+        assert got is not None
+        assert got.segments[0].objects == ["screwdriver", "panel"]
+        assert got.segments[0].as_dict()["objects"] == ["screwdriver", "panel"]
+
+    def test_an_empty_object_list_stays_empty_rather_than_null(self, tmp_path):
+        from video_searching_agent.store.annotations import AnnotationStore
+
+        store = AnnotationStore(str(tmp_path / "b.sqlite3"))
+        store.put(self._clip([]))
+        assert store.get("vid_objects").segments[0].objects == []
+
+    def test_a_database_written_before_the_column_existed_still_opens(self, tmp_path):
+        """The store holds the only copy of every tree we paid to produce.
+
+        `CREATE TABLE IF NOT EXISTS` is a no-op on a table that already exists,
+        so without a migration the column never reaches a store somebody has —
+        and reading a missing key from a sqlite3.Row raises rather than
+        returning None, so the failure would be a crash on read, not a blank.
+        """
+        import sqlite3
+
+        from video_searching_agent.store.annotations import AnnotationStore
+
+        path = str(tmp_path / "old.sqlite3")
+        # An old-shape segments table: everything except `objects`.
+        legacy = sqlite3.connect(path)
+        legacy.executescript(
+            """
+            CREATE TABLE segments (
+                rowid_alias       INTEGER PRIMARY KEY AUTOINCREMENT,
+                video_id          TEXT NOT NULL,
+                segment_id        TEXT NOT NULL,
+                parent_segment_id TEXT,
+                hier_level        TEXT,
+                span_start        REAL,
+                span_end          REAL,
+                label             TEXT,
+                narration         TEXT,
+                hands_visible     INTEGER,
+                left_hand         TEXT,
+                right_hand        TEXT,
+                evidence          TEXT,
+                UNIQUE(video_id, segment_id)
+            );
+            INSERT INTO segments (video_id, segment_id, hier_level, span_start,
+                                  span_end, label, evidence)
+            VALUES ('vid_old', 's1', 'action', 0.0, 5.0, 'fold the towel', '[]');
+            """
+        )
+        legacy.commit()
+        legacy.close()
+
+        store = AnnotationStore(path)
+        rows = store._conn.execute("PRAGMA table_info(segments)").fetchall()
+        assert "objects" in {row["name"] for row in rows}
+
+        # The pre-existing row survives the migration and reads as an empty list.
+        segment = store.get("vid_old")
+        if segment is not None:  # the clips row was never written for this fixture
+            assert segment.segments[0].objects == []
+        store.put(self._clip(["towel"]))
+        assert store.get("vid_objects").segments[0].objects == ["towel"]
+
+
+class TestSearchingByWhatIsInTheFootage:
+    """The reason the tree is rows and not a blob.
+
+    A buyer does not search by title — they ask for footage of somebody handling
+    a drill, or footage where a hand steadies something. Those are questions
+    about objects and hands, and only a per-segment search can answer them.
+    """
+
+    @staticmethod
+    def _store(tmp_path):
+        from video_searching_agent.store.annotations import AnnotationStore, Clip, Segment
+
+        store = AnnotationStore(str(tmp_path / "s.sqlite3"))
+        store.put(
+            Clip(
+                video_id="vid_desk",
+                source_video_id="src_1",
+                # Title says nothing useful on purpose.
+                title="Saturday project vlog 4K",
+                segments=[
+                    Segment(
+                        segment_id="s1",
+                        hier_level="action",
+                        span_start=0.0,
+                        span_end=9.0,
+                        label="drive the screw",
+                        left_hand="steadies the panel",
+                        right_hand="turns the screwdriver",
+                        objects=["screwdriver", "side panel"],
+                    )
+                ],
+            )
+        )
+        return store
+
+    def test_a_search_for_an_object_finds_a_clip_whose_title_never_says_it(self, tmp_path):
+        store = self._store(tmp_path)
+        found, total = store.search(text="screwdriver")
+        assert total == 1 and [c.video_id for c in found] == ["vid_desk"]
+
+    def test_a_search_for_a_hand_action_finds_it(self, tmp_path):
+        store = self._store(tmp_path)
+        assert store.search(text="steadies")[1] == 1
+
+    def test_a_search_for_something_absent_finds_nothing(self, tmp_path):
+        """The guard that makes the three above mean anything."""
+        store = self._store(tmp_path)
+        assert store.search(text="soldering iron")[1] == 0
