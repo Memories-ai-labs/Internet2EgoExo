@@ -151,6 +151,47 @@ def core_subject(query: str) -> str:
     return cleaned or query.strip()
 
 
+# Words that must never end a search. A request elaborates in clauses, and a
+# fixed word count cuts through one: "packing a suitcase, folding and placing
+# clothes into luggage" truncated to eight words ends on "into", and searching
+# that returned "IMPOSSIBLE 💀🍷" and a Toca Boca clip. Every template query for
+# every request was damaged this way, and it only showed when the model rewrite
+# failed to parse and the templates were all that was left.
+_DANGLING = frozenset(
+    """a an the and or with into onto for to of in on at from by then while
+    plus using without over under after before during""".split()
+)
+
+
+# The last word of a clause that names a category rather than a task.
+_CATEGORY_HEADS = frozenset(
+    "task tasks work chores chore activity activities job jobs routine routines "
+    "footage video videos clips".split()
+)
+
+
+def head_phrase(subject: str, max_words: int = 8) -> str:
+    """The part of a request that names the task, ending on a real word.
+
+    Prefers the first clause, because a request usually names the task and then
+    elaborates: "packing a suitcase, folding and placing clothes into luggage"
+    is asking for `packing a suitcase`. Falls back to a word cap for requests
+    written as one clause, then trims any trailing function word the cap left
+    hanging.
+    """
+    clauses = [c.strip() for c in re.split(r"[,;:]|\s+[-—–]\s+", subject) if c.strip()]
+    # A request written as "kitchen tasks - chopping, stirring, washing up"
+    # names a category first and the task second. Searching the category finds
+    # listicles, so a leading category label is skipped rather than searched.
+    while len(clauses) > 1 and clauses[0].split()[-1].lower() in _CATEGORY_HEADS:
+        clauses.pop(0)
+    first = clauses[0] if clauses else subject
+    words = (first or subject).split()[:max_words]
+    while words and words[-1].lower() in _DANGLING:
+        words.pop()
+    return " ".join(words) or subject.strip()
+
+
 def template_queries(
     query: str,
     viewpoint: Viewpoint | None = None,
@@ -159,7 +200,7 @@ def template_queries(
     """Rewrites that need no model, and are the floor for the ones that do."""
 
     subject = core_subject(query)
-    short = " ".join(subject.split()[:8])
+    short = head_phrase(subject)
     idiom = EGOCENTRIC_IDIOM if viewpoint is not Viewpoint.EXOCENTRIC else EXOCENTRIC_IDIOM
 
     candidates = [
@@ -231,6 +272,28 @@ async def rewrite_query(
     if hasattr(llm, "get_text_response"):
         text = llm.get_text_response(response) or ""
     suggestions = _read_suggestions(text, query)
+    if not suggestions:
+        # Worth one more ask. The templates are a floor, not an equal: on the
+        # assembly request the model's queries were "ranger roll packing cubes"
+        # grade domain vocabulary and the templates were the request restated,
+        # and a single unparseable reply was the whole difference. A retry costs
+        # about $0.001 against a query that otherwise finds nothing usable.
+        try:
+            messages = llm.new_conversation(
+                f"Request: {query}\n"
+                + (f"Wanted viewpoint: {viewpoint.value}\n" if viewpoint else "")
+                + "Write the queries. Reply with the JSON object only, no prose."
+            )
+            response = await llm.create_message_async(messages, system=prompt, max_tokens=600)
+            if hasattr(llm, "get_cost_usd"):
+                result.cost_usd += float(llm.get_cost_usd(response) or 0.0)
+            retry_text = (
+                llm.get_text_response(response) or "" if hasattr(llm, "get_text_response") else ""
+            )
+            suggestions = _read_suggestions(retry_text, query)
+        except Exception as exc:  # noqa: BLE001 - templates still answer
+            logger.info("rewrite retry failed: %s", exc)
+
     if not suggestions:
         result.error = result.error or "the model returned no usable queries"
         result.queries = templates
