@@ -265,3 +265,45 @@ class TestIngestPipeline:
         result = await _pipeline(downloader, datalake, gemini).ingest("https://x/1")
         payload = json.loads(json.dumps(result.as_dict()))
         assert payload["segments"] and payload["annotation"]["annotations"]
+
+
+class TestWhereDownloadsLand:
+    """The hosted backend could not download anything for want of a directory.
+
+    ``./downloads`` is read-only on a serverless host, so the first fetch died
+    with ``[Errno 30] Read-only file system: 'downloads'`` — and because the
+    structural QA runs collect in demo mode, nothing caught it. These pin the
+    fallback that fixes it.
+    """
+
+    def test_an_explicit_directory_is_used_as_given(self, tmp_path):
+        from video_searching_agent.pipeline.download import ClipDownloader
+
+        downloader = ClipDownloader(output_dir=tmp_path / "here", youtube=False)
+        assert downloader.output_dir == tmp_path / "here"
+
+    def test_a_read_only_default_falls_back_to_a_writable_place(self, monkeypatch, tmp_path):
+        import tempfile
+
+        from video_searching_agent.pipeline import download as module
+
+        monkeypatch.setattr(module, "_is_writable", lambda directory: False)
+        monkeypatch.setattr(tempfile, "gettempdir", lambda: str(tmp_path))
+
+        downloader = module.ClipDownloader(youtube=False)
+        assert downloader.output_dir == tmp_path / "internet-video-search-downloads"
+
+    def test_a_writable_default_is_left_alone(self, monkeypatch):
+        from video_searching_agent.pipeline import download as module
+
+        monkeypatch.setattr(module, "_is_writable", lambda directory: True)
+        downloader = module.ClipDownloader(youtube=False)
+        assert downloader.output_dir == module.Path("downloads")
+
+    def test_writability_is_tested_by_writing(self, tmp_path):
+        """Asking the environment is not an answer; the probe has to try."""
+
+        from video_searching_agent.pipeline.download import _is_writable
+
+        assert _is_writable(tmp_path / "new") is True
+        assert (tmp_path / "new" / ".write-probe").exists() is False

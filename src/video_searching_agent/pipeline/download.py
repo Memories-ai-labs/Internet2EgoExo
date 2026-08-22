@@ -15,6 +15,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import shutil
+import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -97,6 +98,53 @@ def _configured_user_agent() -> str:
     return configured or DEFAULT_USER_AGENT
 
 
+def _is_writable(directory: Path) -> bool:
+    """Whether a directory can be created and written to, tested by doing it.
+
+    Asking the filesystem is the only reliable answer: a serverless function
+    has a read-only project directory and a writable /tmp, and nothing in the
+    environment says so outright.
+    """
+    try:
+        directory.mkdir(parents=True, exist_ok=True)
+        probe = directory / ".write-probe"
+        probe.write_bytes(b"")
+        probe.unlink(missing_ok=True)
+    except OSError:
+        return False
+    return True
+
+
+def _resolve_download_dir(explicit: str | Path | None) -> Path:
+    """Where downloads land, falling back to somewhere that actually works.
+
+    A serverless deployment has a read-only project directory, so the default
+    ``./downloads`` raises ``Read-only file system`` at the first fetch — which
+    is exactly how the hosted backend managed to look healthy while being
+    unable to download anything. The fallback is the system temp directory,
+    which is writable there and everywhere else.
+    """
+    if explicit:
+        return Path(explicit)
+
+    configured = ""
+    try:
+        from video_searching_agent.config.settings import get_settings
+
+        configured = get_settings().download_dir
+    except Exception:  # noqa: BLE001 - settings are optional here
+        configured = ""
+    if configured:
+        return Path(configured)
+
+    preferred = Path("downloads")
+    if _is_writable(preferred):
+        return preferred
+    fallback = Path(tempfile.gettempdir()) / "internet-video-search-downloads"
+    logger.info("%s is not writable; downloading to %s instead", preferred, fallback)
+    return fallback
+
+
 def _configured_youtube_fetcher() -> YouTubeFetcher | None:
     """A YouTube fetcher built from settings, or nothing if it cannot work.
 
@@ -143,7 +191,9 @@ class ClipDownloader:
         """Initialize the downloader.
 
         Args:
-            output_dir: Where files land. Defaults to ``./downloads``.
+            output_dir: Where files land. Defaults to ``DOWNLOAD_DIR``, then
+                ``./downloads``, then the system temp directory when neither
+                is writable — which is the case on a serverless host.
             max_duration_seconds: Skip anything longer (default 3h).
             max_filesize_mb: Skip anything larger (default 2 GB).
             format_selector: yt-dlp format string.
@@ -153,7 +203,7 @@ class ClipDownloader:
                 do from a server address. Defaults to a fetcher built from
                 settings; pass ``False`` to insist on the extractor.
         """
-        self.output_dir = Path(output_dir or "downloads")
+        self.output_dir = _resolve_download_dir(output_dir)
         self.max_duration_seconds = max_duration_seconds
         self.max_filesize_mb = max_filesize_mb
         self.format_selector = format_selector

@@ -473,6 +473,46 @@ def phase_live(report: Report, full: bool, only: str | None = None) -> None:
         report.add("live", label, not problems, "; ".join(problems) or detail)
 
 
+def check_live_collect(report: Report) -> None:
+    """Send one real URL through the deployment's ingest path.
+
+    Phase 2 exercises collect in demo mode, which is why the hosted backend
+    could report sixteen healthy tools while being unable to download anything:
+    ``./downloads`` is read-only on a serverless host, so every real fetch died
+    with ``[Errno 30]`` and no check ever saw it.
+
+    What is asserted is narrow on purpose. A candidate the agent *judges*
+    unusable is a pass — that is the pipeline working. What fails the sweep is
+    the pipeline being unable to try: a read-only filesystem, a missing
+    credential, a timeout with nothing streamed.
+    """
+    # A 30-second clip. Long enough to be real, short enough that the Datalake
+    # bill for running this every half hour is rounding error.
+    body = {
+        "urls": [os.environ.get("QA_COLLECT_URL", "https://www.youtube.com/watch?v=XWgeWBdh1pY")],
+        "min_duration_seconds": 10,
+    }
+    try:
+        events = _sse(f"{DEPLOYMENT}/api/v1/collect/stream", body, timeout=300)
+    except Exception as exc:  # noqa: BLE001
+        report.add("live", "collect reaches the download on the deployment", False, str(exc)[:160])
+        return
+
+    stages = [p.get("clip", {}).get("stage") for e, p in events if e == "clip_stage"]
+    clips = [p.get("clip", {}) for e, p in events if e == "clip_stage"]
+    errors = [c.get("error") for c in clips if c.get("error")]
+
+    # An infrastructure failure names the machine, not the footage.
+    markers = ("Read-only file system", "No space left", "not configured", "Permission denied")
+    infra = [err for err in errors if any(marker in str(err) for marker in markers)]
+    report.add(
+        "live",
+        "collect reaches the download on the deployment",
+        bool(stages) and not infra,
+        f"stages={stages} infra_errors={infra}" if infra or not stages else f"stages={stages}",
+    )
+
+
 def phase_judgement(report: Report) -> None:
     """A real curation pass: real captions, real gates."""
     print("\n4. judgement — a real curation pass on indexed footage")
@@ -536,6 +576,7 @@ def main() -> int:
     phase_structural(report)
     if not args.offline:
         phase_live(report, full=args.full, only=args.query)
+        check_live_collect(report)
         phase_judgement(report)
 
     print("\n" + report.summary())

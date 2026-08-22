@@ -141,6 +141,13 @@ class Settings(BaseSettings):
     )
 
     # Downloading
+    download_dir: str = Field(
+        default="",
+        description="Where downloads land. Empty tries ./downloads and falls "
+        "back to the system temp directory, which is what a serverless host "
+        "gives you instead of a writable project directory.",
+        validation_alias="DOWNLOAD_DIR",
+    )
     download_user_agent: str = Field(
         default="",
         description="User-Agent for yt-dlp. Empty uses the project default; "
