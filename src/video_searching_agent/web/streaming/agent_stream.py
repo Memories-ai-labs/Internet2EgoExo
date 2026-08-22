@@ -477,6 +477,10 @@ class StreamingAgentWrapper:
                 video_references,
                 dataset,
                 wanted=parsed_query.viewpoint if parsed_query else None,
+                # The request itself, not the rewritten searches: the searches
+                # are how the footage is titled, and the request is what the
+                # footage has to show.
+                task=user_query,
             )
 
             agent_response = AgentResponse(

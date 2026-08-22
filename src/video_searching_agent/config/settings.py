@@ -163,10 +163,13 @@ class Settings(BaseSettings):
     # Looking at the footage before downloading it
     viewpoint_check: str = Field(
         default="frames",
-        description="Viewpoint check: 'off'; 'frames' (a few stills, ~$0.002 a "
-        "candidate); 'escalate' (frames, then a watch only for the ones they "
-        "cannot call); or 'watch' (always watch, which costs whole-video money "
-        "on a provider that ignores the frame-rate hint)",
+        description="Viewpoint and activity check: 'off'; 'frames' (a few "
+        "stills, ~$0.002 a candidate); 'escalate' (frames, then a watch only "
+        "for the ones they cannot call); or 'watch' (always watch, which costs "
+        "whole-video money on a provider that ignores the frame-rate hint). "
+        "The two watching modes also need YouTube-URL ingestion enabled on the "
+        "Google key, which is a per-key entitlement; without it a watch is "
+        "discarded and the frames' verdict stands.",
         validation_alias="VIEWPOINT_CHECK",
     )
 

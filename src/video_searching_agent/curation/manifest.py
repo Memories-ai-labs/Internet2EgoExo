@@ -125,6 +125,7 @@ async def verify_viewpoints(
     dataset: DatasetManifest,
     *,
     wanted: Viewpoint | None,
+    task: str | None = None,
     llm: Any | None = None,
     mode: str | None = None,
 ) -> list[VideoReference]:
@@ -150,7 +151,7 @@ async def verify_viewpoints(
     from video_searching_agent.curation.frame_viewpoint import check_many
 
     resolved = mode or _configured_sight_mode()
-    if resolved == "off" or not references or wanted is None:
+    if resolved == "off" or not references or (wanted is None and not task):
         return references
 
     if llm is None:
@@ -171,7 +172,7 @@ async def verify_viewpoints(
         }
         for ref in references
     ]
-    verdicts = await check_many(llm, candidates, mode=resolved)
+    verdicts = await check_many(llm, candidates, task=task, mode=resolved)
 
     kept: list[VideoReference] = []
     spent = 0.0
@@ -185,6 +186,15 @@ async def verify_viewpoints(
             reason = f"frames show {seen.viewpoint.value} footage"
             dataset.exclusion_reasons[reason] = dataset.exclusion_reasons.get(reason, 0) + 1
             continue
+        if seen.misses_task():
+            # The viewpoint question cannot catch this one: "How To Use a
+            # Laundromat" really is worn-camera footage, and it is a tour of
+            # the machines rather than anybody doing the laundry. Frames that
+            # merely fail to catch the task are not this case and are kept.
+            dataset.excluded_clips += 1
+            reason = "frames show a different kind of video"
+            dataset.exclusion_reasons[reason] = dataset.exclusion_reasons.get(reason, 0) + 1
+            continue
         if seen.viewpoint is not Viewpoint.UNKNOWN:
             # A checked match is worth more than a guess from a title, so the
             # reading replaces the metadata one rather than averaging with it.
@@ -195,6 +205,12 @@ async def verify_viewpoints(
             evidence = f"frames: {seen.why}" if seen.why else "frames checked"
             if evidence not in (reference.viewpoint_evidence or []):
                 reference.viewpoint_evidence = [*(reference.viewpoint_evidence or []), evidence]
+        if seen.shows_task and seen.task_why:
+            # Kept, and worth saying why it was kept on the activity too — a
+            # confirmed activity is the other half of what the look bought.
+            note = f"frames: {seen.task_why}"
+            if note not in (reference.viewpoint_evidence or []):
+                reference.viewpoint_evidence = [*(reference.viewpoint_evidence or []), note]
         kept.append(reference)
 
     dataset.clips = [clip for clip in dataset.clips if clip.url in {r.url for r in kept}]

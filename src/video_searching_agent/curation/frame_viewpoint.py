@@ -18,15 +18,32 @@ quarter, a half and three quarters of the way in. They are free, they are
 actual frames rather than designed cover art, and they are enough to see
 whether a camera is worn: measured at about $0.002 and 3.5s per candidate.
 
-**The video** (opt in, and capped). Gemini takes a YouTube URL directly and
-watches the whole thing. It is the better judgement, and it cost $0.26 for a
-single ten-minute video in testing — 140 times the frame check. Worth it for a
-handful of finalists, ruinous for twenty candidates a query on a hosted demo.
+**The video** (opt in, capped, and not available on every key). Gemini takes a
+YouTube URL directly and watches the whole thing. It is the better judgement,
+and it cost $0.26 for a single ten-minute video in testing — 140 times the
+frame check. Worth it for a handful of finalists, ruinous for twenty candidates
+a query on a hosted demo.
 
-Either way the verdict is advisory in one direction only: it can say *this is
-not what you asked for* and stop a download, and it can raise confidence in a
-match. It never overrides the post-index caption evidence, which sees all of
-the footage rather than three moments of it.
+The watch also needs YouTube-URL ingestion enabled on the key, which is a
+per-key entitlement rather than a model feature. Without it the failure is not
+an error you can see: ``gemini-3.1-pro-preview`` refuses with 403, but the 2.5
+models accept the request, silently drop the video part and answer from the
+prompt alone. So :func:`watch_video` checks the bill for media tokens and
+throws away a verdict that was reached without the video. What is left is the
+frame check, which is why it is the default.
+
+Two questions, not one, because the second is free. Whether the camera is worn
+and whether the frames show the activity that was asked for are independent,
+and a video can pass the first and fail the second: "How To Use a Laundromat"
+is worn-camera footage of a tour of the machines. Across 16 candidates from two
+requests, three passed the viewpoint question and failed the task question —
+two product adverts and that tour — and each one would otherwise have cost a
+download, an upload, an index pass and a caption pass.
+
+Every verdict is advisory in one direction only: it can say *this is not what
+you asked for* and stop a download, and it can raise confidence in a match. It
+never overrides the post-index caption evidence, which sees all of the footage
+rather than three moments of it.
 """
 
 from __future__ import annotations
@@ -82,10 +99,59 @@ Say "unknown" when the frames genuinely do not show — a title card, a product 
 shot, an empty workbench. Guessing is worse than abstaining here, because a \
 wrong "exocentric" throws away good footage before anybody looks at it."""
 
+# The same look, asked one more question. A video can be perfectly egocentric and
+# still be the wrong activity, and that is just as useless — "How To Use a
+# Laundromat" reads as worn-camera footage because it is, and it is a captioned
+# tour of the machines rather than anybody doing the laundry. Measured over 16
+# candidates across two requests, three passed the viewpoint question and failed
+# this one: two product ads and that tour. Three downloads, uploads, index
+# passes and caption passes not spent, for no extra money — it is the same call.
+TASK_CLAUSE = """
+The footage is wanted for this task:
+
+TASK: {task}
+
+That is a second, separate judgement, and it has three answers, not two.
+
+"doing" — the frames show somebody performing this task.
+
+"other_kind" — this is a different *kind* of video and no amount of it will \
+show the task being performed: a review of the tools, an advert for the parts, \
+a tour of the equipment, a presenter talking to camera, an animation, a \
+product shot.
+
+"unclear" — this may well be a video of the task; these particular frames just \
+do not show it. Somebody between jobs, a wide shot of the room, a moment of \
+something else. Three frames out of an hour miss most of what happens.
+
+The line between "other_kind" and "unclear" is the whole point. Only \
+"other_kind" throws the video away, and it must be a claim about the video, \
+never about these three frames."""
+
+TASK_FIELDS = """
+ "task": "doing" | "other_kind" | "unclear",
+ "task_confidence": 0.0-1.0,
+ "task_why": "one clause naming what in the frames decided the activity","""
+
 WATCH_PROMPT = SIGHT_PROMPT.replace("frames sampled from one video", "an entire video").replace(
     'Say "unknown" when the frames genuinely do not show',
     'Say "unknown" when the video genuinely does not show',
 )
+
+
+def sight_prompt(base: str, task: str | None) -> str:
+    """The prompt, with the task question folded in when there is a task.
+
+    Kept as a transform of the single-question prompt rather than a second
+    prompt, so the viewpoint wording cannot drift apart between the two.
+    """
+    if not task:
+        return base
+    body = base.replace(
+        ' "hands_visible": true | false,',
+        f' "hands_visible": true | false,{TASK_FIELDS}',
+    )
+    return body + TASK_CLAUSE.format(task=task)
 
 
 @dataclass
@@ -96,6 +162,9 @@ class SightVerdict:
     hands_visible: bool | None = None
     confidence: float = 0.0
     why: str = ""
+    task_reading: str = ""
+    task_confidence: float = 0.0
+    task_why: str = ""
     method: str = "none"
     frames_seen: int = 0
     cost_usd: float | None = None
@@ -121,12 +190,45 @@ class SightVerdict:
             return False
         return self.confidence >= 0.6
 
+    @property
+    def shows_task(self) -> bool | None:
+        """True when the frames caught the task, False for a different kind of
+        video, None when these frames simply could not say."""
+
+        return {"doing": True, "other_kind": False}.get(self.task_reading)
+
+    def misses_task(self) -> bool:
+        """Whether what was seen makes this the wrong video for the task.
+
+        Not the same rule as :meth:`contradicts`, because the two questions do
+        not have the same evidence behind them. Viewpoint is a property of the
+        whole video — a worn camera stays worn — so three stills settle it.
+        Activity is local in time, and three stills out of an hour miss most of
+        what happens. Measured: a video honestly titled "folding some laundry |
+        first person POV" has stills of a cat, a bookshelf and a hand at a
+        laundry basket. The model read those frames correctly; a rule that
+        dropped it on "the task is not in these frames" was the thing that was
+        wrong, and it threw away good footage three times out of three.
+
+        So this only fires on ``other_kind`` — a claim about the video rather
+        than about the frames, of the sort three stills genuinely can support:
+        an advert, a review, a presenter, a cartoon. Not being able to see the
+        task never loses a candidate.
+        """
+        if not self.looked or self.task_reading != "other_kind":
+            return False
+        return self.task_confidence >= 0.6
+
     def as_dict(self) -> dict[str, Any]:
         return {
             "viewpoint": self.viewpoint.value,
             "hands_visible": self.hands_visible,
             "confidence": round(self.confidence, 2),
             "why": self.why,
+            "shows_task": self.shows_task,
+            "task_reading": self.task_reading,
+            "task_confidence": round(self.task_confidence, 2),
+            "task_why": self.task_why,
             "method": self.method,
             "frames_seen": self.frames_seen,
             "cost_usd": self.cost_usd,
@@ -164,14 +266,15 @@ async def look_at_frames(
     client: Any,
     frames: list[bytes],
     *,
+    task: str | None = None,
     max_tokens: int = 900,
 ) -> SightVerdict:
-    """Ask the model what viewpoint some frames show."""
+    """Ask the model what viewpoint some frames show, and whether they show the task."""
 
     if not frames:
         return SightVerdict(error="no frames could be fetched")
     try:
-        messages = client.new_visual_conversation(SIGHT_PROMPT, frames)
+        messages = client.new_visual_conversation(sight_prompt(SIGHT_PROMPT, task), frames)
         response = await client.create_message_async(messages, max_tokens=max_tokens)
     except Exception as exc:  # noqa: BLE001 - a look that fails decides nothing
         logger.info("frame check failed: %s", exc)
@@ -186,6 +289,7 @@ async def watch_video(
     client: Any,
     video_url: str,
     *,
+    task: str | None = None,
     duration_seconds: float | None = None,
     fps: float | None = WATCH_FPS,
     max_tokens: int = 900,
@@ -224,12 +328,27 @@ async def watch_video(
 
     try:
         messages = client.new_video_conversation(
-            WATCH_PROMPT, video_url, fps=fps if sampled else None
+            sight_prompt(WATCH_PROMPT, task), video_url, fps=fps if sampled else None
         )
         response = await client.create_message_async(messages, max_tokens=max_tokens)
     except Exception as exc:  # noqa: BLE001
         logger.info("video watch failed for %s: %s", video_url, exc)
         return SightVerdict(error=str(exc)[:200])
+
+    # A model sent a video it could not fetch does not say so — it answers
+    # anyway, from the URL and the prompt. Asked to describe a YouTube video
+    # this deployment's key has no access to, one reply came back "A robot dog
+    # retrieves a key, inserts it into a door lock", with a normal STOP finish
+    # and a prompt bill of ten tokens, every one of them text. YouTube URL
+    # ingestion is a per-key entitlement, so this is not a rare failure: it is
+    # what every watch does on a key without it. An answer about a video that
+    # was never delivered is worse than no answer, so it is thrown away.
+    if getattr(client, "saw_media", None) and client.saw_media(response) is False:
+        logger.info("watch discarded for %s: the video never reached the model", video_url)
+        return SightVerdict(
+            error="the video was not ingested (billed as text only) — no verdict from it"
+        )
+
     verdict = _read(response, client)
     verdict.method = "watch" if sampled else "watch-unsampled"
     return verdict
@@ -241,6 +360,7 @@ async def check_viewpoint(
     video_id: str | None = None,
     video_url: str | None = None,
     duration_seconds: float | None = None,
+    task: str | None = None,
     mode: str = "frames",
 ) -> SightVerdict:
     """Look at a candidate, by whichever tier was asked for.
@@ -250,6 +370,9 @@ async def check_viewpoint(
         video_id: A YouTube id, which is what makes free frames available.
         video_url: The watch URL, needed for watching.
         duration_seconds: Used to refuse an unaffordable watch.
+        task: What the footage is wanted for. Given one, the same look also
+            says whether the frames show that activity — a judgement the
+            viewpoint question cannot make and which costs nothing extra.
         mode: ``off``, ``frames``, ``escalate`` or ``watch``.
 
             ``escalate`` is the one worth defaulting to when money allows: the
@@ -261,19 +384,25 @@ async def check_viewpoint(
     if mode == "watch":
         if not video_url:
             return SightVerdict(error="watching needs a video URL")
-        return await watch_video(client, video_url, duration_seconds=duration_seconds)
+        return await watch_video(client, video_url, task=task, duration_seconds=duration_seconds)
     if not video_id:
         return SightVerdict(error="frames are only available for YouTube videos")
 
     frames = await fetch_frames(frame_urls(video_id))
-    verdict = await look_at_frames(client, frames)
+    verdict = await look_at_frames(client, frames, task=task)
     if mode != "escalate" or not video_url:
         return verdict
-    if verdict.looked and verdict.viewpoint is not Viewpoint.UNKNOWN:
+    # Escalate on either abstention: the stills that cannot name the viewpoint
+    # and the stills that cannot name the activity are both unfinished answers,
+    # and a watch is what finishes them.
+    undecided = verdict.viewpoint is Viewpoint.UNKNOWN or (
+        bool(task) and verdict.task_reading in ("", "unclear")
+    )
+    if verdict.looked and not undecided:
         return verdict
 
     # The stills could not say. That is exactly what a watch is for.
-    watched = await watch_video(client, video_url, duration_seconds=duration_seconds)
+    watched = await watch_video(client, video_url, task=task, duration_seconds=duration_seconds)
     if not watched.looked:
         # Keep the frame verdict, and say why the escalation did not happen.
         verdict.evidence.append(f"not escalated: {watched.error}")
@@ -288,6 +417,7 @@ async def check_many(
     client: Any,
     candidates: list[dict[str, Any]],
     *,
+    task: str | None = None,
     mode: str = "frames",
     concurrency: int = 6,
 ) -> list[SightVerdict]:
@@ -308,6 +438,7 @@ async def check_many(
                 video_id=candidate.get("video_id"),
                 video_url=candidate.get("url") or candidate.get("webpage_url"),
                 duration_seconds=candidate.get("duration_seconds"),
+                task=task,
                 mode=mode,
             )
 
@@ -340,6 +471,17 @@ def _read(response: Any, client: Any) -> SightVerdict:
         confidence = 0.5
     hands = parsed.get("hands_visible")
 
+    # An unrecognised answer — including one from a model that ignored the new
+    # field entirely — reads as no answer, which loses nothing.
+    task_reading = str(parsed.get("task") or "").strip().lower()
+    if task_reading not in ("doing", "other_kind", "unclear"):
+        task_reading = ""
+    task_confidence = parsed.get("task_confidence")
+    try:
+        task_confidence = float(task_confidence)
+    except (TypeError, ValueError):
+        task_confidence = 0.5 if task_reading else 0.0
+
     cost = None
     if hasattr(client, "get_cost_usd"):
         try:
@@ -352,6 +494,9 @@ def _read(response: Any, client: Any) -> SightVerdict:
         hands_visible=hands if isinstance(hands, bool) else None,
         confidence=max(0.0, min(1.0, confidence)),
         why=str(parsed.get("why") or "")[:300],
+        task_reading=task_reading,
+        task_confidence=max(0.0, min(1.0, task_confidence)),
+        task_why=str(parsed.get("task_why") or "")[:300],
         cost_usd=cost,
         error=None if parsed else f"could not read a verdict from: {text[:120]}",
     )

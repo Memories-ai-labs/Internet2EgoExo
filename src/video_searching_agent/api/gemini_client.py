@@ -199,6 +199,38 @@ class GeminiClient:
         """Gemini does not report cost; the local price table computes it."""
         return None
 
+    def saw_media(self, response: types.GenerateContentResponse) -> bool | None:
+        """Whether the prompt actually billed for video or image tokens.
+
+        A model that was sent a video it could not fetch does not say so. Asked
+        to describe a YouTube URL this key has no access to, one reply came back
+        "A robot dog retrieves a key, inserts it into a door lock" — invented
+        whole, with a normal STOP finish and ten prompt tokens, all of them
+        text. So a media verdict is only trustworthy if the bill says media
+        arrived, and this is how that is checked.
+
+        Returns:
+            True when a non-text modality was billed, False when the prompt was
+            text only, and None when the response does not break usage down by
+            modality — in which case the caller has learnt nothing and should
+            not treat the absence as proof either way.
+        """
+        usage = getattr(response, "usage_metadata", None)
+        details = getattr(usage, "prompt_tokens_details", None) if usage else None
+        if not details:
+            return None
+        seen_any = False
+        for detail in details:
+            modality = str(getattr(detail, "modality", "") or "")
+            if not modality:
+                continue
+            seen_any = True
+            if not modality.upper().endswith("TEXT") and (
+                getattr(detail, "token_count", 0) or 0
+            ) > 0:
+                return True
+        return False if seen_any else None
+
     def convert_messages_to_gemini(
         self,
         messages: list[dict[str, Any]],

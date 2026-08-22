@@ -55,7 +55,7 @@ class TestViewpointClassification:
         assert verdict.confidence >= 0.7
 
     def test_pov_meme_pattern_is_held_at_low_confidence(self):
-        """"POV: <scenario>" is a caption device, not a camera rig."""
+        """ "POV: <scenario>" is a caption device, not a camera rig."""
         verdict = classify_viewpoint(title="POV: you woke up as the last person on earth")
         assert verdict.confidence <= 0.2
         assert any("penalty" in cue for cue in verdict.evidence)
@@ -118,19 +118,19 @@ class TestUsabilityScoring:
 
     def test_non_reusable_licence_excluded_when_required(self):
         verdict = ViewpointVerdict(Viewpoint.EGOCENTRIC, 0.9)
-        score = score_candidate(
-            verdict, 900, "youtube", license_filter=LicenseFilter.REUSABLE
-        )
+        score = score_candidate(verdict, 900, "youtube", license_filter=LicenseFilter.REUSABLE)
         assert not score.usable
         assert "youtube" in score.excluded_reason
 
     def test_unknown_viewpoint_is_kept_but_ranked_lower(self):
         matched = score_candidate(
-            ViewpointVerdict(Viewpoint.EGOCENTRIC, 0.9), 900,
+            ViewpointVerdict(Viewpoint.EGOCENTRIC, 0.9),
+            900,
             wanted_viewpoint=Viewpoint.EGOCENTRIC,
         )
         unknown = score_candidate(
-            ViewpointVerdict(Viewpoint.UNKNOWN, 0.0), 900,
+            ViewpointVerdict(Viewpoint.UNKNOWN, 0.0),
+            900,
             wanted_viewpoint=Viewpoint.EGOCENTRIC,
         )
         assert matched.usable and unknown.usable
@@ -289,9 +289,7 @@ class TestCostModel:
 
     def test_annotation_priced_per_moment_plus_tokens(self):
         without = estimate_collection_cost(1.0)
-        with_pass = estimate_collection_cost(
-            1.0, annotated_moments=100, annotation_tokens_usd=0.20
-        )
+        with_pass = estimate_collection_cost(1.0, annotated_moments=100, annotation_tokens_usd=0.20)
         # 100 moments × ($0.008 search + $0.008 moment) + $0.20 tokens
         assert with_pass.annotation_usd == pytest.approx(1.8, abs=0.01)
         assert with_pass.total_usd > without.total_usd
@@ -347,28 +345,36 @@ class TestVerifyingViewpointsAtSearchTime:
         from video_searching_agent.models.dataset import DatasetClip, DatasetManifest
 
         manifest = DatasetManifest(query="first-person cooking")
-        manifest.clips = [
-            DatasetClip(url=r.url, platform="youtube", title=r.title) for r in refs
-        ]
+        manifest.clips = [DatasetClip(url=r.url, platform="youtube", title=r.title) for r in refs]
         manifest.recompute_totals()
         return manifest
 
     @staticmethod
     def _seer(answers):
-        """A check_many stand-in returning a verdict per candidate, in order."""
+        """A check_many stand-in returning a verdict per candidate, in order.
+
+        An answer is ``(viewpoint, confidence)``, optionally followed by
+        ``(task_reading, task_confidence)`` for the activity half of the look.
+        """
 
         from video_searching_agent.curation.frame_viewpoint import SightVerdict
 
-        async def check_many(client, candidates, *, mode="frames", concurrency=6):
+        async def check_many(client, candidates, *, task=None, mode="frames", concurrency=6):
             out = []
             for candidate in candidates:
-                viewpoint, confidence = answers[candidate["video_id"]]
+                answer = answers[candidate["video_id"]]
+                viewpoint, confidence = answer[0], answer[1]
+                task_reading = answer[2] if len(answer) > 2 else ""
+                task_confidence = answer[3] if len(answer) > 3 else 0.0
                 out.append(
                     SightVerdict(
                         viewpoint=viewpoint,
                         confidence=confidence,
                         method="frames",
                         why="what the frames showed",
+                        task_reading=task_reading,
+                        task_confidence=task_confidence,
+                        task_why="what the frames showed happening",
                         cost_usd=0.002,
                     )
                 )
@@ -377,9 +383,7 @@ class TestVerifyingViewpointsAtSearchTime:
         return check_many
 
     @pytest.mark.asyncio
-    async def test_a_confident_wrong_viewpoint_never_reaches_the_candidate_list(
-        self, monkeypatch
-    ):
+    async def test_a_confident_wrong_viewpoint_never_reaches_the_candidate_list(self, monkeypatch):
         from video_searching_agent.curation import frame_viewpoint
         from video_searching_agent.curation.manifest import verify_viewpoints
         from video_searching_agent.curation.viewpoint import Viewpoint
@@ -493,3 +497,111 @@ class TestVerifyingViewpointsAtSearchTime:
         )
         assert kept == refs
         assert called == []
+
+
+class TestTheActivityHalfOfTheLook:
+    """The right viewpoint of the wrong activity is still the wrong footage.
+
+    A worn camera touring a laundromat passes every viewpoint test there is.
+    Catching it needs the second question, and catching it *here* is the whole
+    point: after this line the next thing that happens is a download.
+    """
+
+    _refs = staticmethod(TestVerifyingViewpointsAtSearchTime._refs)
+    _manifest = staticmethod(TestVerifyingViewpointsAtSearchTime._manifest)
+    _seer = staticmethod(TestVerifyingViewpointsAtSearchTime._seer)
+
+    @pytest.mark.asyncio
+    async def test_worn_camera_footage_of_the_wrong_activity_is_dropped(self, monkeypatch):
+        from video_searching_agent.curation import frame_viewpoint
+        from video_searching_agent.curation.manifest import verify_viewpoints
+        from video_searching_agent.curation.viewpoint import Viewpoint
+
+        refs = self._refs(
+            ("doing", "POV folding a mountain of laundry"),
+            ("touring", "How To Use a Laundromat"),
+        )
+        manifest = self._manifest(refs)
+        monkeypatch.setattr(
+            frame_viewpoint,
+            "check_many",
+            self._seer(
+                {
+                    # Both are egocentric, and only one is somebody doing it.
+                    "doing": (Viewpoint.EGOCENTRIC, 0.95, "doing", 0.9),
+                    "touring": (Viewpoint.EGOCENTRIC, 0.9, "other_kind", 0.8),
+                }
+            ),
+        )
+
+        kept = await verify_viewpoints(
+            refs,
+            manifest,
+            wanted=Viewpoint.EGOCENTRIC,
+            task="someone doing the laundry",
+            llm=object(),
+            mode="frames",
+        )
+
+        assert [r.video_id for r in kept] == ["doing"]
+        assert manifest.exclusion_reasons == {"frames show a different kind of video": 1}
+        assert [c.url for c in manifest.clips] == [kept[0].url]
+        # What the frames saw happening is recorded on the one that survived,
+        # so the reason it was kept is auditable rather than implied.
+        assert any("happening" in note for note in (kept[0].viewpoint_evidence or []))
+
+    @pytest.mark.asyncio
+    async def test_frames_that_did_not_catch_the_task_keep_the_candidate(self, monkeypatch):
+        from video_searching_agent.curation import frame_viewpoint
+        from video_searching_agent.curation.manifest import verify_viewpoints
+        from video_searching_agent.curation.viewpoint import Viewpoint
+
+        refs = self._refs(("card", "POV laundry day"))
+        manifest = self._manifest(refs)
+        monkeypatch.setattr(
+            frame_viewpoint,
+            "check_many",
+            # Confidently "these frames do not show it" — which is not a claim
+            # about the video, and must not cost it its place.
+            self._seer({"card": (Viewpoint.EGOCENTRIC, 0.9, "unclear", 0.9)}),
+        )
+
+        kept = await verify_viewpoints(
+            refs,
+            manifest,
+            wanted=Viewpoint.EGOCENTRIC,
+            task="someone doing the laundry",
+            llm=object(),
+            mode="frames",
+        )
+
+        assert [r.video_id for r in kept] == ["card"]
+        assert manifest.excluded_clips == 0
+
+    @pytest.mark.asyncio
+    async def test_a_task_alone_is_enough_to_look(self, monkeypatch):
+        """A request with no stated viewpoint still gets the activity check."""
+
+        from video_searching_agent.curation import frame_viewpoint
+        from video_searching_agent.curation.manifest import verify_viewpoints
+        from video_searching_agent.curation.viewpoint import Viewpoint
+
+        refs = self._refs(("ad", "Cam Fittings — various styles available"))
+        manifest = self._manifest(refs)
+        monkeypatch.setattr(
+            frame_viewpoint,
+            "check_many",
+            self._seer({"ad": (Viewpoint.EGOCENTRIC, 0.9, "other_kind", 0.9)}),
+        )
+
+        kept = await verify_viewpoints(
+            refs,
+            manifest,
+            wanted=None,
+            task="assembling flat-pack furniture",
+            llm=object(),
+            mode="frames",
+        )
+
+        assert kept == []
+        assert manifest.exclusion_reasons == {"frames show a different kind of video": 1}
