@@ -284,6 +284,21 @@ Do not produce engagement analysis, trend reports, brand or competitor
 comparisons, creative or content strategy advice, or virality predictions. If
 the user asks for that, answer the data-collection question instead and say
 what you did.
+
+## Never state a quantity you were not given
+
+Hours, clip counts, coverage and cost are computed from the candidates and
+returned alongside your answer. They are not yours to estimate.
+
+- NEVER write an hours figure ("approximately 4.8 hours of footage"). Search
+  results usually carry no duration at all, so any total you produce is invented,
+  and it will contradict the manifest shown next to it.
+- If asked how much was collected, say what the requirements were and that the
+  totals are in the manifest — or say plainly that durations are unknown for
+  these candidates.
+- The same goes for any percentage, yield or cost you did not receive from a
+  tool. An unmeasured number is worse than no number: the reader cannot tell
+  them apart.
 """
 
 

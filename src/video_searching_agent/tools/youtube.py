@@ -43,7 +43,16 @@ class YouTubeSearchTool(BaseTool):
 
     @property
     def youtube(self) -> Any:
-        """Lazy-load YouTube API client."""
+        """Lazy-load YouTube API client.
+
+        Raises:
+            ValueError: When no key is configured. Without this,
+                `googleapiclient` falls back to Application Default Credentials
+                and the caller gets a confusing Google Cloud error instead of
+                being told which key is missing.
+        """
+        if not self.api_key:
+            raise ValueError("YOUTUBE_API_KEY is not configured")
         if self._youtube is None:
             self._youtube = build("youtube", "v3", developerKey=self.api_key)
         return self._youtube
@@ -427,7 +436,16 @@ class YouTubeChannelTool(BaseTool):
 
     @property
     def youtube(self) -> Any:
-        """Lazy-load YouTube API client."""
+        """Lazy-load YouTube API client.
+
+        Raises:
+            ValueError: When no key is configured. Without this,
+                `googleapiclient` falls back to Application Default Credentials
+                and the caller gets a confusing Google Cloud error instead of
+                being told which key is missing.
+        """
+        if not self.api_key:
+            raise ValueError("YOUTUBE_API_KEY is not configured")
         if self._youtube is None:
             self._youtube = build("youtube", "v3", developerKey=self.api_key)
         return self._youtube

@@ -8,6 +8,44 @@ from googleapiclient.errors import HttpError
 from video_searching_agent.tools.youtube import YouTubeChannelTool, YouTubeSearchTool
 
 
+class TestMissingCredentials:
+    """A missing key must say which key, not leak a Google Cloud error.
+
+    Seen live: with no key configured, `googleapiclient` fell back to
+    Application Default Credentials and the agent was told "Your default
+    credentials were not found ... set up ADC", which names neither the tool nor
+    the key it wants.
+    """
+
+    @pytest.fixture
+    def unconfigured(self, monkeypatch):
+        from video_searching_agent.config import settings as settings_module
+
+        monkeypatch.setenv("YOUTUBE_API_KEY", "")
+        settings_module.get_settings.cache_clear()
+        yield
+        settings_module.get_settings.cache_clear()
+
+    def test_no_key_says_which_key_is_missing(self, unconfigured):
+        with pytest.raises(ValueError, match="YOUTUBE_API_KEY is not configured"):
+            YouTubeSearchTool().youtube
+
+    def test_the_channel_tool_says_the_same(self, unconfigured):
+        with pytest.raises(ValueError, match="YOUTUBE_API_KEY is not configured"):
+            YouTubeChannelTool().youtube
+
+    def test_health_reports_it_too(self, unconfigured):
+        healthy, reason = YouTubeSearchTool().health_check()
+        assert healthy is False
+        assert reason == "YOUTUBE_API_KEY is not configured"
+
+    def test_a_configured_key_still_builds_a_client(self):
+        tool = YouTubeSearchTool(api_key="a-key")
+        with patch("video_searching_agent.tools.youtube.build") as build:
+            assert tool.youtube is build.return_value
+            build.assert_called_once_with("youtube", "v3", developerKey="a-key")
+
+
 class TestYouTubeSearchTool:
     """Tests for YouTube search tool."""
 
