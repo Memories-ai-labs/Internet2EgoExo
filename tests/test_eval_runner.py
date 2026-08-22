@@ -9,7 +9,14 @@ ones.
 
 from __future__ import annotations
 
+from video_searching_agent.evaluation.metrics import (
+    QueryOutcome,
+    outcome_from_dict,
+    score_run,
+    was_blocked,
+)
 from video_searching_agent.evaluation.runner import DERIVED_READS_PER_CLIP, clip_outcome
+from video_searching_agent.evaluation.scorecard import render
 
 # Shaped after a real `complete` payload from /api/v1/curate/stream.
 CURATED = {
@@ -86,3 +93,35 @@ def test_a_payload_missing_everything_optional_still_reads() -> None:
 def test_a_blocking_failure_is_carried_through_because_it_vetoes_the_clip() -> None:
     clip = clip_outcome("q1", {**CURATED, "blocking_failures": ["G1-HAND"]})
     assert clip.blocking_failures == ["G1-HAND"]
+
+
+def test_a_platform_refusal_is_told_apart_from_a_rejected_clip() -> None:
+    """A 402 on upload is an invoice, not a verdict about the footage."""
+    assert was_blocked('POST /videos (multipart) returned 402: {"code":"quota_exceeded"}')
+    assert was_blocked("upload returned 429: rate limit exceeded")
+    assert not was_blocked("stopped at downloading")
+    assert not was_blocked("nothing reached the Datalake: ['stopped at probing']")
+    assert not was_blocked("")
+
+
+def test_a_record_written_before_the_field_existed_is_still_read_as_refused() -> None:
+    """Re-scoring an old run must not turn a refusal into a clean zero."""
+    old = {
+        "query_id": "q",
+        "query": "someone watering plants",
+        "error": 'nothing reached the Datalake: [\'POST /videos returned 402: quota_exceeded\']',
+    }
+    assert outcome_from_dict(old).was_refused is True
+    assert outcome_from_dict({**old, "error": "stopped at downloading"}).was_refused is False
+
+
+def test_a_refused_query_is_counted_apart_from_a_yield_failure() -> None:
+    card = score_run(
+        [
+            QueryOutcome(query_id="a", query="x", attempted=1, error="returned 402: quota"),
+            QueryOutcome(query_id="b", query="y", attempted=1, error="stopped at downloading"),
+        ]
+    )
+    assert card.chain.queries_blocked == 1
+    assert card.chain.index_rate_is_a_floor is True
+    assert "refused by the platform" in render(card)

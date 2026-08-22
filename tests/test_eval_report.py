@@ -137,6 +137,17 @@ def test_the_readme_block_carries_the_interval_and_the_caveat() -> None:
     assert "eval/REPORT.md" in block
 
 
+def test_a_refused_tick_says_so_in_the_readme_not_just_the_report() -> None:
+    """The README is what gets read; a warning only in the report is not a warning."""
+    refused = _snapshot(blocked=2)
+    block = render_readme_block([refused])
+    assert "refused by the platform" in block
+    assert "not comparable to a clean one" in block
+
+    clean = render_readme_block([_snapshot()])
+    assert "refused by the platform" not in clean
+
+
 def test_the_readme_block_says_so_when_nothing_has_run() -> None:
     block = render_readme_block([])
     assert "No recurring run has reported yet" in block

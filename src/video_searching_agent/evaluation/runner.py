@@ -27,7 +27,7 @@ import urllib.error
 import urllib.request
 from typing import Any
 
-from video_searching_agent.evaluation.metrics import ClipOutcome, QueryOutcome
+from video_searching_agent.evaluation.metrics import ClipOutcome, QueryOutcome, was_blocked
 
 # The cleaning agent reads a clip's caption, transcription and summary back out
 # of the Datalake before it grades anything. Three derived reads, every clip,
@@ -36,6 +36,7 @@ from video_searching_agent.evaluation.metrics import ClipOutcome, QueryOutcome
 DERIVED_READS_PER_CLIP = 3
 
 NETWORK_ERRORS = (urllib.error.URLError, TimeoutError, OSError)
+
 
 
 def sse(
@@ -226,8 +227,10 @@ def run_query(
                 )[:90]
             )
     outcome.indexed = len(indexed)
+    outcome.blocked = any(was_blocked(failure) for failure in failures)
     if not indexed:
-        outcome.error = f"nothing reached the Datalake: {sorted(set(failures)) or ['no events']}"
+        reason = "the platform refused us" if outcome.blocked else "nothing reached the Datalake"
+        outcome.error = f"{reason}: {sorted(set(failures)) or ['no events']}"
         outcome.seconds = time.time() - started
         return outcome
 

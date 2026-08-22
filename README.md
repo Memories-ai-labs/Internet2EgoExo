@@ -642,17 +642,17 @@ called out, never filled with a guess.
 ## Performance metrics
 
 <!-- performance-metrics:start -->
-**Latest run — 2026-08-22T09:11:13Z** · eval set `v1.0` · `replayed:publish-20260822T083809Z.jsonl` slice, 10 queries, 5 clips graded, $0.86 spent
+**Latest run — 2026-08-22T09:16:26Z** · eval set `v1.0` · `replayed:publish-20260822T083809Z.jsonl` slice, 12 queries, 6 clips graded, $1.48 spent
 
-| metric | latest | 95% interval | 24h ago | 7d ago | rolling 1 run (5 clips) |
+| metric | latest | 95% interval | 24h ago | 7d ago | rolling 1 run (6 clips) |
 | --- | --- | --- | --- | --- | --- |
 | survived the screen | **—** | — | — | — | — |
-| accepted | **0%** (0/5) | 0%–43% | — | — | 0% |
-| A or B | **0%** (0/5) | 0%–43% | — | — | 0% |
-| usable time | **95%** | — | — | — | 95% |
-| $ / usable hour | **$9.11** | — | — | — | $9.11 |
+| accepted | **0%** (0/6) | 0%–39% | — | — | 0% |
+| A or B | **0%** (0/6) | 0%–39% | — | — | 0% |
+| usable time | **98%** | — | — | — | 98% |
+| $ / usable hour | **$5.98** | — | — | — | $5.98 |
 
-Grades this run: **A** 0 · **B** 0 · **C** 0 · **D** 5 · anchors 7
+⚠️ **2 of 12 queries were refused by the platform** — billing or credentials, not the footage — so this tick is measured over a smaller set than it attempted and is not comparable to a clean one. Grades this run: **A** 0 · **B** 0 · **C** 0 · **D** 6 · anchors 13
 
 Runs every eight hours on a fixed slice of the eval set, so the numbers are comparable day to day, and small enough that one tick cannot resolve a small change on its own — read the interval and the rolling column, and quote a full 200-query run rather than a tick. Reports: [`eval/reports/`](eval/reports/) · latest: [`eval/REPORT.md`](eval/REPORT.md) · history: [`eval/history.jsonl`](eval/history.jsonl).
 <!-- performance-metrics:end -->

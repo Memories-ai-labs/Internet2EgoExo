@@ -78,6 +78,7 @@ class Snapshot:
     usd_per_grade: dict[str, float] = field(default_factory=dict)
     contradictions: int = 0
     errors: int = 0
+    blocked: int = 0
 
     # --- the rates, all of them with a denominator to hand ---------------
     @property
@@ -169,6 +170,7 @@ def snapshot_of(
         },
         contradictions=len(card.contradictions),
         errors=len(card.errors),
+        blocked=chain.queries_blocked,
     )
 
 
@@ -360,6 +362,16 @@ def render_report(
             "",
         ]
 
+    if snapshot.blocked:
+        lines += [
+            f"> ⚠️ **{snapshot.blocked} of {snapshot.queries} queries were refused by the "
+            "platform**, not by the footage — a spent balance, an expired key or a rate "
+            "limit on upload. Their candidates never reached a verdict, so everything "
+            "below is measured over a smaller set than the run attempted. This tick is "
+            "not comparable to a clean one.",
+            "",
+        ]
+
     lines += [
         _sample_caveat(snapshot, low, high),
         "",
@@ -448,7 +460,15 @@ def render_readme_block(history: list[Snapshot]) -> str:
         f"{_was(week_ago, 'usd_per_usable_hour', money=True)} | "
         f"{_usd(window.usd_per_usable_hour, window.usable_hours)} |",
         "",
-        "Grades this run: "
+        (
+            f"⚠️ **{latest.blocked} of {latest.queries} queries were refused by the "
+            "platform** — billing or credentials, not the footage — so this tick is "
+            "measured over a smaller set than it attempted and is not comparable to a "
+            "clean one. "
+            if latest.blocked
+            else ""
+        )
+        + "Grades this run: "
         + " · ".join(f"**{grade}** {latest.grades.get(grade, 0)}" for grade in GRADES)
         + f" · anchors {latest.action_anchors}"
         + (
