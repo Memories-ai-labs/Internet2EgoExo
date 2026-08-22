@@ -104,6 +104,9 @@ npm-debug.log*
 # committed instead so the output's shape is visible from a clean clone.
 eval/results/
 
+# The annotation store is data, not code. Its rows come from runs.
+data/
+
 # `vercel link` writes an .env.local holding the project's OIDC token, and a
 # deployment's own pull writes further .env.* files. None of them belong in the
 # repository; .env.example does.

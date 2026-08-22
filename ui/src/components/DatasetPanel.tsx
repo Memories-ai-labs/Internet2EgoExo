@@ -20,6 +20,8 @@ export function DatasetPanel({ manifest }: { manifest: Manifest }) {
   // Before the gates have run there is nothing accepted *yet* — which is not
   // the same as nothing being acceptable. A zero here would read as a verdict.
   const graded = manifest.accepted_clips > 0 || Object.keys(manifest.grades).length > 0;
+  // What the searches turned up, before the pre-download look spent anything.
+  const found = manifest.total_clips + manifest.excluded_clips;
 
   return (
     <Panel
@@ -95,14 +97,52 @@ export function DatasetPanel({ manifest }: { manifest: Manifest }) {
         {Object.keys(manifest.annotation_levels).length ? (
           <Stat label="Annotation depth" value={mix(manifest.annotation_levels)} small />
         ) : null}
-        {manifest.excluded_clips ? (
-          <Stat
-            label={`Excluded ${manifest.excluded_clips}`}
-            value={mix(manifest.exclusion_reasons)}
-            small
-          />
-        ) : null}
       </div>
+
+      {/* The screen is now the largest loss in the funnel, and "0 candidates"
+          was being read as a failed search when it usually means the footage
+          exists and is shot on a tripod. So it gets the arithmetic, not a
+          footnote: found, kept, and why the rest went. */}
+      {manifest.excluded_clips ? (
+        <div className="funnel">
+          <div className="funnel__line">
+            <span className="funnel__n">{found}</span>
+            <span className="funnel__label">found by the searches</span>
+            <span className="funnel__arrow" aria-hidden="true">&rarr;</span>
+            <span className="funnel__n">{manifest.total_clips}</span>
+            <span className="funnel__label">
+              survived the look{found ? ` (${percent(manifest.total_clips / found)})` : ""}
+            </span>
+          </div>
+          <ul className="funnel__reasons">
+            {Object.entries(manifest.exclusion_reasons)
+              .sort((a, b) => b[1] - a[1])
+              .map(([reason, count]) => (
+                <li key={reason}>
+                  <span className="funnel__count">{count}</span> {reason}
+                </li>
+              ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {manifest.searches_run?.length ? (
+        <div className="searches">
+          <p className="searches__intro">
+            Searched as, because footage is titled by whoever recorded it:
+          </p>
+          <ul className="searches__list">
+            {manifest.searches_run.slice(0, 6).map((search) => (
+              <li key={search.text} className="searches__item">
+                {search.angle ? (
+                  <span className="searches__angle">{search.angle}</span>
+                ) : null}
+                <span className="searches__text">{search.text}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       {manifest.cost ? (
         <div className="stats">

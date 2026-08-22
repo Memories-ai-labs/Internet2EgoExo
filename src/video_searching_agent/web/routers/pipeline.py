@@ -207,9 +207,7 @@ async def _collect_events(
                 "rejected": rejected,
                 "accepted_count": len(accepted),
                 "rejected_count": len(rejected),
-                "video_ids": [
-                    clip["video_id"] for clip in accepted if clip.get("video_id")
-                ],
+                "video_ids": [clip["video_id"] for clip in accepted if clip.get("video_id")],
             }
         ),
     }

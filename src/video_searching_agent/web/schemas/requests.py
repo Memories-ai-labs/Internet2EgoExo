@@ -43,6 +43,7 @@ class QueryRequest(BaseModel):
         if not stripped:
             raise ValueError("Query cannot be empty or whitespace only")
         return stripped
+
     clarification: str | None = Field(
         None,
         max_length=500,
@@ -79,6 +80,7 @@ class QueryRequest(BaseModel):
                 normalized.append(canonical)
 
         return normalized or None
+
     viewpoint: Viewpoint | None = Field(
         None,
         description=(

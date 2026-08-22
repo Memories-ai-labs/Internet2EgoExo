@@ -60,40 +60,71 @@ def _clip(
 
 TREE = [
     {
-        "span_start": 0.0, "span_end": 540.0, "ref": None, "segment_id": "t1",
-        "parent_segment_id": None, "hier_level": "task",
+        "span_start": 0.0,
+        "span_end": 540.0,
+        "ref": None,
+        "segment_id": "t1",
+        "parent_segment_id": None,
+        "hier_level": "task",
         "narration": "A mirepoix is prepped and softened in a pan.",
-        "label": "prep-mirepoix", "left_hand": None, "right_hand": None,
-        "objects": [], "tags": ["task_family/cooking"], "source": "agent",
-        "confidence": 0.8, "caveat": "read from caption wording, not a hand-tracking or pose model",
+        "label": "prep-mirepoix",
+        "left_hand": None,
+        "right_hand": None,
+        "objects": [],
+        "tags": ["task_family/cooking"],
+        "source": "agent",
+        "confidence": 0.8,
+        "caveat": "read from caption wording, not a hand-tracking or pose model",
     },
     {
-        "span_start": 12.0, "span_end": 180.0, "ref": None, "segment_id": "t1.a1",
-        "parent_segment_id": "t1", "hier_level": "action",
+        "span_start": 12.0,
+        "span_end": 180.0,
+        "ref": None,
+        "segment_id": "t1.a1",
+        "parent_segment_id": "t1",
+        "hier_level": "action",
         "narration": "The knife works through an onion held against the board.",
-        "label": "chop-vegetables", "left_hand": "holds the onion steady",
+        "label": "chop-vegetables",
+        "left_hand": "holds the onion steady",
         "right_hand": "moves the knife through it",
         "objects": ["onion", "knife", "cutting board"],
         "tags": ["hoi/chop-vegetables/right/move-knife", "hands_visible"],
-        "source": "agent", "confidence": 0.72,
+        "source": "agent",
+        "confidence": 0.72,
         "caveat": "read from caption wording, not a hand-tracking or pose model",
     },
     {
-        "span_start": 96.0, "span_end": 101.0, "ref": None, "segment_id": "t1.a1.e1",
-        "parent_segment_id": "t1.a1", "hier_level": "event",
+        "span_start": 96.0,
+        "span_end": 101.0,
+        "ref": None,
+        "segment_id": "t1.a1.e1",
+        "parent_segment_id": "t1.a1",
+        "hier_level": "event",
         "narration": "The left hand shifts back from the blade.",
-        "label": "reposition-grip", "left_hand": None, "right_hand": None,
-        "objects": [], "tags": [], "source": "agent", "confidence": None,
+        "label": "reposition-grip",
+        "left_hand": None,
+        "right_hand": None,
+        "objects": [],
+        "tags": [],
+        "source": "agent",
+        "confidence": None,
         "caveat": "read from caption wording, not a hand-tracking or pose model",
     },
     {
-        "span_start": 220.0, "span_end": 540.0, "ref": None, "segment_id": "t1.a2",
-        "parent_segment_id": "t1", "hier_level": "action",
+        "span_start": 220.0,
+        "span_end": 540.0,
+        "ref": None,
+        "segment_id": "t1.a2",
+        "parent_segment_id": "t1",
+        "hier_level": "action",
         "narration": "The pan is stirred while the vegetables soften.",
-        "label": "saute-vegetables", "left_hand": None, "right_hand": None,
+        "label": "saute-vegetables",
+        "left_hand": None,
+        "right_hand": None,
         "objects": ["pan", "wooden spoon"],
         "tags": ["hoi/saute-vegetables/right/stir-pan", "hands_visible"],
-        "source": "agent", "confidence": 0.64,
+        "source": "agent",
+        "confidence": 0.64,
         "caveat": "read from caption wording, not a hand-tracking or pose model",
     },
 ]
@@ -101,21 +132,66 @@ TREE = [
 CAVEAT = "read from caption wording, not a hand-tracking or pose model"
 
 CHECKS = [
-    {"id": "G0-LIC", "name": "Licence permits commercial training use", "passed": True,
-     "measured": True, "blocking": False, "value": "creativeCommon",
-     "threshold": "explicit commercial-use permission", "detail": None},
-    {"id": "G1-HAND", "name": "Wearer's own hands in frame", "passed": True, "measured": True,
-     "blocking": True, "value": 0.78, "threshold": ">=60% of caption segments", "detail": None},
-    {"id": "G1-RES", "name": "Resolution", "passed": True, "measured": True, "blocking": False,
-     "value": "1080p", "threshold": ">=1080p for grade A, >=720p to pass", "detail": "A (>=1080p)"},
-    {"id": "G1-OTHERFACE", "name": "No one else's face in frame", "passed": True,
-     "measured": True, "blocking": True, "value": "none seen",
-     "threshold": "no other person in frame", "detail": None},
-    {"id": "G1-IDLE", "name": "Idle share", "passed": False, "measured": True, "blocking": False,
-     "value": 0.18, "threshold": "<=15%, and marked", "detail": None},
-    {"id": "G3-DUP", "name": "Overlap with public corpora", "passed": False, "measured": False,
-     "blocking": False, "value": None, "threshold": "<=10%, cosine >=0.95 counts as duplicate",
-     "detail": "needs OmniRetriever embeddings against the Egocentric-10K base"},
+    {
+        "id": "G0-LIC",
+        "name": "Licence permits commercial training use",
+        "passed": True,
+        "measured": True,
+        "blocking": False,
+        "value": "creativeCommon",
+        "threshold": "explicit commercial-use permission",
+        "detail": None,
+    },
+    {
+        "id": "G1-HAND",
+        "name": "Wearer's own hands in frame",
+        "passed": True,
+        "measured": True,
+        "blocking": True,
+        "value": 0.78,
+        "threshold": ">=60% of caption segments",
+        "detail": None,
+    },
+    {
+        "id": "G1-RES",
+        "name": "Resolution",
+        "passed": True,
+        "measured": True,
+        "blocking": False,
+        "value": "1080p",
+        "threshold": ">=1080p for grade A, >=720p to pass",
+        "detail": "A (>=1080p)",
+    },
+    {
+        "id": "G1-OTHERFACE",
+        "name": "No one else's face in frame",
+        "passed": True,
+        "measured": True,
+        "blocking": True,
+        "value": "none seen",
+        "threshold": "no other person in frame",
+        "detail": None,
+    },
+    {
+        "id": "G1-IDLE",
+        "name": "Idle share",
+        "passed": False,
+        "measured": True,
+        "blocking": False,
+        "value": 0.18,
+        "threshold": "<=15%, and marked",
+        "detail": None,
+    },
+    {
+        "id": "G3-DUP",
+        "name": "Overlap with public corpora",
+        "passed": False,
+        "measured": False,
+        "blocking": False,
+        "value": None,
+        "threshold": "<=10%, cosine >=0.95 counts as duplicate",
+        "detail": "needs OmniRetriever embeddings against the Egocentric-10K base",
+    },
 ]
 
 
@@ -308,9 +384,7 @@ def collect_events(body: Any) -> list[tuple[str, dict[str, Any]]]:
                     "idle_seconds": 160,
                     "blocking_failures": [],
                     "unmeasured": ["G3-DUP"],
-                    "notes": [
-                        "Gate 3 (diversity/dedup) is scored per dataset, not per clip"
-                    ],
+                    "notes": ["Gate 3 (diversity/dedup) is scored per dataset, not per clip"],
                     "checks": CHECKS,
                 },
                 "frame_check": {
@@ -479,3 +553,223 @@ def curate_events(body: Any) -> list[tuple[str, dict[str, Any]]]:
         ("clip_done", {"clip": curated}),
         ("complete", report),
     ]
+
+
+# --- the library ----------------------------------------------------------
+#
+# Demo mode has to populate this too, or browser QA cannot reach the view at all
+# and the one screen that shows the *result* of the whole pipeline goes
+# unexercised. The shape is exactly what the store returns, including the awkward
+# real case: a clip that was cut and cleaned before anything labelled it, whose
+# spans are real and whose labels are null.
+
+LIBRARY_CLIPS: list[dict[str, Any]] = [
+    {
+        "video_id": "vid_demoegocook01",
+        "collection_id": "col_demo_clean",
+        "source_video_id": "vid_demosource001",
+        "source_start": 122.0,
+        "source_end": 158.0,
+        "source_url": "https://www.youtube.com/watch?v=demo-cook",
+        "title": "POV breakfast service — eggs and toasties",
+        "duration_seconds": 36.0,
+        "viewpoint": "egocentric",
+        "grade": "B",
+        "annotation_level": "L2",
+        "accepted": True,
+        "motion_mean": 0.118,
+        "sharpness_mean": 1240.0,
+        "query": "kitchen tasks — chopping, stirring, washing up",
+        "created_at": "2026-08-22T09:04:02Z",
+        "segments": [
+            {
+                "segment_id": "t1",
+                "parent_segment_id": None,
+                "hier_level": "task",
+                "span_start": 0.0,
+                "span_end": 36.0,
+                "seconds": 36.0,
+                "label": "prepare-breakfast-plate",
+                "narration": "plating a cooked breakfast to order",
+                "hands_visible": True,
+                "left_hand": None,
+                "right_hand": None,
+                "evidence": ["3 action anchors"],
+            },
+            {
+                "segment_id": "t1.a1",
+                "parent_segment_id": "t1",
+                "hier_level": "action",
+                "span_start": 0.0,
+                "span_end": 14.0,
+                "seconds": 14.0,
+                "label": "crack-eggs-into-bowl",
+                "narration": "the left hand steadies the bowl while the right cracks two eggs",
+                "hands_visible": True,
+                "left_hand": "steadies the metal bowl",
+                "right_hand": "cracks the eggs against the rim",
+                "evidence": ["frames"],
+            },
+            {
+                "segment_id": "t1.a2",
+                "parent_segment_id": "t1",
+                "hier_level": "action",
+                "span_start": 14.0,
+                "span_end": 36.0,
+                "seconds": 22.0,
+                "label": "plate-sausage-and-toast",
+                "narration": "tongs lift sausages onto the plate, then toast beside them",
+                "hands_visible": True,
+                "left_hand": "holds the plate level",
+                "right_hand": "works the tongs",
+                "evidence": ["frames", "captions"],
+            },
+        ],
+    },
+    {
+        "video_id": "vid_demounlabelled2",
+        "collection_id": "col_demo_clean",
+        "source_video_id": "vid_demosource002",
+        "source_start": 77.1,
+        "source_end": 97.1,
+        "source_url": "",
+        "title": "HOW TO MOUNT THE IKEA SUNNERSTRA RAIL SYSTEM",
+        "duration_seconds": 20.0,
+        "viewpoint": "unknown",
+        "grade": "",
+        "annotation_level": "",
+        # Cut and cleaned, never annotated. A real state, and the one that used
+        # to render as a row of blanks.
+        "accepted": False,
+        "motion_mean": 0.042,
+        "sharpness_mean": 33.6,
+        "query": "mounting a wall rail",
+        "created_at": "2026-08-22T08:58:11Z",
+        "segments": [
+            {
+                "segment_id": "t1",
+                "parent_segment_id": None,
+                "hier_level": "task",
+                "span_start": 0.0,
+                "span_end": 20.0,
+                "seconds": 20.0,
+                "label": None,
+                "narration": None,
+                "hands_visible": True,
+                "left_hand": None,
+                "right_hand": None,
+                "evidence": ["1 action anchors"],
+            },
+            {
+                "segment_id": "t1.a1",
+                "parent_segment_id": "t1",
+                "hier_level": "action",
+                "span_start": 0.0,
+                "span_end": 20.0,
+                "seconds": 20.0,
+                "label": None,
+                "narration": None,
+                "hands_visible": True,
+                "left_hand": None,
+                "right_hand": None,
+                "evidence": ["hand:hand", "manipulation:holds"],
+            },
+        ],
+    },
+]
+
+
+def library_page(
+    q: str = "",
+    viewpoint: str = "",
+    hands_only: bool = False,
+    accepted_only: bool = False,
+    limit: int = 50,
+    offset: int = 0,
+) -> dict[str, Any]:
+    """The demo library, filtered the way the store filters it.
+
+    The filtering is real rather than ignored, because a search box that returns
+    the same rows whatever is typed is exactly the bug browser QA exists to
+    catch.
+    """
+    rows = LIBRARY_CLIPS
+    if viewpoint:
+        rows = [c for c in rows if (c["viewpoint"] or "unknown") == viewpoint]
+    if accepted_only:
+        rows = [c for c in rows if c["accepted"]]
+    if hands_only:
+        rows = [c for c in rows if any(s.get("hands_visible") for s in c["segments"])]
+    if q:
+        needle = q.lower()
+        rows = [
+            c
+            for c in rows
+            if needle in (c["title"] or "").lower()
+            or any(
+                needle in (str(s.get("label") or "") + str(s.get("narration") or "")).lower()
+                for s in c["segments"]
+            )
+        ]
+    page = rows[offset : offset + max(1, limit)]
+    return {
+        "clips": [
+            {k: v for k, v in clip.items() if k != "segments"}
+            | {
+                "segment_count": len(clip["segments"]),
+                "action_count": sum(1 for s in clip["segments"] if s["hier_level"] == "action"),
+            }
+            for clip in page
+        ],
+        "total": len(rows),
+        "limit": limit,
+        "offset": offset,
+        "store": {"path": "demo", "persists": True},
+    }
+
+
+def library_facets() -> dict[str, Any]:
+    labels: dict[str, dict[str, Any]] = {}
+    for clip in LIBRARY_CLIPS:
+        for segment in clip["segments"]:
+            if segment["hier_level"] != "action" or not segment["label"]:
+                continue
+            row = labels.setdefault(
+                segment["label"], {"label": segment["label"], "segments": 0, "clips": 0}
+            )
+            row["segments"] += 1
+            row["clips"] += 1
+    seconds = sum(c["duration_seconds"] for c in LIBRARY_CLIPS)
+    by_viewpoint: dict[str, int] = {}
+    for clip in LIBRARY_CLIPS:
+        key = clip["viewpoint"] or "unknown"
+        by_viewpoint[key] = by_viewpoint.get(key, 0) + 1
+    return {
+        "totals": {
+            "clips": len(LIBRARY_CLIPS),
+            "accepted_clips": sum(1 for c in LIBRARY_CLIPS if c["accepted"]),
+            "hours": round(seconds / 3600, 4),
+            "action_segments": sum(
+                1 for c in LIBRARY_CLIPS for s in c["segments"] if s["hier_level"] == "action"
+            ),
+            "by_viewpoint": by_viewpoint,
+        },
+        "action_labels": sorted(labels.values(), key=lambda r: -r["segments"]),
+        "task_labels": [],
+    }
+
+
+def library_clip(video_id: str) -> dict[str, Any] | None:
+    for clip in LIBRARY_CLIPS:
+        if clip["video_id"] == video_id:
+            return dict(clip) | {
+                "segment_count": len(clip["segments"]),
+                "action_count": sum(1 for s in clip["segments"] if s["hier_level"] == "action"),
+                "playback": {
+                    "url": None,
+                    "status": "ready",
+                    "tags": ["hand", "bowl", "eggs", "hob", "plate"],
+                    "error": "demo mode serves no footage",
+                },
+            }
+    return None

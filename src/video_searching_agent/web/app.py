@@ -14,6 +14,7 @@ from video_searching_agent.config.settings import get_settings
 from video_searching_agent.web.middleware.auth import APIKeyAuthMiddleware
 from video_searching_agent.web.middleware.rate_limit import RateLimitMiddleware
 from video_searching_agent.web.routers import (
+    clips_router,
     health_router,
     pipeline_router,
     queries_router,
@@ -76,6 +77,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(queries_router)
     app.include_router(pipeline_router)
+    app.include_router(clips_router)
 
     # Serve the bundled web UI (no build step) and send "/" to it.
     if STATIC_DIR.is_dir():
