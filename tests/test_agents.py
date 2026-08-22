@@ -768,45 +768,6 @@ class TestCurationAgent:
         assert gemini.prompts == []
 
     @pytest.mark.asyncio
-    async def test_reposts_are_grouped_as_duplicates(self):
-        datalake = _FakeDatalake(
-            caption="The right hand turns the wrench.",
-            segments=_segments((0.0, 120.0, "the right hand turns the wrench")),
-        )
-        gemini = _FakeGemini([_ACTION_REPLY, _TASK_REPLY] * 2)
-        report = await self._agent(datalake, gemini).curate(
-            ["vid_1", "vid_2"],
-            media={
-                "vid_1": {"duration_seconds": 120, "uploader": "Fix It Fast"},
-                "vid_2": {"duration_seconds": 121, "uploader": "fixitfast"},
-            },
-        )
-        assert report.duplicate_groups == 1
-        assert {clip.dup_group_id for clip in report.clips} == {"dup1"}
-
-    @pytest.mark.asyncio
-    async def test_gate_three_reports_dedup_as_unmeasured(self):
-        datalake = _FakeDatalake(
-            caption="Both hands fold the dough.",
-            segments=_segments((0.0, 200.0, "both hands fold the dough")),
-        )
-        gemini = _FakeGemini([_ACTION_REPLY, _TASK_REPLY])
-        report = await self._agent(datalake, gemini).curate(
-            ["vid_1"],
-            media={
-                "vid_1": {
-                    "duration_seconds": 200,
-                    "uploader": "baker",
-                    "source_url": "https://example.com/b",
-                }
-            },
-        )
-        dup = next(c for c in report.dataset_checks if c.check_id == "G3-DUP")
-        assert dup.measured is False
-        operators = next(c for c in report.dataset_checks if c.check_id == "G3-OP")
-        assert operators.passed is False  # one uploader is not diversity
-
-    @pytest.mark.asyncio
     async def test_the_worklist_can_come_from_a_tag(self):
         datalake = _FakeDatalake(
             caption="Both hands knead dough.",
@@ -858,7 +819,6 @@ class TestCurationAgent:
         assert entry.annotations
         assert manifest.hours.accepted_labeled_hours > 0
         assert manifest.hours.delivered_hours == pytest.approx(400 / 3600, abs=1e-3)
-        assert any(check["id"] == "G3-DUP" for check in manifest.dataset_checks)
 
     @pytest.mark.asyncio
     async def test_an_empty_worklist_is_not_an_error(self):

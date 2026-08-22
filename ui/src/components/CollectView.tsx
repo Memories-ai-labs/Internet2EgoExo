@@ -552,10 +552,8 @@ export function CollectView({
                   .join(" · ")}
                 small
               />
-              <Stat label="Duplicate groups" value={curation.duplicate_groups} small />
               <Stat label="Idle" value={hours(curation.hours.idle_hours)} small />
             </div>
-            <GateList checks={curation.dataset_checks} />
             {curation.errors.length ? (
               <div className="notice">
                 {curation.errors.map((message) => (

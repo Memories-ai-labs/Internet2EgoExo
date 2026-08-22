@@ -99,9 +99,6 @@ class DatasetClip(BaseModel):
     idle_seconds: int | None = None
     task_family: str | None = Field(None, description="Gate 3 coverage bucket")
     error_sample: bool = Field(False, description="Gate 3: this clip shows an error or a rework")
-    dup_group_id: str | None = Field(
-        None, description="Near-duplicate group, when deduplication has run"
-    )
     blocking_failures: list[str] = Field(
         default_factory=list, description="Gate ids that veto this clip outright"
     )
@@ -152,9 +149,6 @@ class DatasetManifest(BaseModel):
     )
     annotation_levels: dict[str, int] = Field(
         default_factory=dict, description="Clip count per annotation depth"
-    )
-    dataset_checks: list[dict] = Field(
-        default_factory=list, description="Gate 3 diversity/dedup checks"
     )
 
     by_viewpoint: dict[str, int] = Field(default_factory=dict)

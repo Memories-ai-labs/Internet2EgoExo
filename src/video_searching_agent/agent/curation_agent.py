@@ -7,12 +7,14 @@ actually asks:
 * **How many hours are there really?** Four different numbers, never mixed:
   what was worn, what was delivered, what was accepted, what was accepted *and*
   labelled. Only the last one should ever be quoted externally.
-* **Is it diverse enough to train on?** One creator's kitchen filmed twenty
-  times is one hour of information, not twenty (`G3-OP`, `G3-SOP`, `G3-ERR`).
-* **Is any of it the same footage twice?** Reposts and near-duplicates inflate
-  the books and leak between train and test splits (`G3-DUP`).
-* **What grade is the batch?** A-D on the scorecard, which decides whether it
-  goes to the main training set, stays internal, or is not ingested at all.
+* **What grade is the batch?** A-D from the mean of what got in, which decides
+  whether it goes to the main training set, stays internal, or is not ingested.
+
+Diversity and deduplication used to be graded here (`G3-OP`, `G3-SOP`, `G3-ERR`,
+`G3-DUP`) and no longer are: they judge a *set* rather than the footage, and
+this project's deliverable is a clip you can train on. What matters about a clip
+is whether the hands are in frame, whether you can see what they are doing, and
+whether the tree over it says what they did.
 
 It also drives the per-clip agents over a worklist, because "curate this
 collection" is one request, not three: for each video it runs the cleaning
@@ -22,7 +24,6 @@ agent, and only what survives is worth paying the annotation agent for.
 from __future__ import annotations
 
 import logging
-import re
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any
@@ -38,12 +39,10 @@ from video_searching_agent.api.memories_datalake_client import (
     MemoriesDatalakeError,
 )
 from video_searching_agent.curation.quality_gates import (
-    GateCheck,
     Grade,
     HoursLedger,
     build_hours_ledger,
     evaluate_clip,
-    evaluate_dataset,
 )
 from video_searching_agent.curation.viewpoint import Viewpoint
 from video_searching_agent.models.dataset import DatasetManifest
@@ -75,7 +74,6 @@ class CuratedClip:
     uploader: str | None = None
     task_family: str | None = None
     error_sample: bool = False
-    dup_group_id: str | None = None
     blocking_failures: list[str] = field(default_factory=list)
     cleaning: CleaningVerdict | None = None
     annotation: AnnotationRun | None = None
@@ -96,7 +94,6 @@ class CuratedClip:
             "uploader": self.uploader,
             "task_family": self.task_family,
             "error_sample": self.error_sample,
-            "dup_group_id": self.dup_group_id,
             "blocking_failures": self.blocking_failures,
             "cleaning": self.cleaning.as_dict() if self.cleaning else None,
             "annotation": self.annotation.as_dict() if self.annotation else None,
@@ -110,10 +107,8 @@ class CurationReport:
     query: str = ""
     clips: list[CuratedClip] = field(default_factory=list)
     hours: HoursLedger = field(default_factory=HoursLedger)
-    dataset_checks: list[GateCheck] = field(default_factory=list)
     grades: dict[str, int] = field(default_factory=dict)
     annotation_levels: dict[str, int] = field(default_factory=dict)
-    duplicate_groups: int = 0
     trace: AgentTrace = field(default_factory=lambda: AgentTrace(agent=AGENT_NAME))
     errors: list[str] = field(default_factory=list)
 
@@ -152,8 +147,6 @@ class CurationReport:
             "batch_grade": self.batch_grade,
             "grades": self.grades,
             "annotation_levels": self.annotation_levels,
-            "duplicate_groups": self.duplicate_groups,
-            "dataset_checks": [check.as_dict() for check in self.dataset_checks],
             "trace": self.trace.as_list(),
             "errors": self.errors,
         }
@@ -319,22 +312,10 @@ class CurationAgent:
             if on_clip is not None:
                 await on_clip(clip)
 
-        self._mark_duplicates(report)
         self._tally(report)
-        report.dataset_checks = evaluate_dataset(
-            [
-                {
-                    "uploader": clip.uploader,
-                    "task_family": clip.task_family,
-                    "error_sample": clip.error_sample,
-                }
-                for clip in report.clips
-                if clip.accepted
-            ]
-        )
         report.trace.add(
-            thought="Grade the set as a whole, not clip by clip.",
-            action="evaluate_dataset",
+            thought="Grade the set from the clips that got in.",
+            action="tally",
             action_input={"accepted": report.accepted_clips},
             observation=(
                 f"batch {report.batch_grade}, "
@@ -367,7 +348,6 @@ class CurationAgent:
             entry.idle_seconds = curated.idle_seconds
             entry.task_family = curated.task_family
             entry.error_sample = curated.error_sample
-            entry.dup_group_id = curated.dup_group_id
             entry.blocking_failures = curated.blocking_failures
             if curated.annotation:
                 entry.annotations = list(curated.annotation.annotations)
@@ -375,7 +355,6 @@ class CurationAgent:
                 entry.notes = curated.rejection_reason
 
         manifest.recompute_totals()
-        manifest.dataset_checks = [check.as_dict() for check in report.dataset_checks]
         return manifest
 
     # --------------------------------------------------------------- plumbing
@@ -516,39 +495,6 @@ class CurationAgent:
             observation=f"{len(ids)} videos to curate",
         )
         return ids
-
-    @staticmethod
-    def _mark_duplicates(report: CurationReport) -> None:
-        """Group clips that look like the same footage twice.
-
-        This is the cheap half of `G3-DUP`: same uploader, near-identical
-        duration and the same task family is a repost often enough to be worth
-        flagging. It is *not* embedding-level deduplication against public
-        corpora — `evaluate_dataset` reports that check as unmeasured, and this
-        does not change that.
-        """
-        buckets: dict[str, list[CuratedClip]] = {}
-        for clip in report.clips:
-            if not clip.uploader or not clip.duration_seconds:
-                continue
-            key = "|".join(
-                (
-                    re.sub(r"\W+", "", clip.uploader.lower()),
-                    str(round(clip.duration_seconds / 5)),
-                    clip.task_family or "",
-                )
-            )
-            buckets.setdefault(key, []).append(clip)
-
-        groups = 0
-        for members in buckets.values():
-            if len(members) < 2:
-                continue
-            groups += 1
-            group_id = f"dup{groups}"
-            for clip in members:
-                clip.dup_group_id = group_id
-        report.duplicate_groups = groups
 
     @staticmethod
     def _tally(report: CurationReport) -> None:

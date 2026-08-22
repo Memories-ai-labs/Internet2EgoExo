@@ -8,7 +8,8 @@ They are also what the browser QA runs against (`ui/qa/`), which is why the
 awkward cases are here on purpose and not just the happy path:
 
 * a clip that is **rejected for having no hands**, with its reason;
-* a gate that is **unmeasured** (`G3-DUP`) rather than passed;
+* a gate that is **unmeasured** (`G0-PROV` with nothing supplied) rather
+  than passed;
 * an action whose captions **never say which hand**, so the field stays null;
 * an idle share that is **flagged but not blocking**.
 
@@ -183,14 +184,17 @@ CHECKS = [
         "detail": None,
     },
     {
-        "id": "G3-DUP",
-        "name": "Overlap with public corpora",
+        # The unmeasured case, which the UI has to render differently from a
+        # failure. It used to be G3-DUP; diversity and dedup are no longer
+        # judged, so provenance-not-supplied carries the example now.
+        "id": "G0-PROV",
+        "name": "Provenance complete",
         "passed": False,
         "measured": False,
         "blocking": False,
         "value": None,
-        "threshold": "<=10%, cosine >=0.95 counts as duplicate",
-        "detail": "needs OmniRetriever embeddings against the Egocentric-10K base",
+        "threshold": "source_url and uploader both present",
+        "detail": "nothing supplied for this clip",
     },
 ]
 
@@ -248,7 +252,6 @@ def query_events(body: Any) -> list[tuple[str, dict[str, Any]]]:
         "accepted_clips": 2,
         "grades": {"B": 1, "C": 1, "D": 1},
         "annotation_levels": {"L3": 1, "L1": 2},
-        "dataset_checks": CHECKS[-1:],
         "by_viewpoint": {"egocentric": 2, "exocentric": 1},
         "by_platform": {"youtube": 3},
         "reusable_license_clips": 2,
@@ -383,7 +386,7 @@ def collect_events(body: Any) -> list[tuple[str, dict[str, Any]]]:
                     "usable_seconds": 740,
                     "idle_seconds": 160,
                     "blocking_failures": [],
-                    "unmeasured": ["G3-DUP"],
+                    "unmeasured": ["G0-PROV"],
                     "notes": ["Gate 3 (diversity/dedup) is scored per dataset, not per clip"],
                     "checks": CHECKS,
                 },
@@ -516,7 +519,6 @@ def curate_events(body: Any) -> list[tuple[str, dict[str, Any]]]:
         "uploader": "Cooking POV",
         "task_family": "cooking",
         "error_sample": False,
-        "dup_group_id": None,
         "blocking_failures": [],
         "cleaning": None,
         "annotation": None,
@@ -537,8 +539,6 @@ def curate_events(body: Any) -> list[tuple[str, dict[str, Any]]]:
         "batch_grade": "B",
         "grades": {"B": 1, "D": 1},
         "annotation_levels": {"L3": 1, "L0": 1},
-        "duplicate_groups": 1,
-        "dataset_checks": CHECKS[-3:],
         "trace": [],
         "errors": ["demo data — no videos were read or graded"],
     }

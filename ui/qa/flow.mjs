@@ -166,7 +166,7 @@ await page.locator(".clip").first().getByRole("button", { name: "Gates & annotat
 await page.waitForSelector(".gates", { timeout: 5000 });
 await step("07-gates");
 const gateText = await page.locator(".clip").first().innerText();
-for (const expected of ["G1-HAND", "not measured", "G3-DUP", "anchors"]) {
+for (const expected of ["G1-HAND", "not measured", "anchors"]) {
   if (!gateText.includes(expected)) problems.push(`gate detail missing "${expected}"`);
 }
 
@@ -176,7 +176,7 @@ await page.waitForSelector(".panel:has-text('Batch grade')", { timeout: 15000 })
 await page.waitForTimeout(400);
 await step("08-curation");
 const curationText = await page.locator(".panel", { hasText: "Curate the set" }).innerText();
-for (const expected of ["batch grade", "delivered", "accepted + labelled", "duplicate groups", "0.21h"]) {
+for (const expected of ["batch grade", "delivered", "accepted + labelled", "0.21h"]) {
   if (!curationText.toLowerCase().includes(expected)) problems.push(`curation panel missing "${expected}"`);
 }
 await noHorizontalScroll("curation");

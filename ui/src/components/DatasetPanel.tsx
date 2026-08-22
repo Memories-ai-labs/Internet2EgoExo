@@ -8,7 +8,6 @@
 import { hours, mix, money, percent } from "../lib/format";
 import { manifestToCsv, manifestToJsonl, download } from "../lib/exports";
 import type { Manifest } from "../lib/types";
-import { GateList } from "./GateList";
 import { Panel, Stat } from "./primitives";
 
 export function DatasetPanel({ manifest }: { manifest: Manifest }) {
@@ -179,7 +178,6 @@ export function DatasetPanel({ manifest }: { manifest: Manifest }) {
         </div>
       ) : null}
 
-      {manifest.dataset_checks.length ? <GateList checks={manifest.dataset_checks} /> : null}
     </Panel>
   );
 }

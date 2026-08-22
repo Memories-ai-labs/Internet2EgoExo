@@ -46,20 +46,13 @@ class AnnotationLevel(StrEnum):
     L3 = "L3"  # + events, objects, hand state, error/rework samples
 
 
-# The most a single clip can score. Gate 3 (diversity, dedup) is worth 25 and is
-# a property of a whole batch — you cannot tell whether a clip is a duplicate by
-# looking only at it — so those points are never creditable per clip.
-PER_CLIP_CEILING = 75
-# What the per-clip checks sum to once licence is out of the scoring: annotation
-# depth 30 + tree structure 15 + media 20 + provenance 3.
-CREDITABLE_PER_CLIP = 68
-
-LEVEL_POINTS = {
-    AnnotationLevel.L0: 0,
-    AnnotationLevel.L1: 10,
-    AnnotationLevel.L2: 22,
-    AnnotationLevel.L3: 30,
-}
+# A clip is scored out of 100 and can earn all of it. Nothing in the scale is
+# reserved for properties of a batch any more.
+PER_CLIP_CEILING = 100
+# What the surviving per-clip checks sum to before rescaling: tree soundness 15
+# + media quality 20 + provenance 3. Diversity/dedup, annotation depth and
+# licence are all deliberately unscored.
+CREDITABLE_PER_CLIP = 38
 
 
 class Grade(StrEnum):
@@ -371,7 +364,8 @@ def evaluate_clip(
 ) -> QualityReport:
     """Run Gate 0-2 over one clip and score it.
 
-    Gate 3 is dataset level; see :func:`evaluate_dataset`.
+    Diversity and deduplication are not judged here or anywhere: they
+    describe a set, and the deliverable is a clip you can train on.
 
     Every argument is optional because a clip is judged at whatever stage it has
     reached — a candidate has no captions yet, and an unindexed download has no
@@ -847,8 +841,15 @@ def _score(report: QualityReport) -> None:
         c.check_id for c in report.checks if c.blocking and c.measured and not c.passed
     ]
 
-    # --- annotation depth and quality: 45 -------------------------------
-    score = LEVEL_POINTS[report.annotation_level]
+    # --- the tree is usable: 15 -----------------------------------------
+    #
+    # Annotation *depth* is no longer scored. The L0-L3 ladder describes how
+    # many levels a tree has, and depth for its own sake is not the goal: an L2
+    # that says what both hands did is worth more than an L3 that does not. The
+    # level is still reported, as a description of the tree rather than a score
+    # for it. What is scored is whether the tree is *sound* — spans nested,
+    # siblings not overlapping, each level in its own words.
+    score = 0
     structural = [
         passed("G2-TREE-1"),
         passed("G2-TREE-2"),
@@ -898,17 +899,15 @@ def _score(report: QualityReport) -> None:
     if passed("G0-PROV"):
         score += 3
 
-    # Diversity is a dataset property; per clip it stays uncredited and is
-    # noted so a single clip can never read as an A on its own.
-    report.notes.append("Gate 3 (diversity/dedup) is scored per dataset, not per clip")
 
-    # Rescale to the per-clip ceiling. Dropping the licence points left the
-    # creditable weights summing to 68 while the bands below are expressed on a
-    # 100-point scale where 75 is the per-clip maximum (Gate 3's 25 diversity
-    # points are a dataset property and cannot be earned by one clip). Scaling
-    # by 75/68 preserves every relative weight exactly — no constant is invented
-    # here — and keeps a perfect clip at the same 75 it was worth before, so
-    # published bands stay comparable across this change.
+    # Rescale the surviving checks onto the full 100. Three dimensions were
+    # removed as things this project does not judge a clip on — diversity and
+    # deduplication (a property of a set, not a clip), annotation depth (a
+    # description, not a goal), and licence (a rights question) — which left the
+    # creditable weights summing to 38. Scaling by 100/38 preserves every
+    # relative weight exactly, so no constant is invented here, and it makes the
+    # ceiling a real 100: grade A is now reachable by one clip, which it never
+    # was while a quarter of the scale could only be earned by a batch.
     scaled = score * PER_CLIP_CEILING / CREDITABLE_PER_CLIP
     report.score = min(round(scaled), 100)
     report.grade = (
@@ -920,6 +919,16 @@ def _score(report: QualityReport) -> None:
         if report.score >= 55
         else Grade.D
     )
+    # A veto caps the grade. Without this a clip with no hands in frame scored
+    # 92 and read as an A while being rejected — the score is a quality measure
+    # and the blocking gates are a veto, and a report that shows the first
+    # without the second invites somebody to quote it. Grade decides ingestion,
+    # and a vetoed clip is not ingested, so its grade has to say so.
+    if report.blocking_failures:
+        report.grade = Grade.D
+        report.notes.append(
+            "grade capped at D by a blocking gate: " + ", ".join(report.blocking_failures)
+        )
     report.accepted = not report.blocking_failures and report.grade != Grade.D
 
 
@@ -943,66 +952,3 @@ def build_hours_ledger(
     )
 
 
-def evaluate_dataset(clips: list[dict[str, Any]]) -> list[GateCheck]:
-    """Gate 3 checks, which only mean anything across a whole set.
-
-    Deduplication against public corpora needs embeddings we do not compute
-    here, so `G3-DUP` reports unmeasured rather than guessing.
-    """
-    if not clips:
-        return []
-
-    uploaders = [str(clip.get("creator") or clip.get("uploader") or "") for clip in clips]
-    known = [name for name in uploaders if name]
-    distinct = len(set(known))
-    top_share = (
-        max((known.count(name) for name in set(known)), default=0) / len(known) if known else 0.0
-    )
-
-    checks = [
-        GateCheck(
-            "G3-OP",
-            "Operator diversity",
-            passed=distinct >= 3 and top_share <= 0.5,
-            measured=bool(known),
-            value=f"{distinct} sources, top share {top_share:.0%}",
-            threshold=">=3 sources, none above 50%",
-        )
-    ]
-
-    families = {str(clip.get("task_family") or "").strip() for clip in clips}
-    families.discard("")
-    checks.append(
-        GateCheck(
-            "G3-SOP",
-            "Task-family coverage",
-            passed=len(families) >= 10,
-            measured=bool(families),
-            value=f"{len(families)} families",
-            threshold=">=10 task families",
-        )
-    )
-
-    error_samples = sum(1 for clip in clips if clip.get("error_sample"))
-    error_share = error_samples / len(clips)
-    checks.append(
-        GateCheck(
-            "G3-ERR",
-            "Error / rework samples",
-            passed=0.10 <= error_share <= 0.20,
-            measured=error_samples > 0,
-            value=f"{error_share:.0%}",
-            threshold="10-20% of each task",
-        )
-    )
-
-    checks.append(
-        GateCheck(
-            "G3-DUP",
-            "Overlap with public corpora",
-            measured=False,
-            threshold="<=10%, cosine >=0.95 counts as duplicate",
-            detail="needs OmniRetriever embeddings against the Egocentric-10K base",
-        )
-    )
-    return checks
