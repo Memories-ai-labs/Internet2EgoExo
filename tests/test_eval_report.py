@@ -114,6 +114,18 @@ def test_the_screen_gets_its_own_trend_line() -> None:
     assert "(15/60)" in block
 
 
+def test_a_run_that_never_counted_the_screen_says_so_instead_of_zero() -> None:
+    """`66/0` is not a ratio, and 0% would read as "the screen kept nothing"."""
+    old = _snapshot(found=0, candidates=66)
+    assert old.screen_measured is False
+
+    block = render_readme_block([old])
+    row = next(line for line in block.splitlines() if "survived the screen" in line)
+    assert "(66/0)" not in row
+    assert "0%" not in row
+    assert "—" in row
+
+
 def test_the_readme_block_carries_the_interval_and_the_caveat() -> None:
     block = render_readme_block([_snapshot(hours_ago=24), _snapshot()])
 

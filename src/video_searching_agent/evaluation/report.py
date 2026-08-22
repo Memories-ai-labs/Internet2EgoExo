@@ -101,6 +101,16 @@ class Snapshot:
         return _ratio(self.candidates, self.found)
 
     @property
+    def screen_measured(self) -> bool:
+        """Whether this run recorded what the screen dropped.
+
+        Runs from before the funnel counted it carry `found = 0` with candidates
+        of their own, and `66/0` is not a ratio. Those report the screen as
+        unmeasured rather than as 0%.
+        """
+        return self.found > 0
+
+    @property
     def usable_time_ratio(self) -> float:
         return _ratio(self.usable_hours, self.delivered_hours)
 
@@ -236,6 +246,10 @@ class Window:
         return _ratio(self.candidates, self.found)
 
     @property
+    def screen_measured(self) -> bool:
+        return self.found > 0
+
+    @property
     def acceptance_rate(self) -> float:
         return _ratio(self.accepted, self.graded)
 
@@ -306,12 +320,10 @@ def render_report(
         "| metric | this run | 95% interval | previous | window "
         f"({window.ticks} {_ticks(window.ticks)}, {window.graded} clips) |",
         "| --- | --- | --- | --- | --- |",
-        f"| survived the screen | {_pct(snapshot.screen_survival_rate)} "
-        f"({snapshot.candidates}/{snapshot.found}) | "
+        f"| survived the screen | {_screen(snapshot)} | "
         f"{_interval(snapshot.candidates, snapshot.found)} | "
-        f"{_pct(previous.screen_survival_rate) if previous else '—'}"
-        f"{_move(snapshot.screen_survival_rate, previous)} | "
-        f"{_pct(window.screen_survival_rate)} |",
+        f"{_screen(previous)}{_screen_move(snapshot, previous)} | "
+        f"{_screen(window)} |",
         f"| acceptance rate | {_pct(snapshot.acceptance_rate)} "
         f"({snapshot.accepted}/{snapshot.graded}) | "
         f"{_pct(low)}–{_pct(high)} | "
@@ -414,12 +426,10 @@ def render_readme_block(history: list[Snapshot]) -> str:
         "| metric | latest | 95% interval | 24h ago | 7d ago | "
         f"rolling {window.ticks} {_runs(window.ticks)} ({window.graded} clips) |",
         "| --- | --- | --- | --- | --- | --- |",
-        f"| survived the screen | **{_pct(latest.screen_survival_rate)}** "
-        f"({latest.candidates}/{latest.found}) | "
+        f"| survived the screen | **{_screen(latest)}** | "
         f"{_interval(latest.candidates, latest.found)} | "
-        f"{_was(day_ago, 'screen_survival_rate')} | "
-        f"{_was(week_ago, 'screen_survival_rate')} | "
-        f"{_pct(window.screen_survival_rate)} |",
+        f"{_screen(day_ago)} | {_screen(week_ago)} | "
+        f"{_screen(window)} |",
         f"| accepted | **{_pct(latest.acceptance_rate)}** "
         f"({latest.accepted}/{latest.graded}) | {_pct(low)}–{_pct(high)} | "
         f"{_was(day_ago, 'acceptance_rate')} | {_was(week_ago, 'acceptance_rate')} | "
@@ -521,6 +531,25 @@ def _was(snapshot: Snapshot | None, attribute: str, *, money: bool = False) -> s
     if money:
         return f"${value:.2f}" if value else "—"
     return _pct(value)
+
+
+def _screen_move(now: Snapshot, previous: Snapshot | None) -> str:
+    """Movement in the screen's survival rate, only when both ends measured it."""
+    if previous is None or not (now.screen_measured and previous.screen_measured):
+        return ""
+    return _delta(now.screen_survival_rate, previous.screen_survival_rate)
+
+
+def _screen(source: Snapshot | Window | None) -> str:
+    """The screen's survival rate with its denominator, or an honest dash.
+
+    A run recorded before the funnel counted what the screen dropped has no
+    denominator here, and reporting that as 0% would read as "the screen threw
+    everything away" — the opposite of "we did not measure it".
+    """
+    if source is None or not source.screen_measured:
+        return "—"
+    return f"{_pct(source.screen_survival_rate)} ({source.candidates}/{source.found})"
 
 
 def _move(now: float, previous: Snapshot | None, attribute: str = "") -> str:
