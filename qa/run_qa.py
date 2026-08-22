@@ -308,7 +308,7 @@ def phase_structural(report: Report) -> None:
         report.add(
             "structural",
             "collect streams every stage",
-            {"probing", "downloading", "uploading", "indexing", "cleaning"} <= stages,
+            {"probing", "looking", "downloading", "uploading", "indexing", "cleaning"} <= stages,
             f"{len(stages)} distinct stages",
         )
         collect = _final(events, "complete")

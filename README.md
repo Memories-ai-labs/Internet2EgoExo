@@ -138,7 +138,8 @@ MEMORIES_COLLECTION_NAME=video-searching-agent
 MEMORIES_INDEX_FPS=1.0
 MEMORIES_INDEX_WAIT_SECONDS=120    # how long one call waits for indexing
 EXA_API_KEY=your_exa_api_key
-APIFY_API_TOKEN=your_apify_api_token
+APIFY_API_TOKEN=your_apify_api_token   # also how YouTube videos get downloaded
+VIEWPOINT_CHECK=frames                 # off | frames | watch — see PRE-SIGHT
 ```
 
 ### Getting API Keys
@@ -150,7 +151,25 @@ APIFY_API_TOKEN=your_apify_api_token
    - Create an API key
 3. **Memories.ai API Key** (required): Create a Video Datalake key (`sk-mai-...`) in the [Console](https://console.memories.ai) → API keys. Indexing is billed per minute of video — see [pricing](https://docs.memories.ai/datalake/pricing)
 4. **Exa.ai API Key** (optional): Sign up at [exa.ai](https://exa.ai) for neural web search
-5. **Apify API Token** (optional): Sign up at [apify.com](https://apify.com) for TikTok/Instagram/Twitter scraping
+5. **Apify API Token** (recommended): Sign up at [apify.com](https://apify.com). It scrapes TikTok, Instagram and X — and it is how YouTube videos are downloaded, which matters more than it sounds:
+
+   yt-dlp no longer works against YouTube from a datacentre address. It fails
+   with *"Sign in to confirm you're not a bot"*, which is not a transient
+   error — it is YouTube declining to serve any IP range that looks like a
+   server, and every host this pipeline realistically runs on (a container, a
+   CI runner, a serverless function) sits in one of those ranges. So for
+   YouTube:
+
+   * **metadata** comes from the YouTube Data API, which is free, answers in
+     one round trip, and states outright whether a video is Creative Commons
+     (`status.license`) — a Gate 0 fact that the extractor was always vague
+     about;
+   * **the file** comes from an Apify downloader actor, which fetches it from a
+     residential address into Apify's key-value store, from where this process
+     streams it to disk on the way to the Datalake.
+
+   Other platforms still go through yt-dlp, and so does YouTube when you run
+   locally from an address YouTube will serve.
 
 ## Quick Start
 
@@ -192,16 +211,19 @@ own output.
                                                   ▼
  2  SCREEN        cleaning agent      licence · length · viewpoint     ← spends nothing
                                                   ▼
- 3  DOWNLOAD      yt-dlp              platform pages are not fetchable media
+ 3  LOOK          cleaning agent      a few real frames, not the words about them
+                                     wrong viewpoint stops here, for ~$0.002
                                                   ▼
- 4  INDEX         Video Datalake      upload → captions · transcription · embeddings
+ 4  DOWNLOAD      Apify · yt-dlp      platform pages are not fetchable media
                                                   ▼
- 5  CLEAN         cleaning agent      hands · other people · editing · resolution
+ 5  INDEX         Video Datalake      upload → captions · transcription · embeddings
+                                                  ▼
+ 6  CLEAN         cleaning agent      hands · other people · editing · resolution
                                      then: where does each action start and stop
                                                   ▼
- 6  ANNOTATE      annotation agent    task → action → event, on time anchors
+ 7  ANNOTATE      annotation agent    task → action → event, on time anchors
                                                   ▼
- 7  CURATE        curation agent      hours ledger · diversity · duplicates · grade
+ 8  CURATE        curation agent      hours ledger · diversity · duplicates · grade
                                                   ▼
                       ┌──────────────────────────────────────────────────────┐
                       │  clean clips, every one with hands, each with a tree  │
@@ -238,7 +260,34 @@ nothing is indexed, so a candidate that cannot qualify costs nothing:
 |-------|------|
 | `PRE-DUR` | Shorter than the minimum you asked for → skip |
 | `PRE-VIEW` | Metadata places it in the *other* viewpoint → skip. Metadata *silence* never rejects: the frames get the deciding vote |
+| `PRE-SIGHT` | The *frames* show the other viewpoint → skip. See below |
 | `G0-LIC` | Licence recorded as a data field. Unclear licensing does not stop collection, it bars the clip from the training set — and it is enforced by the field, not by memory |
+
+Everything above except `PRE-SIGHT` reads words *about* a video — a title, a
+description, tags. That is how a run can come back with clips that are licence
+clear and completely off topic: a video called "POV cooking" is very often a
+tripod pointed at a worktop, and no field in the metadata says so.
+
+`PRE-SIGHT` looks at the video instead, still before the download. Two tiers,
+and the price gap between them is why there are two:
+
+| `VIEWPOINT_CHECK` | What it does | Measured cost |
+|---|---|---|
+| `frames` (default) | Reads the three storyboard stills YouTube publishes for every video — actual frames from about a quarter, a half and three quarters in, free to fetch — and asks the VLM what camera it is looking at | **~$0.002** and ~3.5s a candidate |
+| `watch` | Hands the YouTube URL to Gemini, which watches the whole video | **~$0.26** for ten minutes of footage |
+| `off` | Skips the look | free |
+
+`frames` is the default because it is 140× cheaper for the same verdict on the
+question being asked, and on the four-video check in `tests/` it got all four
+right — including abstaining on the one whose stills are title cards. `watch` is
+better judgement and worth it for a handful of finalists; it is never the
+default, because twenty candidates a query would be $5 a search.
+
+The look can only ever *stop* a download, and only on a confident opposite
+reading. Abstention passes through, a weak reading passes through, and a failed
+call passes through with a note saying it did not run — the post-index caption
+evidence sees all of the footage rather than three moments of it, and keeps the
+last word.
 
 **After indexing**, from the derived content — this is the pass that matters,
 because it judges the footage rather than the description of it:

@@ -49,9 +49,7 @@ class GeminiClient:
         if tools:
             config.tools = tools  # type: ignore[assignment]
             # Disable automatic function calling - we want to handle it manually
-            config.automatic_function_calling = types.AutomaticFunctionCallingConfig(
-                disable=True
-            )
+            config.automatic_function_calling = types.AutomaticFunctionCallingConfig(disable=True)
         return config
 
     def create_message(
@@ -104,6 +102,31 @@ class GeminiClient:
     def new_conversation(self, text: str) -> list[types.Content]:
         """Start a conversation with one user turn."""
         return [types.Content(role="user", parts=[types.Part(text=text)])]
+
+    def new_visual_conversation(
+        self, text: str, images: list[bytes], mime_type: str = "image/jpeg"
+    ) -> list[types.Content]:
+        """Start a conversation that shows the model some frames."""
+        parts = [types.Part(text=text)]
+        parts.extend(types.Part.from_bytes(data=raw, mime_type=mime_type) for raw in images)
+        return [types.Content(role="user", parts=parts)]
+
+    def new_video_conversation(self, text: str, video_url: str) -> list[types.Content]:
+        """Start a conversation that shows the model an actual video.
+
+        Gemini takes a YouTube URL as a file part and watches it. It is billed
+        per video token, so this is an escalation rather than a default — see
+        :mod:`video_searching_agent.curation.frame_viewpoint`.
+        """
+        return [
+            types.Content(
+                role="user",
+                parts=[
+                    types.Part(text=text),
+                    types.Part(file_data=types.FileData(file_uri=video_url, mime_type="video/*")),
+                ],
+            )
+        ]
 
     def append_user_text(self, messages: list[types.Content], text: str) -> None:
         """Add a user turn."""
@@ -170,18 +193,22 @@ class GeminiClient:
                             parts.append(types.Part(text=item["text"]))
                         elif item_type == "tool_use":
                             # Model made a function call
-                            parts.append(types.Part(
-                                function_call=types.FunctionCall(
-                                    name=item["name"],
-                                    args=item["input"],
+                            parts.append(
+                                types.Part(
+                                    function_call=types.FunctionCall(
+                                        name=item["name"],
+                                        args=item["input"],
+                                    )
                                 )
-                            ))
+                            )
                         elif item_type == "tool_result":
                             # User returning function result
-                            parts.append(types.Part.from_function_response(
-                                name=item["name"],
-                                response={"result": item["content"]},
-                            ))
+                            parts.append(
+                                types.Part.from_function_response(
+                                    name=item["name"],
+                                    response={"result": item["content"]},
+                                )
+                            )
                     elif isinstance(item, types.Part):
                         parts.append(item)
 
@@ -203,11 +230,13 @@ class GeminiClient:
         """
         declarations = []
         for tool in tools:
-            declarations.append(types.FunctionDeclaration(
-                name=tool["name"],
-                description=tool["description"],
-                parameters=tool.get("input_schema", {}),
-            ))
+            declarations.append(
+                types.FunctionDeclaration(
+                    name=tool["name"],
+                    description=tool["description"],
+                    parameters=tool.get("input_schema", {}),
+                )
+            )
 
         return [types.Tool(function_declarations=declarations)]
 
@@ -295,10 +324,14 @@ class GeminiClient:
         if parts:
             for part in parts:
                 if part.function_call:
-                    tool_calls.append({
-                        "name": part.function_call.name,
-                        "input": dict(part.function_call.args) if part.function_call.args else {},
-                    })
+                    tool_calls.append(
+                        {
+                            "name": part.function_call.name,
+                            "input": dict(part.function_call.args)
+                            if part.function_call.args
+                            else {},
+                        }
+                    )
 
         return tool_calls
 

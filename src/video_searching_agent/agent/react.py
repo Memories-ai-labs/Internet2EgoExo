@@ -95,8 +95,13 @@ class AgentTrace:
 def parse_json_object(text: str) -> dict[str, Any]:
     """Pull the first JSON object out of a model response.
 
+    A response clipped by a token limit is repaired rather than thrown away.
+    That case is common and expensive: an annotation cut off inside its last
+    field used to lose every field before it too, so a limit set slightly too
+    low looked exactly like a model that answered nothing.
+
     Raises:
-        json.JSONDecodeError: When there is no parseable object.
+        json.JSONDecodeError: When there is nothing parseable, repair included.
         ValueError: When what parsed was not an object.
     """
     candidate = text.strip()
@@ -107,14 +112,73 @@ def parse_json_object(text: str) -> dict[str, Any]:
     try:
         parsed = json.loads(candidate)
     except json.JSONDecodeError:
+        parsed = None
         match = re.search(r"\{.*\}", candidate, re.DOTALL)
-        if not match:
-            raise
-        parsed = json.loads(match.group(0))
+        if match:
+            # A greedy match can end on a *nested* closing brace, so what it
+            # found is a candidate rather than an answer.
+            try:
+                parsed = json.loads(match.group(0))
+            except json.JSONDecodeError:
+                parsed = None
+        if parsed is None:
+            repaired = _close_truncated_json(candidate)
+            if repaired is None:
+                raise
+            parsed = repaired
 
     if not isinstance(parsed, dict):
         raise ValueError("model response was not a JSON object")
     return parsed
+
+
+def _close_truncated_json(candidate: str) -> dict[str, Any] | None:
+    """Salvage the fields that did arrive from an object cut off mid-write.
+
+    Walks the text tracking string state and nesting depth, drops whatever
+    trails the last complete key/value pair, and closes what is still open.
+    Returns None when there is no object here to salvage.
+    """
+    start = candidate.find("{")
+    if start < 0:
+        return None
+
+    in_string = False
+    escaped = False
+    stack: list[str] = []
+    # The index just past the last comma or opening brace at depth 1, which is
+    # where a complete pair ends.
+    safe_end: int | None = None
+
+    for index in range(start, len(candidate)):
+        char = candidate[index]
+        if in_string:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == '"':
+                in_string = False
+            continue
+        if char == '"':
+            in_string = True
+        elif char in "{[":
+            stack.append("}" if char == "{" else "]")
+        elif char in "}]":
+            if stack:
+                stack.pop()
+        elif char == "," and len(stack) == 1:
+            safe_end = index
+
+    if safe_end is None:
+        # Nothing complete arrived; an empty object says that honestly.
+        return {}
+    closing = "".join(reversed(stack)) if stack else "}"
+    try:
+        parsed = json.loads(candidate[start:safe_end] + closing)
+    except json.JSONDecodeError:
+        return None
+    return parsed if isinstance(parsed, dict) else None
 
 
 def text_of(payload: dict[str, Any], field_name: str) -> str | None:

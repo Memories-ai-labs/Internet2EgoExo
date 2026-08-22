@@ -23,6 +23,7 @@ import { Empty, Field, Panel, Pill, Stat } from "./primitives";
 
 const STAGES = [
   "probing",
+  "looking",
   "downloading",
   "uploading",
   "indexing",
@@ -50,7 +51,10 @@ function furthestStage(clip: IngestClip): number {
     case "rejected":
       return STAGES.indexOf("cleaning");
     case "skipped":
-      return STAGES.indexOf("probing");
+      // A candidate can be skipped by the metadata screen or by the frame
+      // check that follows it; the reason says which, so the journey credits
+      // the look only when it happened.
+      return clip.screening?.sight ? STAGES.indexOf("looking") : STAGES.indexOf("probing");
     case "failed":
       if (clip.video_id) return STAGES.indexOf("indexing");
       if (clip.size_mb) return STAGES.indexOf("downloading");

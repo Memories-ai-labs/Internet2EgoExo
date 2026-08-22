@@ -153,6 +153,41 @@ class OpenRouterClient:
         """Start a conversation with one user turn."""
         return [{"role": "user", "content": text}]
 
+    def new_visual_conversation(
+        self, text: str, images: list[bytes], mime_type: str = "image/jpeg"
+    ) -> list[dict[str, Any]]:
+        """Start a conversation that shows the model some frames."""
+        import base64
+
+        content: list[dict[str, Any]] = [{"type": "text", "text": text}]
+        for raw in images:
+            encoded = base64.b64encode(raw).decode()
+            content.append(
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:{mime_type};base64,{encoded}"},
+                }
+            )
+        return [{"role": "user", "content": content}]
+
+    def new_video_conversation(self, text: str, video_url: str) -> list[dict[str, Any]]:
+        """Start a conversation that shows the model an actual video.
+
+        OpenRouter passes a YouTube URL through to Google AI Studio, which
+        watches it. It is billed per video token, so a ten-minute video costs
+        real money — see :mod:`video_searching_agent.curation.frame_viewpoint`
+        for why this is the escalation and not the default.
+        """
+        return [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": text},
+                    {"type": "file", "file": {"file_data": video_url, "filename": "video.mp4"}},
+                ],
+            }
+        ]
+
     def append_user_text(self, messages: list[dict[str, Any]], text: str) -> None:
         """Add a user turn."""
         messages.append({"role": "user", "content": text})

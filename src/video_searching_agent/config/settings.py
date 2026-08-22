@@ -131,6 +131,15 @@ class Settings(BaseSettings):
         validation_alias="APIFY_API_TOKEN",
     )
 
+    # Looking at the footage before downloading it
+    viewpoint_check: str = Field(
+        default="frames",
+        description="Pre-download viewpoint check: 'off', 'frames' (a few "
+        "stills, ~$0.002 a candidate) or 'watch' (Gemini watches the whole "
+        "video, ~$0.26 for ten minutes)",
+        validation_alias="VIEWPOINT_CHECK",
+    )
+
     # Downloading
     download_user_agent: str = Field(
         default="",

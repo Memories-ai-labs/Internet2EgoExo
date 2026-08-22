@@ -116,6 +116,102 @@ def _segments(*spans: tuple[float, float, str]) -> list[dict[str, Any]]:
     return [{"start": start, "end": end, "text": text} for start, end, text in spans]
 
 
+class TestTheLookBeforeTheDownload:
+    """The layer that looks at frames, not at words about the footage."""
+
+    @staticmethod
+    def _sighted(text: str) -> Any:
+        """A cleaning agent whose model answers with `text`."""
+
+        class Client:
+            def new_visual_conversation(self, prompt: str, images: list[bytes]) -> list[dict]:
+                return [{"role": "user", "content": prompt}]
+
+            async def create_message_async(self, messages: list[dict], **_: object) -> dict:
+                return {"text": text}
+
+            def get_text_response(self, response: dict) -> str:
+                return response["text"]
+
+            def get_cost_usd(self, response: dict) -> float | None:
+                return 0.002
+
+        return CleaningAgent(llm=Client())
+
+    @pytest.mark.asyncio
+    async def test_frames_that_show_the_wrong_viewpoint_stop_the_download(self, monkeypatch):
+        """This is the case metadata cannot catch: the title says POV, the
+        frames say tripod."""
+
+        import video_searching_agent.curation.frame_viewpoint as sight
+
+        async def frames(urls, limit=4):
+            return [b"x" * 3000]
+
+        monkeypatch.setattr(sight, "fetch_frames", frames)
+        agent = self._sighted(
+            '{"viewpoint": "exocentric", "hands_visible": true, "confidence": 0.96,'
+            ' "why": "a presenter faces the camera"}'
+        )
+        info = {"title": "POV cooking", "url": "https://www.youtube.com/watch?v=abc"}
+        verdict = agent.screen(info, wanted_viewpoint=Viewpoint.EGOCENTRIC)
+        assert verdict.accepted is True  # the words gave nothing away
+
+        verdict = await agent.look(verdict, info, wanted_viewpoint=Viewpoint.EGOCENTRIC)
+        assert verdict.accepted is False
+        assert "frames show exocentric" in verdict.reasons[0]
+        assert any(check.check_id == "PRE-SIGHT" for check in verdict.checks)
+
+    @pytest.mark.asyncio
+    async def test_frames_that_agree_raise_confidence_without_inventing_it(self, monkeypatch):
+        import video_searching_agent.curation.frame_viewpoint as sight
+
+        async def frames(urls, limit=4):
+            return [b"x" * 3000]
+
+        monkeypatch.setattr(sight, "fetch_frames", frames)
+        agent = self._sighted(
+            '{"viewpoint": "egocentric", "hands_visible": true, "confidence": 0.9,'
+            ' "why": "own hands from below"}'
+        )
+        info = {"title": "cooking", "url": "https://www.youtube.com/watch?v=abc"}
+        verdict = await agent.look(
+            agent.screen(info, wanted_viewpoint=Viewpoint.EGOCENTRIC),
+            info,
+            wanted_viewpoint=Viewpoint.EGOCENTRIC,
+        )
+        assert verdict.accepted is True
+        assert verdict.viewpoint == Viewpoint.EGOCENTRIC
+        assert verdict.viewpoint_confidence == pytest.approx(0.9)
+        assert verdict.sight is not None and verdict.sight.method == "frames"
+
+    @pytest.mark.asyncio
+    async def test_a_look_that_fails_leaves_the_verdict_alone(self, monkeypatch):
+        """A rate limit must not become a rejection."""
+
+        import video_searching_agent.curation.frame_viewpoint as sight
+
+        async def no_frames(urls, limit=4):
+            return []
+
+        monkeypatch.setattr(sight, "fetch_frames", no_frames)
+        agent = self._sighted("{}")
+        info = {"title": "cooking", "url": "https://www.youtube.com/watch?v=abc"}
+        before = agent.screen(info, wanted_viewpoint=Viewpoint.EGOCENTRIC)
+        after = await agent.look(before, info, wanted_viewpoint=Viewpoint.EGOCENTRIC)
+        assert after.accepted is True
+        assert any("frame check did not run" in note for note in after.notes)
+
+    @pytest.mark.asyncio
+    async def test_looking_can_be_turned_off(self):
+        agent = CleaningAgent(llm=False)
+        info = {"title": "cooking", "url": "https://www.youtube.com/watch?v=abc"}
+        verdict = await agent.look(
+            agent.screen(info), info, wanted_viewpoint=Viewpoint.EGOCENTRIC, mode="off"
+        )
+        assert verdict.sight is None
+
+
 class TestCleaningAgentScreening:
     """The pre-download filter, which spends nothing."""
 
@@ -257,9 +353,7 @@ class TestAgenticClipping:
         assert CleaningAgent().propose_segments([{"text": "hands"}]) == []
 
     def test_anchors_never_carry_a_clip_file(self):
-        tree = CleaningAgent().propose_segments(
-            _segments((0.0, 12.0, "the hands wipe the bench"))
-        )
+        tree = CleaningAgent().propose_segments(_segments((0.0, 12.0, "the hands wipe the bench")))
         assert all("clip_file" not in segment.as_dict() for segment in tree)
 
     def test_hands_not_required_still_anchors_activity(self):
@@ -540,9 +634,7 @@ class TestAnnotationAgent:
         segments = CleaningAgent().propose_segments(
             _segments((0.0, 10.0, "the right hand moves the knife"))
         )
-        await AnnotationAgent(client=datalake, gemini=gemini).annotate_video(
-            "vid_1", segments
-        )
+        await AnnotationAgent(client=datalake, gemini=gemini).annotate_video("vid_1", segments)
         write = datalake.updates[-1]
         assert write["custom"]["annotation"]["level"] == "L3"
         assert len(write["custom"]["hoi"]) == 3

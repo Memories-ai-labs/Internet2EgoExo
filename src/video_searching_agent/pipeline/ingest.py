@@ -219,6 +219,14 @@ class IngestPipeline:
             min_duration_seconds=min_duration_seconds,
         )
         result.screening = screening
+        if screening.accepted:
+            # Everything above read words about the video. This looks at it.
+            await stage("looking")
+            screening = await self.cleaning.look(
+                screening,
+                {**info, "url": url},
+                wanted_viewpoint=wanted_viewpoint,
+            )
         if not screening.accepted:
             await stage("skipped")
             result.rejection_reason = "; ".join(screening.reasons)

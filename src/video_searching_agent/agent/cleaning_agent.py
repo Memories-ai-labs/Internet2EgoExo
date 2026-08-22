@@ -42,6 +42,10 @@ from video_searching_agent.curation.frame_check import (
     check_frames,
     mentions_hands,
 )
+from video_searching_agent.curation.frame_viewpoint import (
+    SightVerdict,
+    check_viewpoint,
+)
 from video_searching_agent.curation.quality_gates import (
     GateCheck,
     QualityReport,
@@ -51,6 +55,7 @@ from video_searching_agent.curation.quality_gates import (
     permits_commercial_use,
 )
 from video_searching_agent.curation.viewpoint import Viewpoint, classify_viewpoint
+from video_searching_agent.utils.youtube_urls import youtube_video_id
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +76,21 @@ TAG_HANDS = "hands_visible"
 TAG_NO_HANDS = "no_hands"
 TAG_EGOCENTRIC = "first_person_view"
 TAG_EXOCENTRIC = "third_person_view"
+
+
+def _configured_sight_mode() -> str:
+    """How hard to look before downloading: ``off``, ``frames`` or ``watch``.
+
+    Defaults to ``frames``, which is the tier that costs about a fifth of a
+    cent. ``watch`` has Gemini watch the whole video and cost $0.26 for ten
+    minutes of footage in testing, so it is never the default.
+    """
+    try:
+        from video_searching_agent.config.settings import get_settings
+
+        return get_settings().viewpoint_check
+    except Exception:  # noqa: BLE001 - settings are optional here
+        return "frames"
 
 
 @dataclass
@@ -119,6 +139,9 @@ class ScreeningVerdict:
     viewpoint_confidence: float = 0.0
     duration_seconds: int | None = None
     commercial_use_ok: bool = False
+    notes: list[str] = field(default_factory=list)
+    # What the frames showed, when they were looked at at all.
+    sight: SightVerdict | None = None
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -129,6 +152,8 @@ class ScreeningVerdict:
             "viewpoint_confidence": self.viewpoint_confidence,
             "duration_seconds": self.duration_seconds,
             "commercial_use_ok": self.commercial_use_ok,
+            "notes": self.notes,
+            "sight": self.sight.as_dict() if self.sight else None,
             "checks": [check.as_dict() for check in self.checks],
         }
 
@@ -193,6 +218,7 @@ class CleaningAgent:
         min_action_seconds: float = MIN_ACTION_SECONDS,
         max_merge_gap_seconds: float = MAX_MERGE_GAP_SECONDS,
         max_action_seconds: float = MAX_ACTION_SECONDS,
+        llm: Any | None = None,
     ) -> None:
         """Initialize the agent.
 
@@ -201,17 +227,40 @@ class CleaningAgent:
             min_action_seconds: Shortest span worth anchoring.
             max_merge_gap_seconds: Longest pause that still counts as one action.
             max_action_seconds: Longest span still called one action.
+            llm: The model that looks at frames before a download. Built from
+                settings on first use; pass ``False`` to look at nothing.
         """
         self._client = client
         self.min_action_seconds = min_action_seconds
         self.max_merge_gap_seconds = max_merge_gap_seconds
         self.max_action_seconds = max_action_seconds
+        self._llm = llm
+        self._llm_resolved = llm is not None
 
     @property
     def client(self) -> MemoriesDatalakeClient:
         if self._client is None:
             self._client = MemoriesDatalakeClient()
         return self._client
+
+    @property
+    def llm(self) -> Any | None:
+        """The model used for the pre-download look, if one can be built.
+
+        Resolved once and cached, including the failure: a run with no model
+        configured should skip the look quietly rather than try on every
+        candidate.
+        """
+        if not self._llm_resolved:
+            self._llm_resolved = True
+            try:
+                from video_searching_agent.api.llm import get_llm_client
+
+                self._llm = get_llm_client()
+            except Exception as exc:  # noqa: BLE001 - looking is optional
+                logger.info("no model for the frame check: %s", exc)
+                self._llm = None
+        return self._llm or None
 
     # ------------------------------------------------ agentic filtering (pre)
 
@@ -240,9 +289,7 @@ class CleaningAgent:
         verdict = ScreeningVerdict(url=info.get("webpage_url") or info.get("url"))
 
         duration = info.get("duration")
-        verdict.duration_seconds = (
-            int(duration) if isinstance(duration, int | float) else None
-        )
+        verdict.duration_seconds = int(duration) if isinstance(duration, int | float) else None
 
         tags = [str(tag) for tag in (info.get("tags") or info.get("categories") or [])]
         reading = classify_viewpoint(
@@ -254,9 +301,7 @@ class CleaningAgent:
         verdict.viewpoint_confidence = reading.confidence
 
         licence = info.get("license") or info.get("licence")
-        verdict.commercial_use_ok = permits_commercial_use(
-            str(licence) if licence else None
-        )
+        verdict.commercial_use_ok = permits_commercial_use(str(licence) if licence else None)
         verdict.checks.append(
             GateCheck(
                 "G0-LIC",
@@ -290,8 +335,7 @@ class CleaningAgent:
             # Silence never rejects: the metadata is a weak signal and the frame
             # check gets the deciding vote after indexing.
             contradicted = (
-                verdict.viewpoint != Viewpoint.UNKNOWN
-                and verdict.viewpoint != wanted_viewpoint
+                verdict.viewpoint != Viewpoint.UNKNOWN and verdict.viewpoint != wanted_viewpoint
             )
             verdict.checks.append(
                 GateCheck(
@@ -310,11 +354,80 @@ class CleaningAgent:
                 )
 
         if require_commercial_use and not verdict.commercial_use_ok:
-            verdict.reasons.append(
-                "licence does not clearly permit commercial training use"
-            )
+            verdict.reasons.append("licence does not clearly permit commercial training use")
 
         verdict.accepted = not verdict.reasons
+        return verdict
+
+    async def look(
+        self,
+        verdict: ScreeningVerdict,
+        info: dict[str, Any],
+        *,
+        wanted_viewpoint: Viewpoint | None = None,
+        mode: str | None = None,
+    ) -> ScreeningVerdict:
+        """Look at the candidate's own frames, and fold what was seen into
+        the verdict.
+
+        This is the layer the metadata screen cannot be: a title says
+        "POV cooking", the frames say a tripod pointed at a worktop. Cheap
+        enough to run on every candidate — about $0.002 and a second or two —
+        and it runs *before* the download, so being wrong about a video costs
+        that instead of a download, an upload, an index and a caption pass.
+
+        It only ever rejects on a confident, opposite reading. Silence,
+        abstention and a weak guess all pass through, because the caption
+        evidence after indexing sees the whole video rather than three moments
+        of it and has the better claim to the last word.
+        """
+        resolved = mode or _configured_sight_mode()
+        if resolved == "off" or self.llm is None:
+            return verdict
+
+        video_id = youtube_video_id(info.get("webpage_url") or info.get("url") or "")
+        seen = await check_viewpoint(
+            self.llm,
+            video_id=video_id,
+            video_url=info.get("webpage_url") or info.get("url"),
+            mode=resolved,
+        )
+        verdict.sight = seen
+        if not seen.looked:
+            # Nothing was seen, so nothing changes — but say why, so a run that
+            # silently stopped looking is visible in the record.
+            if seen.error:
+                verdict.notes.append(f"frame check did not run: {seen.error}")
+            return verdict
+
+        contradicted = seen.contradicts(wanted_viewpoint)
+        verdict.checks.append(
+            GateCheck(
+                "PRE-SIGHT",
+                "The footage itself shows the viewpoint asked for",
+                passed=not contradicted,
+                blocking=True,
+                value=f"{seen.viewpoint.value} ({seen.confidence:.2f}, {seen.method})",
+                threshold=(
+                    f"{wanted_viewpoint.value} or unclear"
+                    if wanted_viewpoint
+                    else "no viewpoint requested"
+                ),
+            )
+        )
+        if contradicted:
+            verdict.reasons.append(
+                f"the frames show {seen.viewpoint.value} footage"
+                + (f": {seen.why}" if seen.why else "")
+            )
+            verdict.accepted = False
+        elif seen.viewpoint != Viewpoint.UNKNOWN:
+            # A confident agreement is worth recording: it is the difference
+            # between a licence-clear guess and a checked match.
+            verdict.viewpoint = seen.viewpoint
+            verdict.viewpoint_confidence = max(verdict.viewpoint_confidence, seen.confidence)
+        if seen.hands_visible is False and seen.confidence >= 0.6:
+            verdict.notes.append("no hands in the sampled frames; the caption pass decides")
         return verdict
 
     # ----------------------------------------------- agentic filtering (post)
@@ -360,9 +473,7 @@ class CleaningAgent:
             title=title,
         )
         verdict.frame_check = check
-        rejection = check.rejection(
-            require_hands=require_hands, wanted_viewpoint=wanted_viewpoint
-        )
+        rejection = check.rejection(require_hands=require_hands, wanted_viewpoint=wanted_viewpoint)
         verdict.trace.add(
             thought="Judge the footage on what the index says is in the frames.",
             action="frame_check",
@@ -543,9 +654,7 @@ class CleaningAgent:
                     span_end=end,
                     hands_visible=any(s.get("hands_visible") for s in run),
                     evidence=evidence[:4],
-                    source_text=" ".join(
-                        str(s.get("text") or "") for s in run
-                    ).strip()[:600],
+                    source_text=" ".join(str(s.get("text") or "") for s in run).strip()[:600],
                 )
             )
 
@@ -570,9 +679,7 @@ class CleaningAgent:
             task.span_end = float(total_duration)
         return [task, *actions]
 
-    def _cap_run_length(
-        self, run: list[dict[str, Any]]
-    ) -> list[list[dict[str, Any]]]:
+    def _cap_run_length(self, run: list[dict[str, Any]]) -> list[list[dict[str, Any]]]:
         """Cut a run into chunks no longer than `max_action_seconds`.
 
         The cut always lands on a caption-segment boundary — an anchor should

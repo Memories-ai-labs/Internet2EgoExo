@@ -20,6 +20,9 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import unquote, urlparse
 
+from video_searching_agent.pipeline.youtube_fetch import YouTubeFetcher, YouTubeFetchError
+from video_searching_agent.utils.youtube_urls import is_youtube_url
+
 logger = logging.getLogger(__name__)
 
 # Progressive MP4 up to 1080p: one file, no ffmpeg merge step required.
@@ -29,8 +32,7 @@ DEFAULT_FORMAT = "best[ext=mp4][height<=1080]/best[height<=1080]/best"
 # itself, and yt-dlp's own default is refused by name in places. An honest,
 # contactable agent string is both politer and more likely to be served.
 DEFAULT_USER_AGENT = (
-    "InternetVideoSearch/0.1 "
-    "(+https://github.com/Memories-ai-labs/Internet-Video-Search)"
+    "InternetVideoSearch/0.1 (+https://github.com/Memories-ai-labs/Internet-Video-Search)"
 )
 
 # A link that is already the media file needs no extractor. Dataset pages, lab
@@ -95,6 +97,27 @@ def _configured_user_agent() -> str:
     return configured or DEFAULT_USER_AGENT
 
 
+def _configured_youtube_fetcher() -> YouTubeFetcher | None:
+    """A YouTube fetcher built from settings, or nothing if it cannot work.
+
+    Without a Data API key there is nothing to describe a video with, so the
+    extractor stays the only path — it still works where YouTube has not
+    blocked the address.
+    """
+    try:
+        from video_searching_agent.config.settings import get_settings
+
+        settings = get_settings()
+    except Exception:  # noqa: BLE001 - settings are optional here
+        return None
+    if not settings.youtube_api_key:
+        return None
+    return YouTubeFetcher(
+        youtube_api_key=settings.youtube_api_key,
+        apify_token=settings.apify_api_token,
+    )
+
+
 def _select_info(info: dict[str, Any]) -> dict[str, Any]:
     """Unwrap playlist results to the single entry yt-dlp actually fetched."""
     if info.get("_type") == "playlist":
@@ -115,6 +138,7 @@ class ClipDownloader:
         max_filesize_mb: int = 2048,
         format_selector: str = DEFAULT_FORMAT,
         user_agent: str | None = None,
+        youtube: YouTubeFetcher | bool | None = None,
     ) -> None:
         """Initialize the downloader.
 
@@ -125,12 +149,16 @@ class ClipDownloader:
             format_selector: yt-dlp format string.
             user_agent: Identify the fetcher. Defaults to settings, which
                 default to :data:`DEFAULT_USER_AGENT`.
+            youtube: How to reach YouTube, which the extractor can no longer
+                do from a server address. Defaults to a fetcher built from
+                settings; pass ``False`` to insist on the extractor.
         """
         self.output_dir = Path(output_dir or "downloads")
         self.max_duration_seconds = max_duration_seconds
         self.max_filesize_mb = max_filesize_mb
         self.format_selector = format_selector
         self.user_agent = user_agent or _configured_user_agent()
+        self.youtube = _configured_youtube_fetcher() if youtube is None else (youtube or None)
 
     def probe(self, url: str) -> dict[str, Any]:
         """Read a clip's metadata without downloading it.
@@ -142,6 +170,15 @@ class ClipDownloader:
         headers instead — with no duration, which the index fills in later.
         """
         from yt_dlp import YoutubeDL
+
+        if self.youtube and is_youtube_url(url):
+            try:
+                return self.youtube.probe(url)
+            except YouTubeFetchError as exc:
+                # Worth one attempt with the extractor: a developer running
+                # locally, with cookies and a residential address, still has a
+                # working one.
+                logger.info("the Data API could not describe %s (%s); trying yt-dlp", url, exc)
 
         options = {
             "quiet": True,
@@ -178,16 +215,12 @@ class ClipDownloader:
                 response = client.head(url, headers=headers)
                 if response.status_code >= 400:
                     # Some hosts only answer GET; ask for one byte.
-                    response = client.get(
-                        url, headers={**headers, "Range": "bytes=0-0"}
-                    )
+                    response = client.get(url, headers={**headers, "Range": "bytes=0-0"})
         except httpx.HTTPError as exc:
             raise DownloadError(f"Could not read {url}: {exc}") from exc
 
         if response.status_code >= 400:
-            raise DownloadError(
-                f"Could not read {url}: host returned {response.status_code}"
-            )
+            raise DownloadError(f"Could not read {url}: host returned {response.status_code}")
 
         content_type = response.headers.get("content-type", "")
         if content_type and not content_type.startswith(("video/", "application/octet-stream")):
@@ -232,6 +265,9 @@ class ClipDownloader:
                 f"Clip is {int(duration)}s, over the {self.max_duration_seconds}s limit"
             )
 
+        if self.youtube and self.youtube.can_download and is_youtube_url(url):
+            return self._download_via_youtube_fetcher(url, info)
+
         self.output_dir.mkdir(parents=True, exist_ok=True)
         template = str(self.output_dir / "%(extractor)s-%(id)s.%(ext)s")
         warnings: list[str] = []
@@ -260,9 +296,7 @@ class ClipDownloader:
             # yt-dlp may have remuxed to a different extension.
             candidates = sorted(self.output_dir.glob(f"{path.stem}.*"))
             if not candidates:
-                raise DownloadError(
-                    f"Download reported success but no file was written for {url}"
-                )
+                raise DownloadError(f"Download reported success but no file was written for {url}")
             path = candidates[0]
             warnings.append(f"file landed as {path.name}")
 
@@ -282,6 +316,72 @@ class ClipDownloader:
             warnings=warnings,
         )
 
+    def _download_via_youtube_fetcher(self, url: str, info: dict[str, Any]) -> DownloadedClip:
+        """Fetch a YouTube video through Apify and stream it to disk.
+
+        The actor leaves the file in Apify's key-value store and hands back a
+        link, so the fetch itself is an ordinary authenticated download. The
+        stored copy expires after a few days, which is irrelevant: it is read
+        once, here, on the way to the Datalake.
+        """
+        assert self.youtube is not None
+        stored, headers = self.youtube.download_url(url)
+        video_id = info.get("id") or "video"
+        path = self.output_dir / f"youtube-{video_id}.mp4"
+        written = self._stream_to_disk(stored, path, headers=headers)
+
+        duration = info.get("duration")
+        return DownloadedClip(
+            url=url,
+            path=path,
+            duration_seconds=int(duration) if isinstance(duration, int | float) else None,
+            filesize_bytes=written,
+            width=info.get("width"),
+            height=info.get("height"),
+            fps=info.get("fps"),
+            title=info.get("title"),
+            uploader=info.get("uploader") or info.get("channel"),
+            extractor="youtube+apify",
+            license_note=str(info["license"]) if info.get("license") else None,
+            warnings=[
+                "fetched through Apify: YouTube refuses direct extraction from a datacentre address"
+            ],
+        )
+
+    def _stream_to_disk(self, url: str, path: Path, headers: dict[str, str] | None = None) -> int:
+        """Write a URL to a file, stopping at the size bound. Returns bytes."""
+        import httpx
+
+        limit = self.max_filesize_mb * 1024 * 1024
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        request_headers = {"User-Agent": self.user_agent, **(headers or {})}
+        written = 0
+        try:
+            with httpx.Client(timeout=None, follow_redirects=True) as client:
+                with client.stream("GET", url, headers=request_headers) as response:
+                    if response.status_code >= 400:
+                        raise DownloadError(
+                            f"Download failed for {url}: host returned {response.status_code}"
+                        )
+                    with open(path, "wb") as handle:
+                        for chunk in response.iter_bytes(1024 * 256):
+                            written += len(chunk)
+                            if written > limit:
+                                handle.close()
+                                path.unlink(missing_ok=True)
+                                raise DownloadError(
+                                    f"Clip exceeded the {self.max_filesize_mb} MB limit "
+                                    "while downloading"
+                                )
+                            handle.write(chunk)
+        except httpx.HTTPError as exc:
+            path.unlink(missing_ok=True)
+            raise DownloadError(f"Download failed for {url}: {exc}") from exc
+        if not written:
+            path.unlink(missing_ok=True)
+            raise DownloadError(f"Download failed for {url}: the host sent an empty file")
+        return written
+
     def _download_direct(self, url: str, info: dict[str, Any]) -> DownloadedClip:
         """Stream a direct media link to disk, honouring the size bound."""
         import httpx
@@ -290,8 +390,7 @@ class ClipDownloader:
         limit = self.max_filesize_mb * 1024 * 1024
         if isinstance(declared, int) and declared > limit:
             raise DownloadError(
-                f"Clip is {declared // (1024 * 1024)} MB, over the "
-                f"{self.max_filesize_mb} MB limit"
+                f"Clip is {declared // (1024 * 1024)} MB, over the {self.max_filesize_mb} MB limit"
             )
 
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -300,13 +399,10 @@ class ClipDownloader:
 
         try:
             with httpx.Client(timeout=None, follow_redirects=True) as client:
-                with client.stream(
-                    "GET", url, headers={"User-Agent": self.user_agent}
-                ) as response:
+                with client.stream("GET", url, headers={"User-Agent": self.user_agent}) as response:
                     if response.status_code >= 400:
                         raise DownloadError(
-                            f"Download failed for {url}: host returned "
-                            f"{response.status_code}"
+                            f"Download failed for {url}: host returned {response.status_code}"
                         )
                     with open(path, "wb") as handle:
                         for chunk in response.iter_bytes(1024 * 256):

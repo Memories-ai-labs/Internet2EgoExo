@@ -251,12 +251,46 @@ def collect_events(body: Any) -> list[tuple[str, dict[str, Any]]]:
             "reasons": [],
             "viewpoint": "egocentric",
             "commercial_use_ok": True,
+            "notes": [],
+            "sight": {
+                "viewpoint": "egocentric",
+                "hands_visible": True,
+                "confidence": 0.95,
+                "why": "the wearer's own hands come into frame from the bottom",
+                "method": "frames",
+                "frames_seen": 4,
+                "cost_usd": 0.0021,
+                "error": None,
+            },
             "checks": CHECKS[:1],
         },
     }
 
     stages: list[tuple[str, dict[str, Any]]] = [
         ("probing", {}),
+        (
+            "looking",
+            {
+                "screening": {
+                    "accepted": True,
+                    "reasons": [],
+                    "viewpoint": "egocentric",
+                    "commercial_use_ok": True,
+                    "notes": [],
+                    "sight": {
+                        "viewpoint": "egocentric",
+                        "hands_visible": True,
+                        "confidence": 0.95,
+                        "why": "the wearer's own hands come into frame from the bottom",
+                        "method": "frames",
+                        "frames_seen": 4,
+                        "cost_usd": 0.0021,
+                        "error": None,
+                    },
+                    "checks": CHECKS[:1],
+                }
+            },
+        ),
         ("downloading", {}),
         ("uploading", {"size_mb": 148.2}),
         ("indexing", {"video_id": "vid_1"}),
