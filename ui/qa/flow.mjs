@@ -84,6 +84,9 @@ await step("02-search-results");
 await noHorizontalScroll("search-results");
 
 console.log("cards:", await page.locator(".card").count());
+const banner = await page.locator(".banner").count();
+console.log("demo banner:", banner ? "shown" : "absent");
+if (!banner) problems.push("demo mode is on but the page does not say so");
 console.log("activity rows:", await page.locator(".activity__row").count());
 console.log("dataset stats:", (await page.locator(".panel", { hasText: "Dataset" }).first().locator(".stat").allInnerTexts()).join(" | "));
 
@@ -101,13 +104,18 @@ if (!treeText.includes("hand assignment not stated")) problems.push("tree does n
 const depth = await page.locator(".card__tree .tree__node .tree__node .tree__node").count();
 if (!depth) problems.push("the annotation tree is flat — task/action/event are not nested");
 
-// 3. select and send to collection
+// 3. select and send to collection — two clips, so the batch shows both a clip
+// that clears the gates and one that is dropped for having no hands.
 await page.locator(".card").first().locator('input[type="checkbox"]').check();
+await page.locator(".card").nth(2).locator('input[type="checkbox"]').check();
 await page.getByRole("button", { name: "Send to the Datalake" }).click();
 await page.waitForSelector(".page-head h1:has-text('Curate')", { timeout: 5000 });
 await step("04-collect-prefilled");
 const queued = await page.locator(".textarea").inputValue();
 if (!queued.includes("aaa1")) problems.push("the selected URL did not reach the collection queue");
+if (queued.split("\n").filter(Boolean).length !== 2) {
+  problems.push(`the collection queue holds ${queued.split("\n").filter(Boolean).length} URLs, expected 2`);
+}
 
 // 4. collect
 await page.getByRole("button", { name: "Download & index" }).click();

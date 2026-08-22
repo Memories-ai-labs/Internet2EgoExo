@@ -32,8 +32,15 @@ function store(key: string, value: string): void {
   }
 }
 
+interface Health {
+  demo_mode?: boolean;
+  model?: string;
+  version?: string;
+}
+
 export function App() {
   const [view, setView] = useState<View>("search");
+  const [health, setHealth] = useState<Health | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [queued, setQueued] = useState<string[]>([]);
   const [apiKey, setApiKey] = useState(() => readStored(API_KEY_STORAGE));
@@ -47,6 +54,21 @@ export function App() {
   useEffect(() => {
     store(API_KEY_STORAGE, apiKey);
   }, [apiKey]);
+
+  useEffect(() => {
+    // Which mode this deployment is in decides what the numbers mean, so it is
+    // asked once and said plainly rather than left for the reader to guess.
+    let cancelled = false;
+    fetch("/api/v1/health")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((payload) => {
+        if (!cancelled && payload) setHealth(payload as Health);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const toggleSelected = (url: string) =>
     setSelected((current) =>
@@ -108,10 +130,21 @@ export function App() {
             Hand and viewpoint verdicts are read from index captions, not from a hand-tracking
             model.
           </span>
+          {health?.model && !health.demo_mode ? (
+            <span className="sidebar__note">{health.model}</span>
+          ) : null}
         </div>
       </nav>
 
       <main className="content">
+        {health?.demo_mode ? (
+          <div className="banner">
+            <strong>Demo data.</strong> Every result below is canned — nothing is
+            searched, downloaded, indexed or spent. Set <code>OPENROUTER_API_KEY</code>{" "}
+            (or <code>GOOGLE_API_KEY</code>) and <code>MEMORIES_API_KEY</code>, and turn{" "}
+            <code>DEMO_MODE</code> off, to run it for real.
+          </div>
+        ) : null}
         {view === "search" ? (
           <SearchView
             apiKey={apiKey}

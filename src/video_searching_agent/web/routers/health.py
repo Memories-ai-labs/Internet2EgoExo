@@ -4,6 +4,8 @@ from typing import Any
 
 from fastapi import APIRouter
 
+from video_searching_agent.api.llm import llm_label
+from video_searching_agent.config.settings import get_settings
 from video_searching_agent.web.dependencies import get_agent
 
 # Import version directly to avoid circular import
@@ -17,8 +19,21 @@ async def health_check() -> dict[str, Any]:
     """Health check endpoint with tool status.
 
     Returns:
-        Health status including version and tool availability.
+        Health status including version, whether this deployment is serving
+        demo payloads, which model drives it, and tool availability.
     """
+    settings = get_settings()
+
+    if settings.demo_mode:
+        # Nothing is configured in demo mode, so there is nothing to probe.
+        return {
+            "status": "healthy",
+            "version": __version__,
+            "demo_mode": True,
+            "model": "none — demo payloads",
+            "tools": {"total": 0, "healthy": 0, "details": {}},
+        }
+
     agent = get_agent()
     tool_health = agent.get_tool_health()
 
@@ -29,6 +44,8 @@ async def health_check() -> dict[str, Any]:
     return {
         "status": "healthy",
         "version": __version__,
+        "demo_mode": False,
+        "model": llm_label(),
         "tools": {
             "total": total_count,
             "healthy": healthy_count,

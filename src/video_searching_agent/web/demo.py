@@ -356,10 +356,15 @@ def collect_events(body: Any) -> list[tuple[str, dict[str, Any]]]:
             "title": "Kitchen tour, fixed camera",
             "stage": "rejected",
             "accepted": False,
+            "video_id": "vid_2",
             "rejection_reason": "no hands visible in the captions",
             "annotation": None,
             "annotation_level": None,
             "tags_written": ["clean_rejected", "no_hands"],
+            # Its own record, not the accepted clip's: no grade, because a clip
+            # that fails a blocking gate never gets one.
+            "quality": None,
+            "segments": [],
             "frame_check": {
                 "hands_visible": False,
                 "hands_confidence": 0.0,

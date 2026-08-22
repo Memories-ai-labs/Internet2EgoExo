@@ -10,6 +10,7 @@ from fastapi import APIRouter, Request
 from sse_starlette.sse import EventSourceResponse
 
 from video_searching_agent.config.settings import get_settings
+from video_searching_agent.web import demo
 from video_searching_agent.web.dependencies import get_agent
 from video_searching_agent.web.schemas.events import ErrorEvent
 from video_searching_agent.web.schemas.requests import QueryRequest
@@ -32,6 +33,12 @@ async def generate_events(
     Yields:
         Dictionaries with 'event' and 'data' keys for sse-starlette.
     """
+    if get_settings().demo_mode:
+        # Canned payloads: the deployed link works with no keys and no budget.
+        async for frame in demo.frames(demo.query_events(query_request)):
+            yield frame
+        return
+
     agent = get_agent()
 
     try:

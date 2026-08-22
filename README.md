@@ -490,11 +490,12 @@ npm run build    # type-checks, then rebuilds the committed bundle
 
 ### Browser QA
 
-`ui/qa/` drives the whole flow in a real browser against a stub API — no
-Datalake calls, no downloads, no model calls, nothing spent:
+`ui/qa/` drives the whole flow in a real browser against **the real app in demo
+mode** — same routing, same validation, same SSE framing, canned payloads, and
+nothing spent:
 
 ```bash
-uv run python ui/qa/stub_api.py 8821   # serves the built UI + canned payloads
+uv run python ui/qa/stub_api.py 8821   # the real app with DEMO_MODE=1
 cd ui && npm run qa                    # search -> collect -> gates -> grade
 ```
 
@@ -554,6 +555,68 @@ caption wording, not from a hand-tracking or pose model.
 - **Light and dark** — both themes ship; the choice is remembered per browser.
 - The UI is public (so it can load and ask for a key); `/api/v1/*` stays behind
   API-key auth and rate limiting.
+
+## Deploy it
+
+### One click, no keys — the demo
+
+`DEMO_MODE=1` makes every streaming endpoint serve canned payloads: nothing is
+searched, downloaded, indexed or spent, and no credentials are needed at all.
+The page says so in a banner, and the payloads are the same shape the real ones
+are — including the awkward cases (a clip dropped for having no hands, a gate
+that is *unmeasured* rather than passed, an action whose captions never say
+which hand).
+
+```bash
+DEMO_MODE=1 uvicorn video_searching_agent.web.main:app --port 8000
+```
+
+### Vercel
+
+`vercel.json` and `api/index.py` are in the repo, and `api/requirements.txt`
+holds a deliberately smaller dependency set than the project's own (no
+playwright, no scraper SDKs — they are not importable in a serverless bundle and
+are not needed to serve the API or the UI).
+
+```bash
+npm i -g vercel
+vercel            # first deploy, links the project
+vercel --prod
+```
+
+Then set environment variables in the Vercel dashboard (or `vercel env add`):
+
+| Variable | For |
+|----------|-----|
+| `DEMO_MODE=1` | A clickable demo with no other keys at all |
+| `OPENROUTER_API_KEY` | The models — one key drives the agents (see below) |
+| `MEMORIES_API_KEY` | The Video Datalake (`sk-mai-…`) |
+| `MEMORIES_COLLECTION_ID` | Index into an existing collection |
+| `YOUTUBE_API_KEY` / `EXA_API_KEY` / `APIFY_API_TOKEN` | Platform search |
+| `API_KEYS` | Require `X-API-Key` on `/api/v1/*` |
+
+**What does not fit serverless.** A function has a request timeout — 60s on
+Hobby, up to 300s on Pro — and indexing a long video takes minutes. The
+collection stream handles that the way it was designed to: it reports
+`indexing still running` with the `video_id` to come back with, rather than
+hanging. For bulk collection, run the app on a host without a request timeout
+(a VM, Render, Railway, Fly) and point the UI at it. Downloading is also
+happier there: platform hosts rate-limit datacenter IPs, and serverless disk is
+capped at 512 MB in `/tmp`.
+
+## The models: one key, or Google's
+
+Either provider drives the agents, and the choice is a setting rather than a
+rewrite:
+
+| Provider | Key | Notes |
+|----------|-----|-------|
+| **OpenRouter** | `OPENROUTER_API_KEY` | One key in front of hundreds of models. Default model `google/gemini-3.7-flash` — cheap, fast, and multimodal, so the same key can later read frames rather than only caption text. Cost is reported by OpenRouter itself, not guessed from a local price table. |
+| **Gemini** | `GOOGLE_API_KEY` | The original path, through the google-genai SDK. |
+
+`LLM_PROVIDER` forces a choice (`openrouter` / `gemini`); the default, `auto`,
+prefers OpenRouter when its key is present. Set `OPENROUTER_MODEL` to use a
+different model.
 
 ## Streaming API
 

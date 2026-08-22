@@ -29,6 +29,7 @@ from sse_starlette.sse import EventSourceResponse
 from video_searching_agent.agent.curation_agent import CurationAgent
 from video_searching_agent.config.settings import get_settings
 from video_searching_agent.pipeline.ingest import IngestPipeline
+from video_searching_agent.web import demo
 from video_searching_agent.web.schemas.events import ErrorEvent
 from video_searching_agent.web.schemas.requests import CollectRequest, CurateRequest
 
@@ -78,6 +79,11 @@ async def _collect_events(
     body: CollectRequest,
 ) -> AsyncGenerator[dict[str, Any], None]:
     """Stream one collection run."""
+    if get_settings().demo_mode:
+        async for frame in demo.frames(demo.collect_events(body)):
+            yield frame
+        return
+
     pipeline = IngestPipeline()
     accepted: list[dict[str, Any]] = []
     rejected: list[dict[str, Any]] = []
@@ -160,6 +166,11 @@ async def _curate_events(
     body: CurateRequest,
 ) -> AsyncGenerator[dict[str, Any], None]:
     """Stream one curation pass."""
+    if get_settings().demo_mode:
+        async for frame in demo.frames(demo.curate_events(body)):
+            yield frame
+        return
+
     agent = CurationAgent()
 
     yield {

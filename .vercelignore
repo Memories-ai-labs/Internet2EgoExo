@@ -1,0 +1,21 @@
+# Keep the function bundle small: none of this is imported at runtime.
+ui/node_modules
+ui/src
+ui/qa
+ui/package.json
+ui/package-lock.json
+ui/tsconfig.json
+ui/vite.config.ts
+ui/index.html
+tests
+docs
+openclaw
+htmlcov
+.venv
+.pytest_cache
+.ruff_cache
+downloads
+Dockerfile
+docker-compose.yml
+deploy.sh
+uv.lock

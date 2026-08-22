@@ -754,6 +754,21 @@ code,
   word-break: break-all;
 }
 
+/* Demo mode: say so once, at the top, and get out of the way. */
+.banner {
+  border: 1px solid color-mix(in oklab, var(--warning) 45%, var(--border));
+  border-radius: var(--radius-xl);
+  padding: var(--space-3) var(--space-4);
+  font-size: 13px;
+  color: var(--foreground);
+}
+
+.banner code {
+  padding: 1px 5px;
+  border-radius: var(--radius-lg);
+  background: var(--default);
+}
+
 .notice {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
