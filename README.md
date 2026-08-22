@@ -283,6 +283,12 @@ right — including abstaining on the one whose stills are title cards. `watch` 
 better judgement and worth it for a handful of finalists; it is never the
 default, because twenty candidates a query would be $5 a search.
 
+The arithmetic is what makes this worth running on every candidate rather than
+on finalists. Measured on this deployment: the look costs **$0.002**; the
+download it might prevent costs **$0.09–0.12** in Apify credits, plus a minute
+of Datalake indexing, plus the caption reads the cleaning and annotation passes
+make on top. One rejection pays for fifty looks.
+
 The look can only ever *stop* a download, and only on a confident opposite
 reading. Abstention passes through, a weak reading passes through, and a failed
 call passes through with a note saying it did not run — the post-index caption
