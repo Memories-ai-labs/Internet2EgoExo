@@ -268,7 +268,15 @@ description, tags. That is how a run can come back with clips that are licence
 clear and completely off topic: a video called "POV cooking" is very often a
 tripod pointed at a worktop, and no field in the metadata says so.
 
-`PRE-SIGHT` looks at the video instead, still before the download. Two tiers,
+`PRE-SIGHT` looks at the video instead. It runs **twice**, and the first time is
+the one that matters most: right after the search, on the candidates about to be
+offered. A search for first-person cooking otherwise returns things like "10
+Camera Angles and Shots for Cooking Videos" — nothing in that title says the
+camera is on a tripod, so queueing four clips means watching all four get
+skipped later. Checking at search time means the wrong ones are never offered,
+and the manifest records them under `frames show exocentric footage` rather than
+pretending they were never found. The second pass is the pre-download one below,
+which catches anything queued by hand. Two tiers,
 and the price gap between them is why there are two:
 
 | `VIEWPOINT_CHECK` | What it does | Measured cost |

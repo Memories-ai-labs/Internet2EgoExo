@@ -12,7 +12,10 @@ from video_searching_agent.agent.tool_policy import apply_tool_call_policy
 from video_searching_agent.api.llm import get_llm_client
 from video_searching_agent.config.pricing import get_pricing
 from video_searching_agent.config.settings import get_settings
-from video_searching_agent.curation.manifest import curate_references
+from video_searching_agent.curation.manifest import (
+    curate_references,
+    verify_viewpoints,
+)
 from video_searching_agent.models.cost import (
     GeminiCost,
     TokenUsage,
@@ -134,30 +137,32 @@ class VideoSearchingAgent:
         Args:
             youtube_api_key: YouTube API key for YouTube tools.
         """
-        self.tools.register_all([
-            # YouTube API tools
-            YouTubeSearchTool(api_key=youtube_api_key),
-            YouTubeChannelTool(api_key=youtube_api_key),
-            # Exa.ai tools (neural web search)
-            ExaSearchTool(),
-            ExaSimilarTool(),
-            ExaContentTool(),
-            ExaResearchTool(),
-            # Platform search tools (Apify-based)
-            TikTokApifySearchTool(),
-            InstagramApifySearchTool(),
-            TwitterApifySearchTool(),
-            # Creator info tools (Apify-based)
-            TikTokApifyCreatorTool(),
-            InstagramApifyCreatorTool(),
-            TwitterApifyProfileTool(),
-            # Video Datalake (index / analyse / search indexed moments)
-            VideoIndexTool(),
-            VideoAnalysisTool(),
-            VideoMomentSearchTool(),
-            # Unified video search (Exa discovery + Apify scraping)
-            VideoSearchTool(),
-        ])
+        self.tools.register_all(
+            [
+                # YouTube API tools
+                YouTubeSearchTool(api_key=youtube_api_key),
+                YouTubeChannelTool(api_key=youtube_api_key),
+                # Exa.ai tools (neural web search)
+                ExaSearchTool(),
+                ExaSimilarTool(),
+                ExaContentTool(),
+                ExaResearchTool(),
+                # Platform search tools (Apify-based)
+                TikTokApifySearchTool(),
+                InstagramApifySearchTool(),
+                TwitterApifySearchTool(),
+                # Creator info tools (Apify-based)
+                TikTokApifyCreatorTool(),
+                InstagramApifyCreatorTool(),
+                TwitterApifyProfileTool(),
+                # Video Datalake (index / analyse / search indexed moments)
+                VideoIndexTool(),
+                VideoAnalysisTool(),
+                VideoMomentSearchTool(),
+                # Unified video search (Exa discovery + Apify scraping)
+                VideoSearchTool(),
+            ]
+        )
 
     async def query(self, user_query: str) -> AgentResponse:
         """Process a user query and return video searching results.
@@ -183,9 +188,8 @@ class VideoSearchingAgent:
         )
 
         # Check if clarification is needed
-        if (
-            self.enable_clarification
-            and self.clarification_manager.needs_clarification(parsed_query)
+        if self.enable_clarification and self.clarification_manager.needs_clarification(
+            parsed_query
         ):
             clarification_response = self.clarification_manager.build_clarification_response(
                 parsed_query
@@ -285,8 +289,7 @@ class VideoSearchingAgent:
             # Execute tools and collect results as function response parts
             tool_result_texts: list[tuple[str, str]] = []
             indexed_tool_calls = [
-                (index, call["name"], call["input"])
-                for index, call in enumerate(tool_calls)
+                (index, call["name"], call["input"]) for index, call in enumerate(tool_calls)
             ]
             for _, tool_name, _ in indexed_tool_calls:
                 tools_used.add(tool_name)
@@ -305,12 +308,14 @@ class VideoSearchingAgent:
                         result = self._filter_tool_result_by_time(result, parsed_query.time_frame)
 
                     # Store result in session (now filtered)
-                    session.search_results.append({
-                        "tool": tool_name,
-                        "input": tool_input,
-                        "result": result.data if result.success else result.error,
-                        "success": result.success,
-                    })
+                    session.search_results.append(
+                        {
+                            "tool": tool_name,
+                            "input": tool_input,
+                            "result": result.data if result.success else result.error,
+                            "success": result.success,
+                        }
+                    )
 
                     # Format result for Gemini
                     result_str = result.to_string()
@@ -356,9 +361,7 @@ class VideoSearchingAgent:
 
         # Apply time frame filter if specified
         if parsed_query and parsed_query.time_frame:
-            video_references = self._filter_by_time_frame(
-                video_references, parsed_query.time_frame
-            )
+            video_references = self._filter_by_time_frame(video_references, parsed_query.time_frame)
 
         # Curate: classify viewpoint, drop what fails the requirements, rank by
         # usability and build the manifest.
@@ -367,6 +370,16 @@ class VideoSearchingAgent:
             parsed_query,
             query=user_query,
             discovery_usd=usage_metrics.total_cost_usd,
+        )
+
+        # The metadata got its say above; now look at the footage, while the
+        # candidate list is still just a list. A tripod pointed at a worktop
+        # calls itself "POV" often enough that this is the difference between
+        # a list worth queueing and one where every pick gets skipped later.
+        video_references = await verify_viewpoints(
+            video_references,
+            dataset,
+            wanted=parsed_query.viewpoint if parsed_query else None,
         )
 
         return AgentResponse(
@@ -394,9 +407,7 @@ class VideoSearchingAgent:
                 fallback_tools: list[BaseTool] = [
                     t
                     for t in (
-                        self.tools.get(name)
-                        for name in fallback_names
-                        if self.tools.has(name)
+                        self.tools.get(name) for name in fallback_names if self.tools.has(name)
                     )
                     if t is not None
                 ]
@@ -442,14 +453,13 @@ class VideoSearchingAgent:
         semaphore = asyncio.Semaphore(self.tool_execution_concurrency)
 
         async def _execute_bounded(
-            tool_call: tuple[int, str, dict[str, Any]]
+            tool_call: tuple[int, str, dict[str, Any]],
         ) -> tuple[int, str, dict[str, Any], ToolResult]:
             async with semaphore:
                 return await self._execute_tool_call(*tool_call)
 
         tasks = [
-            asyncio.create_task(_execute_bounded(tool_call))
-            for tool_call in indexed_tool_calls
+            asyncio.create_task(_execute_bounded(tool_call)) for tool_call in indexed_tool_calls
         ]
         ordered_results: list[tuple[int, str, dict[str, Any], ToolResult]] = []
         try:
@@ -555,12 +565,14 @@ class VideoSearchingAgent:
             unit_cost = pricing.tools.get_tool_cost(tool_name)
             quota = pricing.tools.get_youtube_quota(tool_name)
 
-            tool_costs.append(ToolUsageCost(
-                tool_name=tool_name,
-                invocation_count=count,
-                estimated_cost_usd=unit_cost * count,
-                quota_used=quota * count if quota > 0 else None,
-            ))
+            tool_costs.append(
+                ToolUsageCost(
+                    tool_name=tool_name,
+                    invocation_count=count,
+                    estimated_cost_usd=unit_cost * count,
+                    quota_used=quota * count if quota > 0 else None,
+                )
+            )
 
         # Build usage metrics
         usage_metrics = UsageMetrics(
@@ -598,9 +610,7 @@ class VideoSearchingAgent:
 
         # Log warning if searches failed
         if failed_searches:
-            failed_summary = ", ".join(
-                [f"{name}: {err[:50]}..." for name, err in failed_searches]
-            )
+            failed_summary = ", ".join([f"{name}: {err[:50]}..." for name, err in failed_searches])
             logger.warning(
                 f"{len(failed_searches)} search(es) failed during "
                 f"video extraction: {failed_summary}"
@@ -623,20 +633,14 @@ class VideoSearchingAgent:
                         seen_urls.add(url)
                         creator_data = video.get("creator")
                         creator_name = (
-                            creator_data.get("username")
-                            if isinstance(creator_data, dict)
-                            else None
+                            creator_data.get("username") if isinstance(creator_data, dict) else None
                         )
                         metrics_data = video.get("metrics")
                         views = (
-                            metrics_data.get("views")
-                            if isinstance(metrics_data, dict)
-                            else None
+                            metrics_data.get("views") if isinstance(metrics_data, dict) else None
                         )
                         likes = (
-                            metrics_data.get("likes")
-                            if isinstance(metrics_data, dict)
-                            else None
+                            metrics_data.get("likes") if isinstance(metrics_data, dict) else None
                         )
                         # Extract published_at - handle both string and datetime formats
                         published_at = video.get("published_at")
@@ -644,23 +648,25 @@ class VideoSearchingAgent:
                             # Convert datetime to string if needed
                             published_at = str(published_at)
                         duration_seconds = video.get("duration_seconds")
-                        references.append(VideoReference(
-                            video_id=str(video.get("id") or video.get("platform_id") or ""),
-                            url=url,
-                            title=video.get("title"),
-                            platform=video.get("platform", "youtube"),
-                            creator=creator_name,
-                            thumbnail_url=video.get("thumbnail_url"),
-                            views=views,
-                            likes=likes,
-                            duration_seconds=(
-                                int(duration_seconds)
-                                if isinstance(duration_seconds, int | float)
-                                else None
-                            ),
-                            license=video.get("license"),
-                            published_at=published_at,
-                        ))
+                        references.append(
+                            VideoReference(
+                                video_id=str(video.get("id") or video.get("platform_id") or ""),
+                                url=url,
+                                title=video.get("title"),
+                                platform=video.get("platform", "youtube"),
+                                creator=creator_name,
+                                thumbnail_url=video.get("thumbnail_url"),
+                                views=views,
+                                likes=likes,
+                                duration_seconds=(
+                                    int(duration_seconds)
+                                    if isinstance(duration_seconds, int | float)
+                                    else None
+                                ),
+                                license=video.get("license"),
+                                published_at=published_at,
+                            )
+                        )
 
         # Sort by metric from parsed query before limiting
         if parsed_query and parsed_query.metric:

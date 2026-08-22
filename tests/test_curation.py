@@ -316,3 +316,180 @@ class TestCostModel:
         base = estimate_collection_cost(1.0)
         dense = estimate_collection_cost(1.0, index_fps=2.0)
         assert dense.indexing_usd == pytest.approx(base.indexing_usd * 2, abs=0.01)
+
+
+class TestVerifyingViewpointsAtSearchTime:
+    """Dropping the tripod videos before they are ever offered as candidates.
+
+    Shawn queued four clips from a first-person cooking search and watched all
+    four get skipped at collect time — "10 Camera Angles and Shots for Cooking
+    Videos" among them. Nothing in that title says the camera is on a tripod, so
+    no amount of metadata reading catches it. This is the check that does, moved
+    to where it saves the user the trip.
+    """
+
+    @staticmethod
+    def _refs(*pairs):
+        from video_searching_agent.models.result import VideoReference
+
+        return [
+            VideoReference(
+                url=f"https://www.youtube.com/watch?v={vid}",
+                video_id=vid,
+                title=title,
+                platform="youtube",
+            )
+            for vid, title in pairs
+        ]
+
+    @staticmethod
+    def _manifest(refs):
+        from video_searching_agent.models.dataset import DatasetClip, DatasetManifest
+
+        manifest = DatasetManifest(query="first-person cooking")
+        manifest.clips = [
+            DatasetClip(url=r.url, platform="youtube", title=r.title) for r in refs
+        ]
+        manifest.recompute_totals()
+        return manifest
+
+    @staticmethod
+    def _seer(answers):
+        """A check_many stand-in returning a verdict per candidate, in order."""
+
+        from video_searching_agent.curation.frame_viewpoint import SightVerdict
+
+        async def check_many(client, candidates, *, mode="frames", concurrency=6):
+            out = []
+            for candidate in candidates:
+                viewpoint, confidence = answers[candidate["video_id"]]
+                out.append(
+                    SightVerdict(
+                        viewpoint=viewpoint,
+                        confidence=confidence,
+                        method="frames",
+                        why="what the frames showed",
+                        cost_usd=0.002,
+                    )
+                )
+            return out
+
+        return check_many
+
+    @pytest.mark.asyncio
+    async def test_a_confident_wrong_viewpoint_never_reaches_the_candidate_list(
+        self, monkeypatch
+    ):
+        from video_searching_agent.curation import frame_viewpoint
+        from video_searching_agent.curation.manifest import verify_viewpoints
+        from video_searching_agent.curation.viewpoint import Viewpoint
+
+        refs = self._refs(("good", "POV noodles with a GoPro"), ("tripod", "10 Camera Angles"))
+        manifest = self._manifest(refs)
+        monkeypatch.setattr(
+            frame_viewpoint,
+            "check_many",
+            self._seer(
+                {
+                    "good": (Viewpoint.EGOCENTRIC, 0.95),
+                    "tripod": (Viewpoint.EXOCENTRIC, 0.97),
+                }
+            ),
+        )
+
+        kept = await verify_viewpoints(
+            refs, manifest, wanted=Viewpoint.EGOCENTRIC, llm=object(), mode="frames"
+        )
+
+        assert [r.video_id for r in kept] == ["good"]
+        assert manifest.excluded_clips == 1
+        assert manifest.exclusion_reasons == {"frames show exocentric footage": 1}
+        # The manifest must agree with the list, or the hours are a fiction.
+        assert [c.url for c in manifest.clips] == [kept[0].url]
+
+    @pytest.mark.asyncio
+    async def test_a_checked_match_replaces_the_guess_from_the_title(self, monkeypatch):
+        from video_searching_agent.curation import frame_viewpoint
+        from video_searching_agent.curation.manifest import verify_viewpoints
+        from video_searching_agent.curation.viewpoint import Viewpoint
+
+        refs = self._refs(("good", "cooking"))
+        refs[0].viewpoint = Viewpoint.UNKNOWN
+        refs[0].viewpoint_confidence = 0.2
+        manifest = self._manifest(refs)
+        monkeypatch.setattr(
+            frame_viewpoint, "check_many", self._seer({"good": (Viewpoint.EGOCENTRIC, 0.9)})
+        )
+
+        kept = await verify_viewpoints(
+            refs, manifest, wanted=Viewpoint.EGOCENTRIC, llm=object(), mode="frames"
+        )
+        assert kept[0].viewpoint is Viewpoint.EGOCENTRIC
+        assert kept[0].viewpoint_confidence == pytest.approx(0.9)
+        assert any("frames:" in e for e in kept[0].viewpoint_evidence)
+
+    @pytest.mark.asyncio
+    async def test_abstention_and_weak_readings_keep_the_candidate(self, monkeypatch):
+        """Three stills are weaker evidence than the caption pass. They do not veto."""
+
+        from video_searching_agent.curation import frame_viewpoint
+        from video_searching_agent.curation.manifest import verify_viewpoints
+        from video_searching_agent.curation.viewpoint import Viewpoint
+
+        refs = self._refs(("unclear", "title card"), ("weak", "maybe a tripod"))
+        manifest = self._manifest(refs)
+        monkeypatch.setattr(
+            frame_viewpoint,
+            "check_many",
+            self._seer(
+                {
+                    "unclear": (Viewpoint.UNKNOWN, 1.0),
+                    "weak": (Viewpoint.EXOCENTRIC, 0.4),
+                }
+            ),
+        )
+
+        kept = await verify_viewpoints(
+            refs, manifest, wanted=Viewpoint.EGOCENTRIC, llm=object(), mode="frames"
+        )
+        assert len(kept) == 2
+        assert manifest.excluded_clips == 0
+
+    @pytest.mark.asyncio
+    async def test_no_requested_viewpoint_means_nothing_to_contradict(self, monkeypatch):
+        """And nothing to spend, either."""
+
+        from video_searching_agent.curation import frame_viewpoint
+        from video_searching_agent.curation.manifest import verify_viewpoints
+
+        called = []
+
+        async def spy(*args, **kwargs):
+            called.append(args)
+            return []
+
+        monkeypatch.setattr(frame_viewpoint, "check_many", spy)
+        refs = self._refs(("a", "anything"))
+        kept = await verify_viewpoints(refs, self._manifest(refs), wanted=None, llm=object())
+        assert kept == refs
+        assert called == []
+
+    @pytest.mark.asyncio
+    async def test_the_check_can_be_turned_off(self, monkeypatch):
+        from video_searching_agent.curation import frame_viewpoint
+        from video_searching_agent.curation.manifest import verify_viewpoints
+        from video_searching_agent.curation.viewpoint import Viewpoint
+
+        called = []
+
+        async def spy(*args, **kwargs):
+            called.append(args)
+            return []
+
+        monkeypatch.setattr(frame_viewpoint, "check_many", spy)
+        refs = self._refs(("a", "anything"))
+        kept = await verify_viewpoints(
+            refs, self._manifest(refs), wanted=Viewpoint.EGOCENTRIC, llm=object(), mode="off"
+        )
+        assert kept == refs
+        assert called == []

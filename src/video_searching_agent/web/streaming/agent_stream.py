@@ -16,7 +16,10 @@ from video_searching_agent.agent.tool_policy import apply_tool_call_policy
 from video_searching_agent.api.llm import get_llm_client
 from video_searching_agent.config.pricing import get_pricing
 from video_searching_agent.config.settings import get_settings
-from video_searching_agent.curation.manifest import curate_references
+from video_searching_agent.curation.manifest import (
+    curate_references,
+    verify_viewpoints,
+)
 from video_searching_agent.curation.viewpoint import Viewpoint
 from video_searching_agent.models.cost import (
     GeminiCost,
@@ -143,24 +146,26 @@ class StreamingAgentWrapper:
         from video_searching_agent.tools.youtube import YouTubeChannelTool, YouTubeSearchTool
 
         # Note: Some tool classes are untyped in the tools module
-        self.tools.register_all([
-            YouTubeSearchTool(api_key=youtube_api_key),
-            YouTubeChannelTool(api_key=youtube_api_key),
-            ExaSearchTool(),
-            ExaSimilarTool(),
-            ExaContentTool(),
-            ExaResearchTool(),
-            TikTokApifySearchTool(),
-            InstagramApifySearchTool(),
-            TwitterApifySearchTool(),
-            TikTokApifyCreatorTool(),
-            InstagramApifyCreatorTool(),
-            TwitterApifyProfileTool(),
-            VideoIndexTool(),
-            VideoAnalysisTool(),
-            VideoMomentSearchTool(),
-            VideoSearchTool(),
-        ])
+        self.tools.register_all(
+            [
+                YouTubeSearchTool(api_key=youtube_api_key),
+                YouTubeChannelTool(api_key=youtube_api_key),
+                ExaSearchTool(),
+                ExaSimilarTool(),
+                ExaContentTool(),
+                ExaResearchTool(),
+                TikTokApifySearchTool(),
+                InstagramApifySearchTool(),
+                TwitterApifySearchTool(),
+                TikTokApifyCreatorTool(),
+                InstagramApifyCreatorTool(),
+                TwitterApifyProfileTool(),
+                VideoIndexTool(),
+                VideoAnalysisTool(),
+                VideoMomentSearchTool(),
+                VideoSearchTool(),
+            ]
+        )
 
     async def stream_query(
         self,
@@ -355,8 +360,7 @@ class StreamingAgentWrapper:
                 # Execute tools
                 tool_result_texts: list[tuple[str, str]] = []
                 indexed_tool_calls = [
-                    (index, call["name"], call["input"])
-                    for index, call in enumerate(tool_calls)
+                    (index, call["name"], call["input"]) for index, call in enumerate(tool_calls)
                 ]
                 for _, tool_name, tool_input in indexed_tool_calls:
                     tools_used.add(tool_name)
@@ -401,12 +405,14 @@ class StreamingAgentWrapper:
                         )
 
                         # Store result in session
-                        session.search_results.append({
-                            "tool": tool_name,
-                            "input": tool_input,
-                            "result": result.data if result.success else result.error,
-                            "success": result.success,
-                        })
+                        session.search_results.append(
+                            {
+                                "tool": tool_name,
+                                "input": tool_input,
+                                "result": result.data if result.success else result.error,
+                                "success": result.success,
+                            }
+                        )
 
                         # Format result for Gemini
                         result_str = result.to_string()
@@ -461,6 +467,16 @@ class StreamingAgentWrapper:
                 parsed_query,
                 query=user_query,
                 discovery_usd=usage_metrics.total_cost_usd,
+            )
+
+            # The metadata got its say above; now look at the footage, while the
+            # candidate list is still just a list. A tripod pointed at a worktop
+            # calls itself "POV" often enough that this is the difference between
+            # a list worth queueing and one where every pick gets skipped later.
+            video_references = await verify_viewpoints(
+                video_references,
+                dataset,
+                wanted=parsed_query.viewpoint if parsed_query else None,
             )
 
             agent_response = AgentResponse(
@@ -525,14 +541,13 @@ class StreamingAgentWrapper:
         semaphore = asyncio.Semaphore(self.tool_execution_concurrency)
 
         async def _execute_bounded(
-            tool_call: tuple[int, str, dict[str, Any]]
+            tool_call: tuple[int, str, dict[str, Any]],
         ) -> tuple[int, str, dict[str, Any], ToolResult]:
             async with semaphore:
                 return await self._execute_tool_call(*tool_call)
 
         tasks = [
-            asyncio.create_task(_execute_bounded(tool_call))
-            for tool_call in indexed_tool_calls
+            asyncio.create_task(_execute_bounded(tool_call)) for tool_call in indexed_tool_calls
         ]
         try:
             for task in tasks:
@@ -551,9 +566,7 @@ class StreamingAgentWrapper:
             if tool:
                 fallback_names = get_fallback_tools(tool_name)
                 fallback_tools_raw = [
-                    self.tools.get(name)
-                    for name in fallback_names
-                    if self.tools.has(name)
+                    self.tools.get(name) for name in fallback_names if self.tools.has(name)
                 ]
                 fallback_tools = [t for t in fallback_tools_raw if t is not None]
 
@@ -654,14 +667,16 @@ class StreamingAgentWrapper:
         for tool_name, count in tool_invocations.items():
             unit_cost = pricing.tools.get_tool_cost(tool_name)
             quota = pricing.tools.get_youtube_quota(tool_name)
-            tool_costs.append(ToolUsageCost(
-                tool_name=tool_name,
-                invocation_count=count,
-                estimated_cost_usd=unit_cost * count,
-                quota_used=quota * count if quota > 0 else None,
-                token_usage=None,
-                details=None,
-            ))
+            tool_costs.append(
+                ToolUsageCost(
+                    tool_name=tool_name,
+                    invocation_count=count,
+                    estimated_cost_usd=unit_cost * count,
+                    quota_used=quota * count if quota > 0 else None,
+                    token_usage=None,
+                    details=None,
+                )
+            )
 
         usage_metrics = UsageMetrics(
             gemini=gemini_cost,
@@ -697,20 +712,14 @@ class StreamingAgentWrapper:
                         seen_urls.add(url)
                         creator_data = video.get("creator")
                         creator_name = (
-                            creator_data.get("username")
-                            if isinstance(creator_data, dict)
-                            else None
+                            creator_data.get("username") if isinstance(creator_data, dict) else None
                         )
                         metrics_data = video.get("metrics")
                         views = (
-                            metrics_data.get("views")
-                            if isinstance(metrics_data, dict)
-                            else None
+                            metrics_data.get("views") if isinstance(metrics_data, dict) else None
                         )
                         likes = (
-                            metrics_data.get("likes")
-                            if isinstance(metrics_data, dict)
-                            else None
+                            metrics_data.get("likes") if isinstance(metrics_data, dict) else None
                         )
                         published_at = video.get("published_at")
                         if published_at is not None and not isinstance(published_at, str):
@@ -718,24 +727,26 @@ class StreamingAgentWrapper:
                         video_id_raw = video.get("id", video.get("platform_id", ""))
                         video_id = str(video_id_raw) if video_id_raw else ""
                         duration_seconds = video.get("duration_seconds")
-                        references.append(VideoReference(
-                            video_id=video_id,
-                            url=url,
-                            title=video.get("title"),
-                            platform=video.get("platform", "youtube"),
-                            creator=creator_name,
-                            thumbnail_url=video.get("thumbnail_url"),
-                            views=views,
-                            likes=likes,
-                            duration_seconds=(
-                                int(duration_seconds)
-                                if isinstance(duration_seconds, int | float)
-                                else None
-                            ),
-                            license=video.get("license"),
-                            published_at=published_at,
-                            relevance_note=None,
-                        ))
+                        references.append(
+                            VideoReference(
+                                video_id=video_id,
+                                url=url,
+                                title=video.get("title"),
+                                platform=video.get("platform", "youtube"),
+                                creator=creator_name,
+                                thumbnail_url=video.get("thumbnail_url"),
+                                views=views,
+                                likes=likes,
+                                duration_seconds=(
+                                    int(duration_seconds)
+                                    if isinstance(duration_seconds, int | float)
+                                    else None
+                                ),
+                                license=video.get("license"),
+                                published_at=published_at,
+                                relevance_note=None,
+                            )
+                        )
 
         if parsed_query and parsed_query.metric:
             references = self._sort_references_by_metric(references, parsed_query.metric)

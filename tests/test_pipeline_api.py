@@ -284,3 +284,45 @@ class TestCurateStream:
     def test_a_body_with_no_worklist_is_rejected(self):
         client = TestClient(create_app())
         assert client.post("/api/v1/curate/stream", json={}).status_code == 422
+
+
+class TestHowManyVideosCanBeCuratedAtOnce:
+    """Curation had the collect cap bolted onto it, which is the wrong cost.
+
+    Collecting a URL is a download, an upload and an index — minutes each, so 25
+    is a real guard. Curating an already-indexed video is a caption read, about
+    0.6s, so the same number rejected a perfectly ordinary run of 35 clips with
+    `body.video_ids: List should have at most 25 items`.
+    """
+
+    def test_a_set_larger_than_the_collect_cap_is_accepted(self):
+        from video_searching_agent.web.schemas.requests import (
+            MAX_URLS_PER_REQUEST,
+            CurateRequest,
+        )
+
+        ids = [f"vid_{n}" for n in range(MAX_URLS_PER_REQUEST + 10)]
+        request = CurateRequest(video_ids=ids)
+        assert len(request.video_ids or []) == MAX_URLS_PER_REQUEST + 10
+
+    def test_there_is_still_a_ceiling(self):
+        import pytest
+        from pydantic import ValidationError
+
+        from video_searching_agent.web.schemas.requests import (
+            MAX_VIDEOS_PER_CURATION,
+            CurateRequest,
+        )
+
+        with pytest.raises(ValidationError):
+            CurateRequest(video_ids=[f"vid_{n}" for n in range(MAX_VIDEOS_PER_CURATION + 1)])
+
+    def test_the_two_ceilings_are_not_the_same_number(self):
+        """If they get unified again, this is the failure that says why not."""
+
+        from video_searching_agent.web.schemas.requests import (
+            MAX_URLS_PER_REQUEST,
+            MAX_VIDEOS_PER_CURATION,
+        )
+
+        assert MAX_VIDEOS_PER_CURATION > MAX_URLS_PER_REQUEST

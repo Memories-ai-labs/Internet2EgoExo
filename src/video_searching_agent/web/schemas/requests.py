@@ -132,6 +132,14 @@ class QueryRequest(BaseModel):
 # cannot queue an unbounded number of them.
 MAX_URLS_PER_REQUEST = 25
 
+# Curation gets its own, much higher ceiling. It is a different operation with a
+# different cost: collecting a URL means a download, an upload and an index —
+# minutes each — while curating an already-indexed video means reading its
+# captions, measured at about 0.6s a clip. Sharing the collect cap here is what
+# made "Grade the set" reject a run of 35 clips outright, and verdicts stream as
+# they complete, so a set large enough to run long still delivers what it graded.
+MAX_VIDEOS_PER_CURATION = 200
+
 
 class CollectRequest(BaseModel):
     """Request body for the collection stream.
@@ -203,7 +211,7 @@ class CurateRequest(BaseModel):
 
     video_ids: list[str] | None = Field(
         None,
-        max_length=MAX_URLS_PER_REQUEST,
+        max_length=MAX_VIDEOS_PER_CURATION,
         description="Indexed videos to curate",
     )
     tag: str | None = Field(
