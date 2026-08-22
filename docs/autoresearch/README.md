@@ -44,6 +44,28 @@ The distinction between the last three matters and is easy to blur:
 - **`INSPIRATION.md` is forward-looking.** Untested ideas, each with its
   falsifier. Entries leave it by being tested, and leave a verdict behind.
 
+## The goal, in one sentence
+
+**Valid clips out the other end.** A clip is valid when the hands are in frame,
+the manipulation is legible, and there is a tree over it whose atomic actions
+name what the left hand did, what the right hand did, and to which objects.
+That is the deliverable and the only thing worth optimising.
+
+Explicitly **out of scope**, and not to be reintroduced: depth annotation,
+skeletons or pose keypoints as an output, and annotation *depth for its own
+sake* — the L0/L1/L2/L3 ladder is a description, not a target. A clip at L2 that
+says what both hands did is worth more than an L3 that does not.
+
+Two things follow, both already applied:
+
+- **Licence is out of the grade.** A clip is exactly as trainable whether or not
+  its uploader ticked Creative Commons. It was worth 7 points, which was exactly
+  the C/B boundary, so it capped every non-CC clip at a C; it now scores nothing
+  and only blocks when commercial use is explicitly required.
+- **`valid` is the headline metric**, in scorecard section 0, above the grade
+  bands. Compare runs on **valid clips per query asked** — per query *asked*, so
+  a run cannot improve by failing to search.
+
 ## The objective is the scoreboard
 
 The first iterations aimed at making modules verifiable, and that groundwork is
@@ -199,15 +221,17 @@ The ideas live in `INSPIRATION.md`, each with the measurement that would settle 
 Pick from there. What stays here is the work that is *not* a question — known
 defects and structural jobs whose answer nobody doubts, only their cost:
 
-- **Licence is the binding constraint on grade** (`LEARNINGS.md` L8, measured
-  2026-08-22). It is worth exactly 7 points and it is the C/B boundary: the same
-  L3 tree scores 75 → B on CC-BY and 68 → C on YouTube standard. A non-CC clip
-  can never be better than a C however well annotated. `INSPIRATION.md` Q-SRC4
-  is therefore the highest-leverage entry in the file.
+- **Licence was the binding constraint on grade, and has been removed from it**
+  (`LEARNINGS.md` L8, L11). Nothing to optimise here any more; Q-SRC4 is now
+  only about yield, not grade.
 - **Annotation is *not* the constraint** — an earlier reading said it was, off a
   single anomalous clip. It is producing L2/L3 with 7–9 annotations. Stage 5 of
   `INSPIRATION.md` still matters for the tail (one clip in five returns nothing
-  at all), but it is not where the grade distribution is stuck.
+  at all), because a clip with no labelled action is invalid by definition — but
+  depth beyond "what did each hand do" is not a goal.
+- **Hands and legibility are the validity gates.** Both now reject before
+  download. `is_screen_capture()` had no callers for its whole existence, so
+  the `world` question was billed and discarded — audit for more of that shape.
 - **The five file moves that clear four import cycles** (`MODULES.md` §8 step 1)
   plus `scripts/check_layering.py`. Not a question — a job.
 - **Labels are null on the real clips in the store**; the annotation pass has

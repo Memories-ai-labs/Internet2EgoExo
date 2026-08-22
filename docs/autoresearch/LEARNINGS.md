@@ -116,6 +116,13 @@ clip we can still reconstruct what was rejected alongside it and why.
 
 ## L8 · The licence is the C/B boundary, and it costs exactly 7 points
 
+> **Superseded the same day by L12: licence has been removed from the grade.**
+> Kept because the measurement is what justified removing it, and because the
+> reasoning it corrects (annotation depth as the constraint) is still worth not
+> repeating. Its *recommendation* — chase CC-only yield to raise grades — no
+> longer applies: grades do not move with licence any more.
+
+
 **Evidence.** `2026-08-22` experiment 3. One fixed L3 tree of 9 annotations
 scored through `evaluate_clip` with only the licence varied: CC-BY **75 → B**,
 YouTube standard 68 → C, unknown 65 → C. Per-clip weights are annotation depth
@@ -170,3 +177,36 @@ shuffling costs nothing and makes every prefix representative. See
 The general form, which has now bitten twice in one day: **a sample chosen by
 convenience measures the convenience.** L8 was n=1 mistaken for a bottleneck;
 this is a biased prefix mistaken for a regression.
+
+## L11 · A question asked and not wired costs money and buys nothing
+
+**Evidence.** `2026-08-22` experiment 5. `is_screen_capture()` had **zero
+callers** for its entire existence — not one, not even a test. The `world`
+question was in the prompt, was answered on every look, was billed on every
+look, and the answer was thrown away. The Unity-editor screen recording in the
+clean collection was blamed in these very docs on "predating the question"; it
+did not, the question simply never rejected anything.
+
+**Implies.** Adding a field to a prompt is not the same as adding a gate, and
+the gap between them is invisible from the outside: the verdict object looked
+correct, the prompt looked correct, and the cost showed up as normal. A new
+question needs a caller and a test asserting the rejection *in the same change*,
+or it is a cost with no effect. Worth a grep for the same shape anywhere a
+predicate exists on a verdict type.
+
+## L12 · Score what the footage is, not what the paperwork says
+
+**Evidence.** `2026-08-22` experiment 6. Licence was worth 7 points and 7 points
+was exactly the C/B boundary, so a non-CC clip was capped at C however well shot
+and annotated. Removing it from the scoring was not enough: `G0-PROV` counted
+`license` as one of three provenance fields, so the same rights question kept
+moving the grade under another name. Same footage, same L3 tree, after removing
+both: CC-BY 75/B, YouTube standard 75/B (was 68/C), unknown 75/B (was 65/C).
+
+**Implies.** A quality score should measure the artefact, and a rights or
+process property that rides along inside it will dominate quietly — nobody
+reading "grade C" guesses it means "the uploader did not tick a box". When
+removing a term from a score, grep for the other places it is counted; a single
+weight is rarely the only path. And rescale rather than redistribute: `75/68`
+preserves every relative weight exactly, where hand-picked replacement weights
+would have been four new guessed constants.
