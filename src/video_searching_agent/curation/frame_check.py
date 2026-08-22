@@ -223,6 +223,59 @@ def mentions_hands(text: str | None) -> tuple[bool, list[str]]:
     return bool(hand_cues or manipulation_cues), evidence
 
 
+# Who is doing the manipulating. A caption that says a drum spins or a machine
+# fills is describing a machine, and no hands are in that frame — so a
+# manipulation verb only counts as a hand when the caption also names a human
+# subject. Captioners name the subject consistently, which is what makes this
+# workable.
+_HUMAN_SUBJECT_CUES = (
+    "a person",
+    "the person",
+    "a man",
+    "the man",
+    "a woman",
+    "the woman",
+    "someone",
+    "the wearer",
+    "the user",
+    "he ",
+    "she ",
+    "they ",
+    "his ",
+    "her ",
+    "their ",
+    "i ",
+    "we ",
+)
+
+
+def segment_shows_hands(text: str | None) -> bool:
+    """Whether one caption segment puts the wearer's hands in frame.
+
+    Stricter than :func:`mentions_hands`, and deliberately so. That function
+    answers "is there any evidence of hands anywhere in this clip", where a
+    single mention is enough. This one is asked of every segment in turn and its
+    answer is averaged into `G1-HAND`, so both kinds of error compound:
+
+    * reading only hand nouns *under*-counts, because captioners describe the
+      action rather than the anatomy — "pours olive oil from a bottle into a
+      pan" is a hand in frame, and a six-segment POV cooking clip used the word
+      "hand" in two of them;
+    * counting any manipulation verb *over*-counts, because "a washing machine
+      drum spins behind glass" is a machine working, not a person.
+
+    So: a hand noun on its own, or a manipulation verb with a human subject.
+    """
+    if not text:
+        return False
+    lowered = f" {text.lower()} "
+    if _cues_present(lowered, _HAND_CUES):
+        return True
+    if not _cues_present(lowered, _MANIPULATION_CUES):
+        return False
+    return bool(_cues_present(lowered, _HUMAN_SUBJECT_CUES))
+
+
 def action_signature(text: str | None) -> set[str]:
     """The manipulation cues in a piece of caption text.
 

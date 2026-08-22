@@ -32,6 +32,8 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
+from video_searching_agent.curation.frame_check import segment_shows_hands
+
 # --------------------------------------------------------------------- levels
 
 
@@ -305,26 +307,39 @@ def _cue_ratio(
 
 
 def hand_frame_ratio(caption_segments: list[dict[str, Any]] | None) -> float | None:
-    """Share of caption segments that mention a hand.
+    """Share of caption segments that show the wearer's hands at work.
 
     This is the honest proxy for `G1-HAND` ("fraction of frames containing the
     wearer's own hands"): we have caption segments, not per-frame detections, so
     the unit is segments and the number is reported as such. Returns None when
     there are no segments to measure.
+
+    The test is :func:`~video_searching_agent.curation.frame_check.segment_shows_hands`.
+    It used to be a
+    narrower regex over hand nouns only, and the two disagreed in a way that made
+    the pipeline contradict itself: a POV cooking clip whose every segment
+    describes the wearer manipulating something reported *hands visible at 0.95*
+    and *G1-HAND failed* at once, produced four action anchors, and was then
+    rejected for having no hands in it.
+
+    The narrow reading was the wrong one. Captioners describe the action, not the
+    anatomy — "pours olive oil from a bottle into a pan" is a hand in frame in
+    first-person footage, and only two of that clip's six segments happened to
+    use the word "hand". A gate that reads the anatomy misses the manipulation it
+    exists to find.
     """
     if not caption_segments:
         return None
-    hand_pattern = re.compile(r"\b(hand|hands|fingers|thumb|palm|gloved)\b")
     total = 0
     with_hands = 0
     for segment in caption_segments:
         if not isinstance(segment, dict):
             continue
-        text = str(segment.get("text") or "").lower()
+        text = str(segment.get("text") or "")
         if not text.strip():
             continue
         total += 1
-        if hand_pattern.search(text):
+        if segment_shows_hands(text):
             with_hands += 1
     if not total:
         return None

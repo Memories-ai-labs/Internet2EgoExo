@@ -373,3 +373,82 @@ class TestGateThree:
 
     def test_an_empty_set_has_nothing_to_check(self):
         assert evaluate_dataset([]) == []
+
+
+class TestWhatCountsAsHandsInOneSegment:
+    """The gate and the anchors used to disagree about the same segment.
+
+    A POV cooking clip came back with `hands visible at 0.95` and `G1-HAND
+    failed` at the same time, produced four action anchors, and was then
+    rejected for having no hands in it. Two definitions of "hands present" were
+    live at once: the anchors read manipulation, the gate read anatomy.
+    """
+
+    COOKING = [
+        "A person pours olive oil from a dark green bottle into a gray pan",
+        "The chopped garlic is scraped from the wooden cutting board into the pan",
+        "a hand adds strands of spaghetti to the pot",
+        "The person moves to a kitchen sink and drains cooked pasta",
+        "The person seasons the pasta by shaking salt from a metal shaker",
+        "A person's hand uses a green spatula to transfer spaghetti",
+    ]
+    MACHINE = [
+        "A washing machine drum spins behind glass",
+        "Water fills the drum as it rotates slowly",
+        "The machine's display shows the remaining time",
+    ]
+
+    def test_a_pov_cooking_clip_clears_the_gate(self):
+        """Captioners describe the action, not the anatomy. Only two of these
+        six segments use the word "hand", and all six are a hand in frame."""
+
+        from video_searching_agent.curation.quality_gates import (
+            MIN_HAND_FRAME_RATIO,
+            hand_frame_ratio,
+        )
+
+        ratio = hand_frame_ratio([{"text": s} for s in self.COOKING])
+        assert ratio is not None and ratio >= MIN_HAND_FRAME_RATIO
+
+    def test_a_machine_working_by_itself_does_not(self):
+        """The other failure mode: crediting a spinning drum with hands."""
+
+        from video_searching_agent.curation.quality_gates import hand_frame_ratio
+
+        assert hand_frame_ratio([{"text": s} for s in self.MACHINE]) == 0.0
+
+    def test_a_hand_noun_alone_is_enough(self):
+        from video_searching_agent.curation.frame_check import segment_shows_hands
+
+        assert segment_shows_hands("both hands rest on the workbench") is True
+
+    def test_a_manipulation_verb_alone_is_not(self):
+        from video_searching_agent.curation.frame_check import segment_shows_hands
+
+        assert segment_shows_hands("the conveyor places boxes onto the pallet") is False
+
+    def test_a_manipulation_verb_with_a_person_is(self):
+        from video_searching_agent.curation.frame_check import segment_shows_hands
+
+        assert segment_shows_hands("a person places a box onto the pallet") is True
+
+    def test_neither_cue_is_not(self):
+        from video_searching_agent.curation.frame_check import segment_shows_hands
+
+        assert segment_shows_hands("a wide shot of an empty workshop") is False
+        assert segment_shows_hands("") is False
+        assert segment_shows_hands(None) is False
+
+    def test_the_gate_and_the_anchors_now_agree_on_a_segment(self):
+        """The contradiction itself: anchors were built where the gate saw
+        nothing, so a clip could be anchored and rejected at once."""
+
+        from video_searching_agent.curation.frame_check import (
+            mentions_hands,
+            segment_shows_hands,
+        )
+
+        for text in self.COOKING:
+            anchored = bool(mentions_hands(text)[0])
+            if segment_shows_hands(text):
+                assert anchored, f"the gate counts it but no anchor would: {text!r}"
