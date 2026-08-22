@@ -35,7 +35,12 @@ class _FakeDatalake:
         search_results: list[dict[str, Any]] | None = None,
         moments: dict[str, dict[str, Any]] | None = None,
         fail_update: bool = False,
+        duration_seconds: float | None = 600.0,
     ) -> None:
+        # A duration by default, because the real client has one and the
+        # windowed caption read depends on it. A fake that reported none made
+        # the untimed fallback look like the normal path.
+        self._duration = duration_seconds
         self._caption = caption
         self._segments = segments or []
         self._transcription = transcription
@@ -45,6 +50,11 @@ class _FakeDatalake:
         self._moments = moments or {}
         self._fail_update = fail_update
         self.updates: list[dict[str, Any]] = []
+
+    async def get_video(self, video_id: str) -> dict[str, Any]:
+        """Mirror the real endpoint, which reports the duration."""
+
+        return {"video_id": video_id, "duration_seconds": self._duration}
 
     async def get_caption(
         self,
@@ -476,20 +486,44 @@ class TestCleaningAgentVerdicts:
 
     @pytest.mark.asyncio
     async def test_anchors_need_a_windowed_caption_read(self):
-        # The whole-video read has no timings, so a clip whose duration is
-        # unknown can be judged but not anchored.
+        """The whole-video caption read has no timings, so the window is asked for."""
+
         datalake = _FakeDatalake(
             caption="The right hand turns the wrench.",
             segments=_segments((0.0, 30.0, "the right hand turns the wrench")),
         )
         agent = CleaningAgent(client=datalake)
-
         anchored = await agent.clean("vid_1", media={"duration_seconds": 30})
         assert anchored.action_segments
 
-        unanchored = await agent.clean("vid_1")
-        assert unanchored.accepted is True
-        assert unanchored.action_segments == []
+    @pytest.mark.asyncio
+    async def test_an_unsupplied_duration_is_looked_up_rather_than_given_up_on(self):
+        """A curation run has no download behind it, so nothing hands in a
+        duration — and without one there are no timed segments and no anchors.
+        Five task queries produced six accepted clips and zero anchors between
+        them before this was asked for instead of assumed absent.
+        """
+        datalake = _FakeDatalake(
+            caption="The right hand turns the wrench.",
+            segments=_segments((0.0, 30.0, "the right hand turns the wrench")),
+            duration_seconds=30.0,
+        )
+        verdict = await CleaningAgent(client=datalake).clean("vid_1")
+        assert verdict.action_segments, "the duration was there for the asking"
+
+    @pytest.mark.asyncio
+    async def test_a_duration_nobody_knows_still_judges_the_footage(self):
+        """The honest limit: no duration anywhere means no anchors, but the
+        frame check still runs off the untimed caption."""
+
+        datalake = _FakeDatalake(
+            caption="The right hand turns the wrench.",
+            segments=_segments((0.0, 30.0, "the right hand turns the wrench")),
+            duration_seconds=None,
+        )
+        verdict = await CleaningAgent(client=datalake).clean("vid_1")
+        assert verdict.accepted is True
+        assert verdict.action_segments == []
 
     @pytest.mark.asyncio
     async def test_the_trace_records_every_step(self):

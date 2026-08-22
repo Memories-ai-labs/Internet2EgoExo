@@ -197,6 +197,20 @@ async def watch_video(
     whole video, so a long video is refused rather than silently costing a third
     of a dollar — the frame check's verdict stands instead.
     """
+    # A provider that drops the sampling controls bills the whole video, so
+    # prefer one that keeps them if this deployment has a key for it. The frames
+    # tier is unaffected — this only matters when watching.
+    if not getattr(client, "SAMPLING_CONTROLS_HONOURED", True):
+        from video_searching_agent.api.llm import get_video_client
+
+        try:
+            better = get_video_client()
+        except Exception:  # noqa: BLE001 - falling back is not a failure
+            better = None
+        if better is not None:
+            logger.info("watching through Gemini, which honours the frame-rate hint")
+            client = better
+
     sampled = bool(getattr(client, "SAMPLING_CONTROLS_HONOURED", True))
     if not sampled and duration_seconds and duration_seconds > MAX_UNSAMPLED_WATCH_SECONDS:
         minutes = duration_seconds / 60

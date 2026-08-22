@@ -595,6 +595,33 @@ class QualityCheckAgent:
             audit.set_findings.append(Finding("(set)", "SET-EMPTY", "nothing was delivered"))
             return
 
+        # A set of clips with no anchors in any of them is not a dataset, and
+        # this audit passed exactly that — five task queries, six accepted
+        # clips, zero anchors, verdict "accept" on all five, because there were
+        # no labels to find fault with. Nothing to audit is not the same as
+        # nothing wrong.
+        anchored = sum(
+            1 for clip in clips if any(isinstance(a, dict) for a in (clip.get("segments") or []))
+        )
+        if anchored == 0:
+            audit.set_findings.append(
+                Finding(
+                    "(set)",
+                    "SET-NO-ANCHORS",
+                    f"{len(clips)} clips delivered and not one action anchor between "
+                    "them — there is nothing here to train on",
+                )
+            )
+        elif anchored < len(clips) / 2:
+            audit.set_findings.append(
+                Finding(
+                    "(set)",
+                    "SET-THIN-ANCHORS",
+                    f"only {anchored} of {len(clips)} clips carry any anchor",
+                    severity="warn",
+                )
+            )
+
         # Fifty clips from three recordings is not fifty clips.
         sources = {
             str(clip.get("source_url") or clip.get("url") or clip.get("video_id")) for clip in clips

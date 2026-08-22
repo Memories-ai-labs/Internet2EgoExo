@@ -137,6 +137,7 @@ class TestStructure:
         audit = await agent.audit(
             [
                 clip(
+                    segments=[anchor("a1", 0.0, 60.0)],
                     annotations=[
                         {"segment_id": "t1", "label": "Assemble the shelf", "hier_level": "task"},
                         {
@@ -168,7 +169,7 @@ class TestStructure:
 
         agent = QualityCheckAgent(llm=False)
         audit = await agent.audit(
-            [clip(viewpoint="unknown")],
+            [clip(viewpoint="unknown", segments=[anchor("a1", 0.0, 20.0)])],
             wanted_viewpoint=Viewpoint.EGOCENTRIC,
             verify_evidence=False,
         )
@@ -268,6 +269,7 @@ class TestTheEvidencePass:
         audit = await agent.audit(
             [
                 clip(
+                    segments=[anchor("a1", 0.0, 60.0)],
                     annotations=[
                         {
                             "segment_id": "a1",
@@ -295,6 +297,7 @@ class TestTheEvidencePass:
         await agent.audit(
             [
                 clip(
+                    segments=[anchor("a1", 0.0, 60.0)],
                     annotations=[
                         {"segment_id": "a1", "label": "chops", "span_start": 42.0, "span_end": 58.0}
                     ]
@@ -311,6 +314,7 @@ class TestTheEvidencePass:
         audit = await agent.audit(
             [
                 clip(
+                    segments=[anchor("a1", 0.0, 60.0)],
                     annotations=[
                         {"segment_id": "a1", "label": "chops", "span_start": 10.0, "span_end": 30.0}
                     ]
@@ -330,6 +334,7 @@ class TestTheEvidencePass:
         audit = await agent.audit(
             [
                 clip(
+                    segments=[anchor("a1", 0.0, 60.0)],
                     annotations=[
                         {"segment_id": "a1", "label": "chops", "span_start": 10.0, "span_end": 30.0}
                     ]
@@ -348,6 +353,7 @@ class TestTheEvidencePass:
         audit = await agent.audit(
             [
                 clip(
+                    segments=[anchor("a1", 0.0, 60.0)],
                     annotations=[
                         {"segment_id": "a1", "label": "chops", "span_start": 10.0, "span_end": 30.0}
                     ]
@@ -364,6 +370,7 @@ class TestTheEvidencePass:
         await agent.audit(
             [
                 clip(
+                    segments=[anchor("a1", 0.0, 60.0)],
                     annotations=[
                         {"segment_id": "a1", "label": "chops", "span_start": 10.0, "span_end": 30.0}
                     ]
@@ -380,3 +387,48 @@ class TestTheEvidencePass:
         assert _sample_across(list(range(20)), 4) == [0, 5, 10, 15]
         assert _sample_across([1, 2], 4) == [1, 2]
         assert _sample_across([], 3) == []
+
+
+class TestNothingToAuditIsNotNothingWrong:
+    """The audit's own blind spot, found by running it.
+
+    Five task queries produced six accepted clips with zero anchors between
+    them, and the audit said "accept" to all five — because with no labels there
+    was nothing to find fault with. A set of clips nobody can train on is a
+    failure whether or not it contains a wrong label.
+    """
+
+    @pytest.mark.asyncio
+    async def test_clips_with_no_anchors_at_all_fail(self):
+        agent = QualityCheckAgent(llm=False)
+        audit = await agent.audit(
+            [clip(video_id=f"vid_{n}", url=f"https://x/{n}") for n in range(6)],
+            verify_evidence=False,
+        )
+        assert audit.passed is False
+        assert "SET-NO-ANCHORS" in {f.check for f in audit.set_findings}
+
+    @pytest.mark.asyncio
+    async def test_a_set_where_most_clips_are_bare_is_a_warning(self):
+        agent = QualityCheckAgent(llm=False)
+        clips = [clip(video_id="vid_0", url="https://x/0", segments=[anchor("a", 0.0, 20.0)])]
+        clips += [clip(video_id=f"vid_{n}", url=f"https://x/{n}") for n in range(1, 5)]
+        audit = await agent.audit(clips, verify_evidence=False)
+        checks = {f.check for f in audit.set_findings}
+        assert "SET-THIN-ANCHORS" in checks
+        assert "SET-NO-ANCHORS" not in checks
+        assert audit.passed is True, "thin is a warning, not a rejection"
+
+    @pytest.mark.asyncio
+    async def test_a_properly_anchored_set_says_nothing_about_anchors(self):
+        agent = QualityCheckAgent(llm=False)
+        clips = [
+            clip(video_id=f"vid_{n}", url=f"https://x/{n}", segments=[anchor("a", 0.0, 20.0)])
+            for n in range(4)
+        ]
+        audit = await agent.audit(clips, verify_evidence=False)
+        assert audit.passed is True
+        assert not {f.check for f in audit.set_findings} & {
+            "SET-NO-ANCHORS",
+            "SET-THIN-ANCHORS",
+        }

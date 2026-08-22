@@ -58,3 +58,30 @@ def llm_label() -> str:
     if settings.resolved_llm_provider == "openrouter":
         return f"openrouter · {settings.openrouter_model}"
     return f"gemini · {settings.gemini_model}"
+
+
+def get_video_client() -> Any | None:
+    """A client that can be *asked how much of a video to look at*.
+
+    Sampling controls are the difference between a $0.005 look and a $0.37 one.
+    Measured on the same 89-minute video:
+
+    | request | video tokens |
+    |---|---|
+    | default sampling | 488,504 |
+    | `fps=1/60` (one frame a minute) | 140,222 |
+    | a two-minute window | 10,920 |
+
+    Gemini honours all of that. OpenRouter drops it — the three requests above
+    came back with the *identical* 488,504 tokens through that gateway, which is
+    how you know nothing arrived. So a whole-video look prefers Gemini whenever
+    a Google key exists, whatever the configured provider is for everything
+    else, and returns None when there is none: the caller then bounds the look
+    by duration instead of quietly paying for the whole thing.
+    """
+    settings = get_settings()
+    if not settings.google_api_key:
+        return None
+    from video_searching_agent.api.gemini_client import GeminiClient
+
+    return GeminiClient(api_key=settings.google_api_key)

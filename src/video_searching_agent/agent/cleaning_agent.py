@@ -702,6 +702,36 @@ class CleaningAgent:
 
     # --------------------------------------------------------------- plumbing
 
+    async def _duration_of(
+        self, video_id: str, verdict: CleaningVerdict
+    ) -> float | None:
+        """Ask the Datalake how long a video is.
+
+        Cheap, and it is the difference between timed caption segments and none.
+        A failure here is not a rejection: the read falls back to the untimed
+        whole-video caption, which still supports the frame check even though it
+        cannot support anchors.
+        """
+        try:
+            record = await self.client.get_video(video_id)
+        except MemoriesDatalakeError as exc:
+            verdict.errors.append(f"duration unavailable: {exc}")
+            return None
+        if not isinstance(record, dict):
+            return None
+        for key in ("duration_seconds", "duration", "durationSeconds"):
+            value = record.get(key)
+            if isinstance(value, int | float) and value > 0:
+                return float(value)
+            if isinstance(value, str):
+                try:
+                    parsed = float(value)
+                except ValueError:
+                    continue
+                if parsed > 0:
+                    return parsed
+        return None
+
     async def _read_derived(
         self,
         video_id: str,
@@ -716,6 +746,13 @@ class CleaningAgent:
         segments — so when the duration is known, the whole video is requested
         *as* a window.
 
+        The duration therefore decides whether this pass can produce anchors at
+        all, and it is not always handed in. A collection run knows it from the
+        download; a curation run over already-indexed videos does not, and
+        without it every clip came back with a caption and *no timed segments* —
+        which is exactly how five task queries produced six accepted clips and
+        zero anchors between them. So when it is not supplied, it is asked for.
+
         Missing pieces are tolerated. A clip whose captions are not ready yet
         produces an abstention downstream, not a rejection.
         """
@@ -723,6 +760,9 @@ class CleaningAgent:
         caption_segments: list[dict[str, Any]] = []
         transcription: str | None = None
         summary: str | None = None
+
+        if not duration_seconds:
+            duration_seconds = await self._duration_of(video_id, verdict)
 
         try:
             if duration_seconds:
