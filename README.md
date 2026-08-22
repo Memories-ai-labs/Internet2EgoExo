@@ -174,16 +174,19 @@ them:
   restrictions of every model and corpus used to build it, which is the same
   per-clip rights discipline this project applies to footage, pointed at the
   toolchain.
-- **Hours are being commoditised.** Build AI released
+- **Hours are being commoditised — but pixels are not.** Build AI went from
   [Egocentric-10K](https://www.humanoidsdaily.com/news/build-ai-open-sources-10-000-hours-of-factory-worker-video-to-scale-robot-learning)
-  — 10,000 h of real factory first-person video, 1.08 B frames, 2,138 workers,
-  Apache 2.0. Its dataset card also warns against worker surveillance and
-  biometric identification, and carries no consent documentation: even free hours
-  arrive with an open question on the one axis no downstream processing can fix.
-  A system whose pitch is "we can get you N hours" is standing on ground that
-  keeps vanishing. What does not commoditise is whether an hour is *provably* the
-  right viewpoint, hands-visible, licensed at every link of its chain, and
-  annotated deeply enough to train on.
+  (10,000 h, 1080p) to
+  [Egocentric-100K](https://huggingface.co/datasets/builddotai/Egocentric-100K)
+  (100,405 h, 10.8 B frames, **456×256**) to a reported ~1 M hours, all Apache
+  2.0, in five months. Note what scaling cost: a 17× drop in pixels per frame,
+  in a domain where finger articulation is the payload. And the 10K card warns
+  against surveillance uses while carrying no consent documentation, where
+  [Open-AoE](https://arxiv.org/abs/2607.14183) collects under explicit informed
+  consent with face masking in-pipeline — same modality, same year, opposite
+  posture. So "we can get you N hours" is competing with a million free ones,
+  while "N hours at a resolution and viewpoint where the hands are legible, with
+  the rights cleared" is competing with far less.
 
 ### Why no open-source project does exactly this
 

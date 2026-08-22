@@ -37,7 +37,9 @@ taxonomy, and an annotation budget spent up front.
 **[EPIC-KITCHENS-100](https://arxiv.org/pdf/1804.02748)** — 100 hours, 45 kitchen
 environments, 89,977 action clips, head-mounted, dense verb/noun action labels.
 The original proof that a single domain captured deeply beats a broad shallow
-sweep for action recognition.
+sweep for action recognition. **Licence: CC BY-NC 4.0 — commercial use
+prohibited**, with commercial terms available only by writing to the Bristol
+team.
 
 **[Ego4D](https://ego4d-data.org/)** — 3,670+ hours of daily-life egocentric
 video with a benchmark suite (episodic memory, forecasting, hand–object
@@ -51,6 +53,15 @@ effort**. Its distinguishing property is *simultaneous* capture: a head-mounted
 Aria view plus multiple surrounding exocentric cameras of the same skilled
 activity (sports, music, dance, bike repair). Two years of work by FAIR, Project
 Aria and 15 university partners.
+
+⚠️ **Two things to keep straight.** The 1,286 h is the *combined* ego + exo
+total; the egocentric portion is far smaller — a third-party comparison puts
+Ego-Exo4D V2 at **221.26 h of ego video** against 1,286.3 h total. And both Ego4D
+and Ego-Exo4D are distributed under a **signed licence agreement whose terms are
+not published on the public pages** — you request access, wait for approval, and
+read the agreement then. Neither site states whether commercial use is permitted.
+For a project that scores rights per clip, "the terms are behind a form" is
+itself the finding: it cannot be assumed permissive.
 
 > **Bearing here.** Ego-Exo4D is the clearest argument that the two viewpoints
 > are worth pairing, and its annotation depth is the bar the `L0–L3` gates in this
@@ -191,6 +202,56 @@ lighting, +6% colour) and task semantics (+11% unseen objects).
 > a claim about the authors' compliance; it is a reminder that **derived corpora
 > carry the licence of their inputs**, and that the provenance chain has to be
 > checked at the point of *reuse*, which is the posture §11 argues for.
+
+### Open-AoE
+
+**[arXiv 2607.14183](https://arxiv.org/abs/2607.14183)** — ~2,000 hours of
+egocentric manipulation video from **500+ contributors using 400+ consumer
+smartphone models**, claimed as the broadest consumer-phone device coverage in
+the category. Self-captured, not internet-sourced, and recorded **after explicit
+informed consent**.
+
+- **Annotations**: 32,407 distinct natural-language action descriptions;
+  MANO 21-joint hand poses; 6-DoF camera trajectories; temporally localised
+  atomic actions over 175 verbs, 8,030 objects, 135 scenes.
+- **Toolchain**, which is the more interesting half: on-device detection of valid
+  hand–object interaction at the edge → offline quality checks including **face
+  masking** and integrity validation → camera-trajectory estimation, hand-mesh
+  recovery and action segmentation → a three-gate inspection (completeness,
+  correctness, consistency). Downstream it ships visualisation with overlaid hand
+  meshes, reconstruct-and-retarget to robot trajectories, and training-ready
+  action representations.
+- **Licence: CC BY 4.0.**
+
+> **Bearing here.** The closest thing in open source to this repo's gate
+> structure — an interaction gate, a quality gate, and a three-way consistency
+> inspection — except pointed at footage the project itself collected. Its
+> existence is the strongest single piece of evidence for [§13](#13-why-no-open-source-project-does-exactly-this):
+> when a community builds open pipeline infrastructure for ego video, it builds
+> it around **capture**, never around acquisition from the web.
+
+### EgoVerse
+
+**[arXiv 2604.07607](https://arxiv.org/abs/2604.07607)** — 1,362 hours, 80,000
+episodes, 1,965 tasks, 240 scenes, **2,087 unique demonstrators**, from a
+collaboration spanning Georgia Tech, Stanford, UC San Diego, ETH Zürich, MIT,
+Meta Reality Labs, Mecka AI and Scale AI. Split into **EgoVerse-A** (75 h, 5.5%:
+academic labs, identical protocols, six flagship tasks, Project Aria glasses) and
+**EgoVerse-I** (~1,287 h, 94.5%: industry partners on custom stereo-fisheye rigs),
+with a smartphone-on-head-strap path for community contribution. Annotations:
+21-keypoint 3D hand poses, calibrated 6-DoF head poses, task descriptions, scene
+ids, object labels, demonstrator metadata.
+
+The platform half, **EgoDB**, is the notable part: continuous ingestion,
+standardised preprocessing, unified storage, SQL metadata indexing, a web
+browsing interface, and local sync for training. That is a data *platform* — and
+again, entirely for footage the consortium captures itself.
+
+⚠️ Its dataset licence is not clearly stated; the arXiv entry carries only the
+standard arXiv perpetual non-exclusive licence, which is a paper licence, not a
+data licence. Note also a scale discrepancy worth tracking: [Ego2Robot](#ego2robot)
+cites EgoVerse at 954 h while the v2 paper states 1,362 h — the corpus grew
+between versions.
 
 **[From Human Videos to Robot Manipulation](https://arxiv.org/html/2606.00054v1)** —
 the survey that maps this whole cluster; useful as an index, not as evidence.
@@ -637,16 +698,26 @@ produces a pattern:
 
 | Asset | Licence | Commercial use |
 |---|---|---|
-| Egocentric-10K | Apache 2.0 | ✅ (see §12 caveats) |
+| Egocentric-10K / -100K | Apache 2.0 | ✅ (see §12 caveats) |
+| Egocentric-1M | Apache 2.0 *(reported; card gated, unverified)* | ⚠️ verify before relying on it |
 | Action100M | CC BY 4.0 | ✅ with attribution |
+| Open-AoE | CC BY 4.0 | ✅ with attribution |
 | cosmos-curate (code) | Apache 2.0 | ✅ (models separate) |
 | video2dataset | MIT | ✅ |
 | Exo2Ego-V | Apache 2.0 | ✅ |
 | **EgoDex** | **CC-BY-NC-ND** | ❌ non-commercial, no derivatives |
+| **EPIC-KITCHENS-100** | **CC BY-NC 4.0** | ❌ (commercial terms by email to Bristol) |
 | **LAION-BVD** | **research only** | ❌ |
 | **EgoInfinity (as a whole)** | MIT code, encumbered deps | ❌ until deps are swapped |
+| **Ego4D / Ego-Exo4D** | **signed agreement, terms not public** | ⚠️ unknowable until you sign — do not assume |
+| EgoVerse | dataset licence not clearly stated | ⚠️ ask before use |
 | Panda-70M (data) | inherits HD-VILA-100M | ⚠️ check upstream |
 | EgoVid-5M | inherits Ego4D | ⚠️ check upstream |
+
+Note what the bottom half of that table has in common: the field's **most-cited**
+reference datasets are the ones you cannot use commercially, or cannot even read
+the terms of without signing first. The permissive corner is occupied almost
+entirely by 2026 releases and by tooling.
 
 **Why this belongs in a Related Work document.** This repo already treats licence
 as a first-class per-clip field — CC filtering at search time, licence in the
@@ -687,8 +758,58 @@ is precisely the class of unmeasured check this repo refuses to score as passing
 and note that three of the card's prohibited uses are things a factory-SOP
 product could drift into without anyone deciding to.
 
-Two further limits: ten thousand hours is not fifty thousand, and a single-source
-corpus caps environment and process diversity no matter how many hours it holds.
+### Egocentric-100K and Egocentric-1M — and what scaling cost
+
+🔴 **Egocentric-10K was the first release, not the event.** Build AI's
+progression, in five months:
+
+| Release | When | Hours | Resolution | Licence |
+|---|---|---|---|---|
+| Egocentric-10K | Nov 2025 | 10,000 | 1920×1080 | Apache 2.0 |
+| [Egocentric-100K](https://huggingface.co/datasets/builddotai/Egocentric-100K) | Dec 2025 | **100,405** | **456×256** | Apache 2.0 |
+| Egocentric-1M | Apr 2026 | ~1,000,000 (reported) | not verified | Apache 2.0 (reported) |
+
+**Egocentric-100K, verified at the dataset card**: 100,405 hours, **10.8 billion
+frames**, 2,010,759 clips, 24.79 TB, 30 fps H.265, monocular head-mounted
+**fisheye** Build AI Gen 1, per-worker calibrated camera intrinsics, mean 7.06
+hours per worker, Apache 2.0, access gated behind sharing contact information.
+
+⚠️ **Egocentric-1M is not source-verified here.** Its Hugging Face card returns
+401 to an unauthenticated fetch, so the ~1 M hours, the April 2026 date and the
+Apache 2.0 terms are secondary reporting only. Treat them as strongly indicated,
+not confirmed. Anyone planning around it should open the card while logged in
+before believing this table's last row.
+
+**The part nobody leads with: hours scaled 10×, and pixels per hour collapsed.**
+Egocentric-10K ships 1080p. Egocentric-100K ships **456×256**. That is roughly a
+seventeen-fold reduction in pixels per frame, and 256p is marginal precisely
+where this domain needs resolution — finger articulation, small tool affordances,
+what is actually being grasped. The free hours are real; they are not the same
+hours.
+
+> **What this does to §12's argument.** It strengthens it and sharpens it. Any
+> pitch of the form "we can get you N hours" is now competing with a million free
+> ones. But a pitch of the form "we can get you N hours *at a resolution and
+> viewpoint where the hands are legible, with the rights cleared*" is competing
+> with far less — because the corpus that won on hours gave up on pixels to get
+> there. Retrieval proposes; pixels decide, and at 256p there is less to decide
+> with.
+
+Two further limits hold across the whole family: a single-source corpus caps
+environment and process diversity no matter how many hours it holds, and the
+consent question below does not improve with scale — it multiplies.
+
+### Consent is a design choice, not a casualty of scale
+
+Worth putting side by side. Egocentric-10K's card carries no consent
+documentation and warns against surveillance uses.
+[Open-AoE](#open-aoe) — 2,000 hours from 500+ contributors — states that
+contributors record voluntarily **after explicit informed consent**, and its
+pipeline includes **face masking** as an offline quality stage.
+
+Same modality, same year, opposite posture. A collection system cannot retrofit
+consent, but it can record which posture a source had, and refuse to score an
+unverified one as clean. That is what the manifest's rights field is for.
 
 ### annotated-egocentric-10k-dataset
 
@@ -757,12 +878,17 @@ two adjacent problems and skipped this one.**
 
 ### Where the effort actually went
 
-**Capture.** A substantial open effort exists for *recording new* egocentric
-video: [EgoKit](https://arxiv.org/pdf/2605.16797) unifies low-cost collection
-across heterogeneous devices; [MobileEgo Anywhere](https://arxiv.org/pdf/2605.05945)
+**Capture.** A substantial and *accelerating* open effort exists for *recording
+new* egocentric video, and it now ships pipelines, not just datasets:
+[EgoKit](https://arxiv.org/pdf/2605.16797) unifies low-cost collection across
+heterogeneous devices; [MobileEgo Anywhere](https://arxiv.org/pdf/2605.05945)
 ships a free mobile app plus an open STERA processing pipeline so a lab can
-generate VLA-ready data on commodity phones. Both solve "how do we make more
-footage cheaply."
+generate VLA-ready data on commodity phones; [Open-AoE](#open-aoe) releases a
+full edge-to-training toolchain under CC BY 4.0 around 2,000 hours from 500+
+phone-carrying volunteers; [EgoVerse](#egoverse) runs an eight-institution
+consortium with its own ingestion-and-indexing platform. All of them answer "how
+do we make more footage cheaply, and process what we made." **None of them
+touches footage that already exists on the internet.**
 
 **Annotation.** An equally substantial effort exists for *labelling footage you
 already hold*: [EgoLive](https://arxiv.org/html/2604.23570v1) releases an
@@ -898,6 +1024,11 @@ are the parts that are worth owning.**
 - *EgoScale: Scaling Dexterous Manipulation with Diverse Egocentric Human Data.* https://rpl.cs.utexas.edu/publications/2026/02/18/zheng-arxiv26-egoscale/
 - Deng, Zhou et al. *HumanNet: Scaling Human-centric Video Learning to One Million Hours.* https://arxiv.org/abs/2605.06747
 - *Ego2Robot: Scalable Robot Data Synthesis from Egocentric Human Data.* https://arxiv.org/html/2608.02580
+- *Open-AoE: An Open Egocentric Manipulation Dataset and Toolchain for Embodied Learning.* (CC BY 4.0) https://arxiv.org/abs/2607.14183
+- *EgoVerse: An Egocentric Human Dataset for Robot Learning from Around the World.* https://arxiv.org/abs/2604.07607
+- *EgoKit: Towards Unified Low-Cost Egocentric Data Collection with Heterogeneous Devices.* https://arxiv.org/pdf/2605.16797
+- *MobileEgo Anywhere: Open Infrastructure for long-horizon egocentric data on commodity hardware.* https://arxiv.org/pdf/2605.05945
+- *EgoLive: A Large-Scale Egocentric Dataset from Real-World Human Tasks.* https://arxiv.org/html/2604.23570v1
 - *From Human Videos to Robot Manipulation: A Survey.* https://arxiv.org/html/2606.00054v1
 - *SiMDex: Mining Similar Egocentric Videos for Cross-Embodiment Dexterous Manipulation.* https://arxiv.org/abs/2608.04196
 - Chen et al. *Panda-70M: Captioning 70M Videos with Multiple Cross-Modality Teachers.* CVPR 2024. https://github.com/snap-research/Panda-70M
