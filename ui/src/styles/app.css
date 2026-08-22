@@ -831,3 +831,94 @@ code,
     flex-wrap: wrap;
   }
 }
+
+/* --- the pre-download funnel ------------------------------------------- */
+/* The look is now the largest loss in the run, and "0 candidates" reads as a
+   broken search when it usually means the footage exists and is tripod-shot.
+   So the arithmetic gets shown: found, kept, and where the rest went. */
+.funnel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+.funnel__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+.funnel__n {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.funnel__label {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+.funnel__arrow {
+  color: var(--muted);
+  padding: 0 var(--space-1);
+}
+.funnel__reasons {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.funnel__reasons li {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+.funnel__count {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-right: 0.4em;
+}
+
+/* --- the searches the request became ----------------------------------- */
+.searches {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+.searches__intro {
+  margin: 0 0 var(--space-2);
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+.searches__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.searches__item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4em;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--accent-soft);
+  font-size: 0.8125rem;
+}
+.searches__angle {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.searches__text { color: var(--foreground); }

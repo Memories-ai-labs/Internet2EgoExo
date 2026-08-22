@@ -274,9 +274,13 @@ class StreamingAgentWrapper:
             )
             session.start()
 
-            # Build enhanced query
+            # Rewrite the request into footage-shaped searches. This lived only
+            # on the non-streaming path, which means the UI and the deployment
+            # have never had it — the measured gain (packing 0-of-6 to 5-of-11
+            # egocentric) applied to a code path nobody ran.
+            rewrite = await self._rewrite_searches(user_query, parsed_query)
             enhanced_query = self._build_enhanced_query(
-                user_query, parsed_query, pinned_sources=bool(sources)
+                user_query, parsed_query, pinned_sources=bool(sources), rewrite=rewrite
             )
 
             # Initialize messages
@@ -469,6 +473,10 @@ class StreamingAgentWrapper:
                 discovery_usd=usage_metrics.total_cost_usd,
             )
 
+            # What the agent was told to search, so the UI can show it.
+            if rewrite is not None and getattr(rewrite, "queries", None):
+                dataset.searches_run = [q.as_dict() for q in rewrite.queries]
+
             # The metadata got its say above; now look at the footage, while the
             # candidate list is still just a list. A tripod pointed at a worktop
             # calls itself "POV" often enough that this is the difference between
@@ -599,11 +607,31 @@ class StreamingAgentWrapper:
             parts.append(f"target {parsed_query.target_hours}h")
         return ", ".join(parts)
 
+    async def _rewrite_searches(self, user_query: str, parsed_query: ParsedQuery) -> Any:
+        """Turn the request into searches that find footage rather than lessons."""
+        from video_searching_agent.curation.query_rewrite import rewrite_query
+
+        try:
+            return await rewrite_query(
+                user_query,
+                viewpoint=parsed_query.viewpoint if parsed_query else None,
+                # `self.gemini`, not `self.llm`. They are the same object in
+                # production (line 105 aliases one to the other), but the tests
+                # replace only `gemini` — so using the other one reached the
+                # real network and took the streaming suite from 15s to 61s.
+                # This is the second time; the first was in agent/core.py.
+                llm=self.gemini,
+            )
+        except Exception as exc:  # noqa: BLE001 - the plain query still works
+            logger.info("query rewrite unavailable: %s", exc)
+            return None
+
     def _build_enhanced_query(
         self,
         user_query: str,
         parsed_query: ParsedQuery,
         pinned_sources: bool = False,
+        rewrite: Any | None = None,
     ) -> str:
         """Build enhanced query string with extracted slots for Gemini."""
         parts = [f"User Query: {user_query}"]
@@ -637,6 +665,16 @@ class StreamingAgentWrapper:
         if slot_context:
             parts.append("\nExtracted Parameters:")
             parts.extend([f"- {ctx}" for ctx in slot_context])
+
+        queries = getattr(rewrite, "queries", None) if rewrite else None
+        if queries:
+            parts.append(
+                "\nSuggested searches. The request's own words select for tutorials "
+                "and reviews; these are how the footage is actually titled. Run "
+                "several of them and merge the results — one phrasing does not "
+                "cover the space:"
+            )
+            parts.extend(f"- [{q.angle}] {q.text}" for q in queries[:6])
 
         return "\n".join(parts)
 

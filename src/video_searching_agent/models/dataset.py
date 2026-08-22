@@ -98,9 +98,7 @@ class DatasetClip(BaseModel):
     usable_seconds: int | None = Field(None, description="Duration minus idle")
     idle_seconds: int | None = None
     task_family: str | None = Field(None, description="Gate 3 coverage bucket")
-    error_sample: bool = Field(
-        False, description="Gate 3: this clip shows an error or a rework"
-    )
+    error_sample: bool = Field(False, description="Gate 3: this clip shows an error or a rework")
     dup_group_id: str | None = Field(
         None, description="Near-duplicate group, when deduplication has run"
     )
@@ -169,6 +167,14 @@ class DatasetManifest(BaseModel):
     )
     exclusion_reasons: dict[str, int] = Field(default_factory=dict)
 
+    searches_run: list[dict] = Field(
+        default_factory=list,
+        description="The footage-shaped searches the request was rewritten into. "
+        "Carried so a reader can see why the results look nothing like what "
+        "they typed: 'packing a suitcase' becomes 'POV packing suitcase pack "
+        "with me' and 'ranger roll packing cubes carry on luggage'.",
+    )
+
     cost: CostBreakdown | None = Field(
         None,
         description="What this collection cost, and the cost per usable hour",
@@ -183,11 +189,7 @@ class DatasetManifest(BaseModel):
         The deepest measure available: labelled hours if the annotation pass has
         run, otherwise accepted hours, otherwise what was delivered.
         """
-        return (
-            self.hours.accepted_labeled_hours
-            or self.hours.accepted_hours
-            or self.total_hours
-        )
+        return self.hours.accepted_labeled_hours or self.hours.accepted_hours or self.total_hours
 
     @property
     def target_met(self) -> bool:
@@ -208,8 +210,10 @@ class DatasetManifest(BaseModel):
         by_platform: dict[str, int] = {}
         reusable = 0
         for clip in self.clips:
-            key = clip.viewpoint.value if isinstance(clip.viewpoint, Viewpoint) else str(
-                clip.viewpoint
+            key = (
+                clip.viewpoint.value
+                if isinstance(clip.viewpoint, Viewpoint)
+                else str(clip.viewpoint)
             )
             by_viewpoint[key] = by_viewpoint.get(key, 0) + 1
             by_platform[clip.platform] = by_platform.get(clip.platform, 0) + 1
@@ -253,9 +257,7 @@ class DatasetManifest(BaseModel):
             accepted_labeled_hours=round(labeled_seconds / 3600, 3),
             idle_hours=round(idle_seconds / 3600, 3),
             media_yield=(
-                round((accepted_seconds / 3600) / self.total_hours, 3)
-                if self.total_hours
-                else 0.0
+                round((accepted_seconds / 3600) / self.total_hours, 3) if self.total_hours else 0.0
             ),
         )
         return self
