@@ -135,6 +135,17 @@ Return ONLY a JSON object, no markdown:
 }"""
 
 
+def _looking_enabled() -> bool:
+    """Whether this deployment lets the annotating pass examine frames."""
+
+    try:
+        from video_searching_agent.config.settings import get_settings
+
+        return bool(get_settings().look_at_frames)
+    except Exception:  # noqa: BLE001 - settings are optional here
+        return False
+
+
 @dataclass
 class AnnotationRun:
     """Everything one annotation pass produced."""
@@ -147,6 +158,8 @@ class AnnotationRun:
     spans_rejected: int = 0
     tags_written: list[str] = field(default_factory=list)
     task_family: str | None = None
+    # What examining frames cost on this pass, so looking is accountable.
+    look_cost_usd: float = 0.0
     error_sample: bool = False
     errors: list[str] = field(default_factory=list)
 
@@ -195,17 +208,22 @@ class AnnotationAgent:
         client: MemoriesDatalakeClient | None = None,
         gemini: Any | None = None,
         max_spans: int = 12,
+        llm: Any | None = None,
     ) -> None:
         """Initialize the agent.
 
         Args:
             client: Datalake client. Created on first use when omitted.
-            gemini: Model client for the verdicts.
+            gemini: Model client for the verdicts. Named for the provider it
+                once required; `llm` is the same thing said accurately, and
+                either works.
             max_spans: Ceiling on spans read per pass — each read costs money.
+            llm: Model client. Takes precedence over `gemini`.
         """
         self._client = client
-        self._gemini = gemini
+        self._gemini = llm if llm is not None else gemini
         self.max_spans = max_spans
+        self._annotating: Any | None = None
 
     @property
     def client(self) -> MemoriesDatalakeClient:
@@ -257,7 +275,21 @@ class AnnotationAgent:
         run.spans_considered = len(actions)
         action_annotations: list[ClipAnnotation] = []
 
+        looking = _looking_enabled() and self._gemini not in (None, False)
+        looker = self._looker() if looking else None
+
         for segment in actions[: self.max_spans]:
+            if looker is not None:
+                annotation = await self._label_by_looking(
+                    looker, run, video_id, segment, action_annotations
+                )
+                if annotation is not None:
+                    action_annotations.append(annotation)
+                    run.annotations.append(annotation)
+                    continue
+                # The loop did not converge; fall through to the caption-only
+                # path rather than leaving the span unlabelled.
+
             verdict = await self._judge_span(
                 text=segment.source_text,
                 transcription=None,
@@ -531,6 +563,77 @@ class AnnotationAgent:
             observation=(caption or transcription or "no derived text")[:300],
         )
         return caption, transcription
+
+    def _looker(self) -> Any:
+        """The ReAct annotating agent, built once per run."""
+
+        if self._annotating is None:
+            from video_searching_agent.agent.annotating_agent import AnnotatingAgent
+
+            self._annotating = AnnotatingAgent(client=self.client, llm=self._gemini)
+        return self._annotating
+
+    async def _label_by_looking(
+        self,
+        looker: Any,
+        run: AnnotationRun,
+        video_id: str,
+        segment: Segment,
+        already: list[ClipAnnotation],
+    ) -> ClipAnnotation | None:
+        """Label one span through the looking loop.
+
+        Returns None when the loop did not converge, so the caller can fall back
+        to the caption-only path — an unlabelled span is worse than a span
+        labelled from words alone.
+        """
+        label = await looker.label_span(
+            video_id,
+            segment.span_start,
+            segment.span_end,
+            task_label=None,
+            used_labels=[a.label for a in already if a.label],
+            trace=run.trace,
+        )
+        run.look_cost_usd += label.cost_usd
+        if label.error or not label.label:
+            return None
+        if not label.usable:
+            run.spans_rejected += 1
+            return None
+
+        annotation = self._annotation_from(
+            {
+                "label": label.label,
+                "narration": label.narration,
+                "hands_visible": label.hands_visible,
+                "left_hand": label.left_hand,
+                "right_hand": label.right_hand,
+                "objects": label.objects,
+                "tags": [],
+            },
+            segment_id=segment.segment_id,
+            parent_segment_id=segment.parent_segment_id,
+            hier_level="action",
+            span_start=segment.span_start,
+            span_end=segment.span_end,
+        )
+        # Where the hand assignment came from is part of the record: a dataset
+        # that cannot say whether a label was seen or read is not auditable.
+        if label.hand_evidence:
+            annotation.tags = [*annotation.tags, f"hand_evidence/{label.hand_evidence}"]
+        for event in label.events:
+            run.annotations.append(
+                self._annotation_from(
+                    {"label": event.get("label"), "narration": None},
+                    segment_id=f"{segment.segment_id}.e{len(run.annotations)}",
+                    parent_segment_id=segment.segment_id,
+                    hier_level="event",
+                    span_start=event["span_start"],
+                    span_end=event["span_end"],
+                )
+            )
+        return annotation
 
     async def _judge_span(
         self,

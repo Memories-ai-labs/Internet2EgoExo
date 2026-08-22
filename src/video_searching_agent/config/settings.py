@@ -143,6 +143,23 @@ class Settings(BaseSettings):
         validation_alias="REQUEST_BUDGET_SECONDS",
     )
 
+    # Whether the clipping and annotating passes may look at frames.
+    #
+    # Every judgement in those two passes used to be read off caption wording,
+    # and the failures were the kind you only find by looking. Looking costs
+    # about $0.005 a cut and one or two cuts a clip. Off falls back to the
+    # caption-only path, which still works — less well, and it says so.
+    # Off by default on purpose. Looking spends money and makes network calls,
+    # and a capability that does both should be asked for rather than assumed:
+    # switching it on by default turned four offline unit tests into real API
+    # calls and a 147-second suite. Deployments that want it set the variable.
+    look_at_frames: bool = Field(
+        default=False,
+        description="Let the clipping and annotating agents examine frames "
+        "(~$0.01-0.02 a clip). Off uses caption text alone.",
+        validation_alias="LOOK_AT_FRAMES",
+    )
+
     # Looking at the footage before downloading it
     viewpoint_check: str = Field(
         default="frames",

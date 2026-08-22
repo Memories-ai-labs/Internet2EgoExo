@@ -78,6 +78,17 @@ TAG_EGOCENTRIC = "first_person_view"
 TAG_EXOCENTRIC = "third_person_view"
 
 
+def _looking_enabled() -> bool:
+    """Whether this deployment lets the clipping pass examine frames."""
+
+    try:
+        from video_searching_agent.config.settings import get_settings
+
+        return bool(get_settings().look_at_frames)
+    except Exception:  # noqa: BLE001 - settings are optional here
+        return False
+
+
 def _configured_sight_mode() -> str:
     """How hard to look before downloading: ``off``, ``frames`` or ``watch``.
 
@@ -163,6 +174,9 @@ class CleaningVerdict:
     """The post-index filter's answer, plus the clipping it produced."""
 
     video_id: str
+    # What examining frames cost on this clip, so a run's looking is accountable
+    # rather than absorbed silently.
+    look_cost_usd: float = 0.0
     accepted: bool = False
     rejection_reason: str | None = None
     frame_check: FrameCheck | None = None
@@ -236,6 +250,7 @@ class CleaningAgent:
         self.max_action_seconds = max_action_seconds
         self._llm = llm
         self._llm_resolved = llm is not None
+        self._clipping: Any | None = None
 
     @property
     def client(self) -> MemoriesDatalakeClient:
@@ -534,6 +549,13 @@ class CleaningAgent:
             require_hands=require_hands,
             total_duration=media.get("duration_seconds"),
         )
+        # The walk has never seen the footage. Where looking is available and
+        # affordable, the clipping agent checks its boundaries against frames
+        # and corrects them; where it is not, the walk stands and the record
+        # says so.
+        verdict.segments = await self._refine_anchors(
+            video_id, verdict, duration=duration
+        )
         verdict.trace.add(
             thought="Find where each action starts and stops, as time anchors.",
             action="propose_segments",
@@ -555,6 +577,89 @@ class CleaningAgent:
             await self._write_back(verdict, check)
 
         return verdict
+
+    async def _refine_anchors(
+        self,
+        video_id: str,
+        verdict: CleaningVerdict,
+        duration: float | None,
+    ) -> list[Segment]:
+        """Let the clipping agent look at the proposed boundaries.
+
+        Returns the anchors to keep — the refined ones when the agent ran and
+        converged, the walk's own when it did not. A refinement that fails is
+        not a reason to lose the anchors: the walk's boundaries are rough, not
+        wrong.
+
+        Task and event anchors are left alone. The agent works at action level,
+        which is the level whose boundaries the walk actually guesses at, and
+        the task span is recomputed from what comes back so it still covers its
+        children.
+        """
+        # Deliberately `self._llm` and not the `llm` property: refinement uses a
+        # model it was *given*, and never goes and resolves one. Resolving here
+        # turned four offline unit tests into real API calls, and more to the
+        # point it made an expensive network round trip a hidden side effect of
+        # calling clean(). The pipeline hands one in; a bare agent stays offline.
+        if not _looking_enabled() or self._llm is None or self._llm is False:
+            return verdict.segments
+
+        actions = [s for s in verdict.segments if s.hier_level == "action"]
+        if not actions:
+            return verdict.segments
+
+        try:
+            from video_searching_agent.agent.clipping_agent import ClippingAgent
+
+            agent = self._clipping or ClippingAgent(client=self.client, llm=self._llm)
+            self._clipping = agent
+            result = await agent.refine(
+                video_id,
+                [s.as_dict() for s in actions],
+                duration_seconds=duration,
+                min_span_seconds=self.min_action_seconds,
+            )
+        except Exception as exc:  # noqa: BLE001 - the walk still stands
+            verdict.errors.append(f"clipping agent unavailable: {str(exc)[:150]}")
+            return verdict.segments
+
+        verdict.trace.add(
+            thought="The walk has never seen the footage; check its boundaries.",
+            action="refine_anchors",
+            action_input={"proposed": result.proposed},
+            observation=(
+                f"{len(result.spans)} spans, {result.examined} examined, "
+                f"{result.looks} looks, ${result.cost_usd:.4f}"
+                + (f", fell back: {result.notes}" if result.fell_back else "")
+            ),
+        )
+        verdict.look_cost_usd += result.cost_usd
+        if result.fell_back or not result.spans:
+            return verdict.segments
+
+        refined: list[Segment] = []
+        for index, span in enumerate(result.spans, start=1):
+            refined.append(
+                Segment(
+                    segment_id=f"t1.a{index}",
+                    parent_segment_id="t1",
+                    hier_level="action",
+                    span_start=span.start,
+                    span_end=span.end,
+                    hands_visible=True,
+                    evidence=[span.why] if span.why else ["checked against frames"],
+                )
+            )
+        task = Segment(
+            segment_id="t1",
+            parent_segment_id=None,
+            hier_level="task",
+            span_start=min(span.span_start for span in refined),
+            span_end=max(span.span_end for span in refined),
+            hands_visible=True,
+            evidence=[f"{len(refined)} action anchors"],
+        )
+        return [task, *refined]
 
     # -------------------------------------------------------- agentic clipping
 

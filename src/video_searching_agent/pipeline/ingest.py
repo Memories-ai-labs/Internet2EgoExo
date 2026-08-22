@@ -138,6 +138,18 @@ class IngestResult:
         return payload
 
 
+def _llm_or_none() -> Any | None:
+    """A model client, or None when this deployment has no key for one."""
+
+    try:
+        from video_searching_agent.api.llm import get_llm_client
+
+        return get_llm_client()
+    except Exception as exc:  # noqa: BLE001 - the caption-only path still works
+        logger.info("no model available for the looking passes: %s", exc)
+        return None
+
+
 class IngestPipeline:
     """Screen → download → upload → index → clean → annotate, one clip at a time."""
 
@@ -180,7 +192,10 @@ class IngestPipeline:
     @property
     def cleaning(self) -> CleaningAgent:
         if self._cleaning is None:
-            self._cleaning = CleaningAgent(client=self.client)
+            # The model is handed in on purpose: the cleaning agent only looks
+            # at frames when it was given one, so a bare agent stays offline and
+            # this is the wiring that opts the pipeline in.
+            self._cleaning = CleaningAgent(client=self.client, llm=_llm_or_none())
         return self._cleaning
 
     @property

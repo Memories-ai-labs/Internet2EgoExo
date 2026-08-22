@@ -167,7 +167,9 @@ class TestTheLookBeforeTheDownload:
         verdict = agent.screen(info, wanted_viewpoint=Viewpoint.EGOCENTRIC)
         assert verdict.accepted is True  # the words gave nothing away
 
-        verdict = await agent.look(verdict, info, wanted_viewpoint=Viewpoint.EGOCENTRIC)
+        verdict = await agent.look(
+            verdict, info, wanted_viewpoint=Viewpoint.EGOCENTRIC, mode="frames"
+        )
         assert verdict.accepted is False
         assert "frames show exocentric" in verdict.reasons[0]
         assert any(check.check_id == "PRE-SIGHT" for check in verdict.checks)
@@ -189,6 +191,7 @@ class TestTheLookBeforeTheDownload:
             agent.screen(info, wanted_viewpoint=Viewpoint.EGOCENTRIC),
             info,
             wanted_viewpoint=Viewpoint.EGOCENTRIC,
+            mode="frames",
         )
         assert verdict.accepted is True
         assert verdict.viewpoint == Viewpoint.EGOCENTRIC
@@ -208,7 +211,9 @@ class TestTheLookBeforeTheDownload:
         agent = self._sighted("{}")
         info = {"title": "cooking", "url": "https://www.youtube.com/watch?v=abc"}
         before = agent.screen(info, wanted_viewpoint=Viewpoint.EGOCENTRIC)
-        after = await agent.look(before, info, wanted_viewpoint=Viewpoint.EGOCENTRIC)
+        after = await agent.look(
+            before, info, wanted_viewpoint=Viewpoint.EGOCENTRIC, mode="frames"
+        )
         assert after.accepted is True
         assert any("frame check did not run" in note for note in after.notes)
 

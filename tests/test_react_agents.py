@@ -113,8 +113,10 @@ class TestClipping:
     @pytest.mark.asyncio
     async def test_a_span_below_the_action_floor_is_dropped(self):
         model = _Model(
-            ['{"spans": [{"start": 10.0, "end": 10.5, "why": "w"}, '
-             '{"start": 20.0, "end": 40.0, "why": "w"}]}']
+            [
+                '{"spans": [{"start": 10.0, "end": 10.5, "why": "w"}, '
+                '{"start": 20.0, "end": 40.0, "why": "w"}]}'
+            ]
         )
         agent = ClippingAgent(client=_Lake(), llm=model, eyes=_Eyes())
         result = await agent.refine("vid_1", _proposed((10.0, 50.0)), duration_seconds=600.0)
@@ -125,8 +127,10 @@ class TestClipping:
         """G2-TREE-2. A model that moved a boundary easily produces a hair of overlap."""
 
         model = _Model(
-            ['{"spans": [{"start": 0.0, "end": 30.0, "why": "a"}, '
-             '{"start": 25.0, "end": 60.0, "why": "b"}]}']
+            [
+                '{"spans": [{"start": 0.0, "end": 30.0, "why": "a"}, '
+                '{"start": 25.0, "end": 60.0, "why": "b"}]}'
+            ]
         )
         agent = ClippingAgent(client=_Lake(), llm=model, eyes=_Eyes())
         result = await agent.refine("vid_1", _proposed((0.0, 60.0)), duration_seconds=600.0)
@@ -174,9 +178,7 @@ class TestAnnotating:
         """The whole point. Captions that do not name a hand used to mean both
         fields null; the frames often show it."""
 
-        model = _Model(
-            ['{"tool": "look", "arguments": {"frames": 6}}', self.ANSWER % "frames"]
-        )
+        model = _Model(['{"tool": "look", "arguments": {"frames": 6}}', self.ANSWER % "frames"])
         eyes = _Eyes()
         agent = AnnotatingAgent(client=_Lake(), llm=model, eyes=eyes)
         result = await agent.label_span("vid_1", 10.0, 40.0)
@@ -219,8 +221,10 @@ class TestAnnotating:
     @pytest.mark.asyncio
     async def test_events_are_clamped_inside_their_span(self):
         model = _Model(
-            ['{"label": "x", "usable": true, "events": ['
-            '{"start": 5.0, "end": 500.0, "label": "outside"}]}']
+            [
+                '{"label": "x", "usable": true, "events": ['
+                '{"start": 5.0, "end": 500.0, "label": "outside"}]}'
+            ]
         )
         agent = AnnotatingAgent(client=_Lake(), llm=model, eyes=_Eyes())
         result = await agent.label_span("vid_1", 10.0, 40.0)
@@ -232,8 +236,10 @@ class TestAnnotating:
         """A label justified by footage outside its own span is a wrong label."""
 
         model = _Model(
-            ['{"tool": "look", "arguments": {"start": 0, "end": 900}}',
-             '{"label": "x", "usable": true}']
+            [
+                '{"tool": "look", "arguments": {"start": 0, "end": 900}}',
+                '{"label": "x", "usable": true}',
+            ]
         )
         eyes = _Eyes()
         agent = AnnotatingAgent(client=_Lake(), llm=model, eyes=eyes)
@@ -242,12 +248,8 @@ class TestAnnotating:
 
     @pytest.mark.asyncio
     async def test_a_failed_look_leaves_the_span_unlooked(self):
-        model = _Model(
-            ['{"tool": "look", "arguments": {}}', self.ANSWER % "frames"]
-        )
-        agent = AnnotatingAgent(
-            client=_Lake(), llm=model, eyes=_Eyes(error="409 not ready")
-        )
+        model = _Model(['{"tool": "look", "arguments": {}}', self.ANSWER % "frames"])
+        agent = AnnotatingAgent(client=_Lake(), llm=model, eyes=_Eyes(error="409 not ready"))
         result = await agent.label_span("vid_1", 10.0, 40.0)
         assert result.looked is False
         assert result.left_hand is None, "a look that failed is not evidence"
@@ -275,3 +277,132 @@ class TestAnnotating:
         )
         assert "assemble-wardrobe" in seen[0]
         assert "read-manual" in seen[0]
+
+
+class TestTheLookingPathIsActuallyReached:
+    """Wiring bugs that only appear when looking is switched on.
+
+    Looking is off in tests by default (conftest pins it), which is right — it
+    spends money and touches the network. The cost of that is a whole code path
+    nothing exercises, and it bit immediately: the annotation agent's wiring
+    referenced `self._llm` on a class whose field is `_gemini`, and a field it
+    never declared. Both crashed on the first real run and no test noticed.
+    """
+
+    @pytest.mark.asyncio
+    async def test_annotation_routes_spans_through_the_looking_loop(self, looking):
+        from video_searching_agent.agent.annotation_agent import AnnotationAgent
+        from video_searching_agent.agent.cleaning_agent import Segment
+
+        answer = (
+            '{"label": "screw-bracket-to-panel", "narration": "n", "usable": true, '
+            '"hands_visible": true, "left_hand": "holds the bracket", '
+            '"right_hand": "turns the screwdriver", "hand_evidence": "frames", '
+            '"objects": ["bracket"]}'
+        )
+        model = _Model(['{"tool": "look", "arguments": {}}', answer])
+        agent = AnnotationAgent(client=_Lake(), llm=model)
+        agent._annotating = __import__(
+            "video_searching_agent.agent.annotating_agent", fromlist=["AnnotatingAgent"]
+        ).AnnotatingAgent(client=_Lake(), llm=model, eyes=_Eyes())
+
+        segments = [
+            Segment(
+                segment_id="t1.a1",
+                parent_segment_id="t1",
+                hier_level="action",
+                span_start=10.0,
+                span_end=40.0,
+                hands_visible=True,
+                source_text="a hand does something",
+            )
+        ]
+        run = await agent.annotate_video("vid_1", segments, write_back=False)
+
+        labelled = [a for a in run.annotations if a.hier_level == "action"]
+        assert labelled, "the looking path produced nothing"
+        assert labelled[0].label == "screw-bracket-to-panel"
+        assert labelled[0].left_hand == "holds the bracket"
+        assert labelled[0].right_hand == "turns the screwdriver"
+        # Where the assignment came from is part of the record.
+        assert "hand_evidence/frames" in labelled[0].tags
+        assert run.look_cost_usd > 0
+
+    @pytest.mark.asyncio
+    async def test_a_loop_that_fails_falls_back_to_the_caption_path(self, looking):
+        """An unlabelled span is worse than one labelled from words alone."""
+
+        from video_searching_agent.agent.annotating_agent import AnnotatingAgent
+        from video_searching_agent.agent.annotation_agent import AnnotationAgent
+        from video_searching_agent.agent.cleaning_agent import Segment
+
+        caption_answer = (
+            '{"label": "from-captions", "narration": "n", "usable": true, "hands_visible": true}'
+        )
+        # The looking loop fails; the caption-only call after it succeeds.
+        agent = AnnotationAgent(client=_Lake(), llm=_Model([caption_answer, caption_answer]))
+        agent._annotating = AnnotatingAgent(client=_Lake(), llm=_Model(["not json"]), eyes=_Eyes())
+
+        run = await agent.annotate_video(
+            "vid_1",
+            [
+                Segment(
+                    segment_id="t1.a1",
+                    parent_segment_id="t1",
+                    hier_level="action",
+                    span_start=10.0,
+                    span_end=40.0,
+                    hands_visible=True,
+                    source_text="a hand does something",
+                )
+            ],
+            write_back=False,
+        )
+        labelled = [a for a in run.annotations if a.hier_level == "action"]
+        assert labelled and labelled[0].label == "from-captions"
+
+    @pytest.mark.asyncio
+    async def test_looking_off_never_builds_the_loop(self):
+        """The default path must not touch the network or the field.
+
+        No `looking` fixture here, so the conftest's off setting applies.
+        """
+        from video_searching_agent.agent.annotation_agent import AnnotationAgent
+        from video_searching_agent.agent.cleaning_agent import Segment
+
+        agent = AnnotationAgent(
+            client=_Lake(),
+            llm=_Model(['{"label": "x", "narration": "n", "usable": true, "hands_visible": true}']),
+        )
+        run = await agent.annotate_video(
+            "vid_1",
+            [
+                Segment(
+                    segment_id="t1.a1",
+                    parent_segment_id="t1",
+                    hier_level="action",
+                    span_start=10.0,
+                    span_end=40.0,
+                    hands_visible=True,
+                    source_text="a hand does something",
+                )
+            ],
+            write_back=False,
+        )
+        assert agent._annotating is None, "no loop should have been built"
+        assert run.look_cost_usd == 0.0
+
+    @pytest.mark.asyncio
+    async def test_cleaning_refines_anchors_only_with_a_model_it_was_given(self, looking):
+        """Refinement must never resolve a model of its own — doing so made an
+        expensive network round trip a hidden side effect of clean()."""
+
+        from video_searching_agent.agent.cleaning_agent import CleaningAgent
+
+        agent = CleaningAgent(client=_Lake(), llm=None)
+        assert agent._llm is None
+        # With no model handed in, the refinement path is not entered at all,
+        # which is what keeps a bare agent offline.
+        verdict = type("V", (), {"segments": [], "errors": [], "trace": None})()
+        refined = await agent._refine_anchors("vid_1", verdict, duration=100.0)
+        assert refined == []
