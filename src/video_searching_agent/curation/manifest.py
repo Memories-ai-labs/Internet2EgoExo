@@ -163,7 +163,13 @@ async def verify_viewpoints(
             return references
 
     candidates = [
-        {"video_id": youtube_video_id(ref.url or ""), "url": ref.url} for ref in references
+        {
+            "video_id": youtube_video_id(ref.url or ""),
+            "url": ref.url,
+            # Needed to refuse a watch that would cost a third of a dollar.
+            "duration_seconds": ref.duration_seconds,
+        }
+        for ref in references
     ]
     verdicts = await check_many(llm, candidates, mode=resolved)
 

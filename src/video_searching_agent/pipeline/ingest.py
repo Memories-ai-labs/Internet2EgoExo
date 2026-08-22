@@ -74,6 +74,10 @@ class IngestResult:
     annotation: AnnotationRun | None = None
 
     rejection_reason: str | None = None
+    # Set when the run stopped without a verdict either way — the clip is
+    # indexed or indexing, and can be curated later. Distinct from a rejection,
+    # which is a judgement, and from an error, which is a fault.
+    pending_reason: str | None = None
     tags_written: list[str] = field(default_factory=list)
     error: str | None = None
     notes: list[str] = field(default_factory=list)
@@ -99,6 +103,7 @@ class IngestResult:
             "title": self.downloaded_title,
             "tags_written": self.tags_written,
             "rejection_reason": self.rejection_reason,
+            "pending_reason": self.pending_reason,
             "error": self.error,
             "notes": self.notes,
             "annotation_level": self.annotation_level,
@@ -277,9 +282,23 @@ class IngestPipeline:
                     result.operation, max_wait_seconds=wait_seconds
                 )
                 if not operation.get("done"):
-                    result.notes.append(
-                        "indexing still running; verify later with this video_id"
+                    # Neither accepted nor rejected: the footage is fine, the
+                    # index just has not caught up. Saying so plainly matters —
+                    # returning with the stage still "indexing" and no reason
+                    # made a clip look like it silently vanished, which is
+                    # exactly how a whole-pipeline run reported "nothing
+                    # survived collection" with an empty list of reasons.
+                    await stage("pending")
+                    budget = (
+                        f"inside {wait_seconds:.0f}s"
+                        if isinstance(wait_seconds, int | float)
+                        else "inside the wait budget"
                     )
+                    result.pending_reason = (
+                        f"indexing did not finish {budget}; the Datalake is still "
+                        "working on it. Curate this video_id later — nothing is lost."
+                    )
+                    result.notes.append(result.pending_reason)
                     return result
                 if operation.get("error"):
                     await stage("failed")

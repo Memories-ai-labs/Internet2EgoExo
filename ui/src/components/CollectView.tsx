@@ -36,6 +36,9 @@ const TERMINAL: Record<string, string> = {
   rejected: "rejected",
   skipped: "skipped",
   failed: "failed",
+  // Indexed, but the Datalake had not finished when the request ran out of
+  // time. Not a rejection and not a fault — curate it later.
+  pending: "still indexing",
 };
 
 /** How far a clip actually got, which a terminal stage does not say by itself.
@@ -55,6 +58,9 @@ function furthestStage(clip: IngestClip): number {
       // check that follows it; the reason says which, so the journey credits
       // the look only when it happened.
       return clip.screening?.sight ? STAGES.indexOf("looking") : STAGES.indexOf("probing");
+    case "pending":
+      // It got as far as being indexed; the judgement is what is missing.
+      return STAGES.indexOf("indexing");
     case "failed":
       if (clip.video_id) return STAGES.indexOf("indexing");
       if (clip.size_mb) return STAGES.indexOf("downloading");
@@ -142,6 +148,9 @@ function ClipResult({ clip }: { clip: IngestClip }) {
 
       <Journey clip={clip} />
 
+      {clip.pending_reason ? (
+        <div className="notice">{clip.pending_reason}</div>
+      ) : null}
       {clip.rejection_reason ? (
         <div className="notice notice--error">{clip.rejection_reason}</div>
       ) : null}

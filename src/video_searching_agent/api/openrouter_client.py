@@ -170,13 +170,29 @@ class OpenRouterClient:
             )
         return [{"role": "user", "content": content}]
 
-    def new_video_conversation(self, text: str, video_url: str) -> list[dict[str, Any]]:
+    # OpenRouter forwards the URL but drops every sampling control on the way.
+    # Measured against an 89-minute video: fps=1/60, a two-minute window, and
+    # media_resolution=low all billed the identical 488,504 video tokens and
+    # $0.367 (the last was rejected outright with a 400). So a watch through
+    # this provider always costs the whole video, which is what bounds it by
+    # duration in frame_viewpoint. The Gemini client honours the controls.
+    SAMPLING_CONTROLS_HONOURED = False
+
+    def new_video_conversation(
+        self,
+        text: str,
+        video_url: str,
+        *,
+        fps: float | None = None,
+        start_offset: str | None = None,
+        end_offset: str | None = None,
+    ) -> list[dict[str, Any]]:
         """Start a conversation that shows the model an actual video.
 
-        OpenRouter passes a YouTube URL through to Google AI Studio, which
-        watches it. It is billed per video token, so a ten-minute video costs
-        real money — see :mod:`video_searching_agent.curation.frame_viewpoint`
-        for why this is the escalation and not the default.
+        The sampling arguments are accepted so both clients share a signature,
+        and ignored because this provider ignores them — see
+        :data:`SAMPLING_CONTROLS_HONOURED`. Cost therefore scales with the
+        video's whole length here, which is why the caller bounds it.
         """
         return [
             {

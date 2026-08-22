@@ -134,9 +134,10 @@ class Settings(BaseSettings):
     # Looking at the footage before downloading it
     viewpoint_check: str = Field(
         default="frames",
-        description="Pre-download viewpoint check: 'off', 'frames' (a few "
-        "stills, ~$0.002 a candidate) or 'watch' (Gemini watches the whole "
-        "video, ~$0.26 for ten minutes)",
+        description="Viewpoint check: 'off'; 'frames' (a few stills, ~$0.002 a "
+        "candidate); 'escalate' (frames, then a watch only for the ones they "
+        "cannot call); or 'watch' (always watch, which costs whole-video money "
+        "on a provider that ignores the frame-rate hint)",
         validation_alias="VIEWPOINT_CHECK",
     )
 

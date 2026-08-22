@@ -33,8 +33,19 @@ class _FakeClient:
         self.calls.append({"prompt": prompt, "images": len(images)})
         return [{"role": "user", "content": prompt}]
 
-    def new_video_conversation(self, prompt: str, video_url: str) -> list[dict]:
-        self.calls.append({"prompt": prompt, "video": video_url})
+    def new_video_conversation(
+        self,
+        prompt: str,
+        video_url: str,
+        *,
+        fps: float | None = None,
+        start_offset: str | None = None,
+        end_offset: str | None = None,
+    ) -> list[dict]:
+        # Mirrors both real clients, including the sampling controls one of them
+        # honours. A fake with the old signature made a TypeError look like a
+        # model that declined to answer.
+        self.calls.append({"prompt": prompt, "video": video_url, "fps": fps})
         return [{"role": "user", "content": prompt}]
 
     async def create_message_async(self, messages: list[dict], **_: object) -> dict:

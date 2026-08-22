@@ -111,19 +111,45 @@ class GeminiClient:
         parts.extend(types.Part.from_bytes(data=raw, mime_type=mime_type) for raw in images)
         return [types.Content(role="user", parts=parts)]
 
-    def new_video_conversation(self, text: str, video_url: str) -> list[types.Content]:
+    def new_video_conversation(
+        self,
+        text: str,
+        video_url: str,
+        *,
+        fps: float | None = None,
+        start_offset: str | None = None,
+        end_offset: str | None = None,
+    ) -> list[types.Content]:
         """Start a conversation that shows the model an actual video.
 
-        Gemini takes a YouTube URL as a file part and watches it. It is billed
-        per video token, so this is an escalation rather than a default — see
-        :mod:`video_searching_agent.curation.frame_viewpoint`.
+        Gemini takes a YouTube URL as a file part and watches it, and — unlike
+        the OpenRouter path — it honours the sampling controls. That matters
+        enormously for cost: default sampling on an 89-minute video billed
+        488,504 video tokens and $0.367, where one frame a minute is 89 frames.
+        So pass ``fps=1/60`` for a whole-video look at a bounded price, or a
+        window when only part of the video is in question.
+
+        Args:
+            text: The prompt.
+            video_url: A YouTube URL, or any URI Gemini can fetch.
+            fps: Frames sampled per second. ``1/60`` is one a minute.
+            start_offset: Window start, e.g. ``"600s"``.
+            end_offset: Window end, e.g. ``"720s"``.
         """
+        metadata = None
+        if fps is not None or start_offset is not None or end_offset is not None:
+            metadata = types.VideoMetadata(
+                fps=fps, start_offset=start_offset, end_offset=end_offset
+            )
         return [
             types.Content(
                 role="user",
                 parts=[
                     types.Part(text=text),
-                    types.Part(file_data=types.FileData(file_uri=video_url, mime_type="video/*")),
+                    types.Part(
+                        file_data=types.FileData(file_uri=video_url, mime_type="video/*"),
+                        video_metadata=metadata,
+                    ),
                 ],
             )
         ]

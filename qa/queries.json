@@ -101,5 +101,33 @@
       },
       "note": "Deliberately narrow. Nothing is asserted about the count \u2014 the point is that every kept clip still clears the 600s floor and every exclusion still carries a reason, which the universal invariants check."
     }
+  ],
+  "pipeline_note": "Task queries for the whole-pipeline run (qa/run_pipeline.py): search, collect, index, clean, annotate, curate, then audit the clips that came out. These are phrased as tasks rather than as footage descriptions, because that is how a training-data request actually arrives \u2014 'someone doing the laundry', not 'egocentric footage with hands in frame'. Each one costs real money to run: a download through Apify, a minute of Datalake indexing and a caption pass per clip.",
+  "pipeline_queries": [
+    {
+      "id": "laundry",
+      "query": "someone doing the laundry, loading a machine and folding clothes",
+      "viewpoint": "egocentric"
+    },
+    {
+      "id": "kitchen",
+      "query": "kitchen tasks \u2014 chopping, stirring, washing up",
+      "viewpoint": "egocentric"
+    },
+    {
+      "id": "bike-repair",
+      "query": "fixing a bike, hands on the chain and brakes",
+      "viewpoint": "egocentric"
+    },
+    {
+      "id": "packing",
+      "query": "packing a suitcase, folding and placing clothes into luggage",
+      "viewpoint": "egocentric"
+    },
+    {
+      "id": "assembly",
+      "query": "assembling flat-pack furniture with a screwdriver and an allen key",
+      "viewpoint": "egocentric"
+    }
   ]
 }

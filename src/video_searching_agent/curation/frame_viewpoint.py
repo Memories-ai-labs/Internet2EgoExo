@@ -52,6 +52,15 @@ MAX_FRAMES = 4
 # Below this many bytes the response is YouTube's grey placeholder, not a frame.
 _MIN_FRAME_BYTES = 2000
 
+# One frame a minute: enough to see a camera mount change, cheap enough to ask
+# for on a long video — but only where the provider honours it. Measured on an
+# 89-minute video through OpenRouter, fps, a window and a resolution hint were
+# all dropped and the whole video was billed regardless: 488,504 video tokens,
+# $0.367. So when sampling cannot be asked for, length is the only lever, and a
+# watch is refused above the bound rather than quietly costing that much.
+WATCH_FPS = 1 / 60
+MAX_UNSAMPLED_WATCH_SECONDS = 15 * 60
+
 SIGHT_PROMPT = """You are looking at frames sampled from one video, to decide \
 whether it is usable as first-person (egocentric) training footage.
 
@@ -177,18 +186,38 @@ async def watch_video(
     client: Any,
     video_url: str,
     *,
+    duration_seconds: float | None = None,
+    fps: float | None = WATCH_FPS,
     max_tokens: int = 900,
 ) -> SightVerdict:
-    """Ask the model to watch the whole video. Costs real money — see above."""
+    """Ask the model to watch the video, sampling a frame a minute if it can.
+
+    A provider that honours ``fps`` bills for the frames asked for, which makes
+    a whole-video look affordable on any length. One that drops it bills the
+    whole video, so a long video is refused rather than silently costing a third
+    of a dollar — the frame check's verdict stands instead.
+    """
+    sampled = bool(getattr(client, "SAMPLING_CONTROLS_HONOURED", True))
+    if not sampled and duration_seconds and duration_seconds > MAX_UNSAMPLED_WATCH_SECONDS:
+        minutes = duration_seconds / 60
+        return SightVerdict(
+            error=(
+                f"{minutes:.0f} min is too long to watch unsampled "
+                f"(this provider ignores fps; the bound is "
+                f"{MAX_UNSAMPLED_WATCH_SECONDS // 60} min)"
+            )
+        )
 
     try:
-        messages = client.new_video_conversation(WATCH_PROMPT, video_url)
+        messages = client.new_video_conversation(
+            WATCH_PROMPT, video_url, fps=fps if sampled else None
+        )
         response = await client.create_message_async(messages, max_tokens=max_tokens)
     except Exception as exc:  # noqa: BLE001
         logger.info("video watch failed for %s: %s", video_url, exc)
         return SightVerdict(error=str(exc)[:200])
     verdict = _read(response, client)
-    verdict.method = "watch"
+    verdict.method = "watch" if sampled else "watch-unsampled"
     return verdict
 
 
@@ -197,6 +226,7 @@ async def check_viewpoint(
     *,
     video_id: str | None = None,
     video_url: str | None = None,
+    duration_seconds: float | None = None,
     mode: str = "frames",
 ) -> SightVerdict:
     """Look at a candidate, by whichever tier was asked for.
@@ -204,19 +234,40 @@ async def check_viewpoint(
     Args:
         client: An LLM client from :func:`~video_searching_agent.api.llm.get_llm_client`.
         video_id: A YouTube id, which is what makes free frames available.
-        video_url: The watch URL, needed for ``mode="watch"``.
-        mode: ``off``, ``frames`` or ``watch``.
+        video_url: The watch URL, needed for watching.
+        duration_seconds: Used to refuse an unaffordable watch.
+        mode: ``off``, ``frames``, ``escalate`` or ``watch``.
+
+            ``escalate`` is the one worth defaulting to when money allows: the
+            frames decide most candidates for $0.002, and only the ones they
+            abstain on — a title card, an empty workbench — are worth a watch.
     """
     if mode == "off" or client is None:
         return SightVerdict()
     if mode == "watch":
         if not video_url:
             return SightVerdict(error="watching needs a video URL")
-        return await watch_video(client, video_url)
+        return await watch_video(client, video_url, duration_seconds=duration_seconds)
     if not video_id:
         return SightVerdict(error="frames are only available for YouTube videos")
+
     frames = await fetch_frames(frame_urls(video_id))
-    return await look_at_frames(client, frames)
+    verdict = await look_at_frames(client, frames)
+    if mode != "escalate" or not video_url:
+        return verdict
+    if verdict.looked and verdict.viewpoint is not Viewpoint.UNKNOWN:
+        return verdict
+
+    # The stills could not say. That is exactly what a watch is for.
+    watched = await watch_video(client, video_url, duration_seconds=duration_seconds)
+    if not watched.looked:
+        # Keep the frame verdict, and say why the escalation did not happen.
+        verdict.evidence.append(f"not escalated: {watched.error}")
+        return verdict
+    watched.frames_seen = verdict.frames_seen
+    watched.cost_usd = (verdict.cost_usd or 0.0) + (watched.cost_usd or 0.0)
+    watched.evidence.append("escalated after the frames abstained")
+    return watched
 
 
 async def check_many(
@@ -242,6 +293,7 @@ async def check_many(
                 client,
                 video_id=candidate.get("video_id"),
                 video_url=candidate.get("url") or candidate.get("webpage_url"),
+                duration_seconds=candidate.get("duration_seconds"),
                 mode=mode,
             )
 

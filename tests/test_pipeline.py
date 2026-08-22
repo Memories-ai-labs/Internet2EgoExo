@@ -199,9 +199,13 @@ class TestIngestPipeline:
         datalake = _StubUploader(caption="hands", done=False)
         result = await _pipeline(downloader, datalake, _FakeGemini([])).ingest("https://x/1")
 
-        assert result.stage == "indexing"
+        # "indexing" was the old terminal stage here, and it read as a clip that
+        # stopped for no stated reason. It is its own outcome now.
+        assert result.stage == "pending"
         assert result.video_id == "vid_1"
-        assert any("still running" in note for note in result.notes)
+        assert result.pending_reason and "indexing did not finish" in result.pending_reason
+        assert result.rejection_reason is None
+        assert result.error is None
 
     @pytest.mark.asyncio
     async def test_a_failed_probe_never_spends_anything(self):
@@ -307,3 +311,77 @@ class TestWhereDownloadsLand:
 
         assert _is_writable(tmp_path / "new") is True
         assert (tmp_path / "new" / ".write-probe").exists() is False
+
+
+class TestAClipThatIsNeitherAcceptedNorRejected:
+    """Indexing that outruns the request budget is not a rejection.
+
+    A whole-pipeline run reported "nothing survived collection: []" — an empty
+    list of reasons — because a clip returned with the stage still "indexing",
+    accepted false, and nothing said about why. The footage was fine; the
+    Datalake just had not finished. Saying that plainly is the difference
+    between "come back for this video_id" and "this vanished".
+    """
+
+    @pytest.mark.asyncio
+    async def test_unfinished_indexing_reports_a_pending_reason(self):
+        from video_searching_agent.pipeline.ingest import IngestPipeline
+
+        pipeline = IngestPipeline.__new__(IngestPipeline)
+        pipeline.keep_files = False
+
+        class Cleaning:
+            def screen(self, info, **kwargs):
+                from video_searching_agent.agent.cleaning_agent import ScreeningVerdict
+
+                return ScreeningVerdict(url=info.get("url"), accepted=True)
+
+            async def look(self, verdict, info, **kwargs):
+                return verdict
+
+        class Downloader:
+            async def probe_async(self, url):
+                return {"id": "x", "title": "a clip", "duration": 741}
+
+            async def download_async(self, url):
+                from pathlib import Path
+
+                from video_searching_agent.pipeline.download import DownloadedClip
+
+                return DownloadedClip(url=url, path=Path("/dev/null"), duration_seconds=741)
+
+            def discard(self, clip):
+                return None
+
+        class Client:
+            async def wait_for_operation(self, operation, max_wait_seconds=None):
+                # What the Datalake says when it is still working.
+                return {"done": False}
+
+        pipeline._cleaning = Cleaning()
+        pipeline._downloader = Downloader()
+        pipeline._client = Client()
+        pipeline._annotation = None
+
+        async def fake_upload(clip):
+            return {"video_id": "vid_1", "operation": "op_1"}
+
+        pipeline._upload = fake_upload  # type: ignore[method-assign]
+
+        stages: list[str] = []
+
+        async def on_stage(result):
+            stages.append(result.stage)
+
+        result = await pipeline.ingest(
+            "https://www.youtube.com/watch?v=a", wait_seconds=1, on_stage=on_stage
+        )
+
+        assert result.accepted is False
+        assert result.stage == "pending"
+        assert result.rejection_reason is None, "pending is not a judgement"
+        assert result.error is None, "pending is not a fault"
+        assert result.pending_reason and "indexing did not finish" in result.pending_reason
+        assert result.video_id == "vid_1", "the id has to come back, or the work is lost"
+        assert "pending" in stages
+        assert result.as_dict()["pending_reason"] == result.pending_reason

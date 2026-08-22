@@ -243,11 +243,73 @@ qualified.
 | **Cleaning agent** | **Agentic filtering** and **agentic clipping** | `agent/cleaning_agent.py` |
 | **Annotation agent** | **Agentic annotation** — task → action → event | `agent/annotation_agent.py` |
 | **Curation agent** | **Agentic data curation** across a whole set | `agent/curation_agent.py` |
+| **Quality-check agent** | **Auditing the clips that came out** — independently | `agent/quality_check_agent.py` |
 
 They are separate on purpose. Filtering is a judgement about footage, annotation
 is a judgement about language, and curation is a judgement about a set — mixing
 them into one prompt produces an agent that is mediocre at all three and whose
 mistakes cannot be attributed.
+
+### Auditing what came out
+
+The first four agents each make a judgement and then act on it. The
+quality-check agent makes none of its own about footage: it audits *their
+output*, adversarially, and it is allowed to fail a clip that all of them
+accepted.
+
+That independence is the point. A pipeline that grades its own homework will
+tell you a dataset is fine in exactly the cases where its own reasoning was
+wrong. Twenty videos in and fifty clips out is only a result if the fifty clips
+would survive somebody reading them, so the audit asks a narrower and harsher
+question of the finished artefact: *if someone handed me this dataset, would I
+accept it?*
+
+| Check | What it catches | Cost |
+|---|---|---|
+| `ANCHOR-OVERRUN` / `ANCHOR-ORDER` / `ANCHOR-SHORT` / `ANCHOR-LONG` | An anchor outside its video, backwards, below the action floor, or a single span called one "action" for three minutes | free |
+| `G2-TREE-1` / `G2-TREE-2` / `G2-TREE-3` | A child span outside its parent, siblings overlapping, a level that repeats its parent's words verbatim | free |
+| `HAND-EMPTY` | A hand named with nothing behind it — the label a manipulation model would learn from | free |
+| `VIEWPOINT-DRIFT` | A clip delivered in the viewpoint the collection did not ask for | free |
+| `EVIDENCE-CONTRADICTED` | The annotation says the hands pick up a soldering iron between 0:42 and 0:58; the captions **for that window** describe something else | ~$0.0004 a span |
+| `EVIDENCE-NONE` | A label resting on a window with no captions at all — a claim with nothing checkable behind it | ~free |
+| `SET-DUPLICATE` / `SET-CONCENTRATED` | The same span delivered twice; fifty clips that are really twelve videos | free |
+| `SET-HOURS` | Anchors totalling more than the hours the manifest claims, which means something is double counted | free |
+
+The evidence check is asked as a **refutation** — the model is told to find the
+reason the label is wrong — because a model asked to confirm a label will
+confirm it. Silence is not contradiction: a window with no captions is a
+warning, never a failure, and captions vaguer than the annotation still support
+it. A finding with no evidence behind it is a bug in the audit, not a finding.
+
+Spans are sampled *across* a clip rather than taken from the front, because
+later anchors are the ones most likely to have drifted.
+
+### Running the whole thing on real task queries
+
+```bash
+python qa/run_pipeline.py                  # five task queries, end to end
+python qa/run_pipeline.py --query laundry   # one of them
+python qa/run_pipeline.py --dry-run         # search and check candidates only, free
+```
+
+`qa/run_qa.py` proves the *path* works. This proves the *output* is worth
+having: it runs laundry, kitchen, bike repair, packing and furniture assembly
+all the way through — search → collect → index → clean → annotate → curate —
+and then hands the delivered clips to the audit. It costs real money (a download
+through Apify, a minute of indexing and a caption pass per clip), so it is a
+separate script rather than part of the recurring sweep, and its exit code is
+non-zero when the audit rejects a set.
+
+Two things it found on its first real run, both fixed here:
+
+* A clip whose indexing outran the request budget came back **neither accepted
+  nor rejected, with no reason given** — so the run reported "nothing survived
+  collection: `[]`", an empty list of reasons, for work that had in fact reached
+  the Datalake. That outcome is now its own stage, `pending`, which says what
+  happened and hands back the `video_id` to curate later.
+* Two twelve-minute videos do not fit in one 300-second serverless request, so
+  the stream is cut before the summary event arrives. The per-clip events are
+  the reliable record; the summary is a convenience that may never be sent.
 
 ### Agentic filtering
 
