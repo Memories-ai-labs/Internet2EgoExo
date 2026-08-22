@@ -238,8 +238,13 @@ defects and structural jobs whose answer nobody doubts, only their cost:
   never run over the clean collection. Wire `label_span` over clean clips and
   store the trees (task #13). Same defect as the first item, seen from the
   product side.
-- **One Unity screen-recording clip sits in the clean collection**, predating the
-  `world` question that would now reject it. Re-screen the collection.
+- **One Unity screen-recording clip sits in the clean collection.** Not because
+  it predates the `world` question — that was the earlier explanation and it was
+  wrong. The question existed and was never wired (`LEARNINGS.md` L11). It is
+  wired now, so re-screening the collection will catch it.
+- **The `legibility` gate is uncalibrated** (`INSPIRATION.md` Q-SCR4). It is a
+  new reject path on the primary criterion, and an uncalibrated reject path can
+  silently throw away the corpus. Highest priority in the file.
 
 Two defects in the measuring instrument, both deliberately unfixed:
 

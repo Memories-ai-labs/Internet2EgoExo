@@ -123,12 +123,13 @@ known way to find *the moment*". Also the Action100M corpus is 1.2 M
 
 ### Q-SRC4 · Licence as a search-time facet, not a downstream footnote
 
-> **Promoted to the top of this file, 2026-08-22.** No longer a hypothesis about
-> tidiness — the licence check is *measured* at 7 points and is the C/B boundary
-> (`LEARNINGS.md` L8). The same L3 tree scores 75 → B on CC-BY and 68 → C on
-> YouTube standard, and 75 is the per-clip ceiling. Every non-CC clip we collect
-> is a permanent C. This is the highest-leverage change available anywhere in the
-> pipeline; what remains open is only *what it costs in yield*.
+> **CLOSED for grade, 2026-08-22. Licence has been removed from the score**
+> (`LEARNINGS.md` L12) at Shawn's direction: a clip is exactly as trainable
+> whether or not its uploader ticked Creative Commons. There is nothing left to
+> win here on quality. What survives is a much smaller question — whether a
+> CC-only *policy* would be commercially worth its yield cost — and that is a
+> business decision, not an experiment for this loop. Do not spend an iteration
+> on it unless asked.
 
 **Hypothesis.** Filtering for Creative Commons at search time changes the yield
 curve, and we would rather know the size of the CC-only corpus than discover
@@ -215,6 +216,36 @@ better to me" is not the metric — the metric is decisions that flip.
 ---
 
 ## Stage 2–3 · Acquire and index
+
+### Q-SCR4 · Is the legibility question calibrated, or does it reject worn cameras?
+
+**Hypothesis.** `legibility` was added on 2026-08-22 as the fourth question in
+the frames look, to enforce "not blurred" — the criterion Shawn named and the
+one nothing measured before. Its wording is **untested**: a head-mounted camera
+moves, and a model asked whether footage is blurry may well answer yes to
+exactly the footage we want. The prompt says so explicitly ("movement is not
+blur") and only an affirmative `illegible` rejects, but neither of those is
+evidence.
+
+**Measure.** On the Q-SCR1 calibration set, record the legibility answer for
+every candidate alongside a hand label of *can you see what the hands are
+doing*. Report the wrong-rejection rate specifically for **egocentric footage
+with visible camera motion** — that is the failure mode, and a set that
+happens to contain only tripod footage will not find it. Also count how often
+the answer is `unclear`, which is a cost with no effect: a question that never
+decides is a question not worth asking.
+
+**Falsifier.** A wrong-rejection rate near zero on moving footage closes this.
+A high one means the question is measuring motion, and the fix is to ask about
+the *hands* rather than the footage — "are the hands sharp enough to see the
+grip" is a different question from "is this video blurry".
+
+**Cost.** Folds into Q-SCR1: same set, same looks, one more field to record.
+
+**Provenance.** The gate's own author, flagging it unvalidated in
+`experiments/2026-08-22.md` experiment 5. This is the highest-priority entry in
+the file: it is a *new reject path on the primary criterion*, and a reject path
+nobody has calibrated can silently throw away the corpus.
 
 ### Q-ACQ1 · What does the 400-second video cost us that a 60-second cut would not?
 
@@ -365,21 +396,18 @@ shape as ours "at a scale that proves the shape survives full automation".
 
 ## Stage 6 · Grade
 
-### Q-GRD1 · A per-clip score cannot reach A. Should the scorecard stop implying it can?
+### Q-GRD1 · ~~A per-clip score cannot reach A~~ — CLOSED, it can now
 
-**Hypothesis.** Gate 3's 25 points are dataset-level and uncreditable to a
-single clip, so a per-clip score caps at 75 while grade A needs 85. Every
-per-clip A/B share we report is therefore measuring against an unreachable
-ceiling.
+> **Resolved 2026-08-22, and not by moving a threshold.** Shawn removed
+> diversity and deduplication from the scorecard altogether — they judge a set,
+> and the deliverable is a clip. With nothing in the scale reserved for a batch,
+> the surviving checks were rescaled onto the full 100 and a single clip can now
+> earn all of it. Grade A is reachable. Nothing here to do.
 
-**Measure.** Nothing to measure — this is arithmetic, and it is already
-confirmed.
-
-**Decision, not an experiment.** This is Shawn's call, and the loop must not
-"fix" it by moving a threshold. The three coherent options: report A/B at the
-dataset level only; define a per-clip band set that tops out at 75; or credit
-Gate 3 per clip against the batch it shipped in. Until he chooses, the report
-must state the cap plainly so no reader mistakes 0% A for a quality finding.
+Kept as a record of the shape of the problem: a per-clip number measured against
+a ceiling only a batch could reach, which made every A/B share we published
+meaningless without a footnote. The fix was to stop scoring the batch property,
+not to re-band the score.
 
 ### Q-GRD2 · Is our own quality standard internally consistent?
 
@@ -400,9 +428,16 @@ threshold.
 
 ## Stage 7–8 · Refine, store and the library
 
-### Q-REF1 · Near-duplicate detection before we pay to store duplicates
+### Q-REF1 · ~~Near-duplicate detection~~ — OUT OF SCOPE
 
-**Hypothesis.** Cutting overlapping spans from one source produces
+> **Closed 2026-08-22.** Shawn: diversity and duplication are not what matters.
+> Gate 3 is gone from the scorecard and the repost grouping with it. A duplicate
+> clip is still a *valid* clip by the definition that now governs — hands in
+> frame, legible, annotated — so there is nothing here that moves the metric.
+> Keep the note only so nobody re-derives it as an obvious gap: it was
+> considered and deliberately dropped.
+
+**The former hypothesis.** Cutting overlapping spans from one source produces
 near-duplicates that inflate delivered hours and hurt Gate 3 diversity.
 
 **Measure.** Cut deliberately overlapping spans from one source, then measure
