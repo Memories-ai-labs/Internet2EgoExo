@@ -86,6 +86,27 @@ A/B/C/D bands, cost attributed two ways, stratified by difficulty and family),
 and `qa/run_qa.py` is the recurring health sweep — a separate cadence, and not
 to be merged into this loop.
 
+## Where the loop actually runs — current state, 2026-08-22
+
+Honest, because a fresh session will otherwise assume the schedule is working.
+Both scheduled loops are **stopped**, for the reasons in `experiments/2026-08-22.md`
+experiment 8 and `LEARNINGS.md` L13-L14:
+
+| loop | state | why |
+|---|---|---|
+| hourly auto-research routine | **disabled**, not deleted | 7 fires, 0 pushes; its tool grant has no `mcp__*` entries while its first step is an MCP call |
+| eval keep-alive routine | **deleted** | an hourly poke cannot carry an 8-hour job in a container reclaimed on idle |
+| eval on GitHub Actions | **built, never run** | needs 6 repository secrets, which only Shawn can add |
+
+So an iteration today is a session Shawn starts, not a schedule. Restoring the
+schedule needs, in order: the six secrets (`OPENROUTER_API_KEY`,
+`GOOGLE_API_KEY`, `YOUTUBE_API_KEY`, `MEMORIES_API_KEY`, `APIFY_API_TOKEN`,
+optionally `EXA_API_KEY`, all rotated first) so `eval.yml` can produce a
+scoreboard, and then either MCP tools in the routine's grant or a first step that
+does not need them. Until a scoreboard exists again the newest complete datapoint
+is a 34-query prefix, which L10 says reads pessimistic and is not comparable to
+anything.
+
 ## Method
 
 Each iteration, in order, timeboxed to well under an hour:

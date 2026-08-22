@@ -210,3 +210,38 @@ removing a term from a score, grep for the other places it is counted; a single
 weight is rarely the only path. And rescale rather than redistribute: `75/68`
 preserves every relative weight exactly, where hand-picked replacement weights
 would have been four new guessed constants.
+
+## L13 · A long job needs a host that outlives the turn, not a louder alarm
+
+**Evidence.** `2026-08-22` experiment 8a. The 200-query eval needs ~8 h of
+continuous process life. The session container is reclaimed when the session
+goes idle, so an hourly keep-alive routine bought minutes per hour: three reads
+over a day showed 21 → 26 → 34 records and then a dead process. Renewing the
+keep-alive a fourth time would have measured the same thing again.
+
+**Implies.** Match the job to a host that can hold it — CI, a worker, a VM —
+rather than trying to keep an ephemeral one awake. And the diagnostic habit: an
+estimate in hours ("~11 h") is an estimate of *compute*, and says nothing about
+whether anything will still be running then. Ask what the process is running
+*inside* before quoting a wall clock. The general form of the mistake: a
+schedule that keeps firing is not the same as progress, and the cheapest test is
+to read the same counter three times.
+
+## L14 · Silence from a scheduled agent is more often a blocked first step than an empty result
+
+**Evidence.** `2026-08-22` experiment 8b. An hourly routine fired 7 times, pushed
+nothing, and reported no failure. Its `allowed_tools` grant contained no `mcp__*`
+entries while its first two instructions were both MCP calls; three sibling
+sessions were visibly stopped on `"Waiting on permission: mcp__…"`. A
+non-interactive session that hits a permission prompt waits for an approver who
+is not there, then is reclaimed — indistinguishable from outside from a run that
+found nothing to do.
+
+**Implies.** Before believing "the loop ran and there was nothing to improve",
+check that the loop could execute its first tool call: compare the routine's tool
+grant against the tools its prompt actually needs. Any autonomous loop worth
+scheduling should also leave a trace on *every* fire — a commit, a log line, an
+experiment stub — because a loop whose only output is a push is unfalsifiable
+when it pushes nothing. Corollary held open, not proven: this diagnosis is
+circumstantial (trigger-fired sessions are not listed), so the fix is worth
+testing by fixing the grant and watching one fire, not by assuming.
