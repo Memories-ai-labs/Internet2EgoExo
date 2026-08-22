@@ -642,7 +642,19 @@ called out, never filled with a guess.
 ## Performance metrics
 
 <!-- performance-metrics:start -->
-_No recurring run has reported yet._
+**Latest run — 2026-08-22T09:11:13Z** · eval set `v1.0` · `replayed:publish-20260822T083809Z.jsonl` slice, 10 queries, 5 clips graded, $0.86 spent
+
+| metric | latest | 95% interval | 24h ago | 7d ago | rolling 1 run (5 clips) |
+| --- | --- | --- | --- | --- | --- |
+| survived the screen | **—** | — | — | — | — |
+| accepted | **0%** (0/5) | 0%–43% | — | — | 0% |
+| A or B | **0%** (0/5) | 0%–43% | — | — | 0% |
+| usable time | **95%** | — | — | — | 95% |
+| $ / usable hour | **$9.11** | — | — | — | $9.11 |
+
+Grades this run: **A** 0 · **B** 0 · **C** 0 · **D** 5 · anchors 7
+
+Runs every eight hours on a fixed slice of the eval set, so the numbers are comparable day to day, and small enough that one tick cannot resolve a small change on its own — read the interval and the rolling column, and quote a full 200-query run rather than a tick. Reports: [`eval/reports/`](eval/reports/) · latest: [`eval/REPORT.md`](eval/REPORT.md) · history: [`eval/history.jsonl`](eval/history.jsonl).
 <!-- performance-metrics:end -->
 
 The block above is rewritten by `eval/publish.py` every eight hours and committed
