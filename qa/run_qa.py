@@ -30,6 +30,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -47,12 +48,59 @@ JUDGEMENT_VIDEO = os.environ.get("QA_VIDEO_ID", "vid_5btyh22t6knevmlcks2ufonn5q"
 JUDGEMENT_COLLECTION = os.environ.get("QA_COLLECTION", "col_bngey4z7vxpqyimcogrolfnw5i")
 LOCAL_PORT = int(os.environ.get("QA_LOCAL_PORT", "8899"))
 
+
+_HOURS = re.compile(r"\d[\d,]*(?:\.\d+)?\s*(?:hours?|hrs?)\b", re.IGNORECASE)
+# Words that make an hour figure a claim about what THIS run produced, rather
+# than a fact quoted about somebody else's published dataset.
+_YIELD_CUES = (
+    "collected",
+    "delivered",
+    "accepted",
+    "curated",
+    "ingested",
+    "gathered",
+    "assembled",
+    "we found",
+    "i found",
+    "this run",
+    "these clips",
+    "the clips below",
+)
+
+
+def hour_claims(answer: str) -> list[str]:
+    """Every hour figure the answer states, with the line it sits on."""
+
+    found: list[str] = []
+    for line in answer.splitlines():
+        found.extend(match.group(0).strip() for match in _HOURS.finditer(line))
+    return found
+
+
+def own_yield_claims(answer: str) -> list[str]:
+    """Hour figures the answer presents as this run's own output.
+
+    A literature answer may legitimately say Ego4D is 3,670 hours. What it may
+    never do is say that the run collected, delivered or accepted hours that
+    were never measured, so the cue is the verb, not the number.
+    """
+
+    found: list[str] = []
+    for line in answer.splitlines():
+        lowered = line.lower()
+        if not any(cue in lowered for cue in _YIELD_CUES):
+            continue
+        found.extend(match.group(0).strip() for match in _HOURS.finditer(line))
+    return found
+
+
 # Every expectation key the runner knows how to check. An unknown key is a
 # failure rather than a shrug: an expectation that silently does nothing is
 # worse than no expectation, because the report reads as if it were checked.
 KNOWN_EXPECTATIONS = frozenset(
     {
         "min_clips",
+        "quotes_published_hours",
         "max_clips",
         "viewpoint_present",
         "all_reusable",
@@ -95,9 +143,7 @@ class Report:
     def summary(self) -> str:
         passed = sum(1 for r in self.results if r.passed and not r.skipped)
         skipped = sum(1 for r in self.results if r.skipped)
-        lines = [
-            f"checks: {passed} passed, {len(self.failures)} failed, {skipped} skipped"
-        ]
+        lines = [f"checks: {passed} passed, {len(self.failures)} failed, {skipped} skipped"]
         for failure in self.failures:
             lines.append(f"  FAIL {failure.phase}/{failure.name}: {failure.detail}")
         return "\n".join(lines)
@@ -164,21 +210,30 @@ def phase_offline(report: Report) -> None:
 
     suite = subprocess.run(
         ["uv", "run", "pytest", "-q", "--no-header"],
-        cwd=ROOT, env=env, capture_output=True, text=True,
+        cwd=ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
     )
     tail = (suite.stdout or suite.stderr).strip().splitlines()[-1:] or [""]
     report.add("offline", "test suite", suite.returncode == 0, tail[0][:160])
 
     validation = subprocess.run(
         ["uv", "run", "pytest", "-q", "--no-header", "tests/test_validation_set.py"],
-        cwd=ROOT, env=env, capture_output=True, text=True,
+        cwd=ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
     )
     tail = (validation.stdout or validation.stderr).strip().splitlines()[-1:] or [""]
     report.add("offline", "validation set", validation.returncode == 0, tail[0][:160])
 
     lint = subprocess.run(
         ["uv", "run", "ruff", "check", "src", "tests", "qa"],
-        cwd=ROOT, env=env, capture_output=True, text=True,
+        cwd=ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
     )
     report.add("offline", "lint", lint.returncode == 0, (lint.stdout or "").strip()[:160])
 
@@ -189,10 +244,19 @@ def phase_structural(report: Report) -> None:
     env = {**os.environ, "DEMO_MODE": "1", "TESTING": "true", "RATE_LIMIT_ENABLED": "false"}
     server = subprocess.Popen(
         [
-            "uv", "run", "python", "-m", "uvicorn",
-            "video_searching_agent.web.main:app", "--port", str(LOCAL_PORT),
+            "uv",
+            "run",
+            "python",
+            "-m",
+            "uvicorn",
+            "video_searching_agent.web.main:app",
+            "--port",
+            str(LOCAL_PORT),
         ],
-        cwd=ROOT, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        cwd=ROOT,
+        env=env,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     )
     base = f"http://127.0.0.1:{LOCAL_PORT}"
     try:
@@ -240,9 +304,7 @@ def phase_structural(report: Report) -> None:
             {"urls": ["https://youtube.com/watch?v=a", "https://youtube.com/watch?v=b"]},
             timeout=120,
         )
-        stages = {
-            payload["clip"]["stage"] for event, payload in events if event == "clip_stage"
-        }
+        stages = {payload["clip"]["stage"] for event, payload in events if event == "clip_stage"}
         report.add(
             "structural",
             "collect streams every stage",
@@ -263,9 +325,7 @@ def phase_structural(report: Report) -> None:
         curation = _final(events, "complete")
         report.add("structural", "curate stream completes", curation is not None)
         if curation:
-            dup = next(
-                (c for c in curation.get("dataset_checks", []) if c["id"] == "G3-DUP"), None
-            )
+            dup = next((c for c in curation.get("dataset_checks", []) if c["id"] == "G3-DUP"), None)
             report.add(
                 "structural",
                 "G3-DUP still reports unmeasured",
@@ -276,7 +336,7 @@ def phase_structural(report: Report) -> None:
         server.wait(timeout=10)
 
 
-def phase_live(report: Report, full: bool) -> None:
+def phase_live(report: Report, full: bool, only: str | None = None) -> None:
     print(f"\n3. live — {DEPLOYMENT}")
     try:
         health = _get(f"{DEPLOYMENT}/api/v1/health")
@@ -300,7 +360,15 @@ def phase_live(report: Report, full: bool) -> None:
         return
 
     # Rotate through the ten so the whole set is covered across a day.
-    chosen = QUERIES if full else [QUERIES[int(time.time() // 1800) % len(QUERIES)]]
+    if only:
+        chosen = [case for case in QUERIES if case["id"] == only]
+        if not chosen:
+            report.add("live", f"query {only} exists", False, "no such query id")
+            return
+    elif full:
+        chosen = QUERIES
+    else:
+        chosen = [QUERIES[int(time.time() // 1800) % len(QUERIES)]]
     for case in chosen:
         unknown = set(case.get("expect") or {}) - KNOWN_EXPECTATIONS
         if unknown:
@@ -312,8 +380,14 @@ def phase_live(report: Report, full: bool) -> None:
             )
         body = {
             key: case[key]
-            for key in ("query", "viewpoint", "min_duration_seconds", "license_filter",
-                        "target_hours", "sources")
+            for key in (
+                "query",
+                "viewpoint",
+                "min_duration_seconds",
+                "license_filter",
+                "target_hours",
+                "sources",
+            )
             if key in case
         }
         label = f"query {case['id']}"
@@ -362,13 +436,10 @@ def phase_live(report: Report, full: bool) -> None:
         floor = body.get("min_duration_seconds")
         if floor:
             short = [
-                c for c in clips
-                if c.get("duration_seconds") and c["duration_seconds"] < floor
+                c for c in clips if c.get("duration_seconds") and c["duration_seconds"] < floor
             ]
             if short:
-                problems.append(
-                    f"{len(short)} kept clips are shorter than the {floor}s minimum"
-                )
+                problems.append(f"{len(short)} kept clips are shorter than the {floor}s minimum")
         if manifest.get("excluded_clips") and not manifest.get("exclusion_reasons"):
             problems.append("clips were excluded without a reason")
         for clip in clips:
@@ -377,12 +448,20 @@ def phase_live(report: Report, full: bool) -> None:
                 break
 
         # The rule that matters most: the answer may not invent quantities.
-        answer = (complete.get("answer") or "").lower()
-        import re
-
-        invented = re.findall(r"(\d+(?:\.\d+)?)\s*(?:hours|hrs)\b", answer)
-        if invented and not manifest.get("total_hours"):
-            problems.append(f"answer states {invented} hours but the manifest has none")
+        # By default any hour figure in an answer with no measured hours is a
+        # defect. A query that asks about published datasets declares
+        # quotes_published_hours, and is then held to the narrower rule that
+        # matters there: it may quote a dataset's size, with a source, but it
+        # still may not claim hours of its own.
+        answer_text = complete.get("answer") or ""
+        if expect.get("quotes_published_hours"):
+            claimed = own_yield_claims(answer_text)
+            if claimed and not manifest.get("total_hours"):
+                problems.append(f"answer claims {claimed} of its own with none measured")
+            if hour_claims(answer_text) and "http" not in answer_text:
+                problems.append("answer quotes hours without citing a single source")
+        elif hour_claims(answer_text) and not manifest.get("total_hours"):
+            problems.append(f"answer states {hour_claims(answer_text)} but the manifest has none")
 
         failed_tools = [
             p.get("tool") for e, p in events if e == "tool_result" and not p.get("success")
@@ -445,6 +524,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--full", action="store_true", help="run all ten example queries")
     parser.add_argument("--offline", action="store_true", help="phases 1-2 only; spends nothing")
+    parser.add_argument("--query", help="run only this example query id, to re-check one failure")
     args = parser.parse_args()
 
     started = datetime.now(UTC)
@@ -454,7 +534,7 @@ def main() -> int:
     phase_offline(report)
     phase_structural(report)
     if not args.offline:
-        phase_live(report, full=args.full)
+        phase_live(report, full=args.full, only=args.query)
         phase_judgement(report)
 
     print("\n" + report.summary())

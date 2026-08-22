@@ -57,7 +57,8 @@
         "min_clips": 0,
         "tools_used": [
           "exa_search"
-        ]
+        ],
+        "quotes_published_hours": true
       }
     },
     {
