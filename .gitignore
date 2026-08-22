@@ -103,3 +103,9 @@ npm-debug.log*
 # deployment at one moment, and it can be large; eval/sample-scorecard.md is
 # committed instead so the output's shape is visible from a clean clone.
 eval/results/
+
+# `vercel link` writes an .env.local holding the project's OIDC token, and a
+# deployment's own pull writes further .env.* files. None of them belong in the
+# repository; .env.example does.
+.env*
+!.env.example
