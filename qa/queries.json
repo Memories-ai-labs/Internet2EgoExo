@@ -1,0 +1,104 @@
+{
+  "note": "Ten example queries the QA sweep runs against a deployment. Each one names what a healthy run must produce, so a pass is a claim about behaviour rather than 'it returned 200'. Chosen to span the axes that matter: viewpoint, activity domain, length, licence, source pinning, and two that should legitimately come back thin.",
+  "queries": [
+    {
+      "id": "ego-cooking",
+      "query": "first-person cooking footage with hands visible, long continuous takes",
+      "viewpoint": "egocentric",
+      "min_duration_seconds": 60,
+      "expect": {
+        "min_clips": 1,
+        "viewpoint_present": "egocentric"
+      }
+    },
+    {
+      "id": "ego-assembly",
+      "query": "egocentric electronics assembly or soldering, head-mounted camera",
+      "viewpoint": "egocentric",
+      "min_duration_seconds": 60,
+      "expect": {
+        "min_clips": 1
+      }
+    },
+    {
+      "id": "ego-repair",
+      "query": "first-person bike or car repair, hands working on the machine",
+      "viewpoint": "egocentric",
+      "min_duration_seconds": 120,
+      "expect": {
+        "min_clips": 1
+      }
+    },
+    {
+      "id": "ego-laundry",
+      "query": "first-person doing laundry and folding clothes, hands visible",
+      "viewpoint": "egocentric",
+      "expect": {
+        "min_clips": 1
+      }
+    },
+    {
+      "id": "exo-fixed",
+      "query": "exocentric fixed-camera footage of someone assembling furniture",
+      "viewpoint": "exocentric",
+      "min_duration_seconds": 120,
+      "expect": {
+        "min_clips": 1,
+        "viewpoint_present": "exocentric"
+      }
+    },
+    {
+      "id": "datasets",
+      "query": "public egocentric video datasets for hand-object interaction research",
+      "sources": [
+        "web"
+      ],
+      "expect": {
+        "min_clips": 0,
+        "tools_used": [
+          "exa_search"
+        ]
+      }
+    },
+    {
+      "id": "licence-filtered",
+      "query": "creative commons first-person kitchen footage",
+      "viewpoint": "egocentric",
+      "license_filter": "reusable",
+      "expect": {
+        "all_reusable": true
+      }
+    },
+    {
+      "id": "source-pinned",
+      "query": "pov cooking clips",
+      "sources": [
+        "tiktok"
+      ],
+      "expect": {
+        "only_platforms": [
+          "tiktok"
+        ]
+      }
+    },
+    {
+      "id": "target-hours",
+      "query": "first-person warehouse picking and packing footage",
+      "viewpoint": "egocentric",
+      "target_hours": 2,
+      "expect": {
+        "reports_target": true
+      }
+    },
+    {
+      "id": "should-come-back-thin",
+      "query": "first-person footage of glassblowing with both hands in frame",
+      "viewpoint": "egocentric",
+      "min_duration_seconds": 600,
+      "expect": {
+        "min_clips": 0
+      },
+      "note": "Deliberately narrow. Nothing is asserted about the count \u2014 the point is that every kept clip still clears the 600s floor and every exclusion still carries a reason, which the universal invariants check."
+    }
+  ]
+}

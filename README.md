@@ -488,6 +488,57 @@ npm run dev      # localhost:5173, proxying /api to localhost:8000
 npm run build    # type-checks, then rebuilds the committed bundle
 ```
 
+### The validation set
+
+`tests/validation/` is a labelled set: inputs with the verdict a careful human
+would give, run through the same judgement code the product runs.
+
+* Four of the cases are **real Datalake output** for real industrial recordings —
+  79 timed caption segments covering soldering, wrist-camera and 40-minute
+  egocentric wire harnessing, and a medical-tubing clip with a second person in
+  half of it.
+* Seven encode a defect that **actually shipped**: slideware cues rejecting
+  "slides the sleeve over the wires", one passing colleague vetoing a
+  forty-minute recording, a 499-second span called a single action, a
+  falsy-zero check dropping every video's first caption segment.
+
+Every expectation is a claim about the footage, not about the implementation, so
+a failure means either the change is wrong or the label was. Building the set
+immediately caught a wrong *label* of mine: one colleague span out of three is a
+third of the footage, which the rule scraps by design — the honest version of
+"one mention in a long recording" needs a long recording, and both now exist as
+separate cases.
+
+```bash
+uv run pytest tests/test_validation_set.py -q
+```
+
+### The QA sweep
+
+`qa/run_qa.py` runs the whole process and reports what is broken, cheapest phase
+first so a failure is found before money is spent:
+
+| Phase | What it does | Cost |
+|-------|--------------|------|
+| offline | The suite, the validation set, lint | free |
+| structural | The whole UI-facing path against a local instance in demo mode — health, search, collect through every stage, curate | free |
+| live | The deployment's health and tool health, then one of the ten example queries in `qa/queries.json`, rotating by clock so the set is covered across the day | model + scraper credits for one query |
+| judgement | A real curation pass on an already-indexed video: real captions, real gates | ~$0.001 |
+
+```bash
+uv run python qa/run_qa.py             # the half-hourly sweep
+uv run python qa/run_qa.py --full      # all ten example queries
+uv run python qa/run_qa.py --offline   # free
+```
+
+The ten queries span the axes that matter — viewpoint, activity domain, length,
+licence, source pinning — and each one names what a healthy run must produce, so
+a pass is a claim about behaviour rather than "it returned 200". Alongside them,
+invariants that hold for every query: no kept clip is shorter than the stated
+minimum, no clip is excluded without a reason, and **the answer may not state
+hours the manifest does not have**. An expectation the runner does not know how
+to check is a failure, not a shrug.
+
 ### Browser QA
 
 `ui/qa/` drives the whole flow in a real browser against **the real app in demo
