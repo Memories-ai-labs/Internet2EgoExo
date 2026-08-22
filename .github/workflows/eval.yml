@@ -1,0 +1,185 @@
+# The eval, run where a long job is allowed to finish.
+#
+# It exists because the measurement needs ~12 hours of continuous wall clock and
+# a machine that does not sleep. A GitHub-hosted runner caps a single job at 6
+# hours whatever the plan, so the full 200-query set is split into four
+# sequential chunks that hand the record file along as an artifact.
+#
+# Chunking is safe because `--resume` matches on `query_id`: a chunk that reruns
+# an already-finished query skips it rather than paying for it twice. `--limit N`
+# selects the first N of the frozen set and resume then removes what is done, so
+# `--limit 50 / 100 / 150 / (none)` is exactly "queries 1-50, 51-100, 101-150,
+# 151-200".
+#
+# NOT triggered by push. A run spends real money, so it happens on a manual
+# dispatch or on the daily schedule below, never because somebody committed.
+
+name: eval
+
+on:
+  workflow_dispatch:
+    inputs:
+      queries:
+        description: "Query set to run"
+        default: "eval/queries-v1.1.json"
+        type: choice
+        options:
+          - eval/queries-v1.1.json
+          - eval/queries.json
+      per_query:
+        description: "Clips to collect per query"
+        default: "2"
+        type: string
+      full:
+        description: "Run all 200 (unticked runs the 20-query slice only)"
+        default: false
+        type: boolean
+  schedule:
+    # Daily, and deliberately only the small slice: the full set costs ~$42, and
+    # $42 a day is not a monitoring budget. The slice is the comparable series
+    # the promotion rule reads.
+    - cron: "50 6 * * *"
+
+# One eval at a time. Two concurrent runs would race for the memories.ai rate
+# limit and bill twice for the same measurement.
+concurrency:
+  group: eval
+  cancel-in-progress: false
+
+env:
+  QA_DEPLOYMENT: http://127.0.0.1:8099
+  DEMO_MODE: "0"
+  OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+  GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+  YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+  MEMORIES_API_KEY: ${{ secrets.MEMORIES_API_KEY }}
+  APIFY_API_TOKEN: ${{ secrets.APIFY_API_TOKEN }}
+  EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
+
+jobs:
+  # A run that starts without keys would burn four jobs discovering that, so it
+  # is checked once, first, and never prints a value.
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      chunks: ${{ steps.plan.outputs.chunks }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Every required secret is present
+        run: |
+          missing=""
+          for name in OPENROUTER_API_KEY GOOGLE_API_KEY YOUTUBE_API_KEY \
+                      MEMORIES_API_KEY APIFY_API_TOKEN; do
+            [ -n "${!name:-}" ] || missing="$missing $name"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::missing repository secrets:$missing"
+            echo "Add them under Settings → Secrets and variables → Actions." >&2
+            exit 1
+          fi
+          echo "all required secrets present"
+      - id: plan
+        name: Decide whether this is the full set or the slice
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "chunks=slice" >> "$GITHUB_OUTPUT"
+          elif [ "${{ inputs.full }}" = "true" ]; then
+            echo "chunks=full" >> "$GITHUB_OUTPUT"
+          else
+            echo "chunks=slice" >> "$GITHUB_OUTPUT"
+          fi
+
+  # The daily comparable datapoint: 20 queries, ~$5. Same code path as the full
+  # run, so the two are directly comparable on `valid clips per query asked`.
+  slice:
+    needs: preflight
+    if: needs.preflight.outputs.chunks == 'slice'
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --all-extras
+      - name: Start the API the eval measures
+        run: |
+          nohup uv run uvicorn src.video_searching_agent.web.main:app \
+            --host 127.0.0.1 --port 8099 > server.log 2>&1 &
+          for _ in $(seq 1 90); do
+            curl -sf http://127.0.0.1:8099/api/v1/health >/dev/null && break
+            sleep 1
+          done
+          curl -sf http://127.0.0.1:8099/api/v1/health >/dev/null \
+            || { echo "::error::server never became healthy"; tail -40 server.log; exit 1; }
+      - name: Run the slice
+        run: |
+          uv run python eval/run_eval.py \
+            --queries "${{ inputs.queries || 'eval/queries-v1.1.json' }}" \
+            --limit 20 --per-query 2 --yes \
+            --out eval/results/slice.jsonl
+      - name: Score it
+        if: always()
+        run: |
+          uv run python eval/run_eval.py --score-only eval/results/slice.jsonl || true
+          {
+            echo "## Eval slice — 20 queries"
+            echo
+            sed -n '/## 0\./,/## 2\./p' eval/results/slice.scorecard.md || true
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: slice-${{ github.run_id }}
+          path: |
+            eval/results/slice*
+            server.log
+          retention-days: 30
+
+  # The full 200, in four chunks. Sequential rather than a matrix: each chunk
+  # needs the previous one's records to know what is already paid for.
+  chunk-1:
+    needs: preflight
+    if: needs.preflight.outputs.chunks == 'full'
+    uses: ./.github/workflows/eval-chunk.yml
+    with:
+      limit: 50
+      chunk: 1
+      previous: ""
+      queries: ${{ inputs.queries }}
+      per_query: ${{ inputs.per_query }}
+    secrets: inherit
+
+  chunk-2:
+    needs: chunk-1
+    uses: ./.github/workflows/eval-chunk.yml
+    with:
+      limit: 100
+      chunk: 2
+      previous: records-1
+      queries: ${{ inputs.queries }}
+      per_query: ${{ inputs.per_query }}
+    secrets: inherit
+
+  chunk-3:
+    needs: chunk-2
+    uses: ./.github/workflows/eval-chunk.yml
+    with:
+      limit: 150
+      chunk: 3
+      previous: records-2
+      queries: ${{ inputs.queries }}
+      per_query: ${{ inputs.per_query }}
+    secrets: inherit
+
+  chunk-4:
+    needs: chunk-3
+    uses: ./.github/workflows/eval-chunk.yml
+    with:
+      limit: 0
+      chunk: 4
+      previous: records-3
+      queries: ${{ inputs.queries }}
+      per_query: ${{ inputs.per_query }}
+    secrets: inherit

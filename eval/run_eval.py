@@ -472,6 +472,11 @@ def main() -> int:
         RESULTS_DIR.mkdir(parents=True, exist_ok=True)
         existing = len(list(RESULTS_DIR.glob("run-*.jsonl")))
         record = RESULTS_DIR / f"run-{existing + 1}.jsonl"
+    # A path handed in with --out gets its directory made too. `eval/results/`
+    # is gitignored, so it does not exist in a fresh checkout — which is every
+    # CI runner. Without this the first write of a paid run dies on
+    # FileNotFoundError after the searching is already billed.
+    record.parent.mkdir(parents=True, exist_ok=True)
 
     estimate = estimate_usd(len(todo), args.per_query, args.dry_run)
     print(f"eval set {version} — {DEPLOYMENT}")
