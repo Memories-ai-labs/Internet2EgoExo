@@ -527,3 +527,125 @@ class TestTheAuditsOwnArithmetic:
             verify_evidence=False,
         )
         assert "SET-HOURS" in {f.check for f in audit.set_findings}
+
+
+class TestLevelsThatSayNothingNew:
+    """`G2-TREE-3`, widened after a real run walked past it.
+
+    A derailleur overhaul labelled its task `overhaul-bike-derailleur` and one
+    of its actions `service-bike-derailleur`, and three consecutive actions were
+    all called `clean-mechanical-parts`. The verbatim-equality test caught
+    neither on re-run.
+    """
+
+    @pytest.mark.asyncio
+    async def test_a_label_identical_to_its_parent_fails(self):
+        agent = QualityCheckAgent(llm=False)
+        audit = await agent.audit(
+            [
+                clip(
+                    segments=[anchor("a1", 0.0, 30.0)],
+                    annotations=[
+                        {"segment_id": "t1", "label": "overhaul-derailleur",
+                         "hier_level": "task"},
+                        {"segment_id": "a1", "parent_segment_id": "t1",
+                         "label": "overhaul-derailleur", "hier_level": "action"},
+                    ],
+                )
+            ],
+            verify_evidence=False,
+        )
+        assert "G2-TREE-3" in {f.check for f in audit.clips[0].findings}
+
+    @pytest.mark.asyncio
+    async def test_a_label_that_only_drops_words_from_its_parent_fails(self):
+        """`bike-derailleur` under `overhaul-bike-derailleur` adds nothing."""
+
+        agent = QualityCheckAgent(llm=False)
+        audit = await agent.audit(
+            [
+                clip(
+                    segments=[anchor("a1", 0.0, 30.0)],
+                    annotations=[
+                        {"segment_id": "t1", "label": "overhaul-bike-derailleur",
+                         "hier_level": "task"},
+                        {"segment_id": "a1", "parent_segment_id": "t1",
+                         "label": "bike-derailleur", "hier_level": "action"},
+                    ],
+                )
+            ],
+            verify_evidence=False,
+        )
+        assert "G2-TREE-3" in {f.check for f in audit.clips[0].findings}
+
+    @pytest.mark.asyncio
+    async def test_a_step_that_names_a_different_operation_passes(self):
+        """`degrease-jockey-wheels` under `clean-jockey-wheels` is a refinement,
+        not a restatement, and must not be flagged."""
+
+        agent = QualityCheckAgent(llm=False)
+        audit = await agent.audit(
+            [
+                clip(
+                    segments=[anchor("a1", 0.0, 30.0)],
+                    annotations=[
+                        {"segment_id": "t1", "label": "clean-jockey-wheels",
+                         "hier_level": "task"},
+                        {"segment_id": "a1", "parent_segment_id": "t1",
+                         "label": "degrease-jockey-wheels", "hier_level": "action"},
+                    ],
+                )
+            ],
+            verify_evidence=False,
+        )
+        assert audit.passed is True
+
+    @pytest.mark.asyncio
+    async def test_actions_sharing_a_label_fail(self):
+        """Three spans called the same thing cannot be told apart downstream."""
+
+        agent = QualityCheckAgent(llm=False)
+        audit = await agent.audit(
+            [
+                clip(
+                    segments=[anchor("a1", 0.0, 30.0)],
+                    annotations=[
+                        {"segment_id": f"a{n}", "label": "clean-mechanical-parts",
+                         "hier_level": "action"}
+                        for n in range(3)
+                    ],
+                )
+            ],
+            verify_evidence=False,
+        )
+        findings = [f for f in audit.clips[0].findings if f.check == "G2-TREE-3"]
+        assert findings and "3 separate actions share" in findings[0].detail
+
+    @pytest.mark.asyncio
+    async def test_distinct_action_labels_pass(self):
+        agent = QualityCheckAgent(llm=False)
+        audit = await agent.audit(
+            [
+                clip(
+                    segments=[anchor("a1", 0.0, 30.0)],
+                    annotations=[
+                        {"segment_id": "a1", "label": "dry-derailleur",
+                         "hier_level": "action"},
+                        {"segment_id": "a2", "label": "scrape-debris-from-gear",
+                         "hier_level": "action"},
+                    ],
+                )
+            ],
+            verify_evidence=False,
+        )
+        assert audit.passed is True
+
+    def test_a_synonym_swap_is_beyond_a_lexical_rule(self):
+        """Stated rather than pretended: `service` vs `overhaul` is the same
+        sentence, and `degrease` vs `clean` is a real refinement, and nothing
+        lexical separates them. The prompt prevents this one, not the audit."""
+
+        from video_searching_agent.agent.quality_check_agent import _restates
+
+        assert _restates("service-bike-derailleur", "overhaul-bike-derailleur") is False
+        assert _restates("degrease-jockey-wheels", "clean-jockey-wheels") is False

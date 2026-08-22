@@ -39,6 +39,7 @@ finding with no evidence behind it is a bug in this agent, not a finding.
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -431,19 +432,47 @@ class QualityCheckAgent:
         """G2-TREE-3, and the rule that hand assignment is never invented."""
 
         by_id = {str(a.get("segment_id")): a for a in annotations if a.get("segment_id")}
+        seen_labels: dict[str, int] = {}
         for annotation in annotations:
             text = _text_of(annotation)
             parent_id = annotation.get("parent_segment_id")
             if parent_id and text:
                 parent_text = _text_of(by_id.get(str(parent_id)) or {})
-                if parent_text and text.strip().lower() == parent_text.strip().lower():
+                # Verbatim equality was the original test and it was too narrow:
+                # a derailleur overhaul labelled its task `overhaul-bike-
+                # derailleur` and an action `service-bike-derailleur`, which
+                # restates the job in different words and slipped through.
+                # Overlapping word stems catch the restatement without flagging
+                # a step that merely mentions the same object.
+                if parent_text and _restates(text, parent_text):
                     result.findings.append(
                         Finding(
                             result.video_id,
                             "G2-TREE-3",
-                            f"a level repeats its parent's words verbatim: {text[:70]!r}",
+                            f"{text[:48]!r} restates its parent {parent_text[:48]!r} — "
+                            "label the step, not the job",
                         )
                     )
+
+            # Three spans called the same thing cannot be told apart by anything
+            # downstream, which is the same failure as a level with no words of
+            # its own — one video produced three consecutive actions all named
+            # `clean-mechanical-parts`.
+            level = str(annotation.get("hier_level") or "")
+            if text and level == "action":
+                key = text.strip().lower()
+                seen_labels[key] = seen_labels.get(key, 0) + 1
+
+        for label, count in seen_labels.items():
+            if count > 1:
+                result.findings.append(
+                    Finding(
+                        result.video_id,
+                        "G2-TREE-3",
+                        f"{count} separate actions share the label {label[:48]!r} — "
+                        "nothing downstream can tell them apart",
+                    )
+                )
 
             # A hand named without evidence is the one invention that matters,
             # because it is the label a manipulation model learns from.
@@ -765,6 +794,41 @@ def _as_float(value: Any) -> float | None:
         return float(value)
     except (TypeError, ValueError):
         return None
+
+
+_LABEL_SPLIT = re.compile(r"[^a-z0-9]+")
+
+# Words that carry no distinguishing meaning in a label, so sharing them is not
+# evidence that two levels say the same thing.
+_LABEL_STOPWORDS = frozenset({"the", "a", "an", "and", "of", "to", "with", "on", "in"})
+
+
+def _label_words(text: str) -> set[str]:
+    return {
+        word
+        for word in _LABEL_SPLIT.split(text.strip().lower())
+        if word and word not in _LABEL_STOPWORDS
+    }
+
+
+def _restates(text: str, parent_text: str) -> bool:
+    """Whether a label says what its parent already said.
+
+    Verbatim equality misses the common case, which is a synonym swap:
+    `overhaul-bike-derailleur` at task level and `service-bike-derailleur` at
+    action level are the same sentence. The test is whether the child adds any
+    word of its own — a step that shares its parent's object but names a
+    different operation does, and passes.
+    """
+    child = _label_words(text)
+    parent = _label_words(parent_text)
+    if not child or not parent:
+        return False
+    if child == parent:
+        return True
+    # Everything the child says, minus what it shares with the parent. A single
+    # new verb is enough to earn its place.
+    return not (child - parent)
 
 
 def _text_of(annotation: dict[str, Any]) -> str:

@@ -71,8 +71,18 @@ of the frames, not the frames themselves, so:
 - If the span shows no hands at all, say so with `hands_visible: false`. That is
   a useful answer, not a failure.
 - Objects are the things acted on, named as the captions name them.
-- `label` is a short kebab-case name for the action ("solder-joint",
-  "tube-insertion", "chop-vegetables").
+- `label` is a short kebab-case name for what happens in THIS span
+  ("solder-joint", "tube-insertion", "chop-vegetables"). Two rules make it
+  worth having:
+  * It must not restate the overall task. A span of a derailleur overhaul
+    labelled "service-derailleur" adds nothing the task name did not already
+    say — label the step, not the job.
+  * It must not repeat a label already used for another span of this video. If
+    three spans really are the same operation, distinguish them by what is being
+    acted on or which pass it is ("degrease-jockey-wheels",
+    "rinse-jockey-wheels"), because three identically named spans cannot be told
+    apart by anything downstream.
+  Any labels already used are listed below; do not reuse them.
 - `narration` is one sentence in your own words about THIS span. It must not
   repeat the name of the overall task back at me.
 - `events` are moments inside this span worth their own anchor — a slip, a
@@ -254,6 +264,7 @@ class AnnotationAgent:
                 start=segment.span_start,
                 end=segment.span_end,
                 ref=None,
+                used_labels=[a.label for a in action_annotations if a.label],
             )
             if verdict is None:
                 run.spans_rejected += 1
@@ -404,6 +415,7 @@ class AnnotationAgent:
                 start=item.get("start"),
                 end=item.get("end"),
                 ref=str(ref),
+                used_labels=[a.label for a in run.annotations if a.label],
             )
             if verdict is None:
                 run.spans_rejected += 1
@@ -527,16 +539,27 @@ class AnnotationAgent:
         start: Any,
         end: Any,
         ref: str | None,
+        used_labels: list[str] | None = None,
     ) -> dict[str, Any] | None:
-        """Ask the model for a schema-shaped verdict on one span."""
+        """Ask the model for a schema-shaped verdict on one span.
+
+        `used_labels` are the labels already given to other spans of this video.
+        Without them the model annotates each span in isolation and cannot know
+        it is repeating itself — which is how one derailleur overhaul produced
+        three consecutive actions all called `clean-mechanical-parts`, and an
+        action that restated its own task.
+        """
         if not text and not transcription:
             return None
 
+        already = ", ".join(dict.fromkeys(label for label in (used_labels or []) if label))
         prompt = (
             f"Span: {ref or 'anchored span'} ({start}s to {end}s)\n\n"
             f"Visual captions:\n{text or '(none)'}\n\n"
             f"Speech:\n{transcription or '(none)'}\n\n"
-            "Annotate this span."
+            + (f"Labels already used for other spans of this video: {already}\n\n"
+               if already else "")
+            + "Annotate this span."
         )
         return await self._ask(prompt, ACTION_SYSTEM_PROMPT, ref or "span")
 
