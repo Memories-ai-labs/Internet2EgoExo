@@ -605,6 +605,15 @@ that assert exactly that.
 Anonymous callers are rate limited per address rather than as one pool, so a
 single heavy visitor cannot starve everyone else.
 
+> **The rate limit does not survive serverless.** The token bucket lives in
+> process memory, and on a platform like Vercel each request can land on a fresh
+> instance — so on that host the limit is effectively not enforced. What actually
+> bounds spend there is `MAX_COLLECT_URLS` (how many clips one request may
+> queue — indexing is billed per video-minute), a spend cap set on the keys
+> themselves at OpenRouter and memories.ai, and `API_KEYS` if you are willing to
+> require one. A real shared limit needs shared state (Vercel KV, Upstash), which
+> this repo does not assume you have.
+
 ### Vercel
 
 `vercel.json` and `api/index.py` are in the repo, and `api/requirements.txt`

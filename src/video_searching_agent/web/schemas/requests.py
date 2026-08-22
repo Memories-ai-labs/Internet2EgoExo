@@ -165,7 +165,12 @@ class CollectRequest(BaseModel):
     @field_validator("urls")
     @classmethod
     def validate_urls(cls, v: list[str]) -> list[str]:
-        """Keep http(s) URLs only, de-duplicated, order preserved."""
+        """Keep http(s) URLs only, de-duplicated, order preserved.
+
+        The count is also checked against `MAX_COLLECT_URLS`, which is how a
+        public deployment running on its owner's key bounds what one caller can
+        spend: indexing is billed per video-minute.
+        """
         cleaned: list[str] = []
         for raw in v:
             candidate = raw.strip()
@@ -177,6 +182,16 @@ class CollectRequest(BaseModel):
                 cleaned.append(candidate)
         if not cleaned:
             raise ValueError("At least one URL is required")
+
+        from video_searching_agent.config.settings import get_settings
+
+        allowed = get_settings().max_collect_urls
+        if len(cleaned) > allowed:
+            raise ValueError(
+                f"This deployment accepts {allowed} URL"
+                f"{'' if allowed == 1 else 's'} per request. "
+                "Send fewer, or bring your own key with the X-Memories-Key header."
+            )
         return cleaned
 
 

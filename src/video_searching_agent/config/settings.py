@@ -194,6 +194,20 @@ class Settings(BaseSettings):
         validation_alias="API_KEYS",
     )
 
+    # Cost containment
+    max_collect_urls: int = Field(
+        default=25,
+        ge=1,
+        le=25,
+        description=(
+            "Clips one collection request may queue. The real ceiling on what a "
+            "single caller can spend: indexing is billed per video-minute, so 25 "
+            "long clips is a large bill from one request. Lower it on a public "
+            "deployment that runs on your own key."
+        ),
+        validation_alias="MAX_COLLECT_URLS",
+    )
+
     # Rate Limiting
     rate_limit_enabled: bool = Field(
         default=True,

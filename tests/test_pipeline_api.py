@@ -87,6 +87,20 @@ class TestCollectRequestValidation:
         with pytest.raises(ValidationError):
             CollectRequest(urls=[f"https://x/{index}" for index in range(26)])
 
+    def test_the_deployment_can_cap_what_one_request_queues(self, monkeypatch):
+        # A public deployment running on its owner's key needs a ceiling on the
+        # bill a single caller can run up; indexing is per video-minute.
+        from video_searching_agent.config import settings as settings_module
+
+        monkeypatch.setenv("MAX_COLLECT_URLS", "2")
+        settings_module.get_settings.cache_clear()
+        try:
+            CollectRequest(urls=["https://a/1", "https://b/2"])
+            with pytest.raises(ValidationError, match="accepts 2 URLs per request"):
+                CollectRequest(urls=["https://a/1", "https://b/2", "https://c/3"])
+        finally:
+            settings_module.get_settings.cache_clear()
+
     def test_hands_are_required_by_default(self):
         assert CollectRequest(urls=["https://a/1"]).require_hands is True
         assert CollectRequest(urls=["https://a/1"]).annotate is True
