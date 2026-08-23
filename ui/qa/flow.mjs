@@ -5,10 +5,13 @@
  *     node ui/qa/flow.mjs ui/qa/shots
  *
  * It walks search -> select -> collect -> gates -> grade -> light theme -> a
- * 420px viewport, screenshots each step, and asserts the things that have
+ * 420px viewport -> the library, then the two ways out of the flow (Stop, and a
+ * second search), screenshots each step, and asserts the things that have
  * actually broken before: the tree must nest and name its levels, the page must
  * not scroll sideways on a phone, a rejected clip must say why, an unmeasured
- * gate must not read as a pass, and the console must stay clean.
+ * gate must not read as a pass, a stopped run must leave a form you can use
+ * again, a second search must not keep the first one's selection, and the
+ * console must stay clean.
  *
  * Needs `npm install playwright` and a Chromium; set PW_CHROMIUM to override
  * the executable path.
@@ -268,6 +271,66 @@ await page.setViewportSize({ width: 420, height: 900 });
 await page.waitForTimeout(300);
 await step("14-library-narrow");
 await noHorizontalScroll("library-narrow");
+
+// 10. Stopping a run, and what a second search does to the first one's
+// selection. Both are dead ends a person reaches by accident rather than by
+// following the flow, and both were real: Stop left the form saying
+// "Searching…" with no way back, and a stale selection was still queued for
+// download after the clips it named had left the screen.
+await page.setViewportSize({ width: 1280, height: 900 });
+await page.goto(base, { waitUntil: "domcontentloaded" });
+await page.waitForSelector(".shell", { timeout: 15000 });
+
+// A server that has not answered yet, so Stop lands before the first byte —
+// which is the case the abort path used to swallow.
+const stall = "**/api/v1/queries/stream";
+await page.route(stall, async (route) => {
+  await new Promise((resolve) => setTimeout(resolve, 6000));
+  await route.fulfill({ status: 200, contentType: "text/event-stream", body: "" }).catch(() => {});
+});
+await page.getByRole("button", { name: "Search", exact: true }).click();
+await page.waitForSelector("button:has-text('Stop')", { timeout: 5000 });
+await page.getByRole("button", { name: "Stop" }).click();
+await page.waitForTimeout(600);
+await step("15-stopped");
+const idle = page.getByRole("button", { name: "Search", exact: true });
+if (!(await idle.count()) || !(await idle.isEnabled())) {
+  problems.push("after Stop the search form is still busy — the run cannot be started again");
+}
+await page.unroute(stall);
+
+await page.goto(base, { waitUntil: "domcontentloaded" });
+await page.waitForSelector(".shell", { timeout: 15000 });
+await page.getByRole("button", { name: "Search", exact: true }).click();
+await page.waitForSelector(".card", { timeout: 15000 });
+await page.getByRole("button", { name: "Select all" }).click();
+
+// The same endpoint, with the ids rewritten: a second search over a different
+// corpus, which is exactly when a carried-over selection does damage.
+await page.route(stall, async (route) => {
+  const response = await route.fetch();
+  const body = (await response.text())
+    .replaceAll("aaa1", "zzz9")
+    .replaceAll("bbb2", "yyy8")
+    .replaceAll("ccc3", "xxx7");
+  await route.fulfill({ response, body });
+});
+await page.fill(".textarea", "a second query, over other footage");
+await page.getByRole("button", { name: "Search", exact: true }).click();
+await page.waitForSelector(".card", { timeout: 15000 });
+await page.waitForTimeout(400);
+await step("16-second-search");
+
+const candidates = page.locator('.panel:has(.panel__title:text-is("Candidates"))');
+const afterSecond = await candidates.locator(".panel__meta").innerText();
+const stillChecked = await page.locator(".card input[type=checkbox]:checked").count();
+if (/selected/.test(afterSecond) && stillChecked === 0) {
+  problems.push(`a second search kept the first one's selection: "${afterSecond}" with nothing on screen selected`);
+}
+if (!(await page.getByRole("button", { name: "Send to the Datalake" }).isDisabled()) && stillChecked === 0) {
+  problems.push("a second search leaves clips queued for the Datalake that are no longer on screen");
+}
+await page.unroute(stall);
 
 await browser.close();
 console.log(problems.length ? `PROBLEMS:\n- ${problems.join("\n- ")}` : "NO PROBLEMS FOUND");
