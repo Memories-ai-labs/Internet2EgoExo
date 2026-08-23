@@ -136,13 +136,15 @@ class TestDemoStreams:
         assert levels == ["task", "action", "event", "action"]
         assert clip["annotation"]["caveat"]
 
-    def test_curation_reports_the_ledger_and_an_unmeasured_gate(self, demo_client):
+    def test_curation_reports_the_ledger_and_keeps_the_hours_apart(self, demo_client):
+        """No dataset checks any more: diversity and dedup judged a set, and
+        what is delivered is a clip."""
         response = demo_client.post("/api/v1/curate/stream", json={"tag": "clean_pass"})
         complete = dict(_events(response.text))["complete"]
         assert complete["batch_grade"] == "B"
         assert complete["hours"]["accepted_labeled_hours"] <= complete["hours"]["delivered_hours"]
-        dup = next(c for c in complete["dataset_checks"] if c["id"] == "G3-DUP")
-        assert dup["measured"] is False
+        assert "dataset_checks" not in complete
+        assert "duplicate_groups" not in complete
 
     def test_validation_still_applies_in_demo_mode(self, demo_client):
         assert demo_client.post("/api/v1/collect/stream", json={"urls": []}).status_code == 422

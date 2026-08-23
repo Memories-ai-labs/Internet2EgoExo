@@ -295,3 +295,108 @@ def snippets_within(
         if len(out) >= limit:
             break
     return out
+
+
+# The phrasings asked of the visual index when corroborating hands. Several,
+# because one phrasing is one embedding and the same footage answers "hands in
+# frame" and "close-up of hands working" differently.
+HAND_QUERIES = (
+    "a person's own hands in frame manipulating an object",
+    "close-up of two hands working on a part",
+)
+
+
+@dataclass
+class HandCorroboration:
+    """Whether the seconds that look most like hands actually describe hands.
+
+    Deliberately **not** a ratio over the video. :func:`search_frames` returns
+    the top-k seconds by similarity, so the denominator of "fraction of the video
+    with hands in it" does not exist here — computing hits/top_k would return
+    roughly 1.0 for every video and mean nothing.
+
+    What does have a denominator is this: of the N seconds this video offers as
+    its *most* hand-like, how many actually describe hands? That is a real
+    question with a real answer, and its negative direction is strong — if the
+    twelve most hand-like seconds in a video describe a spinning drum and an
+    empty worktop, the video does not have hands in it, whatever its captions
+    say. Its positive direction is weaker, which is why it corroborates the
+    caption-derived `G1-HAND` ratio rather than replacing it.
+    """
+
+    examined: int = 0
+    describing_hands: int = 0
+    cost_usd: float = 0.0
+    evidence: list[str] = field(default_factory=list)
+    error: str | None = None
+
+    @property
+    def measured(self) -> bool:
+        return self.error is None and self.examined > 0
+
+    @property
+    def share_of_best_seconds(self) -> float | None:
+        """Of the most hand-like seconds, the share that describe hands."""
+        if not self.measured:
+            return None
+        return self.describing_hands / self.examined
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "examined": self.examined,
+            "describing_hands": self.describing_hands,
+            "share_of_best_seconds": (
+                round(self.share_of_best_seconds, 3)
+                if self.share_of_best_seconds is not None
+                else None
+            ),
+            "evidence": self.evidence[:6],
+            "cost_usd": round(self.cost_usd, 5),
+            "error": self.error,
+            "denominator": (
+                "the seconds this video ranks as most hand-like, not the whole "
+                "video — a strong signal when it is low, a weak one when it is high"
+            ),
+        }
+
+
+async def corroborate_hands(
+    lake: Any,
+    video_id: str,
+    *,
+    per_query: int = 8,
+    collection_id: str | None = None,
+) -> HandCorroboration:
+    """Ask the visual index for the most hand-like seconds, then read them.
+
+    The caption-derived `G1-HAND` ratio is a text judgement about descriptions of
+    multi-second spans. This is a text judgement about descriptions of single
+    seconds that visual similarity picked out, which is the same kind of evidence
+    one step closer to the pixels — and it can disagree, which is the point.
+    """
+    from video_searching_agent.curation.frame_check import segment_shows_hands
+
+    result = HandCorroboration()
+    seen: set[tuple[float, float]] = set()
+    errors: list[str] = []
+    for query in HAND_QUERIES:
+        evidence = await search_frames(
+            lake, query, video_ids=[video_id], top_k=per_query, collection_id=collection_id
+        )
+        result.cost_usd += evidence.cost_usd
+        if not evidence.looked:
+            errors.append(str(evidence.error))
+            continue
+        for hit in evidence.hits:
+            key = (hit.start, hit.end)
+            if key in seen:
+                continue
+            seen.add(key)
+            result.examined += 1
+            if segment_shows_hands(hit.snippet):
+                result.describing_hands += 1
+                if len(result.evidence) < 6:
+                    result.evidence.append(f"[{hit.start:.0f}s] {hit.snippet[:120]}")
+    if not result.examined:
+        result.error = "; ".join(errors)[:200] or "the visual index returned no seconds"
+    return result

@@ -173,6 +173,16 @@ class Settings(BaseSettings):
         validation_alias="VIEWPOINT_CHECK",
     )
 
+    # Where the annotation trees live. Empty uses ./data/annotations.sqlite3 and
+    # falls back to the system temp directory. A serverless host persists
+    # neither, so a deployment that wants this needs a real database.
+    annotation_store_path: str = Field(
+        default="",
+        description="SQLite path for the annotation store. Empty tries "
+        "./data/annotations.sqlite3, then the temp directory, then memory.",
+        validation_alias="ANNOTATION_STORE_PATH",
+    )
+
     # Downloading
     download_dir: str = Field(
         default="",

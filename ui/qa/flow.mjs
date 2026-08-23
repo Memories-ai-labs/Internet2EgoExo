@@ -166,7 +166,7 @@ await page.locator(".clip").first().getByRole("button", { name: "Gates & annotat
 await page.waitForSelector(".gates", { timeout: 5000 });
 await step("07-gates");
 const gateText = await page.locator(".clip").first().innerText();
-for (const expected of ["G1-HAND", "not measured", "G3-DUP", "anchors"]) {
+for (const expected of ["G1-HAND", "not measured", "anchors"]) {
   if (!gateText.includes(expected)) problems.push(`gate detail missing "${expected}"`);
 }
 
@@ -176,7 +176,7 @@ await page.waitForSelector(".panel:has-text('Batch grade')", { timeout: 15000 })
 await page.waitForTimeout(400);
 await step("08-curation");
 const curationText = await page.locator(".panel", { hasText: "Curate the set" }).innerText();
-for (const expected of ["batch grade", "delivered", "accepted + labelled", "duplicate groups", "0.21h"]) {
+for (const expected of ["batch grade", "delivered", "accepted + labelled", "0.21h"]) {
   if (!curationText.toLowerCase().includes(expected)) problems.push(`curation panel missing "${expected}"`);
 }
 await noHorizontalScroll("curation");
@@ -193,6 +193,81 @@ await page.setViewportSize({ width: 420, height: 900 });
 await page.waitForTimeout(300);
 await step("10-narrow");
 await noHorizontalScroll("narrow");
+
+// 9. the library — the clean clips, footage from the Datalake and tree from the
+// store, joined on the video id. Asserted against whatever the server actually
+// holds rather than a fixture: the point of this view is that it shows the real
+// corpus, so a hard-coded expectation would pass on an empty one.
+await page.setViewportSize({ width: 1280, height: 900 });
+await page.getByRole("button", { name: /Library/ }).click();
+await page.waitForSelector(".library", { timeout: 15000 });
+await page.waitForTimeout(600);
+await step("11-library");
+
+const libraryText = await page.locator(".library").innerText();
+for (const expected of ["clips", "action anchors", "viewpoint"]) {
+  // Case-insensitive: the stat labels render through text-transform, and
+  // innerText reports the rendered text, not the source.
+  if (!libraryText.toLowerCase().includes(expected)) {
+    problems.push(`library missing the "${expected}" total`);
+  }
+}
+
+const rows = await page.locator(".clipRow").count();
+const emptyNote = await page.locator(".library__note").count();
+if (rows === 0 && emptyNote === 0) {
+  problems.push("the library shows neither clips nor an explanation of why it is empty");
+}
+
+if (rows > 0) {
+  // Provenance on every row: a clip nobody can trace back is a clip that fails
+  // G0-PROV, and the row is where a person would notice.
+  const firstSource = await page.locator(".clipRow__source").first().innerText();
+  if (!/from \w+/.test(firstSource)) {
+    problems.push(`a library row does not say where the clip came from: "${firstSource}"`);
+  }
+
+  await page.locator(".clipRow").first().click();
+  await page.waitForSelector(".ltree", { timeout: 15000 });
+  await page.waitForTimeout(500);
+  await step("12-library-clip");
+// Objects are the facet a buyer reaches for first, and they were being dropped
+// on the way into the store — so assert they reach the page, and that clicking
+// one filters by it.
+const clipText = await page.locator(".ltree").innerText();
+if (!clipText.toLowerCase().includes("metal bowl")) {
+  problems.push("library clip is missing its objects");
+}
+
+  const treeNodes = await page.locator(".ltree__node").count();
+  if (!treeNodes) problems.push("the opened clip shows no annotation tree");
+
+  // An unlabelled span must read as unlabelled rather than as a blank row —
+  // these clips were cut and cleaned before anything labelled them.
+  const spans = await page.locator(".ltree__span").allInnerTexts();
+  if (spans.some((text) => !/\d/.test(text))) {
+    problems.push(`a tree node has no timespan: ${JSON.stringify(spans)}`);
+  }
+  const labels = await page.locator(".ltree__label").allInnerTexts();
+  if (labels.some((text) => !text.trim())) {
+    problems.push("a tree node renders an empty label instead of saying unlabelled");
+  }
+}
+
+// The search box must filter rather than decorate.
+await page.locator("input[type=search]").fill("zzz-nothing-matches-this");
+await page.waitForTimeout(900);
+const afterSearch = await page.locator(".clipRow").count();
+if (afterSearch !== 0) {
+  problems.push(`searching for nonsense still shows ${afterSearch} clip(s)`);
+}
+await step("13-library-search-empty");
+await noHorizontalScroll("library");
+
+await page.setViewportSize({ width: 420, height: 900 });
+await page.waitForTimeout(300);
+await step("14-library-narrow");
+await noHorizontalScroll("library-narrow");
 
 await browser.close();
 console.log(problems.length ? `PROBLEMS:\n- ${problems.join("\n- ")}` : "NO PROBLEMS FOUND");

@@ -35,6 +35,10 @@ from video_searching_agent.evaluation.metrics import ClipOutcome, QueryOutcome, 
 # is why it is counted rather than left unmeasured.
 DERIVED_READS_PER_CLIP = 3
 
+# Refine cuts at most this many accepted clips per query, so one lucky query
+# cannot spend the whole run's budget on uploads.
+MAX_REFINE_PER_QUERY = 3
+
 NETWORK_ERRORS = (urllib.error.URLError, TimeoutError, OSError)
 
 
@@ -99,9 +103,30 @@ def clip_outcome(query_id: str, clip: dict[str, Any]) -> ClipOutcome:
     duration = int(clip.get("duration_seconds") or 0)
     spans_read = int(annotation.get("spans_considered") or 0)
 
+    # Validity, per the project's one goal: hands in frame, legible footage, and
+    # a tree naming atomic actions with what the hands did and to what. Counted
+    # over the annotation payloads rather than inferred from the grade, because
+    # the grade also moves with licence and resolution.
+    action_labels = [
+        label
+        for label in labels
+        if str(label.get("hier_level") or "").lower() in ("action", "event")
+    ]
+    with_hands = sum(
+        1 for label in action_labels if label.get("left_hand") or label.get("right_hand")
+    )
+    with_objects = sum(1 for label in action_labels if label.get("objects"))
+    # "unmeasured" is not "failed": captions that could not settle the hand
+    # question have not failed it, and must not be scored as though they had.
+    blocking = list(clip.get("blocking_failures") or [])
+    hands_gate = "failed" if "G1-HAND" in blocking else ("passed" if labels else "unmeasured")
+
     return ClipOutcome(
         query_id=query_id,
         video_id=str(clip.get("video_id") or ""),
+        hands_gate=hands_gate,
+        actions_with_hands=with_hands,
+        actions_with_objects=with_objects,
         grade=str(clip.get("grade") or "D"),
         score=int(clip.get("score") or 0),
         accepted=bool(clip.get("accepted")),
@@ -145,6 +170,7 @@ def run_query(
     per_query: int = 2,
     dry_run: bool = False,
     viewpoint: str | None = "egocentric",
+    refine: bool = True,
 ) -> QueryOutcome:
     """Search, collect and curate one eval query."""
     outcome = QueryOutcome(
@@ -246,9 +272,90 @@ def run_query(
         outcome.seconds = time.time() - started
         return outcome
 
-    for clip in final(events).get("clips") or []:
+    curation = final(events)
+    for clip in curation.get("clips") or []:
         outcome.clips.append(clip_outcome(outcome.query_id, clip))
     if not outcome.clips:
         outcome.error = "curation returned no graded clips"
+
+    # ---- 4. refine: cut the accepted spans into the clean collection -----
+    #
+    # The last step, and the one that makes this a pipeline rather than an
+    # opinion: a graded clip is a verdict, and a cut clip in the clean
+    # collection is the deliverable. Skipped with --no-refine when the point of
+    # a run is only to measure the funnel.
+    if refine:
+        _refine_accepted(outcome, curation)
+
     outcome.seconds = time.time() - started
     return outcome
+
+
+def _refine_accepted(outcome: QueryOutcome, curation: dict[str, Any]) -> None:
+    """Cut every accepted clip's action anchors and re-house them.
+
+    Runs in-process rather than over the API: refine needs a writable directory
+    to hold the cut before uploading it, which the deployment may not have, and
+    the local runner always does.
+    """
+    import asyncio
+
+    anchors: list[dict[str, Any]] = []
+    for clip in curation.get("clips") or []:
+        if not clip.get("accepted"):
+            continue
+        segments = (clip.get("cleaning") or {}).get("segments") or []
+        for segment in segments:
+            if segment.get("hier_level") != "action":
+                continue
+            start, end = segment.get("span_start"), segment.get("span_end")
+            if start is None or end is None or end <= start:
+                continue
+            anchors.append(
+                {
+                    "video_id": clip.get("video_id"),
+                    "start": float(start),
+                    "end": float(end),
+                    "title": segment.get("label") or outcome.query,
+                }
+            )
+    if not anchors:
+        return
+
+    try:
+        from video_searching_agent.api.memories_datalake_client import (
+            MemoriesDatalakeClient,
+        )
+        from video_searching_agent.config.settings import get_settings
+        from video_searching_agent.pipeline.refine import record_refined, refine_anchors
+    except Exception as exc:  # noqa: BLE001 - refine is not load-bearing for a measurement
+        print(f"    refine unavailable: {str(exc)[:100]}")
+        return
+
+    async def run() -> None:
+        lake = MemoriesDatalakeClient(api_key=get_settings().memories_api_key)
+        result = await refine_anchors(lake, anchors, max_clips=MAX_REFINE_PER_QUERY)
+        record_refined(result, query=outcome.query)
+        by_source: dict[str, list[Any]] = {}
+        for clip in result.clips:
+            # `uploaded_video_id`, not `video_id`: RefinedClip carries the id of
+            # the clip it *created*, and the source it was cut from, separately.
+            # Getting this wrong raised an AttributeError inside the broad
+            # `except` below, which reported "refine failed" and lost every clip
+            # it had already paid to cut and upload.
+            if clip.uploaded:
+                by_source.setdefault(clip.source_video_id, []).append(clip)
+        for graded in outcome.clips:
+            made = by_source.get(graded.video_id) or []
+            graded.refined_video_ids = [c.uploaded_video_id for c in made]
+            graded.refined_seconds = sum(c.seconds for c in made)
+        if result.skipped_reason:
+            print(f"    refine skipped: {result.skipped_reason}")
+        else:
+            made = sum(1 for c in result.clips if c.uploaded)
+            print(f"    refined {made}/{len(result.clips)} clip(s) into {result.collection_name}")
+
+    try:
+        asyncio.run(run())
+    except Exception as exc:  # noqa: BLE001
+        print(f"    refine failed: {str(exc)[:120]}")

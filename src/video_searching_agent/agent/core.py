@@ -373,6 +373,10 @@ class VideoSearchingAgent:
             discovery_usd=usage_metrics.total_cost_usd,
         )
 
+        # What the agent was told to search, so the UI can show it.
+        if rewrite is not None and getattr(rewrite, "queries", None):
+            dataset.searches_run = [q.as_dict() for q in rewrite.queries]
+
         # The metadata got its say above; now look at the footage, while the
         # candidate list is still just a list. A tripod pointed at a worktop
         # calls itself "POV" often enough that this is the difference between

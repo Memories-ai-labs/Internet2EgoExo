@@ -252,3 +252,110 @@ async def test_several_questions_are_several_searches_and_several_charges() -> N
     ]
     assert all(body["filter"] == {"video_ids": ["vid_a"]} for body in lake.bodies)
     assert sum(evidence.cost_usd for evidence in got) == pytest.approx(2 * SEARCH_COST_USD)
+
+
+class TestCorroboratingHandsAgainstThePixels:
+    """The caption-derived G1-HAND ratio is a text judgement about descriptions
+    of multi-second spans. This is a text judgement about descriptions of single
+    seconds that visual similarity picked out — the same kind of evidence, one
+    step closer to the pixels, and able to disagree.
+    """
+
+    @pytest.mark.asyncio
+    async def test_hand_like_seconds_that_describe_hands_corroborate(self):
+        from video_searching_agent.curation.embedding_search import corroborate_hands
+
+        lake = _FakeLake(
+            [
+                _row("vid_a", 10, 0.40, "two hands grip the wrench and turn it"),
+                _row("vid_a", 11, 0.39, "a hand holds the bolt steady"),
+            ]
+        )
+        got = await corroborate_hands(lake, "vid_a", per_query=2)
+
+        assert got.measured is True
+        assert got.examined == 2
+        assert got.describing_hands == 2
+        assert got.share_of_best_seconds == 1.0
+        assert any("wrench" in line for line in got.evidence)
+
+    @pytest.mark.asyncio
+    async def test_the_most_hand_like_seconds_showing_no_hands_is_the_strong_signal(self):
+        """A spinning drum is exactly the case the caption gate got wrong."""
+
+        from video_searching_agent.curation.embedding_search import corroborate_hands
+
+        lake = _FakeLake(
+            [
+                _row("vid_a", 5, 0.38, "a washing machine drum rotates behind glass"),
+                _row("vid_a", 6, 0.37, "an empty worktop beside a kettle"),
+            ]
+        )
+        got = await corroborate_hands(lake, "vid_a", per_query=2)
+
+        assert got.examined == 2
+        assert got.describing_hands == 0
+        assert got.share_of_best_seconds == 0.0
+
+    @pytest.mark.asyncio
+    async def test_it_asks_more_than_one_phrasing_and_pays_for_each(self):
+        from video_searching_agent.curation.embedding_search import (
+            HAND_QUERIES,
+            corroborate_hands,
+        )
+
+        lake = _FakeLake([_row("vid_a", 1, 0.4, "a hand")])
+        got = await corroborate_hands(lake, "vid_a", per_query=4)
+
+        assert [body["query"] for body in lake.bodies] == list(HAND_QUERIES)
+        assert got.cost_usd == pytest.approx(len(HAND_QUERIES) * SEARCH_COST_USD)
+
+    @pytest.mark.asyncio
+    async def test_the_same_second_returned_twice_is_counted_once(self):
+        """Two phrasings overlap, and a doubled second would inflate both halves
+        of the fraction while looking like more evidence."""
+
+        from video_searching_agent.curation.embedding_search import corroborate_hands
+
+        lake = _FakeLake([_row("vid_a", 30, 0.4, "a hand turns the screw")])
+        got = await corroborate_hands(lake, "vid_a", per_query=4)
+
+        assert got.examined == 1
+        assert got.describing_hands == 1
+
+    @pytest.mark.asyncio
+    async def test_no_seconds_means_unmeasured_rather_than_zero(self):
+        from video_searching_agent.curation.embedding_search import corroborate_hands
+
+        got = await corroborate_hands(_FakeLake([]), "vid_a")
+
+        assert got.measured is False
+        assert got.share_of_best_seconds is None, "a zero here would read as 'no hands'"
+        assert got.error
+
+    @pytest.mark.asyncio
+    async def test_a_failed_search_is_unmeasured_not_a_verdict(self):
+        from video_searching_agent.curation.embedding_search import corroborate_hands
+
+        got = await corroborate_hands(_FakeLake(fail=RuntimeError("402 no balance")), "vid_a")
+
+        assert got.measured is False
+        assert got.share_of_best_seconds is None
+        assert "402" in (got.error or "")
+
+    def test_the_result_states_its_own_denominator(self):
+        from video_searching_agent.curation.embedding_search import HandCorroboration
+
+        payload = HandCorroboration(examined=8, describing_hands=2).as_dict()
+        assert "not the whole" in payload["denominator"]
+        assert "strong signal when it is low" in payload["denominator"]
+
+    def test_there_is_no_ratio_over_the_video(self):
+        """search_frames returns the top-k, so a fraction of the video has no
+        denominator here. A field claiming one would be a lie with a number."""
+
+        from video_searching_agent.curation.embedding_search import HandCorroboration
+
+        got = HandCorroboration(examined=8, describing_hands=8)
+        for forbidden in ("hand_ratio", "fraction_of_video", "coverage", "hand_frame_ratio"):
+            assert not hasattr(got, forbidden), forbidden

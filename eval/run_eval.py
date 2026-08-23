@@ -58,6 +58,11 @@ from video_searching_agent.evaluation.metrics import (  # noqa: E402
 from video_searching_agent.evaluation.runner import run_query  # noqa: E402
 from video_searching_agent.evaluation.scorecard import render  # noqa: E402
 
+# v1.0 by default, deliberately: a run already in flight resumes with the set it
+# started on, and switching sets mid-record would put two different populations
+# in one scorecard. Pass --queries eval/queries-v1.1.json for a new run — v1.1
+# drops the 12 rows that name robot hardware or render artifacts and can only
+# ever return nothing.
 QUERIES_PATH = ROOT / "eval" / "queries.json"
 RESULTS_DIR = ROOT / "eval" / "results"
 DEPLOYMENT = os.environ.get("QA_DEPLOYMENT", "https://internet-egoexo-video-search.vercel.app")
@@ -133,11 +138,21 @@ def main() -> int:
         type=Path,
         help="score an existing run's .jsonl and write its scorecard; spends nothing",
     )
+    parser.add_argument(
+        "--queries",
+        type=Path,
+        help="the query set to run (default eval/queries.json, which is v1.0)",
+    )
     parser.add_argument("--out", type=Path, help="where to write the run record (.jsonl)")
+    parser.add_argument(
+        "--no-refine",
+        action="store_true",
+        help="grade only; do not cut accepted spans into the clean collection",
+    )
     parser.add_argument("--yes", action="store_true", help="do not ask before spending")
     args = parser.parse_args()
 
-    payload = json.loads(QUERIES_PATH.read_text(encoding="utf-8"))
+    payload = json.loads(Path(args.queries or QUERIES_PATH).read_text(encoding="utf-8"))
     version = payload.get("eval_version", "")
 
     # --- score an existing run -------------------------------------------
@@ -168,6 +183,11 @@ def main() -> int:
         RESULTS_DIR.mkdir(parents=True, exist_ok=True)
         existing = len(list(RESULTS_DIR.glob("run-*.jsonl")))
         record = RESULTS_DIR / f"run-{existing + 1}.jsonl"
+    # A path handed in with --out gets its directory made too. `eval/results/`
+    # is gitignored, so it does not exist in a fresh checkout — which is every
+    # CI runner. Without this the first write of a paid run dies on
+    # FileNotFoundError after the searching is already billed.
+    record.parent.mkdir(parents=True, exist_ok=True)
 
     estimate = estimate_usd(len(todo), args.per_query, args.dry_run)
     print(f"eval set {version} — {DEPLOYMENT}")
@@ -191,6 +211,7 @@ def main() -> int:
                 deployment=DEPLOYMENT,
                 per_query=args.per_query,
                 dry_run=args.dry_run,
+                refine=not args.no_refine,
             )
             handle.write(json.dumps(outcome_as_dict(outcome), ensure_ascii=False) + "\n")
             handle.flush()

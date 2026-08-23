@@ -8,9 +8,10 @@
 import { useEffect, useState } from "react";
 
 import { CollectView } from "./components/CollectView";
+import { LibraryView } from "./components/LibraryView";
 import { SearchView } from "./components/SearchView";
 
-type View = "search" | "collect";
+type View = "search" | "collect" | "library";
 
 const API_KEY_STORAGE = "ivs.apiKey";
 const THEME_STORAGE = "ivs.theme";
@@ -136,6 +137,15 @@ export function App() {
                 : "index, clean, annotate"}
             </small>
           </button>
+          <button
+            type="button"
+            className="nav__item"
+            aria-current={view === "library"}
+            onClick={() => setView("library")}
+          >
+            <span>3 · Library</span>
+            <small>browse the clean clips</small>
+          </button>
         </div>
 
         <div className="sidebar__footer">
@@ -257,7 +267,7 @@ export function App() {
               setView("collect");
             }}
           />
-        ) : (
+        ) : view === "collect" ? (
           <CollectView
             apiKey={apiKey}
             ownKeys={ownKeys}
@@ -265,6 +275,8 @@ export function App() {
             queuedViewpoint={queuedViewpoint}
             maxUrlsPerRequest={health?.max_collect_urls ?? 25}
           />
+        ) : (
+          <LibraryView apiBase="" />
         )}
       </main>
     </div>

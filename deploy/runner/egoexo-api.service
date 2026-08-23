@@ -1,0 +1,27 @@
+# The API the eval measures, and the UI, kept up between runs.
+#
+# On an always-on host the server is a service rather than something each eval
+# starts and abandons: one process, one log, and `eval/run.sh` finds it healthy
+# and leaves it alone (START_SERVER=0 in the eval unit says so explicitly).
+[Unit]
+Description=egoexo video-searching-agent API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=egoexo
+WorkingDirectory=/opt/egoexo/video-searching-agent
+EnvironmentFile=/etc/egoexo/env
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/local/bin/uv run uvicorn src.video_searching_agent.web.main:app \
+    --host 127.0.0.1 --port 8099
+Restart=always
+RestartSec=5
+# The point of this host is that a long job survives; a restart loop that also
+# restarts the eval would defeat it, so failures are loud in the journal only.
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

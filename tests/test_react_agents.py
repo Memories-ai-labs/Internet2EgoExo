@@ -362,6 +362,87 @@ class TestTheLookingPathIsActuallyReached:
         assert labelled and labelled[0].label == "from-captions"
 
     @pytest.mark.asyncio
+    async def test_an_agent_built_without_a_model_still_looks(self, looking, monkeypatch):
+        """The gate must not depend on whether anybody touched the property yet.
+
+        `CurationAgent` builds `AnnotationAgent(client=...)` and injects no
+        model, so `_gemini` is None until the lazy `gemini` property is first
+        read. The gate tested `self._gemini not in (None, False)`, so on that
+        path looking was silently off — with LOOK_AT_FRAMES=1 set — and the
+        caption fallback returned zero annotations for anchors carrying no
+        caption text, which is every anchor the pixel path produces.
+
+        Every existing test here injects `llm=` and `_annotating`, which is
+        exactly why none of them caught it.
+        """
+        from video_searching_agent.agent import annotation_agent as module
+        from video_searching_agent.agent.annotation_agent import AnnotationAgent
+        from video_searching_agent.agent.cleaning_agent import Segment
+
+        answer = (
+            '{"label": "seen-it", "narration": "n", "usable": true, '
+            '"hands_visible": true, "left_hand": "holds", "hand_evidence": "frames"}'
+        )
+        model = _Model(['{"tool": "look", "arguments": {}}', answer, answer])
+        monkeypatch.setattr(module, "get_llm_client", lambda *a, **k: model)
+
+        agent = AnnotationAgent(client=_Lake())  # no llm, as CurationAgent does
+        looker = __import__(
+            "video_searching_agent.agent.annotating_agent", fromlist=["AnnotatingAgent"]
+        ).AnnotatingAgent(client=_Lake(), llm=model, eyes=_Eyes())
+        monkeypatch.setattr(agent, "_looker", lambda: looker)
+
+        run = await agent.annotate_video(
+            "vid_1",
+            [
+                Segment(
+                    segment_id="t1.a1",
+                    parent_segment_id="t1",
+                    hier_level="action",
+                    span_start=0.0,
+                    span_end=6.8,
+                    # No source_text: a pixel-derived anchor carries none, so
+                    # the caption fallback has nothing and looking is the only
+                    # path that can produce anything at all.
+                    source_text="",
+                )
+            ],
+            write_back=False,
+        )
+        labelled = [a for a in run.annotations if a.hier_level == "action"]
+        assert labelled, f"looking never ran; errors: {run.errors}"
+        assert labelled[0].label == "seen-it"
+
+    @pytest.mark.asyncio
+    async def test_a_span_that_produced_nothing_says_why(self, monkeypatch):
+        """Zero annotations and zero errors reads as "the footage was empty".
+
+        It usually means the looking path was off and the anchor had no caption
+        text. The pass costs money either way, so it has to explain itself.
+        """
+        from video_searching_agent.agent.annotation_agent import AnnotationAgent
+        from video_searching_agent.agent.cleaning_agent import Segment
+
+        agent = AnnotationAgent(client=_Lake(), llm=_Model([]))
+        run = await agent.annotate_video(
+            "vid_1",
+            [
+                Segment(
+                    segment_id="t1.a1",
+                    parent_segment_id="t1",
+                    hier_level="action",
+                    span_start=0.0,
+                    span_end=6.8,
+                    source_text="",
+                )
+            ],
+            write_back=False,
+        )
+        assert run.annotations == []
+        assert run.errors, "a paid pass that produced nothing said nothing about it"
+        assert "no annotation" in run.errors[0]
+
+    @pytest.mark.asyncio
     async def test_looking_off_never_builds_the_loop(self):
         """The default path must not touch the network or the field.
 

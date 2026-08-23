@@ -201,6 +201,24 @@ async def verify_viewpoints(
             reason = "frames show a different kind of video"
             dataset.exclusion_reasons[reason] = dataset.exclusion_reasons.get(reason, 0) + 1
             continue
+        if seen.is_screen_capture():
+            # A screen recording passes the viewpoint question — a monitor fills
+            # the frame the way a worn camera's view does — and passes the
+            # activity question, because somebody really is performing the task,
+            # in software. Only asking what kind of world this is catches it.
+            dataset.excluded_clips += 1
+            reason = "frames show a screen, not the world"
+            dataset.exclusion_reasons[reason] = dataset.exclusion_reasons.get(reason, 0) + 1
+            continue
+        if seen.is_illegible():
+            # Footage nobody can read the manipulation in is not training data,
+            # however right its viewpoint and activity are. Rejected here rather
+            # than after download: this is the last point before we pay to fetch
+            # and index it.
+            dataset.excluded_clips += 1
+            reason = "cannot see what the hands are doing"
+            dataset.exclusion_reasons[reason] = dataset.exclusion_reasons.get(reason, 0) + 1
+            continue
         if seen.viewpoint is not Viewpoint.UNKNOWN:
             # A checked match is worth more than a guess from a title, so the
             # reading replaces the metadata one rather than averaging with it.
