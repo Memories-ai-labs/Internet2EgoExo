@@ -419,3 +419,137 @@ class TestSearchingByWhatIsInTheFootage:
         """The guard that makes the three above mean anything."""
         store = self._store(tmp_path)
         assert store.search(text="soldering iron")[1] == 0
+
+
+class TestAttachingATreeToAClipThatAlreadyExists:
+    """`put_tree` is the write the store was missing.
+
+    `record_refined` lands a clip row as soon as the clip is cut, on purpose,
+    and the tree was meant to arrive later on the same `video_id`. Nothing ever
+    brought it — `segments` had a reader, a search, a vocabulary and an API
+    route, and no writer outside these tests. That is why 13 of 15 rows in the
+    real store held no tree at all.
+    """
+
+    class Node:
+        """What an annotation run hands back, duck-typed."""
+
+        def __init__(self, **kw):
+            self.hier_level = kw.get("hier_level", "action")
+            self.span_start = kw.get("span_start", 0.0)
+            self.span_end = kw.get("span_end", 6.0)
+            self.label = kw.get("label")
+            self.narration = kw.get("narration")
+            self.left_hand = kw.get("left_hand")
+            self.right_hand = kw.get("right_hand")
+            self.objects = kw.get("objects", [])
+            self.segment_id = kw.get("segment_id")
+            self.parent_segment_id = kw.get("parent_segment_id")
+            self.evidence = kw.get("evidence", [])
+
+    def _cut_clip(self) -> AnnotationStore:
+        """A clip as `record_refined` leaves it: provenance, pixels, no tree."""
+        store = AnnotationStore(":memory:")
+        store.put(
+            Clip(
+                video_id="vid_clean",
+                collection_id="col_clean",
+                source_video_id="vid_source",
+                source_start=41.5,
+                source_end=63.5,
+                duration_seconds=22.0,
+                motion_mean=0.094,
+                sharpness_mean=3120.0,
+                query="someone assembling the lamp",
+            )
+        )
+        return store
+
+    def test_the_provenance_survives_the_tree_landing_on_it(self):
+        """The trap: `put` replaces the row, so building a Clip would blank this.
+
+        source_video_id, the span inside it and the pixel measurements are the
+        only copy of where a clip came from. An annotation run knows none of
+        them, so a writer that replaced the row would silently destroy the
+        traceability that G0-PROV exists to check.
+        """
+        store = self._cut_clip()
+        store.put_tree(
+            "vid_clean",
+            [self.Node(label="fit the shade", left_hand="holds the shade")],
+            annotation_level="L2",
+            grade="B",
+            accepted=True,
+        )
+        clip = store.get("vid_clean")
+        assert clip.source_video_id == "vid_source"
+        assert (clip.source_start, clip.source_end) == (41.5, 63.5)
+        assert clip.motion_mean == 0.094 and clip.sharpness_mean == 3120.0
+        assert clip.query == "someone assembling the lamp"
+        # and the tree did land
+        assert [s.label for s in clip.segments] == ["fit the shade"]
+        assert (clip.annotation_level, clip.grade, clip.accepted) == ("L2", "B", True)
+
+    def test_a_caller_that_knows_no_grade_cannot_erase_one(self):
+        store = self._cut_clip()
+        store.put_tree("vid_clean", [self.Node(label="a")], grade="A", accepted=True)
+        store.put_tree("vid_clean", [self.Node(label="b")])
+        clip = store.get("vid_clean")
+        assert clip.grade == "A" and clip.accepted is True
+
+    def test_a_tree_for_an_unknown_clip_invents_nothing(self):
+        """A tree with no clip has nothing to join to, so it is refused."""
+        store = self._cut_clip()
+        assert store.put_tree("vid_missing", [self.Node(label="x")]) == 0
+        assert store.get("vid_missing") is None
+        assert store.totals()["clips"] == 1
+
+    def test_re_annotating_replaces_the_tree_rather_than_doubling_it(self):
+        """A re-annotation is a correction; two copies double every derived hour."""
+        store = self._cut_clip()
+        store.put_tree("vid_clean", [self.Node(label="first", span_end=5.0)])
+        store.put_tree("vid_clean", [self.Node(label="second", span_end=5.0)])
+        clip = store.get("vid_clean")
+        assert [s.label for s in clip.segments] == ["second"]
+
+    def test_hands_visible_is_inferred_from_a_named_hand_and_not_guessed_otherwise(self):
+        """Unmeasured is not zero: no hand named is not a claim that none showed."""
+        store = self._cut_clip()
+        store.put_tree("vid_clean", [self.Node(label="named", right_hand="turns the screw")])
+        assert store.get("vid_clean").segments[0].hands_visible is True
+
+        store.put_tree("vid_clean", [self.Node(label="silent")])
+        assert store.get("vid_clean").segments[0].hands_visible is None
+
+    def test_the_written_tree_is_immediately_searchable(self):
+        """The end of the join: a tree written here answers a query about pixels."""
+        store = self._cut_clip()
+        store.put_tree(
+            "vid_clean",
+            [
+                self.Node(
+                    label="thread the nut",
+                    left_hand="steadies the bracket",
+                    objects=["nut", "bracket"],
+                )
+            ],
+        )
+        assert store.search(text="bracket")[1] == 1
+        assert store.search(text="steadies")[1] == 1
+        assert store.search(text="soldering iron")[1] == 0
+        assert [row["object"] for row in store.object_vocabulary()] == ["bracket", "nut"]
+
+    def test_nodes_without_ids_still_form_a_tree(self):
+        """An agent that returns bare spans must not collide on segment_id."""
+        store = self._cut_clip()
+        store.put_tree(
+            "vid_clean",
+            [
+                self.Node(hier_level="task", label="assemble the lamp", span_end=22.0),
+                self.Node(label="fit the shade", span_start=0.0, span_end=11.0),
+                self.Node(label="tighten the base", span_start=11.0, span_end=22.0),
+            ],
+        )
+        clip = store.get("vid_clean")
+        assert len({s.segment_id for s in clip.segments}) == 3
+        assert len(clip.action_segments) == 2

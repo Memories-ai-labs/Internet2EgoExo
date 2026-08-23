@@ -46,6 +46,12 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+
+def _clean_text(value: Any) -> str | None:
+    """A string with something in it, or None. Empty string is not a label."""
+    text = str(value).strip() if value is not None else ""
+    return text or None
+
 SCHEMA_VERSION = 1
 
 _SCHEMA = """
@@ -343,6 +349,104 @@ class AnnotationStore:
         with self._tx() as cur:
             cur.execute("DELETE FROM segments WHERE video_id = ?", (video_id,))
             cur.execute("DELETE FROM clips WHERE video_id = ?", (video_id,))
+
+    def put_tree(
+        self,
+        video_id: str,
+        annotations: Iterable[Any],
+        *,
+        annotation_level: str = "",
+        grade: str = "",
+        accepted: bool | None = None,
+        title: str = "",
+        viewpoint: str = "",
+        query: str = "",
+    ) -> int:
+        """Attach a tree to a clip that already exists, keeping its provenance.
+
+        This is the write the store was missing. `record_refined` puts a clip
+        row down as soon as the clip is cut — deliberately, because "cut but not
+        yet annotated" is a real state the Library should show — and the tree
+        was meant to arrive later, keyed on the same `video_id`. Nothing ever
+        brought it: `segments` had a reader, a search, a vocabulary and an API
+        route, and no writer outside the tests.
+
+        Merging rather than replacing is the whole point. :meth:`put` replaces
+        the row, so building a `Clip` from an annotation run and putting it would
+        blank `source_video_id`, `source_start`, `source_end` and the pixel
+        measurements — the provenance that makes a clip traceable, and the only
+        copy of it. So the existing row is read first and only the fields this
+        call actually knows are overwritten.
+
+        Args:
+            video_id: The clean clip's Datalake id — the join, in both directions.
+            annotations: Nodes with the attributes of a tree node: `hier_level`,
+                `span_start`, `span_end`, `label`, `narration`, `left_hand`,
+                `right_hand`, `objects`, and optionally `segment_id` /
+                `parent_segment_id`. Duck-typed on purpose: a `ClipAnnotation`
+                from the annotation agent and a plain `Segment` both fit, and
+                the store stays free of a dependency on either.
+            annotation_level: The depth the run reached (`L0`-`L3`), recorded as
+                a description of the tree, never as a target.
+            grade, accepted, title, viewpoint, query: Overwritten only when a
+                non-empty value is passed, so a caller that knows nothing about
+                the grade cannot erase one.
+
+        Returns:
+            How many nodes were written. Zero means the clip is unknown here —
+            no row is invented, because a tree with no clip has nothing to join
+            to and would be invisible to every read path.
+        """
+        existing = self.get(video_id)
+        if existing is None:
+            logger.warning("no clip row for %s, so its tree has nothing to hang on", video_id)
+            return 0
+
+        nodes: list[Segment] = []
+        for index, node in enumerate(annotations):
+            level = _clean_text(getattr(node, "hier_level", "")) or "action"
+            segment_id = _clean_text(getattr(node, "segment_id", "")) or f"{level}-{index}"
+            objects = list(getattr(node, "objects", None) or [])
+            hands_visible = getattr(node, "hands_visible", None)
+            if hands_visible is None:
+                # An action that names a hand shows one; anything else is not a
+                # claim either way, and unmeasured is not zero.
+                named = _clean_text(getattr(node, "left_hand", "")) or _clean_text(
+                    getattr(node, "right_hand", "")
+                )
+                hands_visible = True if named else None
+            nodes.append(
+                Segment(
+                    segment_id=segment_id,
+                    parent_segment_id=_clean_text(getattr(node, "parent_segment_id", "")) or None,
+                    hier_level=level,
+                    span_start=float(getattr(node, "span_start", None) or 0.0),
+                    span_end=float(getattr(node, "span_end", None) or 0.0),
+                    label=_clean_text(getattr(node, "label", "")),
+                    narration=_clean_text(getattr(node, "narration", "")),
+                    hands_visible=hands_visible,
+                    left_hand=_clean_text(getattr(node, "left_hand", "")),
+                    right_hand=_clean_text(getattr(node, "right_hand", "")),
+                    objects=[str(o) for o in objects if str(o).strip()],
+                    evidence=list(getattr(node, "evidence", None) or []),
+                )
+            )
+
+        existing.segments = nodes
+        if annotation_level:
+            existing.annotation_level = annotation_level
+        if grade:
+            existing.grade = grade
+        if accepted is not None:
+            existing.accepted = accepted
+        if title:
+            existing.title = title
+        if viewpoint:
+            existing.viewpoint = viewpoint
+        if query:
+            existing.query = query
+        self.put(existing)
+        return len(nodes)
 
     def prune_missing(self, live_video_ids: Iterable[str]) -> list[str]:
         """Drop clips the Datalake no longer has.

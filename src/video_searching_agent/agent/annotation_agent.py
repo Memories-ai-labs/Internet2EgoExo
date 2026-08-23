@@ -275,7 +275,15 @@ class AnnotationAgent:
         run.spans_considered = len(actions)
         action_annotations: list[ClipAnnotation] = []
 
-        looking = _looking_enabled() and self._gemini not in (None, False)
+        # `is not False`, not `not in (None, False)`. None means "no client was
+        # injected", which the `gemini` property builds on demand; only an
+        # explicit False means "this deployment has no model". Reading the
+        # private attribute here made looking depend on whether somebody had
+        # already touched the property: the HTTP routers inject a client and
+        # looked, while `CurationAgent`, which injects none, silently never did
+        # — with LOOK_AT_FRAMES=1 set and the caption path falling straight
+        # through to zero annotations for anchors that carry no caption text.
+        looking = _looking_enabled() and self._gemini is not False
         looker = self._looker() if looking else None
 
         for segment in actions[: self.max_spans]:
@@ -342,6 +350,25 @@ class AnnotationAgent:
             )
 
         if not action_annotations:
+            # Never return an empty tree silently. This pass costs money whether
+            # or not it produces labels, and "0 annotations, 0 errors" reads as
+            # "the footage had nothing in it" when it usually means the looking
+            # path was off and the anchors carried no caption text to fall back
+            # on. One clip in five used to come back like this unexplained.
+            run.errors.append(
+                f"{len(actions)} anchored span(s) produced no annotation: "
+                + (
+                    "the looking path was off and no anchor carried caption text"
+                    if looker is None
+                    else "the looking path did not converge on any span"
+                )
+            )
+            run.trace.add(
+                thought="Report why nothing was labelled, rather than returning silence.",
+                action="annotate_video",
+                action_input={"video_id": video_id, "spans": len(actions)},
+                observation=run.errors[-1],
+            )
             return run
 
         task_segment = next(
@@ -570,7 +597,7 @@ class AnnotationAgent:
         if self._annotating is None:
             from video_searching_agent.agent.annotating_agent import AnnotatingAgent
 
-            self._annotating = AnnotatingAgent(client=self.client, llm=self._gemini)
+            self._annotating = AnnotatingAgent(client=self.client, llm=self.gemini)
         return self._annotating
 
     async def _label_by_looking(
@@ -597,6 +624,10 @@ class AnnotationAgent:
         )
         run.look_cost_usd += label.cost_usd
         if label.error or not label.label:
+            run.errors.append(
+                f"span {segment.span_start:.0f}-{segment.span_end:.0f}s came back unlabelled: "
+                + (label.error or "the model returned no label")
+            )
             return None
         if not label.usable:
             run.spans_rejected += 1
