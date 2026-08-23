@@ -190,7 +190,9 @@ human video into robot training data in three stages:
    (Qwen3.5).
 
 **Inputs ~1,940 h** — ANT 7 h (in-house), **EgoDex 732 h**, ViTRA 249 h,
-EgoVerse 954 h. **Output 18,561 h** of synthetic robot data across 15
+EgoVerse 954 h — though the authors state the pipeline accepts in-the-wild video
+as well as curated datasets, making it the one entry in this document that even
+gestures at web-sourced input. The reported corpus is built from curated sets. **Output 18,561 h** of synthetic robot data across 15
 morphologies (Panda, UR5e, ARX-L5, xArm7, Sawyer, Kinova Gen3, IIWA, Jaco, FR3,
 UR10e, ViperX, WidowX, Piper, YAM, Aloha-Agilex). On an extended RoboTwin 2.0
 with disentangled visual / scene / embodiment / task perturbations, 1:1 mixing
@@ -253,6 +255,33 @@ data licence. Note also a scale discrepancy worth tracking: [Ego2Robot](#ego2rob
 cites EgoVerse at 954 h while the v2 paper states 1,362 h — the corpus grew
 between versions.
 
+### EgoLive
+
+**[arXiv 2604.23570](https://arxiv.org/html/2604.23570v1)** — the fidelity end of the
+market, and the exact opposite design choice from [Egocentric-100K](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost).
+1,680 hours of **stereo video at 60 fps**, 65,866 episodes across 346 real-world
+tasks.
+
+- **Capture**: **JoyEgoCam**, a custom head-mounted stereo rig — **2160×2160 per
+  camera**, 130° × 130° field of view, IMU at 200 Hz.
+- **Automated annotation pipeline**, three stages: HaMeR for hand estimation into
+  MANO parameters and **ORB-SLAM3** fusing binocular images with IMU for camera
+  ego-motion → detection/tracking, **SAM2** segmentation and a **fine-tuned
+  Qwen3-VL-32B** for hand–object interaction descriptions → stereo optimisation
+  for 3D keypoints and **FoundationStereo** for depth at 1152×1152.
+- **Ships**: stereo RGB, 6-DoF hand and wrist trajectories, 3D hand keypoints,
+  depth maps, hand masks, interacted-object masks, sub-task segmentation with
+  natural-language descriptions, camera pose.
+- **Licence: CC BY 4.0**, distributed through JD Cloud's robotdata-market.
+
+> **Bearing here.** Put EgoLive's 2160×2160 stereo beside Egocentric-100K's
+> 456×256 and the field's split is obvious: one wing is buying **hours** at the
+> cost of pixels, the other is buying **fidelity** at the cost of hours. Neither
+> is buying *provenance-carrying hours sourced against a requirement*, which is
+> the axis this repo competes on. Its pipeline is also the most complete public
+> answer to "what does a full annotation stack look like" — and, like every other
+> one in §13, it runs on footage the authors captured themselves.
+
 **[From Human Videos to Robot Manipulation](https://arxiv.org/html/2606.00054v1)** —
 the survey that maps this whole cluster; useful as an index, not as evidence.
 
@@ -310,9 +339,24 @@ Desirability filtering keeps 80.5% of candidates.
 > is an ensemble-of-evidence for the same reason theirs is an
 > ensemble-of-teachers.
 
-**[InternVid](https://arxiv.org/abs/2307.06942)** — 7 M videos → 234 M clips with
-LLM-generated descriptions totalling 4.1 B words; the template for
-LLM-in-the-loop corpus construction and the training set behind ViCLIP.
+### InternVid
+
+**[arXiv 2307.06942](https://arxiv.org/abs/2307.06942)** — 7 M videos → 234 M
+clips with LLM-generated descriptions totalling 4.1 B words; the template for
+LLM-in-the-loop corpus construction. Released as graded subsets rather than one
+blob — **InternVid-10M-FLT** (the primary released cut), **10M-DIV**
+(diversity-weighted), **Aesthetics-18M**, **200M**, and the full ~230 M
+video–text pairs — which is a useful pattern in itself: publish the filtered
+tenth that most people should actually use, not only the raw pile.
+
+**ViCLIP**, trained on it, is a plain video CLIP — ViT video encoder plus text
+encoder, spatiotemporal attention, video masking during pretraining — with
+separate checkpoints per subset, so the subsets double as an ablation over data
+quality.
+
+Stated caveats: 15% of clips are only 360P–720P and "may not perform as well"
+for generation, and 85% run under 10 seconds. ⚠️ The dataset page does not state
+a licence; treat it as unresolved until asked.
 
 **[NVIDIA NeMo Curator](https://github.com/NVIDIA-NeMo/Curator)** — GPU-accelerated
 load / filter / dedupe / transform for text, image, video and audio at
@@ -663,9 +707,14 @@ regular intervals into a **tiled image with frame-index labels**, ask a VLM whic
 frame is closest to the action's start (or end), narrow the sampling window
 around the answer, and repeat — a binary search over the timeline conducted in
 natural language. Input: a long video plus an open-vocabulary action query.
-Output: start and end timestamps. Evaluated on the Breakfast dataset, and
-demonstrated qualitatively on a 10-minute first-person cooking video (cutting
-vegetables, washing vegetables).
+Output: start and end timestamps. The tiling is exposed as a single knob —
+`--grid N` builds an N×N grid of sampled frames. Published as *Open-vocabulary
+action localization with iterative visual prompting*, IEEE Access 2025; **code
+MIT**. Evaluated on the Breakfast dataset, and demonstrated qualitatively on a
+10-minute first-person cooking video (cutting vegetables, washing vegetables).
+
+⚠️ Which VLM it runs is not stated on either the project page or the repository
+front page — worth reading `src/` before quoting a cost or latency figure for it.
 
 ⚠️ **The authors state plainly that it does not surpass current model-based
 approaches.** That is exactly what makes it useful: zero training cost and no
@@ -702,6 +751,9 @@ produces a pattern:
 | Egocentric-1M | Apache 2.0 *(reported; card gated, unverified)* | ⚠️ verify before relying on it |
 | Action100M | CC BY 4.0 | ✅ with attribution |
 | Open-AoE | CC BY 4.0 | ✅ with attribution |
+| EgoLive | CC BY 4.0 | ✅ with attribution (distributed via JD Cloud) |
+| VLM-Video-Action-Localization | MIT | ✅ |
+| InternVid | **not stated on the dataset page** | ⚠️ unresolved — ask |
 | cosmos-curate (code) | Apache 2.0 | ✅ (models separate) |
 | video2dataset | MIT | ✅ |
 | Exo2Ego-V | Apache 2.0 | ✅ |
@@ -774,11 +826,14 @@ frames**, 2,010,759 clips, 24.79 TB, 30 fps H.265, monocular head-mounted
 **fisheye** Build AI Gen 1, per-worker calibrated camera intrinsics, mean 7.06
 hours per worker, Apache 2.0, access gated behind sharing contact information.
 
-⚠️ **Egocentric-1M is not source-verified here.** Its Hugging Face card returns
-401 to an unauthenticated fetch, so the ~1 M hours, the April 2026 date and the
-Apache 2.0 terms are secondary reporting only. Treat them as strongly indicated,
-not confirmed. Anyone planning around it should open the card while logged in
-before believing this table's last row.
+⚠️ **Egocentric-1M is still not source-verified, after two attempts.** Its
+Hugging Face card returns 401 to an unauthenticated fetch, and it does not
+surface in dataset search either — searching `builddotai` returns
+Egocentric-100K and Egocentric-10K-Evaluation but no 1M card. So the ~1 M hours,
+the April 2026 date and the Apache 2.0 terms rest entirely on secondary
+coverage. Treat them as indicated, not confirmed, and open the card while logged
+in before planning around this table's last row. The 100K row, by contrast, is
+read straight off the card.
 
 **The part nobody leads with: hours scaled 10×, and pixels per hour collapsed.**
 Egocentric-10K ships 1080p. Egocentric-100K ships **456×256**. That is roughly a
@@ -786,6 +841,23 @@ seventeen-fold reduction in pixels per frame, and 256p is marginal precisely
 where this domain needs resolution — finger articulation, small tool affordances,
 what is actually being grasped. The free hours are real; they are not the same
 hours.
+
+**And the field is visibly splitting along that axis.** In the same window,
+[EgoLive](#egolive) went the other way: 1,680 hours of **stereo 2160×2160 at
+60 fps** with depth, masks and 3D keypoints. Two strategies, both credible:
+
+| | Hours wing (Egocentric-100K) | Fidelity wing (EgoLive) |
+|---|---|---|
+| Hours | 100,405 | 1,680 |
+| Per-frame | 456×256 mono | 2160×2160 **stereo**, 60 fps |
+| Extra signal | none (no audio either) | depth, hand/object masks, 3D keypoints, 6-DoF trajectories |
+| Bet | scale washes out noise | fidelity is what the model actually needs |
+
+Neither wing is buying **provenance-carrying hours sourced against a stated
+requirement**, which is the axis this repo competes on. That is the useful read:
+the free corpora are not converging on one thing you have to beat — they are
+diverging, and the gap between them is where a requirement-driven collector
+lives.
 
 > **What this does to §12's argument.** It strengthens it and sharpens it. Any
 > pitch of the form "we can get you N hours" is now competing with a million free
