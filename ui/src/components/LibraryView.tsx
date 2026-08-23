@@ -8,6 +8,8 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
+
+import { errorText } from "../lib/sse";
 import { Panel, Stat } from "./primitives";
 
 type Segment = {
@@ -60,7 +62,22 @@ type Facets = {
 
 const PAGE = 24;
 
-export function LibraryView({ apiBase }: { apiBase: string }) {
+export function LibraryView({ apiBase, apiKey = "" }: { apiBase: string; apiKey?: string }) {
+  // Every clips endpoint is behind the deployment's access key — only /ui/ and
+  // /api/v1/health are public. Without the header this view used to render the
+  // 401 body as `clips: []`: a locked library and an empty one looked the same,
+  // which is the one thing a library must never do.
+  const read = useCallback(
+    async (path: string) => {
+      const response = await fetch(`${apiBase}${path}`, {
+        headers: apiKey ? { "X-API-Key": apiKey } : undefined,
+      });
+      if (!response.ok) throw new Error(await errorText(response));
+      return response.json();
+    },
+    [apiBase, apiKey],
+  );
+
   const [query, setQuery] = useState("");
   const [viewpoint, setViewpoint] = useState("");
   const [handsOnly, setHandsOnly] = useState(false);
@@ -81,8 +98,8 @@ export function LibraryView({ apiBase }: { apiBase: string }) {
       if (viewpoint) params.set("viewpoint", viewpoint);
       if (handsOnly) params.set("hands_only", "true");
       const [listing, facetPayload] = await Promise.all([
-        fetch(`${apiBase}/api/v1/clips?${params}`).then((r) => r.json()),
-        fetch(`${apiBase}/api/v1/clips/facets`).then((r) => r.json()),
+        read(`/api/v1/clips?${params}`),
+        read("/api/v1/clips/facets"),
       ]);
       setClips(listing.clips ?? []);
       setTotal(listing.total ?? 0);
@@ -93,7 +110,7 @@ export function LibraryView({ apiBase }: { apiBase: string }) {
     } finally {
       setLoading(false);
     }
-  }, [apiBase, query, viewpoint, handsOnly]);
+  }, [read, query, viewpoint, handsOnly]);
 
   useEffect(() => {
     void load();
@@ -102,7 +119,7 @@ export function LibraryView({ apiBase }: { apiBase: string }) {
   const open = async (videoId: string) => {
     setSelected(null);
     try {
-      const detail = await fetch(`${apiBase}/api/v1/clips/${videoId}`).then((r) => r.json());
+      const detail = await read(`/api/v1/clips/${videoId}`);
       setSelected(detail);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "could not open that clip");

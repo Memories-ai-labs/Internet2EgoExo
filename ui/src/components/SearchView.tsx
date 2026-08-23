@@ -87,6 +87,11 @@ export function SearchView({
       setClips([]);
       setManifest(null);
       setAnswer("");
+      // A new search is a new corpus. Selections made against the last one
+      // would survive it invisibly — the panel would count clips that are no
+      // longer on screen, and "Send to the Datalake" would queue them, which
+      // is a bill for footage nobody picked.
+      onClearSelection();
     }
 
     await streamRequest(

@@ -276,7 +276,7 @@ export function App() {
             maxUrlsPerRequest={health?.max_collect_urls ?? 25}
           />
         ) : (
-          <LibraryView apiBase="" />
+          <LibraryView apiBase="" apiKey={apiKey} />
         )}
       </main>
     </div>

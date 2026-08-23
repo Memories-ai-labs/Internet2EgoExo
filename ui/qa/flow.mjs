@@ -5,20 +5,33 @@
  *     node ui/qa/flow.mjs ui/qa/shots
  *
  * It walks search -> select -> collect -> gates -> grade -> light theme -> a
- * 420px viewport, screenshots each step, and asserts the things that have
+ * 420px viewport -> the library, then the two ways out of the flow (Stop, and a
+ * second search), screenshots each step, and asserts the things that have
  * actually broken before: the tree must nest and name its levels, the page must
  * not scroll sideways on a phone, a rejected clip must say why, an unmeasured
- * gate must not read as a pass, and the console must stay clean.
+ * gate must not read as a pass, a stopped run must leave a form you can use
+ * again, a second search must not keep the first one's selection, and the
+ * console must stay clean.
  *
  * Needs `npm install playwright` and a Chromium; set PW_CHROMIUM to override
- * the executable path.
+ * the executable path. QA_BASE points it at a deployment instead of a laptop,
+ * and QA_API_KEY carries that deployment's access key when it requires one.
  */
 
 import { chromium } from "playwright";
 
 const base = process.env.QA_BASE || "http://127.0.0.1:8821/ui/";
 const out = process.argv[2] || ".";
+// A deployment with API_KEYS set answers 401 to everything but /ui/ and
+// /api/v1/health, so the walk would die at the first search. The UI keeps the
+// viewer's access key in localStorage and sends it as X-API-Key; seeding it
+// before the app loads is the same thing a person typing it into the sidebar
+// does, and it is what lets this run against a real host rather than a laptop.
+const accessKey = process.env.QA_API_KEY || "";
 const problems = [];
+// Set while a step deliberately makes a request fail, so the console and
+// request-failure watchers do not report the failure the step is asserting.
+let expectingFailures = false;
 
 // PW_PROXY (or HTTPS_PROXY) lets this run against a deployed URL from a
 // sandbox whose only route out is a proxy. The proxy's CA is trusted by the
@@ -32,15 +45,26 @@ const browser = await chromium.launch({
     : {}),
 });
 const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+if (accessKey) {
+  await page.addInitScript((key) => {
+    try {
+      localStorage.setItem("ivs.apiKey", key);
+    } catch {
+      /* a browser with site data blocked; the run will fail loudly at the first search */
+    }
+  }, accessKey);
+}
 
 page.on("console", (m) => {
   if (m.type() !== "error") return;
+  if (expectingFailures) return;
   if (m.location().url.includes("fonts.googleapis.com")) return;
   if (m.text().includes("ERR_CONNECTION_RESET")) return;
   problems.push(`console: ${m.text()} @ ${m.location().url}`);
 });
 page.on("pageerror", (e) => problems.push(`pageerror: ${e.message}`));
 page.on("requestfailed", (r) => {
+  if (expectingFailures) return;
   // fonts.googleapis.com is unreachable from this sandbox; the fallback stack covers it.
   if (r.url().includes("fonts.googleapis.com")) return;
   // A POST-SSE stream that has delivered its last frame is cancelled by the
@@ -268,6 +292,92 @@ await page.setViewportSize({ width: 420, height: 900 });
 await page.waitForTimeout(300);
 await step("14-library-narrow");
 await noHorizontalScroll("library-narrow");
+
+// 10. Stopping a run, and what a second search does to the first one's
+// selection. Both are dead ends a person reaches by accident rather than by
+// following the flow, and both were real: Stop left the form saying
+// "Searching…" with no way back, and a stale selection was still queued for
+// download after the clips it named had left the screen.
+await page.setViewportSize({ width: 1280, height: 900 });
+await page.goto(base, { waitUntil: "domcontentloaded" });
+await page.waitForSelector(".shell", { timeout: 15000 });
+
+// A server that has not answered yet, so Stop lands before the first byte —
+// which is the case the abort path used to swallow.
+const stall = "**/api/v1/queries/stream";
+await page.route(stall, async (route) => {
+  await new Promise((resolve) => setTimeout(resolve, 6000));
+  await route.fulfill({ status: 200, contentType: "text/event-stream", body: "" }).catch(() => {});
+});
+await page.getByRole("button", { name: "Search", exact: true }).click();
+await page.waitForSelector("button:has-text('Stop')", { timeout: 5000 });
+await page.getByRole("button", { name: "Stop" }).click();
+await page.waitForTimeout(600);
+await step("15-stopped");
+const idle = page.getByRole("button", { name: "Search", exact: true });
+if (!(await idle.count()) || !(await idle.isEnabled())) {
+  problems.push("after Stop the search form is still busy — the run cannot be started again");
+}
+await page.unroute(stall);
+
+await page.goto(base, { waitUntil: "domcontentloaded" });
+await page.waitForSelector(".shell", { timeout: 15000 });
+await page.getByRole("button", { name: "Search", exact: true }).click();
+await page.waitForSelector(".card", { timeout: 15000 });
+await page.getByRole("button", { name: "Select all" }).click();
+
+// The same endpoint, with the ids rewritten: a second search over a different
+// corpus, which is exactly when a carried-over selection does damage.
+await page.route(stall, async (route) => {
+  const response = await route.fetch();
+  const body = (await response.text())
+    .replaceAll("aaa1", "zzz9")
+    .replaceAll("bbb2", "yyy8")
+    .replaceAll("ccc3", "xxx7");
+  await route.fulfill({ response, body });
+});
+await page.fill(".textarea", "a second query, over other footage");
+await page.getByRole("button", { name: "Search", exact: true }).click();
+await page.waitForSelector(".card", { timeout: 15000 });
+await page.waitForTimeout(400);
+await step("16-second-search");
+
+const candidates = page.locator('.panel:has(.panel__title:text-is("Candidates"))');
+const afterSecond = await candidates.locator(".panel__meta").innerText();
+const stillChecked = await page.locator(".card input[type=checkbox]:checked").count();
+if (/selected/.test(afterSecond) && stillChecked === 0) {
+  problems.push(`a second search kept the first one's selection: "${afterSecond}" with nothing on screen selected`);
+}
+if (!(await page.getByRole("button", { name: "Send to the Datalake" }).isDisabled()) && stillChecked === 0) {
+  problems.push("a second search leaves clips queued for the Datalake that are no longer on screen");
+}
+await page.unroute(stall);
+
+// 11. A library nobody is allowed to read must say so. Every clips endpoint
+// sits behind the deployment's access key, and a 401 body is valid JSON — so a
+// locked shelf used to render as `0 matches`, indistinguishable from a corpus
+// that really is empty. Asserted with an injected 401 rather than by unsetting
+// the key, so it holds whether or not this run has one.
+expectingFailures = true;
+await page.route("**/api/v1/clips**", (route) =>
+  route.fulfill({
+    status: 401,
+    contentType: "application/json",
+    body: JSON.stringify({ detail: "Missing X-API-Key header" }),
+  }),
+);
+await page.goto(base, { waitUntil: "domcontentloaded" });
+await page.waitForSelector(".shell", { timeout: 15000 });
+await page.getByRole("button", { name: /Library/ }).click();
+await page.waitForSelector(".library", { timeout: 15000 });
+await page.waitForTimeout(800);
+await step("17-library-locked");
+const lockedText = await page.locator(".library").innerText();
+if (!/x-api-key|unauthorized|401|could not read/i.test(lockedText)) {
+  problems.push(`a 401 from the clips endpoints renders as an empty library: "${lockedText.slice(0, 160).replace(/\n/g, " / ")}"`);
+}
+await page.unroute("**/api/v1/clips**");
+expectingFailures = false;
 
 await browser.close();
 console.log(problems.length ? `PROBLEMS:\n- ${problems.join("\n- ")}` : "NO PROBLEMS FOUND");
