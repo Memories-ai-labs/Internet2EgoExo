@@ -55,8 +55,12 @@ activity (sports, music, dance, bike repair). Two years of work by FAIR, Project
 Aria and 15 university partners.
 
 ⚠️ **Two things to keep straight.** The 1,286 h is the *combined* ego + exo
-total; the egocentric portion is far smaller — a third-party comparison puts
-Ego-Exo4D V2 at **221.26 h of ego video** against 1,286.3 h total. And both Ego4D
+total, and the egocentric portion is far smaller. The official documentation
+states it exactly: *"Ego-Exo4D V2 is released which includes **1286.30** video
+hours (**221.26 ego-hours**) across **5035 takes**."* So the dataset most often
+cited as ~1,300 hours of ego-exo footage carries about **17% egocentric video**.
+Anyone sizing an ego corpus off the headline number is out by roughly 6×. And
+both Ego4D
 and Ego-Exo4D are distributed under a **signed licence agreement whose terms are
 not published on the public pages** — you request access, wait for approval, and
 read the agreement then. Neither site states whether commercial use is permitted.
@@ -254,6 +258,54 @@ standard arXiv perpetual non-exclusive licence, which is a paper licence, not a
 data licence. Note also a scale discrepancy worth tracking: [Ego2Robot](#ego2robot)
 cites EgoVerse at 954 h while the v2 paper states 1,362 h — the corpus grew
 between versions.
+
+### MobileEgo Anywhere
+
+**[arXiv 2605.05945](https://arxiv.org/pdf/2605.05945)** — 200 hours across 354
+sessions from **16 contributors**, captured on iPhone Pro devices in head rigs in
+household environments. Average session 21.2 minutes, longest ~108. The app is
+hands-free by voice ("start" / "stop") and writes synchronised RGB, depth, IMU
+and ARKit 6-DoF pose into MCAP.
+
+The **STERA** pipeline behind it:
+
+1. **3D hand trajectory** — WiLoR produces MANO hand poses, unprojected into 3D
+   with ARKit depth and transformed into a global frame.
+2. **Atomic action labels** — a VLM writes captions with object modifiers and
+   spatial prepositions ("transfer dough from metal bowl to large plate").
+3. **Hierarchical instructions** — an LLM organises those into a **three-level
+   tree**: 5-second manipulation steps → minute-scale sub-goals → full session
+   plans. 45,415 atomic spans, 5,570 episodes, 1,298 sub-goals.
+
+**Licence CC BY 4.0.** Quality reporting is unusually candid: 87% of sessions
+passed all structural checks, 46 needed automatic correction, hand-pose
+consistency was evaluated on 98 of 354 sessions, human validation on 50.
+
+> **Bearing here — the third independent convergence on the same shape.** This
+> repo's task → action → event tree, [Action100M](#action100m)'s brief action →
+> detailed action → caption, and MobileEgo's atomic step → sub-goal → session
+> plan are the same three-level structure, arrived at by three groups who were
+> not talking to each other. That is about as much external validation as an
+> annotation schema ever gets. Note also which axis they agree on: **temporal
+> scope**, not semantic category — the levels differ by how much time they
+> cover, not by what kind of thing they name.
+
+### EgoKit
+
+**[arXiv 2605.16797](https://arxiv.org/pdf/2605.16797)** — not a dataset at all,
+which is the point: a toolkit for capturing your own, across Android phones,
+iPhones, iPads, Project Aria, Apple Vision Pro, Meta Quest 3 and PICO 4 Ultra.
+Platform-native apps (Kotlin / Swift / Unity) share one recording interaction and
+one log format; XR headsets additionally log head pose and OpenXR 26-joint hand
+tracking aligned to the video. Output is H.264 MP4 with per-frame timestamps.
+
+It exists because "each candidate host device exposes a different SDK, a
+different policy on raw camera access" — and its limitations are a good map of
+where consumer ego capture actually breaks: Apple Vision Pro lacks the
+enterprise entitlements for raw camera access, cross-device time sync is hard,
+wrist mounts occlude and collide with desks, and battery caps session length. No
+dataset is released and no data licence applies; the paper carries only the
+arXiv licence.
 
 ### EgoLive
 
@@ -742,8 +794,18 @@ so directly: *commercial use of the repo as a whole is restricted by the WiLoR
 Replacing the hand reconstructor and the detector is tractable engineering — but
 it is engineering, and it belongs on the schedule rather than in the assumptions.
 
-**It is not an isolated case.** Reading the licences across this document
-produces a pattern:
+**It is not an isolated case, and WiLoR in particular keeps reappearing.** It is
+the hand reconstructor in [EgoInfinity](#egoinfinity--lift-to-4d-then-reproject),
+in [Ego2Robot](#ego2robot), and in [MobileEgo Anywhere](#mobileego-anywhere)'s
+STERA pipeline — three otherwise unrelated projects, two of which publish their
+outputs under permissive terms. Whether a CC-BY-NC-ND *model* constrains a
+dataset *derived* using it is genuinely unsettled, and nothing here asserts that
+any of these projects is out of compliance. The practical point is narrower and
+holds regardless: **one non-commercial model has quietly become load-bearing
+across the field's hand-annotation stack**, so "what reconstructed these hands,
+and under what terms" is a question to ask at the point of reuse, not a footnote.
+
+Reading the licences across this document produces the wider pattern:
 
 | Asset | Licence | Commercial use |
 |---|---|---|
@@ -752,6 +814,8 @@ produces a pattern:
 | Action100M | CC BY 4.0 | ✅ with attribution |
 | Open-AoE | CC BY 4.0 | ✅ with attribution |
 | EgoLive | CC BY 4.0 | ✅ with attribution (distributed via JD Cloud) |
+| MobileEgo Anywhere | CC BY 4.0 | ✅ with attribution |
+| EgoKit | toolkit only, no dataset | n/a — paper carries the arXiv licence |
 | VLM-Video-Action-Localization | MIT | ✅ |
 | InternVid | **not stated on the dataset page** | ⚠️ unresolved — ask |
 | cosmos-curate (code) | Apache 2.0 | ✅ (models separate) |
@@ -952,10 +1016,10 @@ two adjacent problems and skipped this one.**
 
 **Capture.** A substantial and *accelerating* open effort exists for *recording
 new* egocentric video, and it now ships pipelines, not just datasets:
-[EgoKit](https://arxiv.org/pdf/2605.16797) unifies low-cost collection across
-heterogeneous devices; [MobileEgo Anywhere](https://arxiv.org/pdf/2605.05945)
-ships a free mobile app plus an open STERA processing pipeline so a lab can
-generate VLA-ready data on commodity phones; [Open-AoE](#open-aoe) releases a
+[EgoKit](#egokit) unifies collection across seven classes of consumer and XR
+device; [MobileEgo Anywhere](#mobileego-anywhere) ships a voice-driven phone app
+plus the open STERA pipeline so a lab can generate VLA-ready data on commodity
+hardware; [Open-AoE](#open-aoe) releases a
 full edge-to-training toolchain under CC BY 4.0 around 2,000 hours from 500+
 phone-carrying volunteers; [EgoVerse](#egoverse) runs an eight-institution
 consortium with its own ingestion-and-indexing platform. All of them answer "how
@@ -1098,8 +1162,9 @@ are the parts that are worth owning.**
 - *Ego2Robot: Scalable Robot Data Synthesis from Egocentric Human Data.* https://arxiv.org/html/2608.02580
 - *Open-AoE: An Open Egocentric Manipulation Dataset and Toolchain for Embodied Learning.* (CC BY 4.0) https://arxiv.org/abs/2607.14183
 - *EgoVerse: An Egocentric Human Dataset for Robot Learning from Around the World.* https://arxiv.org/abs/2604.07607
-- *EgoKit: Towards Unified Low-Cost Egocentric Data Collection with Heterogeneous Devices.* https://arxiv.org/pdf/2605.16797
-- *MobileEgo Anywhere: Open Infrastructure for long-horizon egocentric data on commodity hardware.* https://arxiv.org/pdf/2605.05945
+- *EgoKit: Towards Unified Low-Cost Egocentric Data Collection with Heterogeneous Devices.* (toolkit; no dataset) https://arxiv.org/pdf/2605.16797
+- *MobileEgo Anywhere: Open Infrastructure for long-horizon egocentric data on commodity hardware.* (CC BY 4.0) https://arxiv.org/pdf/2605.05945
+- Ego-Exo4D documentation (source of the 1286.30 h / 221.26 ego-h / 5035 takes figures). https://docs.ego-exo4d-data.org/
 - *EgoLive: A Large-Scale Egocentric Dataset from Real-World Human Tasks.* https://arxiv.org/html/2604.23570v1
 - *From Human Videos to Robot Manipulation: A Survey.* https://arxiv.org/html/2606.00054v1
 - *SiMDex: Mining Similar Egocentric Videos for Cross-Embodiment Dexterous Manipulation.* https://arxiv.org/abs/2608.04196
