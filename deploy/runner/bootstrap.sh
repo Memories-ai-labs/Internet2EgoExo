@@ -13,9 +13,16 @@
 #
 # What it does NOT do: put keys anywhere. /etc/egoexo/env is written by hand,
 # read only by root and the service user, and never committed.
+#
+# Once there is a checkout, deploy/runner/remote.sh drives all of this over SSH.
 set -euo pipefail
 
-REPO="${REPO:-https://github.com/Memories-ai-labs/video-searching-agent}"
+# The public mirror, not the private video-searching-agent this code started in.
+# The clone below carries no credentials — by design, since the script's whole
+# stance is that it installs no secrets — so a private URL fails here on a fresh
+# VM, and fails at the one moment there is no checkout to read this comment
+# from. Both hold the same tree; only this one clones unattended.
+REPO="${REPO:-https://github.com/Memories-ai-labs/Internet2EgoExo}"
 BRANCH="${BRANCH:-main}"
 ROOT=/opt/egoexo/video-searching-agent
 UNITS="$(cd "$(dirname "$0")" && pwd)"
