@@ -289,6 +289,13 @@ consistency was evaluated on 98 of 354 sessions, human validation on 50.
 > annotation schema ever gets. Note also which axis they agree on: **temporal
 > scope**, not semantic category — the levels differ by how much time they
 > cover, not by what kind of thing they name.
+>
+> [Xperience-10M](#ropedia-xperience-10m--the-fidelity-wings-extreme-and-a-caution-about-reading-press-releases-as-availability)
+> is a fourth, and it goes deeper: task → subtask → action → interaction →
+> objects. The last two levels leave the time axis for the object axis, which is
+> the natural extension once you have hand and object tracks to hang labels on —
+> and a reasonable sketch of where an `L4` would go if this repo's gates ever
+> need one.
 
 ### EgoKit
 
@@ -410,9 +417,21 @@ Stated caveats: 15% of clips are only 360P–720P and "may not perform as well"
 for generation, and 85% run under 10 seconds. ⚠️ The dataset page does not state
 a licence; treat it as unresolved until asked.
 
-**[NVIDIA NeMo Curator](https://github.com/NVIDIA-NeMo/Curator)** — GPU-accelerated
-load / filter / dedupe / transform for text, image, video and audio at
-world-model scale.
+### NeMo Curator
+
+**[NVIDIA-NeMo/Curator](https://github.com/NVIDIA-NeMo/Curator)** — GPU-accelerated
+load / filter / dedupe / transform across text, image, video and audio, **Apache
+2.0**, 1.7 k stars, actively released (26.04 shipping Cosmos-Xenna 0.2.0). For
+video the documented stages are **scene detection, clip extraction, motion
+filtering and deduplication**; no throughput figures are published.
+
+⚠️ **A relationship worth stating precisely**, because the two names are easy to
+treat as rivals: **Cosmos-Xenna is NeMo Curator's production execution layer**,
+not a competing tool. NeMo Curator is the high-level pipeline framework; the same
+pipeline definitions run under different executors, with XennaExecutor as the
+production default. [cosmos-curate](#cosmos-curate) sits on the same substrate.
+Choosing between them is a question of which pre-built pipeline you want, not
+which engine.
 
 **Where we differ.** These are throughput-optimised heuristic filters over a
 corpus the operator already holds. Here each verdict is a Thought → Action →
@@ -457,9 +476,23 @@ directions**.
   specialist band of open video-text encoders on MSR-VTT and MSVD; **34.84
   AVG-all on OmniRetriever-Bench** (3,782 triples), +1.72 over Gemini Embedding 2.
 
-**[S-EMBER](https://arxiv.org/pdf/2607.02689)** — streaming egocentric memory
-retrieval; the benchmark form of the same problem, over continuous first-person
-input rather than a fixed corpus.
+### S-EMBER
+
+**[arXiv 2607.02689](https://arxiv.org/pdf/2607.02689)** — the first benchmark
+for **streaming** egocentric memory retrieval, 15 hours of first-person video
+with multiple queries per sequence, released on Hugging Face and GitHub.
+
+The distinction it draws is the one that matters for an indexed corpus: standard
+video retrieval searches pre-segmented clips, whereas streaming memory retrieval
+must find the relevant moment in a continuous feed **without knowing the temporal
+boundaries in advance**. Baselines with GPT-4o and Gemini 3 leave large gaps.
+
+> **Bearing here.** This is the failure mode our clipping stage exists to prevent.
+> A pipeline that indexes whole videos and hopes retrieval will find the moment is
+> attempting S-EMBER's hard problem at query time; a pipeline that has already cut
+> semantically coherent clips and written per-span annotations has converted it
+> into ordinary retrieval. The 15-hour benchmark is small, but the framing is the
+> useful part.
 
 ### The gap this project fills
 
@@ -815,6 +848,8 @@ Reading the licences across this document produces the wider pattern:
 | Open-AoE | CC BY 4.0 | ✅ with attribution |
 | EgoLive | CC BY 4.0 | ✅ with attribution (distributed via JD Cloud) |
 | MobileEgo Anywhere | CC BY 4.0 | ✅ with attribution |
+| NeMo Curator | Apache 2.0 | ✅ |
+| **Ropedia Xperience-10M** | **"other" — gated, DocuSign, research only** | ❌ non-commercial |
 | EgoKit | toolkit only, no dataset | n/a — paper carries the arXiv licence |
 | VLM-Video-Action-Localization | MIT | ✅ |
 | InternVid | **not stated on the dataset page** | ⚠️ unresolved — ask |
@@ -910,18 +945,22 @@ hours.
 [EgoLive](#egolive) went the other way: 1,680 hours of **stereo 2160×2160 at
 60 fps** with depth, masks and 3D keypoints. Two strategies, both credible:
 
-| | Hours wing (Egocentric-100K) | Fidelity wing (EgoLive) |
-|---|---|---|
-| Hours | 100,405 | 1,680 |
-| Per-frame | 456×256 mono | 2160×2160 **stereo**, 60 fps |
-| Extra signal | none (no audio either) | depth, hand/object masks, 3D keypoints, 6-DoF trajectories |
-| Bet | scale washes out noise | fidelity is what the model actually needs |
+| | Hours wing (Egocentric-100K) | Fidelity wing (EgoLive) | Fidelity, taken further ([Xperience-10M](#ropedia-xperience-10m--the-fidelity-wings-extreme-and-a-caution-about-reading-press-releases-as-availability)) |
+|---|---|---|---|
+| Hours | 100,405 | 1,680 | 10,000 |
+| Per-frame | 456×256 mono | 2160×2160 **stereo**, 60 fps | **six streams** (4 fisheye + 2 stereo) |
+| Extra signal | none (no audio either) | depth, hand/object masks, 3D keypoints, 6-DoF trajectories | + audio, SLAM pose, two-hand MANO **and full-body mocap**, IMU |
+| Total size | 24.79 TB | — | **~1 PB** |
+| Licence | Apache 2.0 | CC BY 4.0 | **gated, non-commercial** |
+| Bet | scale washes out noise | fidelity is what the model actually needs | capture everything, sort it out later |
 
-Neither wing is buying **provenance-carrying hours sourced against a stated
+No wing is buying **provenance-carrying hours sourced against a stated
 requirement**, which is the axis this repo competes on. That is the useful read:
 the free corpora are not converging on one thing you have to beat — they are
 diverging, and the gap between them is where a requirement-driven collector
-lives.
+lives. Note also that the further right you go in that table, the less *usable*
+the corpus becomes commercially: the most instrumented one is the one you cannot
+ship on.
 
 > **What this does to §12's argument.** It strengthens it and sharpens it. Any
 > pitch of the form "we can get you N hours" is now competing with a million free
@@ -934,6 +973,49 @@ lives.
 Two further limits hold across the whole family: a single-source corpus caps
 environment and process diversity no matter how many hours it holds, and the
 consent question below does not improve with scale — it multiplies.
+
+### Ropedia Xperience-10M — the fidelity wing's extreme, and a caution about reading press releases as availability
+
+**[ropedia-ai/xperience-10m](https://huggingface.co/datasets/ropedia-ai/xperience-10m)**
+(March 2026) — the most instrumented egocentric corpus in this document, and the
+clearest case of why "released" and "usable" are different words.
+
+Per the dataset card: **10 million experiences, 10,000 hours**, 2.88 B RGB
+frames, 720 M depth frames, 7.2 B IMU frames, **~1 PB**, and 16 M caption
+sentences over a 6 K vocabulary. **Six synchronised video streams** — four
+fisheye plus two rectified stereo — with audio, stereo depth and confidence
+maps, SLAM camera pose, two-hand MANO mocap, **full-body mocap**, IMU, and
+hierarchical language annotations at five levels: task → subtask → action →
+interaction → objects.
+
+🔴 **It is not free hours.** The card's licence field reads **"other"**: access
+is **gated behind manual review**, restricted to **research and non-commercial
+use**, and requires completing a **DocuSign agreement**. On consent it states the
+data "was collected and processed under appropriate consent and review
+procedures", names privacy and downstream misuse as open questions, and
+prohibits identity recognition, person re-identification, biometric profiling
+and surveillance. That is a markedly more careful posture than Egocentric-10K's —
+and a markedly less available dataset.
+
+**The public critique, and why it belongs here.** A
+[July 2026 analysis](https://technologies.org/ropedia-raises-30-million-for-physical-ai-training-data-but-the-dataset-math-doesnt-hold-up/)
+argues the headline numbers do not hold up, and its central objection is
+arithmetic anyone can check: 10,000 hours is 36 million seconds, so 10 million
+"episodes" averages **3.6 seconds each** — long enough to pick up a cup, not to
+be an episode in the sense the word implies. It further argues that "billions of
+frames" merely restates hours × fps × stream count rather than measuring
+diversity, that 10,000 h against Ego4D's 3,670 h is ~2.7× rather than an order of
+magnitude (and Ego4D is free), and that a claimed 50× collection-cost reduction
+comes with no stated baseline. The article reports no response from Ropedia.
+
+The arithmetic is correct as arithmetic; whether "experience" was ever meant to
+denote a multi-second episode is the part left open, and this document takes no
+position on the company's claims. What matters here is the **shape** of the
+objection, because it is this section's argument arriving from outside: a count
+of hours, frames or streams is a vanity metric unless you say what each unit
+contains and what you can legally do with it. A collector that reports hours
+without reporting **viewpoint, legibility, rights and consent per unit** is
+inviting exactly this critique — which is why the manifest carries all four.
 
 ### Consent is a design choice, not a casualty of scale
 
@@ -1174,6 +1256,7 @@ are the parts that are worth owning.**
 - NVIDIA. *NeMo Curator.* https://github.com/NVIDIA-NeMo/Curator
 - Memories.ai Research. *OmniRetriever: Any-to-Any Audio-Video-Text Retrieval via Fusion-as-Teacher Distillation.* https://arxiv.org/abs/2605.26641
 - *S-EMBER: A Large-Scale Benchmark for Streaming Egocentric Memory Retrieval.* https://arxiv.org/pdf/2607.02689
+- Ropedia. *Xperience-10M.* (gated, non-commercial) https://huggingface.co/datasets/ropedia-ai/xperience-10m · release note: https://ropedia.com/blog/20260316_xperience_10m · critique: https://technologies.org/ropedia-raises-30-million-for-physical-ai-training-data-but-the-dataset-math-doesnt-hold-up/
 
 ### Part II — pipeline and tooling
 
