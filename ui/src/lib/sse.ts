@@ -104,7 +104,7 @@ function dispatch(frame: string, handlers: StreamHandlers): void {
 }
 
 /** Whatever the server said went wrong, in the shape FastAPI says it. */
-async function errorText(response: Response): Promise<string> {
+export async function errorText(response: Response): Promise<string> {
   try {
     const payload = (await response.json()) as {
       detail?: string | Array<{ loc?: string[]; msg?: string }>;
