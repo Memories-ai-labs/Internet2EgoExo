@@ -245,3 +245,36 @@ experiment stub — because a loop whose only output is a push is unfalsifiable
 when it pushes nothing. Corollary held open, not proven: this diagnosis is
 circumstantial (trigger-fired sessions are not listed), so the fix is worth
 testing by fixing the grant and watching one fire, not by assuming.
+
+## L15 · A consumer with no producer looks exactly like an empty corpus
+
+**Evidence.** `2026-08-23` experiment 1. The annotation store's `segments` table
+had a search, an object vocabulary, an API route and a Library view — and no
+writer outside the tests. Every read path worked correctly and returned nothing,
+so the system looked like a pipeline that had not been run yet rather than one
+missing a write. 13 of 15 clips in the real store had no tree.
+
+**Implies.** For each table, index or cache, ask which code *writes* it and name
+that code. A read path that works on an empty input is not evidence the write
+exists — it is what makes the missing write invisible. Sibling of L11 (a
+question asked and never wired): both are half a feature that costs money or
+looks complete from every angle except the one nobody checks.
+
+## L16 · A switched-on capability must be read in one place, and a paid pass must say what it bought
+
+**Evidence.** `2026-08-23` experiment 1. `looking = _looking_enabled() and
+self._gemini not in (None, False)` read the private attribute before the lazy
+property had built the client, so the path that injects a model looked and the
+path that does not silently never did — with the flag set. The same span
+returned a full labelled verdict through `label_span` and **nothing, with no
+error**, through `annotate_video`. Third instance of the `self.gemini` /
+`self._gemini` family, and the first where the wrong read disabled a whole
+capability instead of crashing.
+
+**Implies.** Two rules, and the second is what makes the first findable. Read a
+capability flag through one accessor, never through the field it lazily fills —
+`is not False` where False is the sentinel, not `not in (None, False)`, because
+None means "not built yet" and the property exists to fix that. And **any pass
+that spends money must record what it produced or why it produced nothing**: the
+silent zero survived precisely because nothing about it resembled an error, and
+it became a one-line fix the moment it had to explain itself.
