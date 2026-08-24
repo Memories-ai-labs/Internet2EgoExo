@@ -263,3 +263,162 @@ async def test_one_broken_search_does_not_end_the_hunt(failing):
         screen=_screen_by_url({"good": Verdict()}),
     )
     assert len(result.kept) == 1
+
+
+# ---- verify: counting clips that survive, not stills that look right --------
+
+
+def _verifier(verdicts: dict[str, bool]):
+    async def verify(url: str, wanted: str):
+        ok = verdicts.get(url, False)
+        return ok, "accepted" if ok else "the captions place this in exocentric", f"vid_{url}"
+
+    return verify
+
+
+async def test_verify_counts_only_what_survives_indexing():
+    """The frames are a filter; the full pass is the verdict."""
+    agent = FakeAgent([["one"], ["two"]])
+    result = await run_search_loop(
+        "fixing bikes",
+        target=1,
+        verify=True,
+        llm=agent,
+        search=_search_returning({"one": _rows("a", "b"), "two": _rows("c")}),
+        screen=_screen_by_url({"a": Verdict(), "b": Verdict()}),
+        verifier=_verifier({"b": True}),
+    )
+    assert [c.url for c in result.kept] == ["b"]
+    overruled = [c for c in result.candidates if c.verified is False]
+    assert [c.url for c in overruled] == ["a"]
+    assert overruled[0].reason == "overruled after indexing"
+
+
+async def test_without_verify_nothing_is_indexed():
+    called: list[str] = []
+
+    async def verify(url, wanted):
+        called.append(url)
+        return True, "", ""
+
+    agent = FakeAgent([["one"]])
+    result = await run_search_loop(
+        "fixing bikes",
+        target=1,
+        llm=agent,
+        search=_search_returning({"one": _rows("a")}),
+        screen=_screen_by_url({"a": Verdict()}),
+        verifier=verify,
+    )
+    assert called == [], "verifying is opt-in; it costs a download and an index"
+    assert len(result.kept) == 1
+    assert result.candidates[0].verified is None
+
+
+async def test_verifying_stops_at_its_own_budget():
+    """A clip whose indexing would blow the budget is refused before it starts."""
+    agent = FakeAgent([["one"]])
+    rows = [
+        {"url": "long", "title": "an hour", "platform": "youtube", "duration_seconds": 3600},
+        {"url": "short", "title": "a minute", "platform": "youtube", "duration_seconds": 60},
+    ]
+
+    async def search(query, wanted):
+        return rows
+
+    result = await run_search_loop(
+        "fixing bikes",
+        target=5,
+        verify=True,
+        verify_budget_usd=0.10,  # an hour indexes for $3
+        llm=agent,
+        search=search,
+        screen=_screen_by_url({"long": Verdict(), "short": Verdict()}),
+        verifier=_verifier({"long": True, "short": True}),
+    )
+    assert [c.url for c in result.kept] == ["short"]
+    refused = next(c for c in result.candidates if c.url == "long")
+    assert "not verified" in refused.verify_verdict
+
+
+async def test_a_verifier_that_throws_costs_the_candidate_not_the_loop():
+    agent = FakeAgent([["one"]])
+
+    async def verify(url, wanted):
+        if url == "bad":
+            raise RuntimeError("the downloader died")
+        return True, "accepted", "vid_good"
+
+    result = await run_search_loop(
+        "fixing bikes",
+        target=1,
+        verify=True,
+        llm=agent,
+        search=_search_returning({"one": _rows("bad", "good")}),
+        screen=_screen_by_url({"bad": Verdict(), "good": Verdict()}),
+        verifier=verify,
+    )
+    assert [c.url for c in result.kept] == ["good"]
+    bad = next(c for c in result.candidates if c.url == "bad")
+    assert "the downloader died" in bad.verify_verdict
+
+
+async def test_the_agent_is_told_the_frames_were_overruled():
+    """A phrasing that finds footage which looks right and is not is its own
+    lesson, and a different one from a phrasing that finds tripods."""
+    agent = FakeAgent([["POV bike repair"], ["another"]])
+    await run_search_loop(
+        "fixing bikes",
+        target=9,
+        verify=True,
+        llm=agent,
+        search=_search_returning({"POV bike repair": _rows("a")}),
+        screen=_screen_by_url({"a": Verdict()}),
+        verifier=_verifier({}),
+    )
+    first = agent.observations[0]
+    assert "did not survive the full pass" in first
+    assert "overruled after indexing" in first
+
+
+async def test_verifying_stops_the_moment_the_target_is_met():
+    """Each verification is a download and an index; one past the target is
+    money spent on a clip nobody asked for."""
+    agent = FakeAgent([["one"]])
+    verified: list[str] = []
+
+    async def verify(url, wanted):
+        verified.append(url)
+        return True, "accepted", f"vid_{url}"
+
+    await run_search_loop(
+        "fixing bikes",
+        target=2,
+        verify=True,
+        llm=agent,
+        search=_search_returning({"one": _rows("a", "b", "c", "d")}),
+        screen=_screen_by_url(
+            {"a": Verdict(), "b": Verdict(), "c": Verdict(), "d": Verdict()}
+        ),
+        verifier=verify,
+    )
+    assert verified == ["a", "b"]
+
+
+async def test_the_two_bills_are_reported_apart():
+    agent = FakeAgent([["one"]])
+    result = await run_search_loop(
+        "fixing bikes",
+        target=1,
+        verify=True,
+        llm=agent,
+        search=_search_returning(
+            {"one": [{"url": "a", "title": "t", "platform": "youtube", "duration_seconds": 600}]}
+        ),
+        screen=_screen_by_url({"a": Verdict()}),
+        verifier=_verifier({"a": True}),
+    )
+    payload = result.as_dict()
+    assert payload["cost_usd"] == pytest.approx(0.002)
+    assert payload["verify_usd"] == pytest.approx(0.5)
+    assert payload["verified"] is True

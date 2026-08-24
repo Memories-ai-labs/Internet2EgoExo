@@ -355,7 +355,12 @@ async def _search_loop_events(
     yield {
         "event": "started",
         "data": json.dumps(
-            {"query": body.query, "viewpoint": wanted, "target": body.target}
+            {
+                "query": body.query,
+                "viewpoint": wanted,
+                "target": body.target,
+                "verify": body.verify,
+            }
         ),
     }
 
@@ -369,6 +374,7 @@ async def _search_loop_events(
                 "found": len(partial.kept),
                 "screened": len(partial.candidates),
                 "cost_usd": round(partial.cost_usd, 4),
+                "verify_usd": round(partial.verify_usd, 4),
             }
         )
 
@@ -385,6 +391,8 @@ async def _search_loop_events(
                 min_duration_seconds=body.min_duration_seconds,
                 max_rounds=body.rounds,
                 budget_usd=body.budget_usd,
+                verify=body.verify,
+                verify_budget_usd=body.verify_budget_usd,
                 on_round=on_round,
             )
         )

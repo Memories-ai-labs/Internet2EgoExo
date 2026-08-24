@@ -872,9 +872,19 @@ python -m video_searching_agent.agent.search_loop "first-person fixing bikes, ha
 
 In the UI it is **Keep searching until N** on the Search page, next to Search;
 `POST /api/v1/search-loop/stream` streams a `round` event per round so the
-reasons arrive as they land. What it returns are candidates *worth paying to
-index* — the caption pass after indexing still gets the last word, and it
-overrules the three-still screen often enough that "found N" is not "N clips".
+reasons arrive as they land.
+
+By default what it returns are candidates *worth paying to index*, not clips:
+the caption pass after indexing gets the last word and overrules the three-still
+screen often. **Verify by indexing** (`--verify`) closes that gap — everything
+the frames keep is downloaded, indexed and cleaned, and only what survives
+counts, so `target` means deliverable clips. It costs $0.50-$3 a clip against
+$0.002 to look, which is why it is off by default and has its own budget.
+
+Measured on `first-person fixing bikes, hands visible` with `--target 2
+--verify`: six candidates passed the frames, four did not survive indexing —
+two called exocentric once the captions could see the whole video, two failing
+the hands gate — and two were delivered.
 
 ## The dataset on disk
 

@@ -58,6 +58,15 @@ DRY_ROUNDS = 2
 # Screening is ~$0.002 a candidate. This is the whole loop's looking budget.
 DEFAULT_BUDGET_USD = 0.60
 
+# Verifying is three orders of magnitude dearer: a download, an index billed per
+# video-minute, a cleaning pass and an annotation pass, so $0.50-$3 a clip. Its
+# own budget, because a number that bounds a frame check cannot also bound this.
+DEFAULT_VERIFY_BUDGET_USD = 6.00
+
+# Indexing is $0.05 a video-minute and dominates the bill. Enough to refuse a
+# clip whose length would eat the budget on its own, before starting it.
+INDEX_USD_PER_MINUTE = 0.05
+
 # More than this in one round and the agent is not choosing, it is spraying.
 MAX_QUERIES_PER_ROUND = 4
 
@@ -106,12 +115,23 @@ class Candidate:
     # `unclear`, or empty when nothing was seen.
     task_reading: str = ""
     off_task: bool = False
+    # None when nothing deeper than the frames was run. True/False is the
+    # verdict of the full pass — download, index, captions, hands — which is
+    # allowed to overrule the three stills and frequently does.
+    verified: bool | None = None
+    verify_verdict: str = ""
+    video_id: str = ""
 
     @property
     def reason(self) -> str:
         """One word for why this did not pass, for grouping in a report."""
         if self.kept:
             return "kept"
+        if self.verified is False:
+            # The frames liked it and the full pass did not. Worth its own
+            # bucket: it says the phrasing finds footage that *looks* right in
+            # three stills, which is a different lesson from finding a tripod.
+            return "overruled after indexing"
         if self.off_task:
             return "wrong activity"
         return self.viewpoint or "unclear"
@@ -129,6 +149,9 @@ class Candidate:
             "found_by": self.found_by,
             "task_reading": self.task_reading,
             "off_task": self.off_task,
+            "verified": self.verified,
+            "verify_verdict": self.verify_verdict,
+            "video_id": self.video_id,
         }
 
 
@@ -143,6 +166,10 @@ class SearchLoopResult:
     searched: list[str] = field(default_factory=list)
     candidates: list[Candidate] = field(default_factory=list)
     cost_usd: float = 0.0
+    # Kept apart from `cost_usd`: one is a frame check and the other is an
+    # indexing run, and adding them hides which of the two a loop spent on.
+    verify_usd: float = 0.0
+    verified_mode: bool = False
     stopped_because: str = ""
     what_worked: str = ""
     what_did_not: str = ""
@@ -166,6 +193,8 @@ class SearchLoopResult:
             "screened": len(self.candidates),
             "met_target": self.met_target,
             "cost_usd": round(self.cost_usd, 4),
+            "verify_usd": round(self.verify_usd, 4),
+            "verified": self.verified_mode,
             "stopped_because": self.stopped_because,
             "what_worked": self.what_worked,
             "what_did_not": self.what_did_not,
@@ -174,7 +203,9 @@ class SearchLoopResult:
         }
 
 
-def _observation(round_no: int, fresh: list[Candidate], total_kept: int, target: int) -> str:
+def _observation(
+    round_no: int, fresh: list[Candidate], total_kept: int, target: int, verified: bool = False
+) -> str:
     """What one round returned, said so the agent can act on it.
 
     Grouped by reason and attributed to the phrasing, because "6 rejected" tells
@@ -188,10 +219,21 @@ def _observation(round_no: int, fresh: list[Candidate], total_kept: int, target:
         )
 
     kept = [c for c in fresh if c.kept]
-    lines = [
-        f"Round {round_no}: {len(fresh)} new candidates, {len(kept)} passed the frames. "
-        f"{total_kept} of {target} so far."
-    ]
+    if verified:
+        lines = [
+            f"Round {round_no}: {len(fresh)} new candidates, {len(kept)} survived indexing. "
+            f"{total_kept} of {target} so far."
+        ]
+        overruled = [c for c in fresh if c.verified is False]
+        if overruled:
+            lines.append(
+                f"{len(overruled)} looked right in the frames and did not survive the full pass."
+            )
+    else:
+        lines = [
+            f"Round {round_no}: {len(fresh)} new candidates, {len(kept)} passed the frames. "
+            f"{total_kept} of {target} so far."
+        ]
     if kept:
         lines.append("Passed:")
         for c in kept[:6]:
@@ -212,6 +254,9 @@ def _observation(round_no: int, fresh: list[Candidate], total_kept: int, target:
         sample = next((c for c in rejected if c.why), None)
         if sample is not None:
             lines.append(f'  the frames said, of one: "{sample.why[:150]}"')
+        overruled = next((c for c in rejected if c.verified is False and c.verify_verdict), None)
+        if overruled is not None:
+            lines.append(f'  of one the frames liked: "{overruled.verify_verdict[:150]}"')
     return "\n".join(lines)
 
 
@@ -223,9 +268,12 @@ async def run_search_loop(
     min_duration_seconds: float | None = None,
     max_rounds: int = DEFAULT_MAX_ROUNDS,
     budget_usd: float = DEFAULT_BUDGET_USD,
+    verify: bool = False,
+    verify_budget_usd: float = DEFAULT_VERIFY_BUDGET_USD,
     llm: Any = None,
     search: Any = None,
     screen: Any = None,
+    verifier: Any = None,
     on_round: Any = None,
 ) -> SearchLoopResult:
     """Search, screen, learn from the rejections, search again.
@@ -238,6 +286,16 @@ async def run_search_loop(
             Free, and it stops the budget going on ten-second clips.
         max_rounds: Rounds of search before giving up.
         budget_usd: What the screening may spend across the whole loop.
+        verify: Put everything the frames kept through the full pass —
+            download, index, clean — and count only what survives. Off by
+            default, because it is three orders of magnitude dearer than the
+            screen and turns a $0.15 loop into a $6 one. On, `target` means
+            clips you can deliver; off, it means candidates worth paying for.
+        verify_budget_usd: What verifying may spend. Separate from
+            `budget_usd`: one bounds a frame check and cannot also bound an
+            indexing run.
+        verifier: `async (url) -> (bool, str, str)` — accepted, verdict, and
+            the Datalake video id. For tests; the real one runs the pipeline.
         llm: Model client. Resolved when omitted.
         search: `async (query: str) -> list[dict]`, for tests. The real one
             runs the unified video search.
@@ -254,6 +312,8 @@ async def run_search_loop(
     result = SearchLoopResult(request=request, wanted=wanted, target=target)
     search = search or _default_search
     screen = screen or _default_screen
+    verifier = verifier or _default_verify
+    result.verified_mode = verify
 
     seen_urls: set[str] = set()
     dry = 0
@@ -375,10 +435,47 @@ async def run_search_loop(
                 )
             )
 
+
+        # The frames are a filter, not a verdict. With `verify` on, everything
+        # they kept goes through the pass that actually decides — and only what
+        # survives that counts, so `target` means deliverable clips rather than
+        # candidates that looked right in three stills.
+        if verify:
+            # This round's candidates are not in `result` yet, so the running
+            # total is what earlier rounds confirmed plus what this one has.
+            # Reading `result.kept` alone would never reach the target and
+            # would index every candidate the frames liked.
+            confirmed = len(result.kept)
+            for candidate in [c for c in found if c.kept]:
+                if confirmed >= target:
+                    candidate.kept = False
+                    candidate.verify_verdict = "not verified: the target was already met"
+                    continue
+                minutes = (candidate.duration_seconds or 0.0) / 60.0
+                likely = minutes * INDEX_USD_PER_MINUTE
+                if result.verify_usd + likely > verify_budget_usd:
+                    candidate.kept = False
+                    candidate.verify_verdict = (
+                        f"not verified: indexing it would cost about ${likely:.2f} and "
+                        f"${verify_budget_usd - result.verify_usd:.2f} is left"
+                    )
+                    continue
+                try:
+                    accepted, verdict_text, video_id = await verifier(candidate.url, wanted)
+                except Exception as exc:  # noqa: BLE001 - one clip, not the loop
+                    logger.info("verifying %s failed: %s", candidate.url, exc)
+                    accepted, verdict_text, video_id = False, f"failed: {str(exc)[:120]}", ""
+                candidate.verified = accepted
+                candidate.verify_verdict = verdict_text
+                candidate.video_id = video_id
+                candidate.kept = accepted
+                confirmed += int(accepted)
+                result.verify_usd += likely
+
         result.candidates.extend(found)
         kept_now = len(result.kept)
         dry = dry + 1 if not found else 0
-        observation = _observation(rounds, found, kept_now, target)
+        observation = _observation(rounds, found, kept_now, target, verified=verify)
 
         if on_round is not None:
             await on_round(rounds, observation, result)
@@ -437,6 +534,42 @@ async def _default_search(query: str, wanted: str) -> list[dict[str, Any]]:
     return [row for row in rows if isinstance(row, dict)]
 
 
+async def _default_verify(url: str, wanted: str) -> tuple[bool, str, str]:
+    """Put one candidate through the pass that actually decides.
+
+    Download, index, read the captions, check the hands. This is what overrules
+    the three stills — measured on six candidates the frames liked, one
+    survived: two were called exocentric once the captions could see the whole
+    video ("a person's face and torso facing the camera"), and one failed the
+    hands gate. Three stills of somebody looking down at their hands and a
+    twelve-minute video that opens on a presenter are the same three stills.
+
+    Returns `(accepted, why, video_id)`. `video_id` is set even on a rejection
+    when the clip reached the Datalake, because it was paid for and can be
+    curated later.
+    """
+    from video_searching_agent.curation.viewpoint import Viewpoint
+    from video_searching_agent.pipeline.ingest import IngestPipeline
+
+    outcome = await IngestPipeline().ingest(
+        url,
+        require_hands=True,
+        wanted_viewpoint=Viewpoint(wanted),
+        annotate=False,
+        # The loop's screen already looked at this candidate's frames and it
+        # survived; paying for the same look twice is the one waste this
+        # argument exists to prevent.
+        viewpoint_verified=True,
+    )
+    why = (
+        outcome.rejection_reason
+        or outcome.pending_reason
+        or outcome.error
+        or f"accepted at stage {outcome.stage}"
+    )
+    return bool(outcome.accepted), str(why)[:200], str(outcome.video_id or "")
+
+
 async def _default_screen(candidates: list[dict[str, Any]], task: str) -> list[Any]:
     """The pre-download frame check, at about $0.002 a candidate."""
     from video_searching_agent.api.llm import get_llm_client
@@ -446,10 +579,19 @@ async def _default_screen(candidates: list[dict[str, Any]], task: str) -> list[A
 
 
 def _print(result: SearchLoopResult) -> None:
+    bill = f"${result.cost_usd:.3f} screening"
+    if result.verified_mode:
+        bill += f" + ${result.verify_usd:.2f} indexing"
     print(
-        f"{len(result.kept)} of {result.target} found in {result.rounds} round(s), "
-        f"{len(result.candidates)} screened, ${result.cost_usd:.3f}"
+        f"{len(result.kept)} of {result.target} "
+        f"{'verified' if result.verified_mode else 'found'} in {result.rounds} round(s), "
+        f"{len(result.candidates)} screened, {bill}"
     )
+    overruled = [c for c in result.candidates if c.verified is False]
+    if overruled:
+        print(f"  {len(overruled)} passed the frames and did not survive indexing:")
+        for c in overruled[:5]:
+            print(f"      {c.verify_verdict[:88]}")
     print(f"  stopped: {result.stopped_because}")
     if result.what_worked:
         print(f"  worked: {result.what_worked}")
@@ -472,6 +614,18 @@ def main() -> int:
     parser.add_argument("--min-duration", type=float, default=None, help="seconds")
     parser.add_argument("--rounds", type=int, default=DEFAULT_MAX_ROUNDS)
     parser.add_argument("--budget", type=float, default=DEFAULT_BUDGET_USD, help="USD")
+    parser.add_argument(
+        "--verify",
+        action="store_true",
+        help="put everything the frames keep through download, index and clean, and count "
+        "only what survives — `target` then means deliverable clips. Dear: $0.50-$3 each",
+    )
+    parser.add_argument(
+        "--verify-budget",
+        type=float,
+        default=DEFAULT_VERIFY_BUDGET_USD,
+        help="USD the verification may spend",
+    )
     parser.add_argument("--json", action="store_true", help="print the whole result")
     args = parser.parse_args()
 
@@ -485,6 +639,8 @@ def main() -> int:
             min_duration_seconds=args.min_duration,
             max_rounds=args.rounds,
             budget_usd=args.budget,
+            verify=args.verify,
+            verify_budget_usd=args.verify_budget,
         )
     )
     if args.json:

@@ -269,3 +269,14 @@ class SearchLoopRequest(BaseModel):
     budget_usd: float = Field(
         0.60, gt=0, le=5.0, description="What the screening may spend across the whole loop"
     )
+    verify: bool = Field(
+        False,
+        description=(
+            "Put everything the frames keep through download, index and clean, and count "
+            "only what survives. `target` then means deliverable clips rather than "
+            "candidates worth paying for. Dear: $0.50-$3 each"
+        ),
+    )
+    verify_budget_usd: float = Field(
+        6.0, gt=0, le=50.0, description="What verifying may spend, apart from the screening"
+    )

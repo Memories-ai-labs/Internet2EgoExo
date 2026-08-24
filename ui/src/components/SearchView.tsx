@@ -54,6 +54,9 @@ export function SearchView({
   // How many candidates the loop must see pass the frames before it stops.
   // Empty means one search and no second attempt.
   const [keepUntil, setKeepUntil] = useState("");
+  // Off by default and deliberately so: verifying downloads and indexes every
+  // candidate the frames liked, which is $0.50-$3 each against $0.002 to look.
+  const [verify, setVerify] = useState(false);
 
   const [running, setRunning] = useState(false);
   const [activity, setActivity] = useState<ActivityEntry[]>([]);
@@ -106,12 +109,17 @@ export function SearchView({
         viewpoint: viewpoint || "egocentric",
         target,
         min_duration_seconds: minDuration ? Number(minDuration) : undefined,
+        verify,
       },
       {
         onEvent: (event, data) => {
           switch (event) {
             case "started":
-              log("start", `looking for ${target} × ${String(data.viewpoint ?? "")}`);
+              log(
+                "start",
+                `looking for ${target} × ${String(data.viewpoint ?? "")}` +
+                  (data.verify ? ", verified by indexing" : ", screened on frames"),
+              );
               break;
             case "round": {
               const text = String(data.observation ?? "");
@@ -130,7 +138,10 @@ export function SearchView({
               setClips(rows);
               setAnswer(
                 `${found} of ${data.target} passed the frames in ${data.rounds} round(s), ` +
-                  `${data.screened} screened for $${Number(data.cost_usd ?? 0).toFixed(3)}. ` +
+                  `${data.screened} screened for $${Number(data.cost_usd ?? 0).toFixed(3)}` +
+                  (data.verified
+                    ? ` plus $${Number(data.verify_usd ?? 0).toFixed(2)} indexing. `
+                    : ". ") +
                   `Stopped: ${data.stopped_because}.` +
                   (data.what_worked ? `\n\nWorked: ${data.what_worked}` : "") +
                   (data.what_did_not ? `\n\nDid not: ${data.what_did_not}` : ""),
@@ -319,6 +330,14 @@ export function SearchView({
             ) : null}
             {/* One search, or as many as it takes. The second is a different
                 promise, so it is a different button rather than a mode. */}
+            <label className="checkbox" title="Download and index everything the frames keep, and count only what survives. $0.50-$3 a clip">
+              <input
+                type="checkbox"
+                checked={verify}
+                onChange={(event) => setVerify(event.target.checked)}
+              />
+              <span>Verify by indexing</span>
+            </label>
             <label className="field field--inline">
               <span className="field__label">Keep searching until</span>
               <input
