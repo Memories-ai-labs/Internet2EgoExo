@@ -82,13 +82,58 @@ referenced captioning. The closest existing formalisation of "the exo video
 teaches, the ego video executes."
 
 **[HOI4D](https://arxiv.org/pdf/2404.09933)** — 2.4 M RGB-D egocentric frames
-across 4,000 sequences in 610 indoor rooms, with category-level 4D hand–object
-labels. Depth-equipped, so it is the geometric ground truth that monocular
-pipelines like [EgoInfinity](#egoinfinity--lift-to-4d-then-reproject) are trying to approximate from RGB.
+across 4,000 sequences, **9 participants**, **800 object instances** in 16
+categories, 610 indoor rooms. Frame-wise it ships panoptic segmentation, motion
+segmentation, action segmentation, 3D hand pose, category-level object pose,
+reconstructed object meshes and scene point clouds, benchmarked on 4D
+point-cloud semantic segmentation, category-level pose tracking and egocentric
+action segmentation. **Licence CC BY-NC 4.0.** Depth-equipped, so it is the
+geometric ground truth that monocular pipelines like
+[EgoInfinity](#egoinfinity--lift-to-4d-then-reproject) are trying to approximate
+from RGB — and, being non-commercial, another entry for
+[§11](#11-the-licence-trap).
 
-**[ENIGMA-360](https://arxiv.org/pdf/2603.09741)** — ego-exo capture in
-industrial settings; the nearest published analogue to factory-floor procedural
-data, and a useful comparison point for [Egocentric-10K](#egocentric-10k).
+### ENIGMA-360
+
+**[arXiv 2603.09741](https://arxiv.org/html/2603.09741v1)** — the industrial
+ego-exo dataset, and the sharpest available contrast with
+[Egocentric-10K](#egocentric-10k), because the two target the same domain by
+opposite means.
+
+**111.54 hours**, **34 participants** aged 20–70 with mixed experience, on two
+designed maintenance procedures (high- and low-voltage electrical board repair),
+each with four variations by component (resistor / capacitor / transformer) and
+tool (manual or electric screwdriver). **360 videos: 180 egocentric + 180
+exocentric, temporally synchronised** — ego on **HoloLens 2** at 2272×1278 / 30
+fps, exo on a **ZED** at 672×376 / 15 fps, aligned using a lamp as the temporal
+reference.
+
+The annotation density is the point: 14,556 keysteps across 68 types with
+temporal boundaries, 14,036 interaction keyframes, 275,135 object annotations
+over 25 classes, 56,473 hand boxes with handedness, hand contact states, plus
+197,814 hand masks and 1,435,006 object masks, per-frame 1024-d DINOv2 features,
+and 3D lab and object models for synthetic generation. Benchmarks: temporal
+action segmentation, keystep recognition, egocentric hand–object interaction
+detection. **Licence CC BY 4.0.**
+
+Its stated limitation is refreshingly blunt — one laboratory, fixed layout,
+controlled lighting, limited procedural variation, constrained participant
+diversity — and it frames the trade this document keeps circling:
+
+| | ENIGMA-360 | Egocentric-10K |
+|---|---|---|
+| Hours | 111.54 | 10,000 |
+| Setting | one lab, designed procedures | real factories, whatever happened |
+| Ego + exo | both, synchronised | ego only |
+| Annotation | dense, six kinds, hand-checked | none shipped |
+| Consent | 34 recruited participants | not documented |
+| Licence | CC BY 4.0 | Apache 2.0 |
+| Fails at | generalising past one room | telling you what is in it |
+
+Neither is wrong. But a team that needs *industrial procedural data it can
+defend* is choosing between a hundred annotated hours from one room and ten
+thousand unannotated hours of undocumented provenance. That gap is what a
+requirement-driven collector exists to close.
 
 **Where we differ.** Commissioned capture buys control and pays in cost and
 coverage: you get exactly the 123 scenes you funded. This system inverts the
@@ -858,6 +903,8 @@ Reading the licences across this document produces the wider pattern:
 | Exo2Ego-V | Apache 2.0 | ✅ |
 | **EgoDex** | **CC-BY-NC-ND** | ❌ non-commercial, no derivatives |
 | **EPIC-KITCHENS-100** | **CC BY-NC 4.0** | ❌ (commercial terms by email to Bristol) |
+| **HOI4D** | **CC BY-NC 4.0** | ❌ non-commercial |
+| ENIGMA-360 | CC BY 4.0 | ✅ with attribution |
 | **LAION-BVD** | **research only** | ❌ |
 | **EgoInfinity (as a whole)** | MIT code, encumbered deps | ❌ until deps are swapped |
 | **Ego4D / Ego-Exo4D** | **signed agreement, terms not public** | ⚠️ unknowable until you sign — do not assume |
@@ -1236,8 +1283,8 @@ are the parts that are worth owning.**
 - Grauman et al. *Ego4D.* https://ego4d-data.org/
 - Damen et al. *Scaling Egocentric Vision: The EPIC-KITCHENS Dataset.* https://arxiv.org/pdf/1804.02748
 - Huang et al. *EgoExoLearn.* CVPR 2024. https://github.com/OpenGVLab/EgoExoLearn
-- *HOI4D.* https://arxiv.org/pdf/2404.09933
-- *ENIGMA-360: An Ego-Exo Dataset for Human Behavior Understanding in Industrial Scenarios.* https://arxiv.org/pdf/2603.09741
+- *HOI4D.* (CC BY-NC 4.0) https://arxiv.org/pdf/2404.09933 · https://hoi4d.github.io/
+- *ENIGMA-360: An Ego-Exo Dataset for Human Behavior Understanding in Industrial Scenarios.* (CC BY 4.0) https://arxiv.org/html/2603.09741v1 · https://iplab.dmi.unict.it/ENIGMA-360
 - *EgoDex: Learning Dexterous Manipulation from Large-Scale Egocentric Video.* (CC-BY-NC-ND) https://arxiv.org/html/2505.11709v1
 - *EgoScale: Scaling Dexterous Manipulation with Diverse Egocentric Human Data.* https://rpl.cs.utexas.edu/publications/2026/02/18/zheng-arxiv26-egoscale/
 - Deng, Zhou et al. *HumanNet: Scaling Human-centric Video Learning to One Million Hours.* https://arxiv.org/abs/2605.06747
@@ -1273,6 +1320,6 @@ are the parts that are worth owning.**
 - Microsoft. *VLM-Video-Action-Localization.* https://microsoft.github.io/VLM-Video-Action-Localization/
 - Build AI. *Egocentric-10K.* (Apache 2.0) https://www.humanoidsdaily.com/news/build-ai-open-sources-10-000-hours-of-factory-worker-video-to-scale-robot-learning · subset: https://huggingface.co/datasets/Voxel51/Egocentric_10K_subset
 - *annotated-egocentric-10k-dataset.* (Apache 2.0) https://github.com/fit-alessandro-berti/annotated-egocentric-10k-dataset
-- *EgoVid-5M.* (inherits Ego4D terms) https://github.com/JeffWang987/EgoVid
+- *EgoVid-5M: A Large-Scale Video-Action Dataset for Egocentric Video Generation.* (inherits Ego4D terms) https://arxiv.org/abs/2411.08380 · https://github.com/JeffWang987/EgoVid
 - *awesome-egocentric-vision.* https://github.com/Sid2697/awesome-egocentric-vision
 - *awesome-temporal-action-segmentation.* https://github.com/nus-cvml/awesome-temporal-action-segmentation
