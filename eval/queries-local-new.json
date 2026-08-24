@@ -1,19 +1,30 @@
 {
- "eval_version": "local-new-2026-08-23",
- "note": "One canonical task not in the frozen v1.1 set (RDT-01198), from the same task_map.csv vocabulary. Re-tests the documented process end to end on a query the pipeline has never seen.",
+ "eval_version": "local-exo-2026-08-23",
+ "note": "Two more canonical tasks from task_map.csv, run to exercise the viewpoint gate in both directions.",
  "source": {
   "local_copy": "eval/task_map.csv"
  },
  "sampling": {
-  "size": 1
+  "size": 2
  },
  "queries": [
   {
-   "id": "rdt-01198-installing-smoke-detectors",
-   "rdt_id": "RDT-01198",
-   "task_name": "Installing Smoke Detectors",
-   "task_instruction": "Installing smoke detectors.",
-   "query": "someone installing smoke detectors",
+   "id": "rdt-01197-installing-carpet",
+   "rdt_id": "RDT-01197",
+   "task_name": "Installing Carpet",
+   "task_instruction": "Installing carpet.",
+   "query": "someone installing carpet",
+   "domain": "Household & Daily-Living Robotics",
+   "task_family": "Maintenance & Installation",
+   "granularity": "Long-Horizon Activity",
+   "difficulty": "hard"
+  },
+  {
+   "id": "rdt-01215-lighting-fireplace",
+   "rdt_id": "RDT-01215",
+   "task_name": "Lighting Fireplace",
+   "task_instruction": "Lighting fireplace.",
+   "query": "someone lighting fireplace",
    "domain": "Household & Daily-Living Robotics",
    "task_family": "Maintenance & Installation",
    "granularity": "Long-Horizon Activity",

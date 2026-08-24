@@ -43,7 +43,7 @@ from __future__ import annotations
 import csv
 import re
 from collections import Counter, defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 # eval/ sits beside src/, not inside it: the harness and its data are a
@@ -356,6 +356,11 @@ class Task:
     domain: str
     task_family: str
     granularity: str
+    # The map's own verb lexicon, attached by `load_task_map` once it has seen
+    # every row. Empty for a Task built on its own, which falls back to the
+    # short hand-written noun list — enough for a unit test, not enough for
+    # 1,965 rows, which is why the loader is where the real answer comes from.
+    verbs: frozenset[str] = field(default_factory=frozenset)
 
     @property
     def difficulty(self) -> str:
@@ -371,8 +376,12 @@ class Task:
         something anybody typed into a search box — and whichever is used is
         then cut down to something query-shaped.
         """
-        phrase = as_gerund_phrase(self.instruction) if usable_as_query(self.instruction) else ""
-        return f"someone {shorten(phrase or as_gerund_phrase(self.task_name))}"
+        phrase = (
+            as_gerund_phrase(self.instruction, self.verbs)
+            if usable_as_query(self.instruction)
+            else ""
+        )
+        return f"someone {shorten(phrase or as_gerund_phrase(self.task_name, self.verbs))}"
 
     @property
     def query_id(self) -> str:
@@ -437,13 +446,30 @@ def gerund(verb: str) -> str:
     return word + "ing"
 
 
-def as_gerund_phrase(instruction: str) -> str:
+def as_gerund_phrase(instruction: str, verbs: frozenset[str] = frozenset()) -> str:
     """Rewrite an imperative instruction as the activity being performed.
 
     Some rows are normalised labels rather than sentences — `Adjust Bottle.` —
     and carry title case with them. Those are lowercased, because "someone
     adjusting Bottle" reads like a typo; a row that is already a sentence keeps
     its capitalisation, so a proper noun in it survives.
+
+    **An inflected head is not a verb.** `Repairs to furniture.` was read as an
+    imperative and came out "repairsing"; an English imperative is the bare
+    infinitive and never carries the third-person `-s`, so `looks_inflected`
+    catches that class outright. Measured on the whole map: two heads end in a
+    single -s, and both are nouns.
+
+    **What is *not* done here is guessing from absence.** `verbs` carries the
+    heads the map uses as imperatives, and treating "not in that set" as "not a
+    verb" was tried and reverted: it turned `Distribute Steak on Pans` into
+    "doing Distribute Steak on Pans" and `Organize Measuring Cups` into "doing
+    organize measuring cups". Both heads are verbs that simply never open an
+    instruction, and on the sampled 200 the rule made two queries worse and
+    none better. The 75 noun-headed rows it would have fixed are real, and
+    `suspect_gerunds` names them for a human instead — a wrong query somebody
+    can see beats a wrong query dressed as a right one. `verbs` is accepted and
+    unused, so a future caller with better evidence has somewhere to put it.
     """
     text = instruction.strip().rstrip(".").strip()
     if not text:
@@ -452,9 +478,10 @@ def as_gerund_phrase(instruction: str) -> str:
     if len(words) > 1 and all(word[:1].isupper() for word in words):
         text = text.lower()
     head, _, tail = text.partition(" ")
-    if head.lower() in NOT_A_VERB:
-        # Not a verb, so there is no gerund to form. "doing" is clumsy and it is
-        # never wrong, which is the right trade for a query.
+    lowered = head.lower().strip(".,")
+    # Not a verb, so there is no gerund to form. "doing" is clumsy and it is
+    # never wrong, which is the right trade for a query.
+    if lowered in NOT_A_VERB or looks_inflected(lowered):
         return re.sub(r"\s+", " ", f"doing {text}")
     phrase = f"{gerund(head)} {tail}".strip() if tail else gerund(head)
     return re.sub(r"\s+", " ", phrase)
@@ -478,6 +505,27 @@ def shorten(phrase: str) -> str:
     return " ".join(words[:MAX_QUERY_WORDS])
 
 
+# An English imperative is the bare infinitive, and the bare infinitive never
+# carries the third-person `-s`. So a leading `repairs` is a plural noun, not a
+# verb — which is how `Repairs to Furniture` became "someone repairsing to
+# furniture". The handful of base forms that genuinely end in a single -s are
+# listed rather than inferred, because there is no rule that separates them.
+BASE_FORMS_ENDING_IN_S = frozenset({"focus", "bus", "gas", "canvas", "bias", "rinse"})
+
+
+def looks_inflected(word: str) -> bool:
+    """Whether this word carries an `-s` no imperative would.
+
+    `-ss` is not an inflection (`press`, `toss`), and the closed set above is
+    the exception list. Everything else ending in -s is a plural noun standing
+    where a verb should be.
+    """
+    lowered = word.lower().strip(".,")
+    if not lowered.endswith("s") or lowered.endswith("ss"):
+        return False
+    return lowered not in BASE_FORMS_ENDING_IN_S
+
+
 def usable_as_query(instruction: str) -> bool:
     """Whether this instruction can be read as one imperative.
 
@@ -491,7 +539,12 @@ def usable_as_query(instruction: str) -> bool:
         return False
     if "." in text:  # more than one sentence
         return False
-    return words[0].lower() not in FUNCTION_WORDS
+    head = words[0].lower()
+    if head in FUNCTION_WORDS:
+        return False
+    # `Repairs to furniture.` is a noun phrase wearing a full stop. Reading it
+    # as an imperative is what produced "repairsing".
+    return not looks_inflected(head)
 
 
 def imperative_verbs(tasks: list[Task]) -> frozenset[str]:
@@ -501,11 +554,18 @@ def imperative_verbs(tasks: list[Task]) -> frozenset[str]:
     That makes the map its own lexicon — which is what lets the builder flag a
     query whose gerund came from a noun. The alternative, a hand-written verb
     list, would go stale the first time the map grew.
+
+    A lexicon built from the same rows it is used to check will vouch for
+    anything, including the word being questioned: `repairs` entered this set
+    off `Repairs to furniture.` and then proved itself a verb. `usable_as_query`
+    now rejects an inflected head, so it cannot get in — and the belt-and-braces
+    filter here says so out loud rather than relying on that from a distance.
     """
     return frozenset(
-        task.instruction.split()[0].lower().strip(".,")
+        head
         for task in tasks
         if usable_as_query(task.instruction)
+        and not looks_inflected(head := task.instruction.split()[0].lower().strip(".,"))
     )
 
 
@@ -519,9 +579,18 @@ def suspect_gerunds(chosen: list[Task], verbs: frozenset[str]) -> dict[str, str]
     """
     flagged: dict[str, str] = {}
     for task in chosen:
-        if usable_as_query(task.instruction):
-            continue  # the instruction is an imperative; its head is a verb
-        head = task.task_name.split()[0].lower().strip(".,")
+        # Check the head that actually produced the query, not the one this
+        # function would have preferred. Skipping every usable instruction
+        # assumed "usable" meant "imperative", and `Repairs to furniture.`
+        # cleared that bar — so the row that needed a human never got one.
+        source = task.instruction if usable_as_query(task.instruction) else task.task_name
+        words = source.split()
+        if not words:
+            continue
+        head = words[0].lower().strip(".,")
+        if looks_inflected(head):
+            flagged[task.rdt_id] = task.query
+            continue
         if head not in verbs and head not in NOT_A_VERB:
             flagged[task.rdt_id] = task.query
     return flagged
@@ -539,9 +608,15 @@ def _unescape(text: str) -> str:
 
 
 def load_task_map(path: Path | str = DEFAULT_TASK_MAP) -> list[Task]:
-    """Read every row of the task map, unfiltered."""
+    """Read every row of the task map, unfiltered.
+
+    Two passes, because the map is its own dictionary: the first reads the rows,
+    the second hands every row the verb lexicon the whole file implies. A Task
+    cannot tell a verb from a noun on its own, and this is the only place that
+    has seen enough to say.
+    """
     with Path(path).open(newline="", encoding="utf-8") as handle:
-        return [
+        rows = [
             Task(
                 rdt_id=row["rdt_id"].strip(),
                 task_name=_unescape(row["task_name"]),
@@ -552,6 +627,8 @@ def load_task_map(path: Path | str = DEFAULT_TASK_MAP) -> list[Task]:
             )
             for row in csv.DictReader(handle)
         ]
+    verbs = imperative_verbs(rows)
+    return [replace(task, verbs=verbs) for task in rows]
 
 
 def drop_reason(task: Task, raw_family: str | None = None) -> str | None:

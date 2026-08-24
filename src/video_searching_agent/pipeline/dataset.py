@@ -38,13 +38,15 @@ already paid to produce; it calls no model and indexes nothing. Media already
 present is skipped unless `--refresh-media`, because the expensive part of a
 re-export is downloading footage that has not changed.
 
-**The one thing it does decide is viewpoint.** The deliverable is first-person
-footage, so a clip whose own frames were not confirmed egocentric is held back —
-and counted in the manifest by *what the frames said*, split between `exocentric`
-(looked at, and wrong) and `unchecked` (step four has not looked yet). Those are
-different problems with different fixes and a single "12 excluded" would hide
-both. `--include-non-egocentric` ships everything, for the case where somebody
-is deliberately assembling an exocentric set.
+**The one thing it does decide is viewpoint** — the one the run asked for. A
+set built out of egocentric footage ships only clips whose own frames were
+confirmed first-person; a set built out of *exocentric* footage wants the fixed
+camera, and holding a tripod shot back there would be holding back the thing
+that was asked for. So `--viewpoint` says which, `any` ships everything, and
+what is held back is counted by *what the frames said* — `exocentric` (looked
+at, and not what was wanted) apart from `unchecked` (step four has not looked
+yet). Those are different problems with different fixes and a single "12
+excluded" would hide both.
 
 **Nothing else is filtered.** A clip with no tree is exported with no tree, and
 the manifest counts it in `clips_without_tree` rather than hiding it. If that
@@ -79,6 +81,12 @@ logger = logging.getLogger(__name__)
 # added — adding is backwards compatible and renaming is not.
 MANIFEST_VERSION = 1
 
+# What a set can be built out of. Mirrors `annotate_clean.VIEWPOINTS`, because a
+# clip refused by the gate and a clip withheld here must be refused for the same
+# reason — two lists would drift and the directory would disagree with the pass
+# that filled it.
+VIEWPOINTS = ("egocentric", "exocentric", "any")
+
 # Matches the served thumbnail, so the directory and the UI show the same frame.
 THUMBNAIL_WIDTH = 320
 THUMBNAIL_AT = 0.33
@@ -89,6 +97,7 @@ class ExportReport:
     """What one export pass wrote."""
 
     out_dir: str = ""
+    wanted_viewpoint: str = ""
     clips: int = 0
     media_written: int = 0
     media_skipped: int = 0
@@ -96,7 +105,7 @@ class ExportReport:
     with_tree: int = 0
     without_tree: int = 0
     total_seconds: float = 0.0
-    # Held back by the egocentric requirement, counted by what the frames said.
+    # Held back by the viewpoint the run asked for, counted by what the frames said.
     # Never a bare total: "12 excluded" invites the reader to assume they were
     # all junk, and `unverified` is a different problem from `exocentric`.
     withheld: dict[str, int] = field(default_factory=dict)
@@ -120,7 +129,8 @@ class ExportReport:
             "clips_without_tree": self.without_tree,
             "total_seconds": round(self.total_seconds, 1),
             "thumbnails": self.thumbnails,
-            "withheld_not_egocentric": self.withheld_total,
+            "wanted_viewpoint": self.wanted_viewpoint,
+            "withheld_wrong_viewpoint": self.withheld_total,
             "withheld_by_viewpoint": dict(sorted(self.withheld.items())),
             "removed_stale_files": self.removed_stale,
             "errors": self.errors,
@@ -195,7 +205,7 @@ async def export_dataset(
     limit: int = 500,
     media: bool = True,
     refresh_media: bool = False,
-    egocentric_only: bool = True,
+    viewpoint: str = "egocentric",
     store: Any = None,
     lake: Any = None,
 ) -> ExportReport:
@@ -210,9 +220,10 @@ async def export_dataset(
         media: Download the footage. `False` writes the JSON only, which is fast
             and needs no network beyond the store.
         refresh_media: Re-download clips whose file is already on disk.
-        egocentric_only: Ship only clips whose own frames were confirmed
-            first-person. On by default. What is held back is counted in the
-            manifest by the viewpoint that held it back, never as a bare total.
+        viewpoint: Ship only clips whose own frames were confirmed as this —
+            `egocentric`, `exocentric`, or `any` to ship everything. What is
+            held back is counted in the manifest by the viewpoint that held it
+            back, never as a bare total.
         store: An annotation store, or the default one.
         lake: A Datalake client, or one built from settings.
     """
@@ -228,9 +239,13 @@ async def export_dataset(
     if collection_id:
         rows = [clip for clip in rows if clip.collection_id == collection_id]
 
-    report = ExportReport(out_dir=str(out))
+    wanted = (viewpoint or "egocentric").strip().lower()
+    if wanted not in VIEWPOINTS:
+        raise ValueError(f"viewpoint must be one of {VIEWPOINTS}, not {viewpoint!r}")
 
-    if egocentric_only:
+    report = ExportReport(out_dir=str(out), wanted_viewpoint=wanted)
+
+    if wanted != "any":
         # A blank viewpoint is a clip step four has not looked at yet, which is
         # not the same as one it looked at and could not call — the manifest
         # keeps them apart so "run step four" and "this footage is wrong" do
@@ -239,7 +254,7 @@ async def export_dataset(
         withheld_ids: list[str] = []
         for clip in rows:
             seen = (clip.viewpoint or "").strip().lower()
-            if seen == "egocentric":
+            if seen == wanted:
                 kept.append(clip)
             else:
                 key = seen or "unchecked"
@@ -375,7 +390,10 @@ def _print(report: ExportReport) -> None:
         print(f"  stills: {report.thumbnails} rendered")
     if report.withheld:
         breakdown = ", ".join(f"{n} {label}" for label, n in sorted(report.withheld.items()))
-        print(f"  held back {report.withheld_total} clip(s), not first-person: {breakdown}")
+        print(
+            f"  held back {report.withheld_total} clip(s), not "
+            f"{report.wanted_viewpoint}: {breakdown}"
+        )
         if report.removed_stale:
             print(f"  removed {report.removed_stale} file(s) an earlier export had written")
     for err in report.errors[:10]:
@@ -398,10 +416,11 @@ def main() -> int:
         help="re-download clips whose file is already on disk",
     )
     parser.add_argument(
-        "--include-non-egocentric",
-        action="store_true",
-        help="ship clips the frames did not confirm are first-person "
-        "(off by default: the deliverable is egocentric)",
+        "--viewpoint",
+        default="egocentric",
+        choices=list(VIEWPOINTS),
+        help="ship only clips the frames confirmed as this; `any` ships "
+        "everything (default: egocentric)",
     )
     args = parser.parse_args()
 
@@ -414,7 +433,7 @@ def main() -> int:
             limit=args.limit,
             media=not args.no_media,
             refresh_media=args.refresh_media,
-            egocentric_only=not args.include_non_egocentric,
+            viewpoint=args.viewpoint,
         )
     )
     _print(report)

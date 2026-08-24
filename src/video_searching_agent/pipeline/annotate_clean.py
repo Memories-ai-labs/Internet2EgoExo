@@ -26,6 +26,12 @@ listing prunes nothing: "the lookup broke" and "the collection is empty" are
 indistinguishable from the return value, and acting on the second when it was
 the first is how six duplicate collections got made in ten minutes.
 
+**The gate enforces the request, not a preference.** A set built out of
+egocentric footage must be egocentric; a set built out of exocentric footage is
+*meant* to be a fixed camera, and refusing a tripod shot there would be refusing
+the thing that was asked for. So `--viewpoint` says which, and the clip's own
+frames have to agree with it.
+
 **Off unless asked for**, like every step that spends money: the CLI needs
 `--yes`, and `--limit` caps how many clips one pass will pay to annotate.
 """
@@ -100,7 +106,7 @@ class AnnotateReport:
 
     @property
     def refused(self) -> list[ClipResult]:
-        """Clips the viewpoint gate turned away before anything was spent."""
+        """Clips whose frames did not show the viewpoint the run asked for."""
         return [r for r in self.results if r.skipped.startswith(REFUSED)]
 
     def as_dict(self) -> dict[str, Any]:
@@ -111,7 +117,7 @@ class AnnotateReport:
             "pruned": self.pruned,
             "annotated": len(self.annotated),
             "with_hands": len(self.with_hands),
-            "refused_not_egocentric": len(self.refused),
+            "refused_wrong_viewpoint": len(self.refused),
             "results": [r.as_dict() for r in self.results],
             "errors": self.errors,
         }
@@ -119,47 +125,167 @@ class AnnotateReport:
 
 # The prefix every viewpoint refusal carries, so the report can count them
 # without re-deriving the rule from the wording of a message.
-REFUSED = "not first-person: "
+REFUSED = "wrong viewpoint: "
+
+# What a run can ask the delivered footage to be. `any` turns the gate off,
+# which is not the same as asking for `unknown`: one is "do not check", the
+# other is a verdict no set should be built out of.
+VIEWPOINTS = ("egocentric", "exocentric", "any")
+
+
+AGENT_NAME = "viewpoint"
+
+# Two or three looks. A clip whose viewpoint is still unsettled after that is
+# one the agent should say it cannot call, not one it should keep paying to
+# stare at.
+LOOK_BUDGET_USD = 0.02
+
+VIEWPOINT_PROMPT = """You judge whether one short clip is the kind of footage a \
+dataset was asked for. The set being built is {wanted} footage.
+
+egocentric: the camera is worn or held by the person doing the task. Their own \
+hands enter from the bottom of the frame; the view moves when they move.
+exocentric: the camera is somewhere else — a tripod, a phone on a shelf, another \
+person filming. The subject is in front of it, often facing it.
+
+Two things this is not. It is not a judgement about quality: a shaky, dim, \
+first-person clip is still first-person. And it is not settled by the subject \
+matter: a person demonstrating a product to a worn camera is egocentric footage \
+of a demonstration, and a beautifully shot manipulation on a tripod is not \
+egocentric at all.
+
+Look before you answer. One span can mislead — a clip can open on a title card, \
+or on the wearer setting the camera down. If two spans disagree, judge what the \
+clip is mostly.
+
+Answer with ONLY:
+{{"matches": true|false, "viewpoint": "egocentric"|"exocentric"|"unknown", \
+"why": "<what in the frames decided it, one sentence>"}}
+
+`matches` is whether this clip is {wanted} footage. If you looked and still \
+cannot tell, answer with viewpoint "unknown" and matches false — an unjudged \
+clip must not ship."""
 
 
 async def see_viewpoint(
     video_id: str,
     *,
+    wanted: str,
     duration_seconds: float | None,
     task: str = "",
     eyes: Any = None,
     llm: Any = None,
-) -> Any:
-    """Look at the delivered clip's own frames and say what viewpoint they show.
+    max_steps: int = 4,
+) -> dict[str, Any]:
+    """Let an agent look at the delivered clip and say what viewpoint it is.
 
-    `PRE-SIGHT` already asks this question, of the *candidate*, from YouTube's
-    storyboard stills, before anything is downloaded. This asks it again of the
-    thing being shipped, and the two are not the same object: the candidate is a
-    whole video and the deliverable is a span cut out of it, so a source that is
-    egocentric for four of its twelve minutes passes the first check and can
-    still yield a clip that is entirely a presenter talking to camera.
+    `PRE-SIGHT` asks this of the *candidate*, from YouTube's storyboard stills,
+    before anything is downloaded. This asks it of the thing being shipped, and
+    the two are not the same object: the candidate is a whole video and the
+    deliverable is a span cut out of it, so a source that is egocentric for four
+    of its twelve minutes passes the first check and can still yield a clip that
+    is entirely a presenter talking to camera.
 
-    Returns a `SightVerdict`. A look that could not run comes back with
-    `looked` false and an error, which the gate treats as *not established* —
-    see the note on strictness in :func:`annotate_clean_collection`.
+    It is a loop rather than one look because one look is a guess about where to
+    look. A clip that opens on a title card and then shows the work reads as
+    neither from its first frames; an agent that can sample the middle and the
+    end settles it, and one that cannot has to guess. The agent decides how many
+    spans it needs, inside a step and money bound.
+
+    Returns ``{"viewpoint", "matches", "why", "looked", "cost_usd", "error"}``.
+    `looked` false means nothing was seen and the caller must not treat the
+    verdict as a judgement — see the note on strictness in
+    :func:`annotate_clean_collection`.
     """
     from video_searching_agent.agent.eyes import Eyes
+    from video_searching_agent.agent.react_loop import Tool, ToolResult, run_loop
     from video_searching_agent.api.llm import get_llm_client
-    from video_searching_agent.curation.frame_viewpoint import SightVerdict, look_at_frames
+
+    blank: dict[str, Any] = {
+        "viewpoint": "unknown",
+        "matches": False,
+        "why": "",
+        "looked": False,
+        "cost_usd": 0.0,
+        "error": "",
+    }
 
     eyes = eyes or Eyes()
     if not eyes.available:
-        return SightVerdict(error="no ffmpeg, so the clip's frames cannot be read")
+        blank["error"] = "no ffmpeg, so the clip's frames cannot be read"
+        return blank
 
     end = float(duration_seconds or 0.0)
     if end <= 0:
-        return SightVerdict(error="the clip has no known duration to sample across")
+        blank["error"] = "the clip has no known duration to sample across"
+        return blank
 
-    frames = await eyes.look(video_id, 0.0, end)
-    if not frames.looked:
-        return SightVerdict(error=frames.error or "no frames came back")
+    seen_any = False
 
-    return await look_at_frames(llm or get_llm_client(), frames.images, task=task or None)
+    async def look(arguments: dict[str, Any]) -> ToolResult:
+        nonlocal seen_any
+        # Clamped to the clip: an agent asking for 0-600s of a 25s clip is
+        # asking about footage that does not exist, and ffmpeg would hand back
+        # whatever it found rather than saying so.
+        start = max(0.0, min(float(arguments.get("start", 0.0) or 0.0), end))
+        stop = max(start, min(float(arguments.get("end", end) or end), end))
+        if stop <= start:
+            stop = end
+        frames = await eyes.look(video_id, start, stop, int(arguments.get("frames", 4) or 4))
+        if not frames.looked:
+            return ToolResult(observation=frames.describe())
+        seen_any = True
+        return ToolResult(
+            observation=frames.describe(), images=frames.images, cost_usd=frames.cost_usd
+        )
+
+    tools = [
+        Tool(
+            name="look",
+            description=(
+                "sample frames from a span of this clip and see them. The clip is "
+                f"{end:.0f} seconds long and its first frame is second zero"
+            ),
+            arguments='{"start": <seconds>, "end": <seconds>, "frames": 2-6}',
+            run=look,
+        )
+    ]
+
+    opening = (
+        f"Clip {video_id}, {end:.0f} seconds long."
+        + (f" It was collected for: {task}." if task else "")
+        + f" Decide whether it is {wanted} footage."
+    )
+
+    outcome = await run_loop(
+        llm or get_llm_client(),
+        VIEWPOINT_PROMPT.format(wanted=wanted),
+        opening,
+        tools,
+        agent=AGENT_NAME,
+        max_steps=max_steps,
+        budget_usd=LOOK_BUDGET_USD,
+        answer_keys=("matches",),
+    )
+
+    if outcome.answer is None:
+        blank["cost_usd"] = outcome.cost_usd
+        blank["error"] = outcome.stopped_because or "the agent did not reach a verdict"
+        blank["looked"] = False
+        return blank
+
+    verdict = str(outcome.answer.get("viewpoint") or "unknown").strip().lower()
+    return {
+        "viewpoint": verdict if verdict in ("egocentric", "exocentric") else "unknown",
+        "matches": bool(outcome.answer.get("matches")),
+        "why": str(outcome.answer.get("why") or "").strip(),
+        # A verdict reached without ever seeing a frame is a guess from the
+        # prompt, and this gate exists precisely because captions and titles
+        # were not enough.
+        "looked": seen_any,
+        "cost_usd": outcome.cost_usd,
+        "error": "" if seen_any else "the agent answered without looking at any frames",
+    }
 
 
 async def live_video_ids(lake: Any, collection_id: str) -> list[str] | None:
@@ -213,7 +339,7 @@ async def annotate_clean_collection(
     limit: int = 5,
     only_missing: bool = True,
     write_back: bool = False,
-    require_egocentric: bool = True,
+    wanted_viewpoint: str = "egocentric",
     lake: Any = None,
     agent: Any = None,
     store: Any = None,
@@ -248,8 +374,11 @@ async def annotate_clean_collection(
         only_missing: Skip clips that already have a tree. Off re-annotates,
             which replaces the tree rather than adding a second copy.
         write_back: Also write the tree onto the Datalake video's metadata.
-        require_egocentric: Refuse to annotate a clip the frames do not confirm
-            is first-person. On by default; the deliverable is egocentric.
+        wanted_viewpoint: The viewpoint this set is being built out of —
+            `egocentric`, `exocentric`, or `any` to turn the gate off. A clip
+            the frames do not confirm as the one asked for is refused. Asking
+            for exocentric footage and getting a fixed camera is a hit, not a
+            miss; the gate enforces the request, not a preference.
         lake: Datalake client. Created when omitted.
         agent: Curation agent. Created when omitted.
         store: Annotation store. Opened when omitted.
@@ -267,6 +396,10 @@ async def annotate_clean_collection(
     lake = lake or MemoriesDatalakeClient()
     agent = agent or CurationAgent(client=lake)
     store = store or open_store()
+
+    wanted = (wanted_viewpoint or "egocentric").strip().lower()
+    if wanted not in VIEWPOINTS:
+        raise ValueError(f"wanted_viewpoint must be one of {VIEWPOINTS}, not {wanted_viewpoint!r}")
 
     report = AnnotateReport(collection_id=collection_id)
 
@@ -306,24 +439,29 @@ async def annotate_clean_collection(
         result = ClipResult(video_id=video_id)
         clip_row = store.get(video_id)
 
-        if require_egocentric:
+        if wanted != "any":
             verdict = await see_viewpoint(
                 video_id,
+                wanted=wanted,
                 duration_seconds=getattr(clip_row, "duration_seconds", None),
                 task=getattr(clip_row, "query", "") or getattr(clip_row, "title", ""),
                 eyes=eyes,
                 llm=llm,
             )
-            seen = str(getattr(verdict.viewpoint, "value", verdict.viewpoint) or "")
-            result.viewpoint = seen if verdict.looked else ""
-            result.viewpoint_why = verdict.why or verdict.error or ""
+            looked = bool(verdict.get("looked"))
+            result.viewpoint = str(verdict.get("viewpoint") or "") if looked else ""
+            result.viewpoint_why = str(verdict.get("why") or verdict.get("error") or "")
             if result.viewpoint:
                 store.set_viewpoint(video_id, result.viewpoint)
-            if seen != "egocentric" or not verdict.looked:
+            # The agent's own verdict on whether this is the footage asked for,
+            # rather than a string comparison here. It has the frames and the
+            # request; re-deciding from its label would throw away what it saw
+            # and put the judgement back in a place that cannot see anything.
+            if not looked or not verdict.get("matches"):
                 result.skipped = REFUSED + (
-                    f"the frames show {seen} footage — {verdict.why}"
-                    if verdict.looked
-                    else f"the viewpoint could not be established — {verdict.error}"
+                    f"asked for {wanted} — {result.viewpoint_why}"
+                    if looked
+                    else f"asked for {wanted}, and nothing was seen — {verdict.get('error')}"
                 )
                 report.results.append(result)
                 continue
@@ -390,7 +528,7 @@ def _print(report: AnnotateReport) -> None:
     )
     if report.refused:
         print(
-            f"refused {len(report.refused)} clip(s) that are not first-person, "
+            f"refused {len(report.refused)} clip(s) for the wrong viewpoint, "
             "before paying to annotate them"
         )
     for err in report.errors[:10]:
@@ -408,10 +546,11 @@ def main() -> int:
     )
     parser.add_argument("--write-back", action="store_true", help="also write onto the Datalake")
     parser.add_argument(
-        "--no-require-egocentric",
-        action="store_true",
-        help="annotate clips the frames do not confirm are first-person "
-        "(off by default: the deliverable is egocentric)",
+        "--viewpoint",
+        default="egocentric",
+        choices=list(VIEWPOINTS),
+        help="the viewpoint this set is built out of; a clip the frames do not "
+        "confirm as this is refused. `any` turns the gate off (default: egocentric)",
     )
     parser.add_argument("--yes", action="store_true", help="required: this pass spends money")
     args = parser.parse_args()
@@ -428,7 +567,7 @@ def main() -> int:
             limit=args.limit,
             only_missing=not args.all,
             write_back=args.write_back,
-            require_egocentric=not args.no_require_egocentric,
+            wanted_viewpoint=args.viewpoint,
         )
     )
     _print(report)

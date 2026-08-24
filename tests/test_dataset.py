@@ -280,7 +280,8 @@ async def test_what_was_held_back_is_counted_by_reason_not_as_a_total(tmp_path, 
     assert report.withheld_total == 3
 
     manifest = json.loads((tmp_path / "manifest.json").read_text())
-    assert manifest["withheld_not_egocentric"] == 3
+    assert manifest["wanted_viewpoint"] == "egocentric"
+    assert manifest["withheld_wrong_viewpoint"] == 3
     assert manifest["withheld_by_viewpoint"] == {
         "exocentric": 1,
         "unchecked": 1,
@@ -288,11 +289,11 @@ async def test_what_was_held_back_is_counted_by_reason_not_as_a_total(tmp_path, 
     }
 
 
-async def test_the_requirement_can_be_turned_off_deliberately(tmp_path, store):
-    """Somebody assembling an exocentric set is not making a mistake."""
+async def test_any_ships_everything(tmp_path, store):
+    """Somebody who wants the whole store is not making a mistake."""
     store.put(Clip(video_id="vid_exo", collection_id="col_clean", viewpoint="exocentric"))
 
-    report, _ = await _export(tmp_path, store, lake=FakeLake(), egocentric_only=False)
+    report, _ = await _export(tmp_path, store, lake=FakeLake(), viewpoint="any")
 
     assert report.clips == 3
     assert report.withheld == {}
@@ -409,3 +410,30 @@ async def test_a_host_with_no_ffmpeg_still_exports(tmp_path, store, monkeypatch)
     assert report.thumbnails == 0
     tree = json.loads((tmp_path / "annotations" / "vid_clean1.json").read_text())
     assert tree["thumbnail_file"] is None
+
+
+async def test_asking_for_exocentric_ships_the_fixed_camera(tmp_path, store):
+    """The filter follows the request. Asking for exo, a tripod is the hit."""
+    store.put(
+        Clip(
+            video_id="vid_tripod",
+            collection_id="col_clean",
+            duration_seconds=40.0,
+            viewpoint="exocentric",
+        )
+    )
+
+    report, _ = await _export(tmp_path, store, lake=FakeLake(), viewpoint="exocentric")
+
+    assert report.clips == 1
+    assert (tmp_path / "annotations" / "vid_tripod.json").exists()
+    # The two egocentric fixtures are what is held back now.
+    assert report.withheld == {"egocentric": 2}
+    assert report.wanted_viewpoint == "exocentric"
+
+
+async def test_an_unshippable_viewpoint_is_refused_outright(tmp_path, store):
+    import pytest as _pytest
+
+    with _pytest.raises(ValueError):
+        await export_dataset(tmp_path, store=store, media=False, viewpoint="unknown")
