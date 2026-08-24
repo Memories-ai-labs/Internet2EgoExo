@@ -977,8 +977,9 @@ code,
 .clipRow {
   width: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-areas: "title meta" "source meta";
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "thumb body meta";
+  align-items: center;
   gap: 2px var(--space-3);
   padding: var(--space-3) var(--space-2);
   border: 0;
@@ -990,7 +991,14 @@ code,
 }
 .clipRow:hover { background: var(--default-hover); }
 .clipRow--open { background: var(--accent-soft); }
-.clipRow__title { grid-area: title; font-weight: 500; }
+.clipRow__body {
+  grid-area: body;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.clipRow__title { font-weight: 500; }
 .clipRow__meta {
   grid-area: meta;
   align-self: center;
@@ -1001,10 +1009,51 @@ code,
   white-space: nowrap;
 }
 .clipRow__source {
-  grid-area: source;
-  font-family: var(--font-mono);
   font-size: 0.6875rem;
   color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A still from the clip. Fixed 16:9 so a portrait clip does not shove the
+   whole row sideways, and the empty state is the same box rather than a
+   collapsed one, so the list does not jump as thumbnails arrive. */
+.thumb {
+  grid-area: thumb;
+  width: 96px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 4px;
+  background: var(--default-hover);
+  display: block;
+}
+.thumb--empty { border: 1px dashed var(--border); }
+
+/* Where the clip came from, said in full and selectable. */
+.prov {
+  margin: 0 0 var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.prov__row {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  gap: var(--space-2);
+  align-items: baseline;
+}
+.prov__row dt {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.prov__row dd {
+  margin: 0;
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+  user-select: all;
 }
 .library__video {
   width: 100%;

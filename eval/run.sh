@@ -89,7 +89,7 @@ before=0
 echo "records before this run: $before  ->  $out"
 
 set +e
-uv run python eval/run_eval.py "${args[@]}" "${extra[@]}"
+uv run python eval/run_eval.py "${args[@]}" ${extra[@]+"${extra[@]}"}
 status=$?
 set -e
 

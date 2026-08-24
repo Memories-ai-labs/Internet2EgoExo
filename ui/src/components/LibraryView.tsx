@@ -28,6 +28,7 @@ type Segment = {
 
 type ClipRow = {
   video_id: string;
+  collection_id: string;
   source_video_id: string;
   source_start: number | null;
   source_end: number | null;
@@ -40,6 +41,63 @@ type ClipRow = {
   segment_count: number;
   action_count: number;
 };
+
+/** Where in the Datalake this clip came from, said in full.
+ *
+ * The ids are the whole point of the panel and they were abbreviated to their
+ * last eight characters, which is enough to recognise a clip you already know
+ * and not enough to go and find it. Anyone checking a delivered clip needs the
+ * id they can paste into the Datalake and the two timestamps it was cut
+ * between — so both are shown whole, and both are selectable.
+ */
+function Provenance({ clip }: { clip: ClipRow }) {
+  const span =
+    clip.source_start !== null && clip.source_end !== null
+      ? `${clip.source_start.toFixed(1)}s – ${clip.source_end.toFixed(1)}s`
+      : "span not recorded";
+  return (
+    <dl className="prov">
+      <div className="prov__row">
+        <dt>clip</dt>
+        <dd className="mono">{clip.video_id}</dd>
+      </div>
+      <div className="prov__row">
+        <dt>cut from</dt>
+        <dd className="mono">{clip.source_video_id || "—"}</dd>
+      </div>
+      <div className="prov__row">
+        <dt>at</dt>
+        <dd className="mono">{span}</dd>
+      </div>
+      {clip.collection_id ? (
+        <div className="prov__row">
+          <dt>collection</dt>
+          <dd className="mono">{clip.collection_id}</dd>
+        </div>
+      ) : null}
+    </dl>
+  );
+}
+
+/** A still from the clip itself.
+ *
+ * Rendered server-side and cached, so this is one cheap GET. A clip whose
+ * still could not be made shows the placeholder rather than a broken image
+ * icon: "no thumbnail" is a fact about this host, not about the footage.
+ */
+function Thumb({ apiBase, videoId }: { apiBase: string; videoId: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <div className="thumb thumb--empty" aria-hidden="true" />;
+  return (
+    <img
+      className="thumb"
+      src={`${apiBase}/api/v1/clips/${videoId}/thumbnail`}
+      alt=""
+      loading="lazy"
+      onError={() => setFailed(true)}
+    />
+  );
+}
 
 type ClipDetail = ClipRow & {
   segments: Segment[];
@@ -62,7 +120,11 @@ const PAGE = 24;
 
 export function LibraryView({ apiBase }: { apiBase: string }) {
   const [query, setQuery] = useState("");
-  const [viewpoint, setViewpoint] = useState("");
+  // The deliverable is first-person, so that is what the library opens on.
+  // Everything the gate refused is still here and still reachable — a rejected
+  // clip is how you check the gate was right — but it is not what somebody
+  // browsing the corpus should be handed by default.
+  const [viewpoint, setViewpoint] = useState("egocentric");
   const [handsOnly, setHandsOnly] = useState(false);
   const [clips, setClips] = useState<ClipRow[]>([]);
   const [total, setTotal] = useState(0);
@@ -168,8 +230,8 @@ export function LibraryView({ apiBase }: { apiBase: string }) {
             onChange={(event) => setViewpoint(event.target.value)}
             aria-label="Viewpoint"
           >
+            <option value="egocentric">egocentric — the deliverable</option>
             <option value="">any viewpoint</option>
-            <option value="egocentric">egocentric</option>
             <option value="exocentric">exocentric</option>
             <option value="unknown">unknown</option>
           </select>
@@ -227,6 +289,26 @@ export function LibraryView({ apiBase }: { apiBase: string }) {
           </div>
         ) : null}
 
+        {/* Naming what the filter is holding back, rather than leaving the
+            reader to notice the count is short. Split by what the frames said,
+            because "run the gate" and "this footage is wrong" are different
+            problems. */}
+        {viewpoint === "egocentric" && totals ? (
+          (() => {
+            const held = Object.entries(totals.by_viewpoint).filter(([name]) => name !== "egocentric");
+            const n = held.reduce((sum, [, count]) => sum + count, 0);
+            if (!n) return null;
+            return (
+              <p className="library__note">
+                {n} more clip{n === 1 ? "" : "s"} in the store {n === 1 ? "is" : "are"} not
+                first-person and {n === 1 ? "is" : "are"} held out of the deliverable (
+                {held.map(([name, count]) => `${count} ${name}`).join(", ")}). Switch the
+                viewpoint filter to see {n === 1 ? "it" : "them"}.
+              </p>
+            );
+          })()
+        ) : null}
+
         {error ? <p className="library__warning">{error}</p> : null}
 
         {!loading && clips.length === 0 ? (
@@ -246,18 +328,21 @@ export function LibraryView({ apiBase }: { apiBase: string }) {
                 }`}
                 onClick={() => void open(clip.video_id)}
               >
-                <span className="clipRow__title">{clip.title || clip.video_id}</span>
-                <span className="clipRow__meta">
-                  {clip.duration_seconds ? `${clip.duration_seconds.toFixed(0)}s` : "—"}
-                  {clip.viewpoint ? ` · ${clip.viewpoint}` : ""}
-                  {clip.grade ? ` · ${clip.grade}` : ""}
-                  {clip.action_count ? ` · ${clip.action_count} action` : ""}
-                </span>
-                <span className="clipRow__source">
-                  from {clip.source_video_id.slice(-8)}
-                  {clip.source_start !== null && clip.source_end !== null
-                    ? ` @${clip.source_start.toFixed(0)}–${clip.source_end.toFixed(0)}s`
-                    : ""}
+                <Thumb apiBase={apiBase} videoId={clip.video_id} />
+                <span className="clipRow__body">
+                  <span className="clipRow__title">{clip.title || clip.video_id}</span>
+                  <span className="clipRow__meta">
+                    {clip.duration_seconds ? `${clip.duration_seconds.toFixed(0)}s` : "—"}
+                    {clip.viewpoint ? ` · ${clip.viewpoint}` : ""}
+                    {clip.grade ? ` · ${clip.grade}` : ""}
+                    {clip.action_count ? ` · ${clip.action_count} action` : ""}
+                  </span>
+                  <span className="clipRow__source mono">
+                    {clip.source_video_id || "source unknown"}
+                    {clip.source_start !== null && clip.source_end !== null
+                      ? ` @ ${clip.source_start.toFixed(1)}–${clip.source_end.toFixed(1)}s`
+                      : ""}
+                  </span>
                 </span>
               </button>
             </li>
@@ -268,8 +353,16 @@ export function LibraryView({ apiBase }: { apiBase: string }) {
       {selected ? (
         <Panel
           title={selected.title || selected.video_id}
-          action={<span className="panel__meta">{selected.video_id}</span>}
+          action={
+            <span className="panel__meta">
+              {selected.grade ? `grade ${selected.grade} · ` : ""}
+              {selected.annotation_level || "no tree"} · {selected.action_count} action
+              {selected.action_count === 1 ? "" : "s"}
+            </span>
+          }
         >
+          <Provenance clip={selected} />
+
           {selected.playback?.url ? (
             <video
               className="library__video"
