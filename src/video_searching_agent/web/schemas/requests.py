@@ -240,3 +240,32 @@ class CurateRequest(BaseModel):
         if not self.video_ids and not self.tag:
             raise ValueError("Provide either video_ids or tag")
         return self
+
+
+class SearchLoopRequest(BaseModel):
+    """Request body for the search loop.
+
+    One search is a guess about vocabulary. This asks for as many rounds as it
+    takes: each one is screened on its frames, and what the frames said goes
+    back to the agent so the next round can look somewhere else.
+    """
+
+    query: str = Field(
+        ...,
+        min_length=1,
+        max_length=2000,
+        description="The footage wanted, in your own words",
+    )
+    viewpoint: Viewpoint = Field(
+        Viewpoint.EGOCENTRIC, description="What the frames have to show"
+    )
+    target: int = Field(
+        5, ge=1, le=25, description="Candidates that must pass the frames before it stops"
+    )
+    min_duration_seconds: int | None = Field(
+        None, ge=0, description="Drop shorter candidates before paying to screen them"
+    )
+    rounds: int = Field(5, ge=1, le=10, description="Rounds of search before giving up")
+    budget_usd: float = Field(
+        0.60, gt=0, le=5.0, description="What the screening may spend across the whole loop"
+    )

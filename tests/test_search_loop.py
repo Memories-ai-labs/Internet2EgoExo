@@ -13,7 +13,7 @@ import json
 
 import pytest
 
-from video_searching_agent.agent.prospector import DRY_ROUNDS, prospect
+from video_searching_agent.agent.search_loop import DRY_ROUNDS, run_search_loop
 
 
 class Verdict:
@@ -89,7 +89,7 @@ def _rows(*urls):
 
 async def test_it_stops_as_soon_as_the_target_is_met():
     agent = FakeAgent([["one"], ["two"]])
-    result = await prospect(
+    result = await run_search_loop(
         "fixing bikes",
         target=2,
         llm=agent,
@@ -103,7 +103,7 @@ async def test_it_stops_as_soon_as_the_target_is_met():
 
 async def test_falling_short_is_reported_not_rounded_up():
     agent = FakeAgent([["one"]])
-    result = await prospect(
+    result = await run_search_loop(
         "fixing bikes",
         target=5,
         llm=agent,
@@ -119,7 +119,7 @@ async def test_falling_short_is_reported_not_rounded_up():
 async def test_a_candidate_nobody_looked_at_is_not_a_find():
     """The screen is the only thing between a genre and a download."""
     agent = FakeAgent([["one"]])
-    result = await prospect(
+    result = await run_search_loop(
         "fixing bikes",
         target=1,
         llm=agent,
@@ -132,7 +132,7 @@ async def test_a_candidate_nobody_looked_at_is_not_a_find():
 async def test_the_right_viewpoint_doing_the_wrong_thing_does_not_count():
     """A helmet cam on a bike ride is egocentric and is not fixing a bike."""
     agent = FakeAgent([["one"]])
-    result = await prospect(
+    result = await run_search_loop(
         "fixing bikes",
         target=1,
         llm=agent,
@@ -146,7 +146,7 @@ async def test_the_right_viewpoint_doing_the_wrong_thing_does_not_count():
 async def test_the_agent_is_told_which_phrasing_failed_and_how():
     """'6 rejected' cannot be acted on; naming the phrasing can."""
     agent = FakeAgent([["POV bike repair", "bike restoration"], ["another"]])
-    await prospect(
+    await run_search_loop(
         "fixing bikes",
         target=9,
         llm=agent,
@@ -163,7 +163,7 @@ async def test_the_agent_is_told_which_phrasing_failed_and_how():
 
 async def test_a_seam_that_stops_yielding_is_called_dry():
     agent = FakeAgent([["one"], ["one"], ["one"], ["one"]])
-    result = await prospect(
+    result = await run_search_loop(
         "fixing bikes",
         target=9,
         llm=agent,
@@ -184,7 +184,7 @@ async def test_a_url_seen_once_is_never_screened_twice():
         screened.extend(c["url"] for c in candidates)
         return [Verdict(viewpoint="exocentric") for _ in candidates]
 
-    await prospect(
+    await run_search_loop(
         "fixing bikes",
         target=9,
         llm=agent,
@@ -210,7 +210,7 @@ async def test_short_candidates_are_dropped_before_the_screen_spends():
     async def search(query, wanted):
         return rows
 
-    result = await prospect(
+    result = await run_search_loop(
         "fixing bikes",
         target=1,
         min_duration_seconds=300,
@@ -224,7 +224,7 @@ async def test_short_candidates_are_dropped_before_the_screen_spends():
 
 async def test_the_screening_budget_stops_the_hunt():
     agent = FakeAgent([["one"], ["two"], ["three"]])
-    result = await prospect(
+    result = await run_search_loop(
         "fixing bikes",
         target=99,
         budget_usd=0.003,
@@ -239,7 +239,7 @@ async def test_the_screening_budget_stops_the_hunt():
 
 async def test_a_round_with_no_searches_asks_for_some():
     agent = FakeAgent([[]])
-    result = await prospect(
+    result = await run_search_loop(
         "fixing bikes", target=1, llm=agent, search=_search_returning({}), screen=_screen_by_url({})
     )
     assert result.rounds == 0
@@ -255,7 +255,7 @@ async def test_one_broken_search_does_not_end_the_hunt(failing):
             raise RuntimeError("the platform said no")
         return _rows("good")
 
-    result = await prospect(
+    result = await run_search_loop(
         "fixing bikes",
         target=1,
         llm=agent,

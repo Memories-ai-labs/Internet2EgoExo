@@ -1,7 +1,8 @@
 """Collection and curation streaming router.
 
-Two endpoints for the second half of the product — everything that happens
-after the search has found candidates:
+Three endpoints for the second half of the product — everything that happens
+after the search has found candidates, and the one that keeps looking until it
+has:
 
 * ``POST /api/v1/collect/stream`` — download candidates, index them into the
   Video Datalake, clean them and annotate what survives. Each clip's stage is
@@ -9,6 +10,11 @@ after the search has found candidates:
   that only moves at the end is not a progress bar.
 * ``POST /api/v1/curate/stream`` — run the curation agent over a worklist that
   is already indexed, and stream each clip's verdict as it lands.
+* ``POST /api/v1/search-loop/stream`` — search, screen the candidates on their
+  frames, tell the agent what the frames said, and let it search again. Rounds
+  stream as they finish, because the reasons are what a caller needs to see:
+  a run that found nothing because every phrasing hit the wrong genre reads
+  very differently from one that found nothing at all.
 
 Both stream Server-Sent Events. Both are bounded: a request cannot queue more
 clips than `MAX_URLS_PER_REQUEST`, because every clip costs real money to
@@ -33,7 +39,11 @@ from video_searching_agent.pipeline.ingest import IngestPipeline
 from video_searching_agent.web import demo
 from video_searching_agent.web.credentials import RequestCredentials
 from video_searching_agent.web.schemas.events import ErrorEvent
-from video_searching_agent.web.schemas.requests import CollectRequest, CurateRequest
+from video_searching_agent.web.schemas.requests import (
+    CollectRequest,
+    CurateRequest,
+    SearchLoopRequest,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -312,6 +322,91 @@ async def _where_it_landed(agent: Any, report: dict[str, Any]) -> dict[str, Any]
     except Exception as exc:  # noqa: BLE001 - a missing name is not a failed run
         logger.info("could not resolve where the curated videos live: %s", exc)
     return storage
+
+
+@router.post("/search-loop/stream")
+async def stream_search_loop(
+    request: Request,
+    body: SearchLoopRequest,
+) -> EventSourceResponse:
+    """Search, screen on frames, learn from the rejections, search again.
+
+    Events: `started`, `round` (one per round, with what the frames said),
+    `complete`, `error`. The rounds are the point: a caller watching only the
+    final answer cannot tell a loop that found five things from one that gave
+    up, and the reasons are what say which.
+    """
+    settings = get_settings()
+    return EventSourceResponse(
+        _search_loop_events(request, body),
+        media_type="text/event-stream",
+        ping=settings.sse_ping_interval,
+    )
+
+
+async def _search_loop_events(
+    request: Request,
+    body: SearchLoopRequest,
+) -> AsyncGenerator[dict[str, Any], None]:
+    """Stream one search loop, a round at a time."""
+    from video_searching_agent.agent.search_loop import run_search_loop
+
+    wanted = body.viewpoint.value if body.viewpoint else "egocentric"
+    yield {
+        "event": "started",
+        "data": json.dumps(
+            {"query": body.query, "viewpoint": wanted, "target": body.target}
+        ),
+    }
+
+    rounds: list[dict[str, Any]] = []
+
+    async def on_round(number: int, observation: str, partial: Any) -> None:
+        rounds.append(
+            {
+                "round": number,
+                "observation": observation,
+                "found": len(partial.kept),
+                "screened": len(partial.candidates),
+                "cost_usd": round(partial.cost_usd, 4),
+            }
+        )
+
+    try:
+        # The loop is one long await, so the rounds are drained after it rather
+        # than during: `on_round` fills a list and the generator hands over
+        # whatever has accumulated between yields. A caller that disconnects
+        # stops being sent to; the loop's own bounds stop the spending.
+        task = asyncio.create_task(
+            run_search_loop(
+                body.query,
+                wanted=wanted,
+                target=body.target,
+                min_duration_seconds=body.min_duration_seconds,
+                max_rounds=body.rounds,
+                budget_usd=body.budget_usd,
+                on_round=on_round,
+            )
+        )
+        sent = 0
+        while not task.done():
+            await asyncio.sleep(0.5)
+            while sent < len(rounds):
+                if await request.is_disconnected():
+                    task.cancel()
+                    return
+                yield {"event": "round", "data": json.dumps(rounds[sent])}
+                sent += 1
+        while sent < len(rounds):
+            yield {"event": "round", "data": json.dumps(rounds[sent])}
+            sent += 1
+        yield {"event": "complete", "data": json.dumps((await task).as_dict())}
+    except asyncio.CancelledError:
+        raise
+    except Exception as exc:
+        logger.exception("the search loop failed")
+        error = ErrorEvent.create(code="internal_error", message=str(exc))
+        yield {"event": error.event, "data": json.dumps(error.data)}
 
 
 @router.post("/collect/stream")

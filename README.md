@@ -838,6 +838,44 @@ caption wording, not from a hand-tracking or pose model.
 - The UI is public (so it can load and ask for a key); `/api/v1/*` stays behind
   API-key auth and rate limiting.
 
+## Keep searching until it passes
+
+One search is a guess about vocabulary. `first-person fixing bikes, hands
+visible` returns twenty candidates and the frame check keeps none — on YouTube
+"POV" plus "bike" selects for action-camera mount reviews and riding footage,
+and no rephrasing of that finds a workshop.
+
+`agent/search_loop.py` closes the loop. Each round the agent proposes searches,
+every candidate is screened on its frames before anything is downloaded, and the
+agent is told what the frames said about what its own words returned — grouped
+by reason, attributed to the phrasing:
+
+```
+Round 1: 54 new candidates, 6 passed the frames. 6 of 3 so far.
+Rejected, by the phrasing that found them:
+  - [POV bike repair] 9 exocentric, 4 wrong activity, 1 unknown
+  - [GoPro fixing bicycle hands] 18 wrong activity
+```
+
+Then it decides where to look next. Nothing prescribes an angle — a rule about
+which vocabulary works is a rule about YouTube in August. It stops on the
+target, on two rounds that add nothing new, or on the bounds, and the target is
+enforced rather than requested.
+
+Both questions the screen answers are used. A helmet cam on a bike *ride* is
+egocentric and is not footage of fixing a bike; keeping it because the viewpoint
+matched is how a run reports fifteen finds and hands over five.
+
+```bash
+python -m video_searching_agent.agent.search_loop "first-person fixing bikes, hands visible" --target 5
+```
+
+In the UI it is **Keep searching until N** on the Search page, next to Search;
+`POST /api/v1/search-loop/stream` streams a `round` event per round so the
+reasons arrive as they land. What it returns are candidates *worth paying to
+index* — the caption pass after indexing still gets the last word, and it
+overrules the three-still screen often enough that "found N" is not "N clips".
+
 ## The dataset on disk
 
 Everything above leaves the deliverable spread across two systems: the footage

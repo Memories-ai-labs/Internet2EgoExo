@@ -28,7 +28,7 @@ It stops on the first of:
   running out actually looks like;
 * **the bounds** — rounds, or the money the screening has spent.
 
-Stopping short is reported, never rounded up. A hunt that found three of a
+Stopping short is reported, never rounded up. A loop that found three of a
 wanted ten says so, along with what it tried, because "the footage does not
 exist in this vocabulary" is a finding and quietly returning three is not.
 """
@@ -45,7 +45,7 @@ from video_searching_agent.utils.youtube_urls import youtube_video_id
 
 logger = logging.getLogger(__name__)
 
-AGENT_NAME = "prospector"
+AGENT_NAME = "search-loop"
 
 # Rounds, not searches: one round may carry several phrasings. Past this the
 # agent is rephrasing rather than rethinking.
@@ -55,7 +55,7 @@ DEFAULT_MAX_ROUNDS = 5
 # is the seam, and paying for a third is paying to confirm a negative.
 DRY_ROUNDS = 2
 
-# Screening is ~$0.002 a candidate. This is the whole hunt's looking budget.
+# Screening is ~$0.002 a candidate. This is the whole loop's looking budget.
 DEFAULT_BUDGET_USD = 0.60
 
 # More than this in one round and the agent is not choosing, it is spraying.
@@ -133,8 +133,8 @@ class Candidate:
 
 
 @dataclass
-class ProspectResult:
-    """What the hunt found, and what it cost to find out."""
+class SearchLoopResult:
+    """What the loop found, and what it cost to find out."""
 
     request: str = ""
     wanted: str = ""
@@ -215,7 +215,7 @@ def _observation(round_no: int, fresh: list[Candidate], total_kept: int, target:
     return "\n".join(lines)
 
 
-async def prospect(
+async def run_search_loop(
     request: str,
     *,
     wanted: str = "egocentric",
@@ -227,7 +227,7 @@ async def prospect(
     search: Any = None,
     screen: Any = None,
     on_round: Any = None,
-) -> ProspectResult:
+) -> SearchLoopResult:
     """Search, screen, learn from the rejections, search again.
 
     Args:
@@ -237,7 +237,7 @@ async def prospect(
         min_duration_seconds: Drop shorter candidates before screening them.
             Free, and it stops the budget going on ten-second clips.
         max_rounds: Rounds of search before giving up.
-        budget_usd: What the screening may spend across the whole hunt.
+        budget_usd: What the screening may spend across the whole loop.
         llm: Model client. Resolved when omitted.
         search: `async (query: str) -> list[dict]`, for tests. The real one
             runs the unified video search.
@@ -245,13 +245,13 @@ async def prospect(
         on_round: Optional `async (round_no, observation, result)` progress hook.
 
     Returns:
-        A ProspectResult. `met_target` false with `stopped_because` set is the
+        A SearchLoopResult. `met_target` false with `stopped_because` set is the
         honest outcome of a seam that is dry, and is not an error.
     """
     from video_searching_agent.agent.react_loop import Tool, ToolResult, run_loop
     from video_searching_agent.api.llm import get_llm_client
 
-    result = ProspectResult(request=request, wanted=wanted, target=target)
+    result = SearchLoopResult(request=request, wanted=wanted, target=target)
     search = search or _default_search
     screen = screen or _default_screen
 
@@ -285,7 +285,7 @@ async def prospect(
         for phrasing in queries:
             try:
                 rows = await search(phrasing, wanted)
-            except Exception as exc:  # noqa: BLE001 - one bad search, not the hunt
+            except Exception as exc:  # noqa: BLE001 - one bad search, not the loop
                 logger.info("search %r failed: %s", phrasing, exc)
                 continue
             for row in rows:
@@ -352,11 +352,11 @@ async def prospect(
                 # The screen answers two questions and both matter here. A
                 # helmet cam on a bike *ride* is egocentric and is not footage
                 # of fixing a bike; keeping it because the viewpoint matched is
-                # how a hunt reports fifteen finds and hands over five.
+                # how a run reports fifteen finds and hands over five.
                 #
                 # `misses_task` is deliberately narrow — it fires only on
                 # "this is a different kind of video", never on "the task is
-                # not in these three stills" — so this tightens the hunt
+                # not in these three stills" — so this tightens the loop
                 # without throwing away footage whose task is simply elsewhere
                 # in the hour.
                 off_task = bool(getattr(verdict, "misses_task", lambda: False)())
@@ -445,7 +445,7 @@ async def _default_screen(candidates: list[dict[str, Any]], task: str) -> list[A
     return await check_many(get_llm_client(), candidates, task=task)
 
 
-def _print(result: ProspectResult) -> None:
+def _print(result: SearchLoopResult) -> None:
     print(
         f"{len(result.kept)} of {result.target} found in {result.rounds} round(s), "
         f"{len(result.candidates)} screened, ${result.cost_usd:.3f}"
@@ -478,7 +478,7 @@ def main() -> int:
     logging.basicConfig(level=logging.WARNING, format="%(message)s")
 
     result = asyncio.run(
-        prospect(
+        run_search_loop(
             args.request,
             wanted=args.viewpoint,
             target=args.target,
