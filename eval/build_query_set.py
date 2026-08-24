@@ -46,7 +46,6 @@ DEFAULT_SIZE = 200
 # cites it, and the filter has since been tightened, so it can no longer be
 # rebuilt byte-for-byte. Each version gets its own file rather than overwriting
 # the last, so an old run record stays interpretable against the set it used.
-
 QUERIES_PATH = ROOT / "eval" / f"queries-{EVAL_VERSION}.json"
 TASK_MAP_PATH = ROOT / "eval" / "task_map.csv"
 
