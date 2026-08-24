@@ -1,0 +1,23 @@
+{
+ "eval_version": "local-new-2026-08-23",
+ "note": "One canonical task not in the frozen v1.1 set (RDT-01198), from the same task_map.csv vocabulary. Re-tests the documented process end to end on a query the pipeline has never seen.",
+ "source": {
+  "local_copy": "eval/task_map.csv"
+ },
+ "sampling": {
+  "size": 1
+ },
+ "queries": [
+  {
+   "id": "rdt-01198-installing-smoke-detectors",
+   "rdt_id": "RDT-01198",
+   "task_name": "Installing Smoke Detectors",
+   "task_instruction": "Installing smoke detectors.",
+   "query": "someone installing smoke detectors",
+   "domain": "Household & Daily-Living Robotics",
+   "task_family": "Maintenance & Installation",
+   "granularity": "Long-Horizon Activity",
+   "difficulty": "hard"
+  }
+ ]
+}

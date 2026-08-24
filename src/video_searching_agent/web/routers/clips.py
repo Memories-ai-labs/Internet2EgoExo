@@ -12,19 +12,45 @@ than a blob hanging off a video record.
 
 from __future__ import annotations
 
+import asyncio
 import logging
+import os
+from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import FileResponse
 
 from video_searching_agent.config.settings import get_settings
-from video_searching_agent.store.annotations import open_store
+from video_searching_agent.store.annotations import open_store, store_path
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/clips", tags=["clips"])
 
 MAX_LIMIT = 200
+
+# A still is 320px wide and taken a third of the way in. The first frame of a
+# cut is often a wipe or a hand still entering, and the middle is where the
+# manipulation actually is; a third in is the cheapest approximation of that
+# which does not need to know anything about the clip.
+THUMBNAIL_WIDTH = 320
+THUMBNAIL_AT = 0.33
+
+
+def thumbnail_dir() -> Path:
+    """Where rendered stills are kept, beside the store that lists them.
+
+    Cached because generating one costs an ffmpeg invocation against a signed
+    URL, and a library page asks for two dozen at once. Nothing here is
+    authoritative: deleting the directory costs a re-render and nothing else.
+    """
+    configured = os.environ.get("THUMBNAIL_CACHE_PATH", "")
+    if configured:
+        return Path(configured)
+    store = store_path()
+    base = Path(store).parent if store != ":memory:" else Path("data")
+    return base / "thumbnails"
 
 
 @router.get("")
@@ -128,6 +154,95 @@ async def get_clip(video_id: str) -> dict[str, Any]:
     payload = clip.as_dict(with_segments=True)
     payload["playback"] = await _playback(video_id)
     return payload
+
+
+@router.get("/{video_id}/thumbnail")
+async def get_thumbnail(video_id: str) -> FileResponse:
+    """One still from the clip, rendered once and cached.
+
+    The Datalake can hand back a frame, and charges for it — before the lookup,
+    and not refunded on a miss. A library page showing two dozen clips would
+    bill two dozen times, every time somebody scrolled. So the still is cut
+    locally with ffmpeg from the same signed URL the player uses, and kept.
+
+    ffmpeg reads the URL directly and stops after one frame, so this transfers
+    a few hundred kilobytes rather than the whole clip.
+    """
+    cache = thumbnail_dir()
+    cached = cache / f"{video_id}.jpg"
+    if cached.exists() and cached.stat().st_size > 0:
+        return FileResponse(cached, media_type="image/jpeg")
+
+    clip = open_store().get(video_id)
+    if clip is None:
+        raise HTTPException(status_code=404, detail=f"no clip {video_id} in the store")
+
+    playback = await _playback(video_id)
+    url = playback.get("url")
+    if not url:
+        raise HTTPException(
+            status_code=404,
+            detail=playback.get("error") or "the Datalake returned no URL for this clip",
+        )
+
+    at = max(0.0, (clip.duration_seconds or 0.0) * THUMBNAIL_AT)
+    rendered = await _render_still(str(url), cached, at)
+    if not rendered:
+        raise HTTPException(status_code=503, detail="could not render a still for this clip")
+    return FileResponse(cached, media_type="image/jpeg")
+
+
+async def _render_still(url: str, dest: Path, at: float) -> bool:
+    """Cut one frame out of a URL. False when this host cannot."""
+    from video_searching_agent.agent.eyes import Eyes
+
+    ffmpeg = Eyes().ffmpeg
+    if not ffmpeg:
+        logger.info("no ffmpeg on this host, so no thumbnails")
+        return False
+
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    # Written under a temporary name: a half-written jpg that the next request
+    # finds and serves is worse than no thumbnail at all.
+    tmp = dest.with_suffix(".part.jpg")
+    command = [
+        ffmpeg,
+        "-nostdin",
+        "-y",
+        # Before -i, so ffmpeg seeks rather than decoding up to the timestamp.
+        "-ss",
+        f"{at:.3f}",
+        "-i",
+        url,
+        "-frames:v",
+        "1",
+        "-q:v",
+        "4",
+        "-vf",
+        f"scale={THUMBNAIL_WIDTH}:-2",
+        str(tmp),
+    ]
+    try:
+        process = await asyncio.create_subprocess_exec(
+            *command,
+            stdout=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        _out, err = await asyncio.wait_for(process.communicate(), timeout=60)
+    except (TimeoutError, OSError) as exc:
+        logger.info("thumbnail render failed for %s: %s", dest.stem, exc)
+        tmp.unlink(missing_ok=True)
+        return False
+
+    if process.returncode != 0 or not tmp.exists() or tmp.stat().st_size == 0:
+        logger.info(
+            "ffmpeg could not still %s: %s", dest.stem, (err or b"").decode()[-200:].strip()
+        )
+        tmp.unlink(missing_ok=True)
+        return False
+
+    tmp.replace(dest)
+    return True
 
 
 async def _playback(video_id: str) -> dict[str, Any]:

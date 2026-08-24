@@ -254,13 +254,64 @@ async def _curate_events(
             if kind == "progress":
                 yield {"event": "clip_done", "data": json.dumps({"clip": payload})}
             else:
-                yield {"event": "complete", "data": json.dumps(payload.as_dict())}
+                report = payload.as_dict()
+                report["storage"] = await _where_it_landed(agent, report)
+                yield {"event": "complete", "data": json.dumps(report)}
     except asyncio.CancelledError:
         raise
     except Exception as exc:
         logger.exception("curation failed")
         error = ErrorEvent.create(code="internal_error", message=str(exc))
         yield {"event": error.event, "data": json.dumps(error.data)}
+
+
+async def _where_it_landed(agent: Any, report: dict[str, Any]) -> dict[str, Any]:
+    """Say where the graded videos actually are, and what does not exist yet.
+
+    A grade with no location is half an answer: the panel that reports "1 of 5
+    accepted" was read as "there is a clip somewhere", and there is not — this
+    path indexes whole source videos and marks spans on them. Cutting those
+    spans into files is `pipeline/refine.py`, which is deliberately not an API
+    route (it needs a writable directory and a decoder), so nothing reached
+    the clean collection here and nothing was written to disk.
+
+    Saying so is the point. A UI that shows only the grade lets somebody
+    conclude the deliverable exists.
+    """
+    clips = report.get("clips") or []
+    video_ids = [c.get("video_id") for c in clips if c.get("video_id")]
+    storage: dict[str, Any] = {
+        "kind": "source_videos",
+        "collection_id": "",
+        "collection_name": "",
+        "video_ids": video_ids,
+        "clips_cut": 0,
+        "on_disk": False,
+        "note": (
+            "These are whole source videos with spans marked on them, indexed in the "
+            "Video Datalake. No clip files were cut: that is step three (refine), which "
+            "runs from eval/run.sh rather than over the API. Nothing was written to this "
+            "machine's disk."
+        ),
+    }
+    if not video_ids:
+        return storage
+
+    lake = getattr(agent, "client", None)
+    if lake is None:
+        return storage
+    try:
+        record = await lake.get_video(video_ids[0])
+        video = record.get("video") if isinstance(record.get("video"), dict) else record
+        storage["collection_id"] = str(video.get("collection_id") or "")
+        listing = await lake.list_collections()
+        for collection in listing.get("collections") or []:
+            if collection.get("id") == storage["collection_id"]:
+                storage["collection_name"] = str(collection.get("name") or "")
+                break
+    except Exception as exc:  # noqa: BLE001 - a missing name is not a failed run
+        logger.info("could not resolve where the curated videos live: %s", exc)
+    return storage
 
 
 @router.post("/collect/stream")

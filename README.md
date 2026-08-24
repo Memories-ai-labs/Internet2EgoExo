@@ -838,6 +838,59 @@ caption wording, not from a hand-tracking or pose model.
 - The UI is public (so it can load and ask for a key); `/api/v1/*` stays behind
   API-key auth and rate limiting.
 
+## The dataset on disk
+
+Everything above leaves the deliverable spread across two systems: the footage
+in the Datalake behind a signed URL that expires in a day, the tree in a local
+store, the provenance on a third record again. A dataset is a directory that
+survives being copied to another machine, so one more step writes one:
+
+```
+<out>/
+  manifest.json                  every clip in one array, plus the run's totals
+  manifest.jsonl                 the same rows, one per line, for an ingest job
+  clips/<video_id>.mp4           the footage
+  thumbnails/<video_id>.jpg      one still, so the directory is browsable
+  annotations/<video_id>.json    the tree, the provenance, the grade
+```
+
+The filename is the join key — `clips/vid_x.mp4` and `annotations/vid_x.json`
+are the same clip, under the id the Datalake and the store both know it by.
+
+```bash
+set -a && . ./.env && set +a
+eval/run.sh --limit 20 --per-query 1              # 1-3  search → collect → curate → refine
+python -m video_searching_agent.pipeline.annotate_clean --limit 12 --yes   # 4  trees
+python -m video_searching_agent.pipeline.dataset --out ~/egoexo-dataset     # 5  the directory
+```
+
+Step 5 spends nothing on models: it reads what the earlier steps already paid
+for, and skips media already on disk. **Do not hand-call the three streaming
+endpoints to reproduce steps 1-3** — refine is deliberately not an API route, so
+a hand-assembled sequence omits it and produces a run with no clips at all.
+
+**The deliverable is first-person, and that is enforced twice.** Step 4 looks at
+each cut clip's own frames and refuses to annotate one that is not confirmed
+egocentric — stricter than the screen before the download, because nothing
+downstream re-examines a clip, so "not established" and "wrong" have the same
+consequence. Step 5 then ships only the confirmed ones, removes files an earlier
+export wrote for a clip since withheld, and records what was held back split by
+what the frames said. The candidate screen cannot cover this: a source that is
+egocentric for four of its twelve minutes passes it and can still yield a clip
+that is entirely a presenter talking to camera.
+
+The same clips are browsable in `3 · Library`, which answers what a delivered
+clip has to answer — *which video, which seconds, what is in it*. Every row
+carries a still and the whole source video id with its span; opening one shows a
+selectable provenance block, the footage, and the tree in the clip's own time
+base. Stills come from `GET /api/v1/clips/{id}/thumbnail`, cut locally with
+ffmpeg and cached rather than bought from the Datalake's per-frame endpoint.
+
+**[docs/DATASET.md](docs/DATASET.md)** has the full field-by-field schema, how to
+recover when the store and the collection disagree, how the UI reads the same
+dataset, how to read the counts honestly, and the gaps in what the directory
+currently contains.
+
 ## Deploy it
 
 ### One click, no keys — the demo
@@ -1348,7 +1401,9 @@ video-searching-agent/
 │   ├── curation/       # Quality gates, scoring, cost, manifest
 │   ├── evaluation/     # Task vocabulary, yield/cost metrics, scorecard
 │   ├── models/         # Pydantic data models
+│   ├── pipeline/       # download → index → refine → annotate_clean → export
 │   ├── router/         # Query classification
+│   ├── store/          # The annotation store: clips and their trees (SQLite)
 │   ├── tools/          # Gemini function calling tools
 │   └── web/            # FastAPI app, SSE streaming, middleware
 │       └── static/     # Zero-build web UI (index.html / styles.css / app.js)

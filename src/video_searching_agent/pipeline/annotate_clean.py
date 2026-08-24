@@ -58,6 +58,8 @@ class ClipResult:
     grade: str = ""
     hands_named: int = 0
     objects_named: int = 0
+    viewpoint: str = ""
+    viewpoint_why: str = ""
     skipped: str = ""
     error: str = ""
 
@@ -70,6 +72,8 @@ class ClipResult:
             "grade": self.grade,
             "hands_named": self.hands_named,
             "objects_named": self.objects_named,
+            "viewpoint": self.viewpoint,
+            "viewpoint_why": self.viewpoint_why,
             "skipped": self.skipped,
             "error": self.error,
         }
@@ -94,6 +98,11 @@ class AnnotateReport:
     def with_hands(self) -> list[ClipResult]:
         return [r for r in self.annotated if r.hands_named > 0]
 
+    @property
+    def refused(self) -> list[ClipResult]:
+        """Clips the viewpoint gate turned away before anything was spent."""
+        return [r for r in self.results if r.skipped.startswith(REFUSED)]
+
     def as_dict(self) -> dict[str, Any]:
         return {
             "collection_id": self.collection_id,
@@ -102,9 +111,55 @@ class AnnotateReport:
             "pruned": self.pruned,
             "annotated": len(self.annotated),
             "with_hands": len(self.with_hands),
+            "refused_not_egocentric": len(self.refused),
             "results": [r.as_dict() for r in self.results],
             "errors": self.errors,
         }
+
+
+# The prefix every viewpoint refusal carries, so the report can count them
+# without re-deriving the rule from the wording of a message.
+REFUSED = "not first-person: "
+
+
+async def see_viewpoint(
+    video_id: str,
+    *,
+    duration_seconds: float | None,
+    task: str = "",
+    eyes: Any = None,
+    llm: Any = None,
+) -> Any:
+    """Look at the delivered clip's own frames and say what viewpoint they show.
+
+    `PRE-SIGHT` already asks this question, of the *candidate*, from YouTube's
+    storyboard stills, before anything is downloaded. This asks it again of the
+    thing being shipped, and the two are not the same object: the candidate is a
+    whole video and the deliverable is a span cut out of it, so a source that is
+    egocentric for four of its twelve minutes passes the first check and can
+    still yield a clip that is entirely a presenter talking to camera.
+
+    Returns a `SightVerdict`. A look that could not run comes back with
+    `looked` false and an error, which the gate treats as *not established* —
+    see the note on strictness in :func:`annotate_clean_collection`.
+    """
+    from video_searching_agent.agent.eyes import Eyes
+    from video_searching_agent.api.llm import get_llm_client
+    from video_searching_agent.curation.frame_viewpoint import SightVerdict, look_at_frames
+
+    eyes = eyes or Eyes()
+    if not eyes.available:
+        return SightVerdict(error="no ffmpeg, so the clip's frames cannot be read")
+
+    end = float(duration_seconds or 0.0)
+    if end <= 0:
+        return SightVerdict(error="the clip has no known duration to sample across")
+
+    frames = await eyes.look(video_id, 0.0, end)
+    if not frames.looked:
+        return SightVerdict(error=frames.error or "no frames came back")
+
+    return await look_at_frames(llm or get_llm_client(), frames.images, task=task or None)
 
 
 async def live_video_ids(lake: Any, collection_id: str) -> list[str] | None:
@@ -158,11 +213,34 @@ async def annotate_clean_collection(
     limit: int = 5,
     only_missing: bool = True,
     write_back: bool = False,
+    require_egocentric: bool = True,
     lake: Any = None,
     agent: Any = None,
     store: Any = None,
+    eyes: Any = None,
+    llm: Any = None,
 ) -> AnnotateReport:
     """Give the clips in the clean collection trees of their own.
+
+    **The viewpoint gate.** Before a clip is paid to be annotated, its own
+    frames are looked at, and a clip that is not confirmed first-person does not
+    get a tree. This is stricter than the screen before the download, on
+    purpose, and the asymmetry is the point:
+
+    `SightVerdict.contradicts` only rules a *candidate* out on a confident,
+    opposite reading — unknown never does — because a candidate that is kept by
+    mistake is corrected later by the caption pass, and one dropped by mistake
+    is gone. At delivery there is no later pass. Nothing downstream of here
+    re-examines a clip, so "not established" and "wrong" have the same
+    consequence and must be treated the same way: **confirmed egocentric, or it
+    does not ship.** A clip whose frames could not be read is refused too, and
+    the reason says which of the two it was.
+
+    Refusals cost one look (about $0.002) and stop before the annotation spend.
+    They are recorded on the clip as its viewpoint, so a second pass does not
+    pay to look again at footage already judged, and `--no-require-egocentric`
+    exists for the case where somebody is deliberately building an exocentric
+    set.
 
     Args:
         collection_id: Which collection to walk.
@@ -170,9 +248,13 @@ async def annotate_clean_collection(
         only_missing: Skip clips that already have a tree. Off re-annotates,
             which replaces the tree rather than adding a second copy.
         write_back: Also write the tree onto the Datalake video's metadata.
+        require_egocentric: Refuse to annotate a clip the frames do not confirm
+            is first-person. On by default; the deliverable is egocentric.
         lake: Datalake client. Created when omitted.
         agent: Curation agent. Created when omitted.
         store: Annotation store. Opened when omitted.
+        eyes: Frame extractor for the viewpoint gate. Created when omitted.
+        llm: Model client for the viewpoint gate. Resolved when omitted.
 
     Returns:
         An AnnotateReport. `looked` false means the collection could not be
@@ -222,6 +304,30 @@ async def annotate_clean_collection(
 
     for video_id in todo[:limit]:
         result = ClipResult(video_id=video_id)
+        clip_row = store.get(video_id)
+
+        if require_egocentric:
+            verdict = await see_viewpoint(
+                video_id,
+                duration_seconds=getattr(clip_row, "duration_seconds", None),
+                task=getattr(clip_row, "query", "") or getattr(clip_row, "title", ""),
+                eyes=eyes,
+                llm=llm,
+            )
+            seen = str(getattr(verdict.viewpoint, "value", verdict.viewpoint) or "")
+            result.viewpoint = seen if verdict.looked else ""
+            result.viewpoint_why = verdict.why or verdict.error or ""
+            if result.viewpoint:
+                store.set_viewpoint(video_id, result.viewpoint)
+            if seen != "egocentric" or not verdict.looked:
+                result.skipped = REFUSED + (
+                    f"the frames show {seen} footage — {verdict.why}"
+                    if verdict.looked
+                    else f"the viewpoint could not be established — {verdict.error}"
+                )
+                report.results.append(result)
+                continue
+
         try:
             curation = await agent.curate(
                 video_ids=[video_id],
@@ -280,9 +386,13 @@ def _print(report: AnnotateReport) -> None:
         else:
             print(f"  {r.video_id}  — {r.error or r.skipped or 'nothing written'}")
     print(
-        f"annotated {len(report.annotated)} clip(s), "
-        f"{len(report.with_hands)} of them naming a hand"
+        f"annotated {len(report.annotated)} clip(s), {len(report.with_hands)} of them naming a hand"
     )
+    if report.refused:
+        print(
+            f"refused {len(report.refused)} clip(s) that are not first-person, "
+            "before paying to annotate them"
+        )
     for err in report.errors[:10]:
         print(f"  ! {err}")
 
@@ -297,6 +407,12 @@ def main() -> int:
         help="re-annotate clips that already have a tree (replaces it)",
     )
     parser.add_argument("--write-back", action="store_true", help="also write onto the Datalake")
+    parser.add_argument(
+        "--no-require-egocentric",
+        action="store_true",
+        help="annotate clips the frames do not confirm are first-person "
+        "(off by default: the deliverable is egocentric)",
+    )
     parser.add_argument("--yes", action="store_true", help="required: this pass spends money")
     args = parser.parse_args()
 
@@ -312,6 +428,7 @@ def main() -> int:
             limit=args.limit,
             only_missing=not args.all,
             write_back=args.write_back,
+            require_egocentric=not args.no_require_egocentric,
         )
     )
     _print(report)

@@ -14,8 +14,12 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+# Anchored. A bare `lib/` matches at every depth, and it swallowed
+# `ui/src/lib/` — four modules every UI component imports — so the source tree
+# in this repository could not be built at all while the committed bundle kept
+# working. These rules are about a Python distribution at the root; say so.
+/lib/
+/lib64/
 parts/
 sdist/
 var/

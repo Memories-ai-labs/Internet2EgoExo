@@ -52,6 +52,7 @@ def _clean_text(value: Any) -> str | None:
     text = str(value).strip() if value is not None else ""
     return text or None
 
+
 SCHEMA_VERSION = 1
 
 _SCHEMA = """
@@ -447,6 +448,25 @@ class AnnotationStore:
             existing.query = query
         self.put(existing)
         return len(nodes)
+
+    def set_viewpoint(self, video_id: str, viewpoint: str) -> bool:
+        """Record what the clip's own frames showed, and touch nothing else.
+
+        The viewpoint gate has to write a verdict for clips it *refuses*, and a
+        refused clip has no tree — so :meth:`put_tree` is the wrong writer twice
+        over: it takes nodes, and passing it an empty list sets `segments = []`,
+        which would erase the tree of a clip being re-checked. This is the
+        narrow merge that only the gate needs.
+
+        Returns False when the clip is unknown here. No row is invented: a
+        viewpoint with no clip has nothing to join to.
+        """
+        existing = self.get(video_id)
+        if existing is None:
+            return False
+        existing.viewpoint = viewpoint
+        self.put(existing)
+        return True
 
     def prune_missing(self, live_video_ids: Iterable[str]) -> list[str]:
         """Drop clips the Datalake no longer has.
