@@ -1,13 +1,68 @@
-# Internet Video Search
+# Internet2EgoExo
 
-An agent that finds, filters and documents video footage for model training —
-**egocentric** (first-person, head or body mounted) and **exocentric**
-(third-person, fixed camera, multi-view) — and reports what an hour of it costs.
+**Turn internet-scale video into egocentric and exocentric training data.**
 
-Popularity is not a signal here. A 200-view head-mounted recording of someone
-assembling a bicycle is worth more than a 10M-view edit of the same task, so
-candidates are ranked by viewpoint match, clip length and licence — never by
-views, likes or engagement.
+Search the open web for first-person and third-person footage, confirm the
+viewpoint against real frames before paying for anything, then let agents on the
+[Memories.ai](https://memories.ai) video datalake curate and annotate whatever
+survives.
+
+[![License: MIT](https://img.shields.io/badge/licence-MIT-0E0E10.svg)](LICENSE)
+![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-0E0E10.svg)
+![Status: early](https://img.shields.io/badge/status-early-6B6B70.svg)
+
+## Demo
+
+One real run: a plain-language ask, a live search, the frame check that rejects
+the wrong viewpoint before anything is paid for, the cost ledger, and a finished
+clip with its task and action tree.
+
+<video src="https://github.com/Memories-ai-labs/Internet2EgoExo/raw/main/docs/demo.mp4" controls muted playsinline width="100%"></video>
+
+If the player does not load, [download the demo](docs/demo.mp4).
+
+## What it does
+
+You state a goal the way you would say it out loud, not as a set of filters:
+
+> find me first-person cooking footage, hands must be visible, two hours of it
+
+and the loop runs:
+
+| Stage | What happens |
+|-------|--------------|
+| **Search** | YouTube, TikTok, Instagram, X and the open web, in one pass |
+| **Frame check** | Frames are sampled and the viewpoint is decided on pixels, before a cent is spent on indexing |
+| **Index** | Whatever passes goes into the Memories.ai video datalake |
+| **Clean** | A cleaning agent cuts the usable spans out of long recordings |
+| **Annotate** | An annotation agent writes the task, action and event tree |
+| **Curate** | A curation agent grades the set against executable quality gates |
+
+What comes out is a directory of clips with annotations, a manifest, and a bill
+for what an hour of it cost.
+
+## What it is strict about
+
+**No hands, no clip.** First-person footage without hands in it is just ordinary
+footage. This is the one rule with no override.
+
+**Never mix hour counts.** `worn`, `delivered`, `accepted` and
+`accepted_labeled` are four different numbers. Only `accepted_labeled` is safe
+to quote outward.
+
+**Unmeasured is not passed.** A quality check that could not be measured is
+dropped from the score rather than assumed to have passed.
+
+## Where to look
+
+| Section | For |
+|---------|-----|
+| [The pipeline, end to end](#the-pipeline-end-to-end) | one request, followed all the way through |
+| [The agents](#the-agents) | what each agent is judged on |
+| [How a candidate is judged](#how-a-candidate-is-judged) | the standard, as executable checks |
+| [The dataset on disk](#the-dataset-on-disk) | what you actually get handed |
+| [Cost per hour](#cost-per-hour) | how the bill is worked out |
+| [Web UI](#web-ui) | run the whole loop in a browser |
 
 ## Features
 
@@ -53,14 +108,14 @@ The Video Searching Agent follows an **agentic loop pattern** where Google Gemin
 When you send a query, it first goes through the `QueryParser` which uses Gemini to extract structured **slots**:
 
 ```python
-# Input: "Find the top 5 most liked TikTok videos about coffee from last week"
+# Input: "first-person cooking footage from YouTube, at least 5 minutes, 2 hours of it"
 # Extracted slots:
 ParsedQuery(
-    platforms=["tiktok"],
-    topics=["coffee"],
-    metric=MetricType.MOST_LIKED,
-    time_frame=TimeFrame.PAST_WEEK,
-    quantity=5
+    platforms=["youtube"],
+    topics=["cooking"],
+    viewpoint=Viewpoint.EGOCENTRIC,
+    min_duration_s=300,
+    target_hours=2.0,
 )
 ```
 
@@ -111,8 +166,8 @@ The final `AgentResponse` includes:
 
 ```bash
 # Clone the repository
-git clone https://github.com/Memories-ai-labs/Internet-Video-Search.git
-cd Internet-Video-Search
+git clone https://github.com/Memories-ai-labs/Internet2EgoExo.git
+cd Internet2EgoExo
 
 # Install dependencies
 pip install -e .
@@ -178,16 +233,14 @@ import asyncio
 from video_searching_agent import VideoSearchingAgent
 
 async def main():
-    # Initialize the agent
     agent = VideoSearchingAgent()
 
-    # Simple query
     response = await agent.query(
-        "What are the trending UGC videos for SaaS products?"
+        "find me first-person cooking footage, hands must be visible"
     )
     print(response.answer)
 
-    # Show video references
+    # Every candidate carries its viewpoint verdict and the cues behind it.
     for ref in response.video_references:
         print(f"- {ref.title}: {ref.url}")
 
@@ -1101,36 +1154,7 @@ Clean, annotate and grade a worklist that is already indexed. Events: `started`,
 
 One of `video_ids` or `tag` is required.
 
-## Usage Examples
-
-### Find Trending Videos
-
-```python
-response = await agent.find_trending(
-    topic="fitness",
-    platform="youtube"
-)
-```
-
-### Analyze a Creator
-
-```python
-response = await agent.analyze_creator(
-    username="mkbhd",
-    platform="youtube"
-)
-```
-
-### Compare Brands
-
-```python
-response = await agent.compare(
-    entities=["Nike", "Adidas"],
-    platform="youtube"
-)
-```
-
-### Analyze a Specific Video
+## Reading one video's content
 
 Ask about a video's own content and the agent indexes it into the Video Datalake,
 then reads back the captions, transcription and summary:
@@ -1144,16 +1168,6 @@ response = await agent.query(
 Indexing takes time. If it is still running when the call's wait budget expires,
 the tool reports `status: "processing"` with a `video_id`, and the next call reads
 the results instead of re-indexing.
-
-### Complex Query
-
-```python
-response = await agent.query("""
-    Analyze the most viral food content on YouTube in 2025.
-    What common patterns in hooks, opening techniques, and
-    storytelling methods make food videos go viral?
-""")
-```
 
 ## Response Structure
 
@@ -1192,20 +1206,6 @@ UsageMetrics:
     gemini_calls: int             # Number of Gemini API calls
     tool_calls: int               # Total tool invocations
 ```
-
-## Supported Query Types
-
-| Type | Example |
-|------|---------|
-| Industry/Topic | "Trending UGC for SaaS" |
-| Brand Analysis | "Analyze Sephora's video content" |
-| Product Search | "Viral videos featuring mugs" |
-| Creator Profile | "What type of blogger is @mkbhd?" |
-| Creator Discovery | "Top 10 pet bloggers on YouTube" |
-| Comparison | "Coca-Cola vs Pepsi on YouTube" |
-| Channel Analysis | "What are @mkbhd's main views on tech trends?" |
-| Video Analysis | "Analyze this video: [URL]" |
-| Creative Inspiration | "Generate video title ideas for..." |
 
 ## Architecture
 
