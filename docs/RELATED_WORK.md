@@ -147,6 +147,18 @@ both, per clip, with evidence.
 The current wave treats human video as a substitute for teleoperated robot data.
 The scaling numbers have moved fast; the licences have not kept up.
 
+**Three strategies for crossing the embodiment gap**, worth naming up front
+because the doc keeps returning to them:
+
+| Strategy | Representative | How the gap is closed | What it needs from the footage |
+|---|---|---|---|
+| **Retarget** | [Ego2Robot](#ego2robot) | Hand pose → end-effector, human arm inpainted out and a robot rendered in | Hand-visible ego video, at scale |
+| **Reconstruct** | [EgoEngine](#egoengine), [EgoInfinity](#egoinfinity--lift-to-4d-then-reproject) | Rebuild the scene in 3D/sim, re-render any embodiment | Object meshes, calibration, or a static camera |
+| **Match at capture** | [EgoMimic](#egomimic) | Never open a gap — same sensor, kinematically similar robot, co-trained | Aria glasses on the demonstrator |
+
+Only the first is even in principle compatible with footage found rather than
+shot — and even Ego2Robot's published corpus is built from curated sets.
+
 ### EgoDex
 
 **[arXiv 2505.11709](https://arxiv.org/html/2505.11709v1)** — 829 hours, **90 M
@@ -302,6 +314,31 @@ egoengine.github.io.
 > footage whose capture conditions you controlled. For footage you found, the
 > viable operations remain **filter, clip and annotate** — which is exactly the
 > chain this repo implements.
+
+### EgoMimic
+
+**[arXiv 2410.24221](https://arxiv.org/abs/2410.24221)** — the third strategy,
+and the one that solves the embodiment gap by refusing to have one. Rather than
+retargeting ([Ego2Robot](#ego2robot)) or reconstructing
+([EgoEngine](#egoengine)), it makes the two observation spaces match at capture
+time: the human wears **Project Aria glasses** with 3D hand tracking, and the
+robot is a low-cost bimanual manipulator *chosen to minimise kinematic difference
+from human morphology*. Human and robot demonstrations are then treated as
+equally valid embodied data and **co-trained in one imitation-learning
+architecture**, instead of mining human video only for high-level intent.
+
+> **The claim worth remembering**: *adding one hour of additional hand data is
+> significantly more valuable than one hour of additional robot data.* Read
+> beside [HumanNet](#humannet)'s more careful "matched or modestly surpassed",
+> the two bracket the same economic case from different setups — which is why
+> human-video collection is worth doing at all.
+
+Its footage is self-captured through Aria, not sourced from the web, and its
+premise — matched sensors, matched kinematics — is precisely what internet
+footage cannot offer. So it belongs in the same column as the reconstruction
+pipelines when asking what the open web can feed: **nothing here consumes found
+footage**; the strategies differ only in how they arrange the capture they
+control.
 
 ### Open-AoE
 
@@ -1339,6 +1376,7 @@ are the parts that are worth owning.**
 - Deng, Zhou et al. *HumanNet: Scaling Human-centric Video Learning to One Million Hours.* https://arxiv.org/abs/2605.06747
 - *Ego2Robot: Scalable Robot Data Synthesis from Egocentric Human Data.* https://arxiv.org/html/2608.02580
 - *EgoEngine: From Egocentric Human Videos to High-Fidelity Dexterous Robot Demonstrations.* https://arxiv.org/html/2606.12604v1 · https://egoengine.github.io
+- *EgoMimic: Scaling Imitation Learning via Egocentric Video.* https://arxiv.org/abs/2410.24221
 - *Open-AoE: An Open Egocentric Manipulation Dataset and Toolchain for Embodied Learning.* (CC BY 4.0) https://arxiv.org/abs/2607.14183
 - *EgoVerse: An Egocentric Human Dataset for Robot Learning from Around the World.* https://arxiv.org/abs/2604.07607
 - *EgoKit: Towards Unified Low-Cost Egocentric Data Collection with Heterogeneous Devices.* (toolkit; no dataset) https://arxiv.org/pdf/2605.16797
