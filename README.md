@@ -17,9 +17,11 @@ One real run: a plain-language ask, a live search, the frame check that rejects
 the wrong viewpoint before anything is paid for, the cost ledger, and a finished
 clip with its task and action tree.
 
-<video src="https://github.com/Memories-ai-labs/Internet2EgoExo/raw/main/docs/demo.mp4" controls muted playsinline width="100%"></video>
+[![Internet2EgoExo, one real run](docs/demo.gif)](docs/demo.mp4)
 
-If the player does not load, [download the demo](docs/demo.mp4).
+**[Watch the full 92-second run](docs/demo.mp4)** (1280x720). The search in it
+really took 71 seconds, and that stretch is labelled as sped up on screen rather
+than passed off as real time.
 
 ## What it does
 
