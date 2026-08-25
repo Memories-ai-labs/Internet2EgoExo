@@ -34,6 +34,7 @@ and the loop runs:
 | Stage | What happens |
 |-------|--------------|
 | **Search** | YouTube, TikTok, Instagram, X and the open web, in one pass |
+| **Fetch** | The bytes come from a paid provider, routed per platform. No extractor |
 | **Frame check** | Frames are sampled and the viewpoint is decided on pixels, before a cent is spent on indexing |
 | **Index** | Whatever passes goes into the Memories.ai video datalake |
 | **Clean** | A cleaning agent cuts the usable spans out of long recordings |
@@ -181,8 +182,28 @@ VIEWPOINT_CHECK=frames                 # off | frames | watch — see PRE-SIGHT
      residential address into Apify's key-value store, from where this process
      streams it to disk on the way to the Datalake.
 
-   Other platforms still go through yt-dlp, and so does YouTube when you run
-   locally from an address YouTube will serve.
+   The other platforms are fetched the same way, through the scrapers the
+   search already calls, with their download flag on.
+
+   **There is no extractor path at all any more.** `yt-dlp` was the download
+   route for everything except YouTube, and it does not work: TikTok fails with
+   *"Unexpected response from webpage request"* on every attempt, so a run
+   surfaced good TikTok candidates, charged for the search, and then reported
+   `failed` for reasons that said nothing about the footage. Fetching is now
+   routed per platform across providers:
+
+   | `DOWNLOAD_PROVIDERS` | Credentials | State |
+   |---|---|---|
+   | `apify` (default) | `APIFY_API_TOKEN` | Verified against the live API for YouTube, TikTok, Instagram and X |
+   | `rapidapi` | `RAPIDAPI_KEY`, `RAPIDAPI_HOST` | Written to the documented API, **never executed** |
+   | `brightdata` | `BRIGHTDATA_TOKEN`, `BRIGHTDATA_ZONE` | Written to the documented API, **never executed** |
+   | `oxylabs` | `OXYLABS_USERNAME`, `OXYLABS_PASSWORD` | Written to the documented API, **never executed** |
+
+   Set it to an ordered list — `DOWNLOAD_PROVIDERS=apify,brightdata` — and each
+   is tried until one hands back a media URL. A provider with no credentials
+   reports itself unavailable and is never asked, so an unverified one cannot
+   quietly become the provider a run depends on. When all of them refuse, the
+   error names every attempt rather than one extractor.
 
 ## Quick Start
 
@@ -225,7 +246,7 @@ own output.
  3  LOOK          cleaning agent      a few real frames, not the words about them
                                      wrong viewpoint stops here, for ~$0.002
                                                   ▼
- 4  DOWNLOAD      Apify · yt-dlp      platform pages are not fetchable media
+ 4  DOWNLOAD      provider routing    platform pages are not fetchable media
                                                   ▼
  5  INDEX         Video Datalake      upload → captions · transcription · embeddings
                                                   ▼

@@ -198,6 +198,26 @@ class Settings(BaseSettings):
         validation_alias="DOWNLOAD_USER_AGENT",
     )
 
+    # Which providers may fetch a candidate's bytes, in the order they are
+    # tried. `yt-dlp` is deliberately absent: it is blocked on YouTube from a
+    # datacentre address and fails outright on TikTok, so a run that relied on
+    # it reported failures that had nothing to do with the footage.
+    download_providers: str = Field(
+        default="apify",
+        description="Ordered, comma-separated: apify, rapidapi, brightdata, oxylabs",
+        validation_alias="DOWNLOAD_PROVIDERS",
+    )
+    rapidapi_key: str = Field(default="", validation_alias="RAPIDAPI_KEY")
+    rapidapi_host: str = Field(
+        default="",
+        description="The RapidAPI host serving the downloader, e.g. <name>.p.rapidapi.com",
+        validation_alias="RAPIDAPI_HOST",
+    )
+    brightdata_token: str = Field(default="", validation_alias="BRIGHTDATA_TOKEN")
+    brightdata_zone: str = Field(default="", validation_alias="BRIGHTDATA_ZONE")
+    oxylabs_username: str = Field(default="", validation_alias="OXYLABS_USERNAME")
+    oxylabs_password: str = Field(default="", validation_alias="OXYLABS_PASSWORD")
+
     # Where a run's clips get written when somebody asks for them on disk.
     # A fixed default matters more than a clever one: the answer to "where are
     # my videos" has to be a path that is the same next time.

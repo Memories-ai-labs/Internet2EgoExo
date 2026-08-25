@@ -3,7 +3,7 @@
 One clip's journey, and which agent owns each leg:
 
     screen      cleaning agent    metadata only — licence, length, viewpoint
-    download    yt-dlp            platform pages are not fetchable media
+    download    provider routing  platform pages are not fetchable media
     upload      Datalake          multipart, or resumable over 100 MB
     index       Datalake          captions, transcription, embeddings
     clean       cleaning agent    hands, other people, editing, resolution
