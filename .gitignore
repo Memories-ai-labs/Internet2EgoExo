@@ -115,3 +115,6 @@ data/
 # stray annotation store here. Untracked and unignored, one `git add -A` would
 # have committed a database of clip titles.
 annotations.sqlite3
+
+# Exported datasets. Clips and manifests are output, not source.
+dataset/

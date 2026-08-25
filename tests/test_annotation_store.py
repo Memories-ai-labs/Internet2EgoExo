@@ -553,3 +553,65 @@ class TestAttachingATreeToAClipThatAlreadyExists:
         clip = store.get("vid_clean")
         assert len({s.segment_id for s in clip.segments}) == 3
         assert len(clip.action_segments) == 2
+
+
+class TestScopingToOneRun:
+    """The store outlives a run. A screen that claims to show what a run just
+    produced has to be able to ask for exactly that, or it shows a corpus and
+    calls it a result — which is what part three of the UI used to do.
+    """
+
+    def _three(self, store):
+        for n in (1, 2, 3):
+            store.put(_clip(f"vid_{n}", title=f"clip {n}", segments=_tree()))
+        return ["vid_1", "vid_2", "vid_3"]
+
+    def test_search_narrows_to_the_ids_given(self, store):
+        self._three(store)
+        clips, total = store.search(video_ids=["vid_1", "vid_3"])
+        assert total == 2
+        assert {clip.video_id for clip in clips} == {"vid_1", "vid_3"}
+
+    def test_no_ids_is_not_a_filter(self, store):
+        """An empty scope means "everything", not "nothing".
+
+        Getting this backwards would empty the library for every existing
+        caller, none of which pass the parameter.
+        """
+        self._three(store)
+        assert store.search(video_ids=[])[1] == 3
+        assert store.search()[1] == 3
+
+    def test_an_unknown_id_matches_nothing_rather_than_everything(self, store):
+        self._three(store)
+        assert store.search(video_ids=["vid_nope"])[1] == 0
+
+    def test_duplicate_ids_do_not_double_count(self, store):
+        self._three(store)
+        assert store.search(video_ids=["vid_1", "vid_1"])[1] == 1
+
+    def test_scoping_composes_with_the_other_filters(self, store):
+        store.put(_clip("vid_1", viewpoint="egocentric", segments=_tree()))
+        store.put(_clip("vid_2", viewpoint="exocentric", segments=_tree()))
+        clips, total = store.search(video_ids=["vid_1", "vid_2"], viewpoint="egocentric")
+        assert total == 1
+        assert clips[0].video_id == "vid_1"
+
+    def test_totals_count_the_run_and_not_the_store(self, store):
+        self._three(store)
+        assert store.totals()["clips"] == 3
+        assert store.totals(video_ids=["vid_2"])["clips"] == 1
+
+    def test_the_facet_vocabularies_narrow_too(self, store):
+        """A filter list built from the whole store offers labels this run has
+        nothing for, which reads as a run that lost its clips."""
+        store.put(_clip("vid_1", segments=_tree()))
+        store.put(
+            _clip(
+                "vid_2",
+                segments=[Segment("t2.a1", "action", 0.0, 5.0, label="something-else")],
+            )
+        )
+        scoped = {row["label"] for row in store.labels(video_ids=["vid_2"])}
+        assert scoped == {"something-else"}
+        assert "something-else" in {row["label"] for row in store.labels()}

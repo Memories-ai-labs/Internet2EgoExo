@@ -198,6 +198,15 @@ class Settings(BaseSettings):
         validation_alias="DOWNLOAD_USER_AGENT",
     )
 
+    # Where a run's clips get written when somebody asks for them on disk.
+    # A fixed default matters more than a clever one: the answer to "where are
+    # my videos" has to be a path that is the same next time.
+    dataset_dir: str = Field(
+        default="./dataset",
+        description="Directory that `export` writes clips, annotations and the manifest into",
+        validation_alias="DATASET_DIR",
+    )
+
     # Agent configuration
     max_agent_steps: int = Field(
         default=10,

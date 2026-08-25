@@ -57,6 +57,10 @@ export function App() {
   // The viewpoint the search checked the queued candidates against. Part two
   // only trusts the search's frame check when it is asking the same question.
   const [queuedViewpoint, setQueuedViewpoint] = useState("");
+  // The clips this session cut. Part three reads a store that outlives the
+  // session, so it is told what belongs to this run rather than showing the
+  // whole corpus and calling it a result.
+  const [runClips, setRunClips] = useState<string[]>([]);
   const [apiKey, setApiKey] = useState(() => readStored(API_KEY_STORAGE));
   const [theme, setTheme] = useState(() => readStored(THEME_STORAGE, "dark"));
   const [ownKeys, setOwnKeys] = useState<OwnKeys>(() => {
@@ -274,9 +278,13 @@ export function App() {
             queuedUrls={queued}
             queuedViewpoint={queuedViewpoint}
             maxUrlsPerRequest={health?.max_collect_urls ?? 25}
+            onCollected={(clipIds) => {
+              setRunClips(clipIds);
+              setView("library");
+            }}
           />
         ) : (
-          <LibraryView apiBase="" />
+          <LibraryView apiBase="" videoIds={runClips} />
         )}
       </main>
     </div>

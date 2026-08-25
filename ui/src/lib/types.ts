@@ -278,3 +278,49 @@ export interface ActivityEntry {
   message: string;
   failed?: boolean;
 }
+
+/** What cutting a run's action anchors into clips of their own produced. */
+export interface RefineResult {
+  collection_id: string | null;
+  collection_name: string;
+  attempted: number;
+  uploaded: number;
+  rejected_by_the_pixel_pass: number;
+  uploaded_seconds: number;
+  cut_cost_usd: number;
+  /** Set when the host could not do this step, e.g. no writable directory. */
+  skipped_reason: string | null;
+  recorded?: number;
+  /** The clips that now exist. What step three should be scoped to. */
+  clip_ids: string[];
+}
+
+/** What annotating the cut clips produced. */
+export interface AnnotateReport {
+  collection_id: string;
+  looked: boolean;
+  live_clips: number;
+  annotated: number;
+  with_hands: number;
+  refused_wrong_viewpoint: number;
+  errors?: string[];
+  clip_ids: string[];
+}
+
+/** Where a run's clips ended up on this machine. */
+export interface ExportReport {
+  out_dir: string;
+  clips: number;
+  media_written: number;
+  media_skipped: number;
+  media_failed: number;
+  clips_with_tree: number;
+  clips_without_tree: number;
+  total_seconds: number;
+  thumbnails: number;
+  wanted_viewpoint: string;
+  withheld_wrong_viewpoint: number;
+  withheld_by_viewpoint: Record<string, number>;
+  removed_stale_files: number;
+  errors: string[];
+}

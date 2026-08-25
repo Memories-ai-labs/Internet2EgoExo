@@ -924,9 +924,16 @@ python -m video_searching_agent.pipeline.dataset --out ~/egoexo-dataset     # 5 
 ```
 
 Step 5 spends nothing on models: it reads what the earlier steps already paid
-for, and skips media already on disk. **Do not hand-call the three streaming
-endpoints to reproduce steps 1-3** — refine is deliberately not an API route, so
-a hand-assembled sequence omits it and produces a run with no clips at all.
+for, and skips media already on disk.
+
+**All five steps are also reachable over the API**, which is what the web UI
+uses: `refine` and `annotate-clean` used to be command-line only, and a run
+driven from the browser therefore ended with spans marked on source videos and
+no clips cut — the library stayed empty after a run that had plainly worked.
+`POST /api/v1/refine/stream` and `POST /api/v1/annotate-clean/stream` close
+that gap, and `POST /api/v1/export/stream` writes the directory. Cutting still
+needs a writable directory to hold a clip before it is uploaded; a host without
+one gets `skipped_reason` rather than a silent empty result.
 
 **The deliverable is first-person, and that is enforced twice.** Step 4 looks at
 each cut clip's own frames and refuses to annotate one that is not confirmed

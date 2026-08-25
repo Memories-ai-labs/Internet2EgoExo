@@ -1110,3 +1110,49 @@ code,
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
+
+/* "Where the footage is". The answer to the question people actually ask after
+   a run finishes, so it gets its own block above the filters rather than a line
+   of small print underneath them. */
+.library__where {
+  margin: var(--space-4) 0 0;
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.library__whereTitle {
+  margin: 0 0 var(--space-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.library__whereList {
+  display: grid;
+  grid-template-columns: 9rem 1fr;
+  gap: 6px var(--space-3);
+  margin: 0;
+  align-items: baseline;
+}
+.library__whereList dt {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+.library__whereList dd {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+/* The path is the deliverable: it has to be selectable and not truncated. */
+.library__whereList dd code {
+  font-size: 0.8125rem;
+  word-break: break-all;
+  user-select: all;
+}
+.library__whereNote {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}

@@ -8,7 +8,10 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { Panel, Stat } from "./primitives";
+
+import { streamRequest } from "../lib/sse";
+import type { ExportReport } from "../lib/types";
+import { Empty, Panel, Stat } from "./primitives";
 
 type Segment = {
   segment_id: string;
@@ -118,7 +121,18 @@ type Facets = {
 
 const PAGE = 24;
 
-export function LibraryView({ apiBase }: { apiBase: string }) {
+export function LibraryView({
+  apiBase,
+  videoIds = [],
+}: {
+  apiBase: string;
+  /**
+   * The clips this run cut. The store is durable and holds every run ever made,
+   * so an empty list means this session has not produced anything yet — which is
+   * shown as nothing, not as somebody else's corpus.
+   */
+  videoIds?: string[];
+}) {
   const [query, setQuery] = useState("");
   // The deliverable is first-person, so that is what the library opens on.
   // Everything the gate refused is still here and still reachable — a rejected
@@ -133,6 +147,12 @@ export function LibraryView({ apiBase }: { apiBase: string }) {
   const [selected, setSelected] = useState<ClipDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [exporting, setExporting] = useState(false);
+  const [exported, setExported] = useState<ExportReport | null>(null);
+
+  // A string, not the array: an array literal is a new identity every render,
+  // and a dependency that always changes is a fetch loop.
+  const scope = videoIds.join(",");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -142,9 +162,11 @@ export function LibraryView({ apiBase }: { apiBase: string }) {
       if (query.trim()) params.set("q", query.trim());
       if (viewpoint) params.set("viewpoint", viewpoint);
       if (handsOnly) params.set("hands_only", "true");
+      params.set("video_ids", scope);
+      const facetParams = new URLSearchParams({ video_ids: scope });
       const [listing, facetPayload] = await Promise.all([
         fetch(`${apiBase}/api/v1/clips?${params}`).then((r) => r.json()),
-        fetch(`${apiBase}/api/v1/clips/facets`).then((r) => r.json()),
+        fetch(`${apiBase}/api/v1/clips/facets?${facetParams}`).then((r) => r.json()),
       ]);
       setClips(listing.clips ?? []);
       setTotal(listing.total ?? 0);
@@ -155,7 +177,7 @@ export function LibraryView({ apiBase }: { apiBase: string }) {
     } finally {
       setLoading(false);
     }
-  }, [apiBase, query, viewpoint, handsOnly]);
+  }, [apiBase, query, viewpoint, handsOnly, scope]);
 
   useEffect(() => {
     void load();
@@ -171,7 +193,48 @@ export function LibraryView({ apiBase }: { apiBase: string }) {
     }
   };
 
+  /** Write this run's clips, trees and manifest onto this machine. */
+  const exportToDisk = async () => {
+    if (exporting) return;
+    setExporting(true);
+    setError("");
+    await streamRequest(
+      "/api/v1/export/stream",
+      { video_ids: videoIds, viewpoint, media: true },
+      {
+        onEvent: (event, data) => {
+          if (event === "complete") setExported(data as unknown as ExportReport);
+          else if (event === "error") setError(String(data.message ?? "Export failed"));
+        },
+        onError: setError,
+        onDone: () => setExporting(false),
+      },
+    );
+  };
+
   const totals = facets?.totals;
+  const nothingYet = videoIds.length === 0;
+  // Every clip of one run lands in the same clean collection, so the first row
+  // names it. Listed rather than assumed: if a run ever spanned two, saying
+  // "the collection" would be a claim the data does not support.
+  const collections = [...new Set(clips.map((clip) => clip.collection_id).filter(Boolean))];
+
+  // Nothing this run produced means nothing to show. The store still holds
+  // every earlier run, and saying so is better than an empty screen that reads
+  // like a broken one.
+  if (nothingYet) {
+    return (
+      <div className="library">
+        <Panel title="Clean clips">
+          <Empty>
+            Nothing from this run yet. Find footage in step one, then collect it in
+            step two — the clips it cuts show up here, with their footage and their
+            annotation trees, and this is where you export them to disk.
+          </Empty>
+        </Panel>
+      </div>
+    );
+  }
 
   return (
     <div className="library">
@@ -179,7 +242,7 @@ export function LibraryView({ apiBase }: { apiBase: string }) {
         title="Clean clips"
         action={
           <span className="panel__meta">
-            {loading ? "reading…" : `${total} match${total === 1 ? "" : "es"}`}
+            {loading ? "reading…" : `${total} match${total === 1 ? "" : "es"} · this run`}
           </span>
         }
       >
@@ -214,6 +277,56 @@ export function LibraryView({ apiBase }: { apiBase: string }) {
             />
           </div>
         ) : null}
+
+        <div className="library__where">
+          <h3 className="library__whereTitle">Where the footage is</h3>
+          <dl className="library__whereList">
+            <dt>Datalake</dt>
+            <dd>
+              {collections.length ? (
+                collections.map((id) => <code key={id}>{id}</code>)
+              ) : (
+                <span className="library__whereNote">—</span>
+              )}
+            </dd>
+            <dt>On this machine</dt>
+            <dd>
+              {exported ? (
+                <>
+                  <code>{exported.out_dir}</code>
+                  <span className="library__whereNote">
+                    {exported.clips} clip{exported.clips === 1 ? "" : "s"} ·{" "}
+                    {exported.media_written} file{exported.media_written === 1 ? "" : "s"} ·{" "}
+                    {exported.clips_with_tree} with a tree · manifest.json
+                    {exported.withheld_wrong_viewpoint
+                      ? ` · ${exported.withheld_wrong_viewpoint} held back on viewpoint`
+                      : ""}
+                    {exported.media_failed ? ` · ${exported.media_failed} failed` : ""}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="library__whereNote">not exported yet</span>
+                  <button
+                    type="button"
+                    className="button button--small"
+                    onClick={() => void exportToDisk()}
+                    disabled={exporting}
+                  >
+                    {exporting ? "Exporting…" : "Export to disk"}
+                  </button>
+                </>
+              )}
+            </dd>
+          </dl>
+          {exported?.errors?.length ? (
+            <div className="notice notice--error">
+              {exported.errors.map((message) => (
+                <div key={message}>{message}</div>
+              ))}
+            </div>
+          ) : null}
+        </div>
 
         <div className="library__controls">
           <input
