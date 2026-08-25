@@ -280,3 +280,91 @@ class SearchLoopRequest(BaseModel):
     verify_budget_usd: float = Field(
         6.0, gt=0, le=50.0, description="What verifying may spend, apart from the screening"
     )
+
+
+class ExportRequest(BaseModel):
+    """Request body for writing a run's clips out to this machine's disk.
+
+    The default is the clips of one run, not the whole store: a person who has
+    just watched five clips come out expects five files, and handing them the
+    accumulated corpus is a different answer to a question they did not ask.
+    """
+
+    video_ids: list[str] = Field(
+        default_factory=list,
+        max_length=MAX_VIDEOS_PER_CURATION,
+        description="Clips to write. Empty exports everything the store holds.",
+    )
+    collection_id: str = Field("", max_length=200, description="Restrict to one collection")
+    viewpoint: str = Field(
+        "egocentric",
+        description="Ship only clips the frames confirmed as this; 'any' ships everything",
+    )
+    media: bool = Field(
+        True,
+        description=(
+            "Download the footage. False writes the JSON and the manifest only, "
+            "which needs no network beyond the store"
+        ),
+    )
+    refresh_media: bool = Field(
+        False, description="Re-download clips whose file is already on disk"
+    )
+
+
+class RefineAnchor(BaseModel):
+    """One span to cut out of an indexed source video."""
+
+    video_id: str = Field(..., min_length=1, max_length=200)
+    start: float = Field(..., ge=0)
+    end: float = Field(..., gt=0)
+    title: str = Field("", max_length=500)
+    url: str = Field("", max_length=2000)
+
+    @model_validator(mode="after")
+    def span_must_be_real(self) -> "RefineAnchor":
+        """A zero or negative span is a bug upstream, not a clip to pay for."""
+        if self.end <= self.start:
+            raise ValueError("end must be greater than start")
+        return self
+
+
+class RefineRequest(BaseModel):
+    """Request body for cutting a curated run's action anchors into clips.
+
+    The caller passes the anchors it already has from curation rather than the
+    server going back for them: curation just handed them over, and re-reading
+    them would be a second answer to a question already answered.
+    """
+
+    anchors: list[RefineAnchor] = Field(
+        ..., min_length=1, max_length=MAX_VIDEOS_PER_CURATION
+    )
+    query: str = Field("", max_length=2000, description="What the run was looking for")
+    collection_name: str = Field(
+        "egoexo-clean-clips", max_length=200, description="Clean collection to fill"
+    )
+    max_clips: int | None = Field(
+        None, ge=1, le=MAX_VIDEOS_PER_CURATION, description="Stop after this many anchors"
+    )
+
+
+class AnnotateCleanRequest(BaseModel):
+    """Request body for giving the cut clips trees of their own."""
+
+    collection_id: str = Field("", max_length=200, description="Which collection to walk")
+    video_ids: list[str] = Field(
+        default_factory=list,
+        max_length=MAX_VIDEOS_PER_CURATION,
+        description=(
+            "Annotate only these clips. Empty walks the whole collection, which will "
+            "spend the budget on whatever is unlabelled rather than on this run."
+        ),
+    )
+    limit: int = Field(12, ge=1, le=MAX_VIDEOS_PER_CURATION)
+    only_missing: bool = Field(True, description="Skip clips that already have a tree")
+    write_back: bool = Field(True, description="Write the tags back onto the clip")
+    wanted_viewpoint: str = Field(
+        "egocentric",
+        description="Refuse to annotate a clip whose frames are not confirmed as this",
+    )

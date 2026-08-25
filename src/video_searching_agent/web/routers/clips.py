@@ -28,6 +28,11 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/clips", tags=["clips"])
 
+
+def _ids(raw: str) -> list[str]:
+    """A comma-separated id list, as ids. Blank means "do not narrow"."""
+    return [part.strip() for part in raw.split(",") if part.strip()]
+
 MAX_LIMIT = 200
 
 # A still is 320px wide and taken a third of the way in. The first frame of a
@@ -62,6 +67,13 @@ async def list_clips(
     hands_only: bool = Query(False, description="Only clips with a hands-visible segment"),
     accepted_only: bool = Query(False, description="Only clips the gates accepted"),
     source_video_id: str = Query("", description="Every clip cut from one source video"),
+    video_ids: str = Query(
+        "",
+        description=(
+            "Comma-separated clip ids. Narrows the answer to exactly these, so a "
+            "caller can ask what one run produced rather than what the store holds."
+        ),
+    ),
     limit: int = Query(50, ge=1, le=MAX_LIMIT),
     offset: int = Query(0, ge=0),
 ) -> dict[str, Any]:
@@ -92,6 +104,7 @@ async def list_clips(
         hands_only=hands_only,
         accepted_only=accepted_only,
         source_video_id=source_video_id.strip(),
+        video_ids=_ids(video_ids),
         limit=limit,
         offset=offset,
     )
@@ -108,7 +121,11 @@ async def list_clips(
 
 
 @router.get("/facets")
-async def clip_facets() -> dict[str, Any]:
+async def clip_facets(
+    video_ids: str = Query(
+        "", description="Comma-separated clip ids, to describe one run rather than the store"
+    ),
+) -> dict[str, Any]:
     """What is in the store: totals, and the label vocabulary it actually has.
 
     The vocabulary is read from the data rather than declared, so the filters a
@@ -120,13 +137,14 @@ async def clip_facets() -> dict[str, Any]:
         return demo.library_facets()
 
     store = open_store()
+    scope = _ids(video_ids)
     return {
-        "totals": store.totals(),
-        "action_labels": store.labels(hier_level="action"),
-        "task_labels": store.labels(hier_level="task", limit=30),
+        "totals": store.totals(video_ids=scope),
+        "action_labels": store.labels(hier_level="action", video_ids=scope),
+        "task_labels": store.labels(hier_level="task", limit=30, video_ids=scope),
         # What was actually handled. The facet a buyer reaches for first: they
         # ask for footage of a drill, not for footage labelled "drive the screw".
-        "objects": store.object_vocabulary(),
+        "objects": store.object_vocabulary(video_ids=scope),
     }
 
 

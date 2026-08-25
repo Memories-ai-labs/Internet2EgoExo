@@ -437,3 +437,29 @@ async def test_an_unshippable_viewpoint_is_refused_outright(tmp_path, store):
 
     with _pytest.raises(ValueError):
         await export_dataset(tmp_path, store=store, media=False, viewpoint="unknown")
+
+
+async def test_export_can_be_narrowed_to_one_run(tmp_path, store):
+    """The UI exports what a run produced, not the whole accumulated store.
+
+    Without this, somebody who watched five clips come out gets handed every
+    clip the store ever collected, which is a different answer to a question
+    they did not ask — and on a real corpus it is a very large download.
+    """
+    ids = [clip.video_id for clip in store.search(limit=50)[0]]
+    assert len(ids) > 1, "fixture needs at least two clips for this to mean anything"
+
+    report, _ = await _export(
+        tmp_path, store, lake=FakeLake(), viewpoint="any", video_ids=[ids[0]]
+    )
+    assert report.clips == 1
+
+    everything, _ = await _export(tmp_path, store, lake=FakeLake(), viewpoint="any")
+    assert everything.clips == len(ids)
+
+
+async def test_no_ids_exports_everything(tmp_path, store):
+    """An empty scope means "everything", so existing callers are unaffected."""
+    ids = [clip.video_id for clip in store.search(limit=50)[0]]
+    report, _ = await _export(tmp_path, store, lake=FakeLake(), viewpoint="any", video_ids=[])
+    assert report.clips == len(ids)

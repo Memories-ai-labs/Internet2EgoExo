@@ -1,4 +1,4 @@
-"""Download candidate clips with yt-dlp.
+"""Download candidate clips through paid providers.
 
 Platform page URLs (a youtube.com/watch link, a tiktok.com/@user/video link)
 are not fetchable media, so the Datalake cannot ingest them by URL. The
@@ -27,8 +27,6 @@ from video_searching_agent.utils.youtube_urls import is_youtube_url
 
 logger = logging.getLogger(__name__)
 
-# Progressive MP4 up to 1080p: one file, no ffmpeg merge step required.
-DEFAULT_FORMAT = "best[ext=mp4][height<=1080]/best[height<=1080]/best"
 
 # Some hosts — Wikimedia among them — refuse a request that does not identify
 # itself, and yt-dlp's own default is refused by name in places. An honest,
@@ -167,6 +165,11 @@ def _configured_youtube_fetcher() -> YouTubeFetcher | None:
     )
 
 
+def _slug(value: str) -> str:
+    """A filename-safe piece of a provider or video id."""
+    return "".join(c if c.isalnum() or c in "-_" else "-" for c in value).strip("-") or "clip"
+
+
 def _select_info(info: dict[str, Any]) -> dict[str, Any]:
     """Unwrap playlist results to the single entry yt-dlp actually fetched."""
     if info.get("_type") == "playlist":
@@ -185,7 +188,6 @@ class ClipDownloader:
         output_dir: str | Path | None = None,
         max_duration_seconds: int = 3 * 60 * 60,
         max_filesize_mb: int = 2048,
-        format_selector: str = DEFAULT_FORMAT,
         user_agent: str | None = None,
         youtube: YouTubeFetcher | bool | None = None,
     ) -> None:
@@ -197,7 +199,6 @@ class ClipDownloader:
                 is writable — which is the case on a serverless host.
             max_duration_seconds: Skip anything longer (default 3h).
             max_filesize_mb: Skip anything larger (default 2 GB).
-            format_selector: yt-dlp format string.
             user_agent: Identify the fetcher. Defaults to settings, which
                 default to :data:`DEFAULT_USER_AGENT`.
             youtube: How to reach YouTube, which the extractor can no longer
@@ -207,49 +208,49 @@ class ClipDownloader:
         self.output_dir = _resolve_download_dir(output_dir)
         self.max_duration_seconds = max_duration_seconds
         self.max_filesize_mb = max_filesize_mb
-        self.format_selector = format_selector
         self.user_agent = user_agent or _configured_user_agent()
         self.youtube = _configured_youtube_fetcher() if youtube is None else (youtube or None)
 
     def probe(self, url: str) -> dict[str, Any]:
         """Read a clip's metadata without downloading it.
 
-        Cheap enough to run before committing disk and Datalake spend, and it
-        is how duration/licence get checked up front.
+        Cheap enough to run before committing disk and Datalake spend, and it is
+        how the duration and licence gates get their answer.
 
-        A direct media link that the extractor refuses is described from its
-        headers instead — with no duration, which the index fills in later.
+        There is no extractor here either. A TikTok probe through `yt-dlp` fails
+        for the same reason the download did, so a candidate died before any
+        provider was asked — which made the download routing pointless. YouTube
+        is described by the Data API; the rest by whichever provider can answer
+        without paying to fetch the file.
         """
-        from yt_dlp import YoutubeDL
+        return asyncio.run(self._probe(url))
 
+    async def probe_async(self, url: str) -> dict[str, Any]:
+        """:meth:`probe` from an event loop that is already running."""
+        return await self._probe(url)
+
+    async def _probe(self, url: str) -> dict[str, Any]:
         if self.youtube and is_youtube_url(url):
             try:
                 return self.youtube.probe(url)
             except YouTubeFetchError as exc:
-                # Worth one attempt with the extractor: a developer running
-                # locally, with cookies and a residential address, still has a
-                # working one.
-                logger.info("the Data API could not describe %s (%s); trying yt-dlp", url, exc)
+                raise DownloadError(f"Could not read {url}: {exc}") from exc
 
-        options = {
-            "quiet": True,
-            "no_warnings": True,
-            "skip_download": True,
-            "noplaylist": True,
-            "http_headers": {"User-Agent": self.user_agent},
-        }
+        if is_direct_media_url(url):
+            return self._probe_direct(url)
+
+        from video_searching_agent.pipeline.media_providers import ProviderError, build_router
+
         try:
-            with YoutubeDL(options) as ydl:
-                info = ydl.extract_info(url, download=False)
-        except Exception as exc:  # yt-dlp raises a wide range of errors
-            if is_direct_media_url(url):
-                logger.info("extractor refused %s; treating it as a direct file", url)
+            info = await build_router(youtube=self.youtube).describe(url)
+        except ProviderError as exc:
+            # A direct file that does not look like one by its extension is the
+            # one case worth a second guess: the headers settle it for nothing.
+            try:
                 return self._probe_direct(url)
-            raise DownloadError(f"Could not read {url}: {exc}") from exc
-
-        if not isinstance(info, dict):
-            raise DownloadError(f"Could not read {url}: no metadata returned")
-        return _select_info(info)
+            except DownloadError:
+                raise DownloadError(f"Could not read {url}: {exc}") from exc
+        return info
 
     def _probe_direct(self, url: str) -> dict[str, Any]:
         """Describe a direct media link from its own headers.
@@ -294,19 +295,28 @@ class ClipDownloader:
             "extractor_key": "direct",
         }
 
-    async def probe_async(self, url: str) -> dict[str, Any]:
-        """Off-thread :meth:`probe`, so the event loop keeps serving."""
-        return await asyncio.to_thread(self.probe, url)
-
     def download(self, url: str) -> DownloadedClip:
         """Download one clip, respecting the duration and size bounds.
 
         Raises:
             DownloadError: On a failed fetch, or when the clip breaches a bound.
         """
-        from yt_dlp import YoutubeDL
+        return asyncio.run(self._download(url))
 
-        info = self.probe(url)
+    async def download_async(self, url: str) -> DownloadedClip:
+        """:meth:`download` from an event loop that is already running."""
+        return await self._download(url)
+
+    async def _download(self, url: str) -> DownloadedClip:
+        """Resolve the bytes through a provider, then stream them to disk.
+
+        There is no extractor path any more. `yt-dlp` is blocked on YouTube from
+        a datacentre address and fails outright on TikTok, so a run that leaned
+        on it reported failures that said nothing about the footage. Providers
+        are asked in the configured order and every attempt is reported when
+        they all refuse.
+        """
+        info = await self.probe_async(url)
         if info.get("_direct"):
             return self._download_direct(url, info)
 
@@ -316,62 +326,38 @@ class ClipDownloader:
                 f"Clip is {int(duration)}s, over the {self.max_duration_seconds}s limit"
             )
 
-        if self.youtube and self.youtube.can_download and is_youtube_url(url):
-            return self._download_via_youtube_fetcher(url, info)
-
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-        template = str(self.output_dir / "%(extractor)s-%(id)s.%(ext)s")
-        warnings: list[str] = []
-
-        options = {
-            "quiet": True,
-            "no_warnings": True,
-            "noplaylist": True,
-            "outtmpl": template,
-            "format": self.format_selector,
-            "max_filesize": self.max_filesize_mb * 1024 * 1024,
-            "retries": 2,
-            "socket_timeout": 30,
-            "http_headers": {"User-Agent": self.user_agent},
-        }
+        from video_searching_agent.pipeline.media_providers import ProviderError, build_router
 
         try:
-            with YoutubeDL(options) as ydl:
-                result = _select_info(ydl.extract_info(url, download=True) or {})
-                path_str = ydl.prepare_filename(result)
-        except Exception as exc:
+            source = await build_router(youtube=self.youtube).resolve(url)
+        except ProviderError as exc:
             raise DownloadError(f"Download failed for {url}: {exc}") from exc
 
-        path = Path(path_str)
-        if not path.is_file():
-            # yt-dlp may have remuxed to a different extension.
-            candidates = sorted(self.output_dir.glob(f"{path.stem}.*"))
-            if not candidates:
-                raise DownloadError(f"Download reported success but no file was written for {url}")
-            path = candidates[0]
-            warnings.append(f"file landed as {path.name}")
+        merged = {**info, **{k: v for k, v in source.info.items() if v not in (None, "")}}
+        video_id = merged.get("id") or "video"
+        path = self.output_dir / f"{_slug(source.provider)}-{_slug(str(video_id))}.mp4"
+        written = self._stream_to_disk(source.url, path, headers=source.headers)
 
-        licence = result.get("license")
-        width, height = result.get("width"), result.get("height")
-        if not (width and height):
-            # An extractor that reported one dimension or neither leaves
-            # orientation unjudgeable; the file on disk does not.
-            measured = read_mp4_dimensions(path)
-            if measured:
-                width, height = measured
+        # The file is the only reliable source of dimensions: the YouTube Data
+        # API reports `hd`/`sd` and the scrapers report the upload's shape, not
+        # the delivered one, and without a width orientation cannot be judged.
+        measured = read_mp4_dimensions(path)
+        merged_duration = merged.get("duration")
         return DownloadedClip(
             url=url,
             path=path,
-            duration_seconds=int(duration) if isinstance(duration, int | float) else None,
-            filesize_bytes=path.stat().st_size,
-            width=width,
-            height=height,
-            fps=result.get("fps"),
-            title=result.get("title"),
-            uploader=result.get("uploader") or result.get("channel"),
-            extractor=result.get("extractor_key") or result.get("extractor"),
-            license_note=str(licence) if licence else None,
-            warnings=warnings,
+            duration_seconds=(
+                int(merged_duration) if isinstance(merged_duration, int | float) else None
+            ),
+            filesize_bytes=written,
+            width=measured[0] if measured else merged.get("width"),
+            height=measured[1] if measured else merged.get("height"),
+            fps=merged.get("fps"),
+            title=merged.get("title"),
+            uploader=merged.get("uploader") or merged.get("channel"),
+            extractor=source.provider,
+            license_note=str(merged["license"]) if merged.get("license") else None,
+            warnings=[source.note] if source.note else [],
         )
 
     def _download_via_youtube_fetcher(self, url: str, info: dict[str, Any]) -> DownloadedClip:
@@ -492,10 +478,6 @@ class ClipDownloader:
             extractor="direct",
             warnings=["fetched directly: no extractor metadata, duration comes from the index"],
         )
-
-    async def download_async(self, url: str) -> DownloadedClip:
-        """Off-thread :meth:`download`."""
-        return await asyncio.to_thread(self.download, url)
 
     def discard(self, clip: DownloadedClip) -> None:
         """Delete a downloaded file once it is indexed or rejected.

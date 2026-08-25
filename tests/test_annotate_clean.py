@@ -572,3 +572,62 @@ class TestTheDeliverableIsTheViewpointAskedFor:
         )
         assert report.as_dict()["refused_wrong_viewpoint"] == 2
         assert report.as_dict()["annotated"] == 0
+
+
+class TestNamingWhichClipsToAnnotate:
+    """A pass asked to label the clips a run just cut must not spend its budget
+    on older clips that happen to still be unlabelled — but it still has to see
+    the whole collection, or it prunes rows whose video is merely out of scope.
+    """
+
+    @pytest.mark.asyncio
+    async def test_only_the_named_clips_are_paid_for(self):
+        store = _store_with("vid_old", "vid_new")
+        report = await annotate_clean_collection(
+            **_sighted(),
+            lake=FakeLake(pages=[_page("vid_old", "vid_new")]),
+            agent=FakeAgent(),
+            store=store,
+            only=["vid_new"],
+        )
+        assert [r.video_id for r in report.results] == ["vid_new"]
+        assert store.get("vid_old").segments == []
+
+    @pytest.mark.asyncio
+    async def test_naming_none_still_walks_everything(self):
+        """Existing callers pass nothing and must keep their behaviour."""
+        store = _store_with("vid_a", "vid_b")
+        report = await annotate_clean_collection(
+            **_sighted(),
+            lake=FakeLake(pages=[_page("vid_a", "vid_b")]),
+            agent=FakeAgent(),
+            store=store,
+        )
+        assert {r.video_id for r in report.results} == {"vid_a", "vid_b"}
+
+    @pytest.mark.asyncio
+    async def test_pruning_still_sees_the_whole_collection(self):
+        """Scoping the paid work must not turn an out-of-scope row into a
+        missing one: pruning reads the listing, not the scope."""
+        store = _store_with("vid_new", "vid_deleted")
+        report = await annotate_clean_collection(
+            **_sighted(),
+            lake=FakeLake(pages=[_page("vid_new")]),
+            agent=FakeAgent(),
+            store=store,
+            only=["vid_new"],
+        )
+        assert report.pruned == ["vid_deleted"]
+        assert store.get("vid_new") is not None
+
+    @pytest.mark.asyncio
+    async def test_a_named_clip_the_collection_does_not_have_is_not_invented(self):
+        store = _store_with("vid_a")
+        report = await annotate_clean_collection(
+            **_sighted(),
+            lake=FakeLake(pages=[_page("vid_a")]),
+            agent=FakeAgent(),
+            store=store,
+            only=["vid_not_in_the_collection"],
+        )
+        assert report.results == []

@@ -47,6 +47,23 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 
+def _scope(column: str, video_ids: Iterable[str]) -> tuple[str, list[Any]]:
+    """`column IN (?, ?, …)`, for narrowing a query to one run's clips.
+
+    The store is durable and accumulates every run ever made, which is what you
+    want of a corpus and not what you want of a screen that claims to show what
+    a run just produced. Callers that mean "these clips" pass their ids here.
+
+    The ids go in as parameters rather than a temporary table because a run is
+    tens of clips. Something with thousands of ids is asking a different
+    question and should query the whole store instead.
+    """
+    ids = [v for v in dict.fromkeys(video_ids) if v]
+    if not ids:
+        return "", []
+    return f"{column} IN ({','.join('?' * len(ids))})", list(ids)
+
+
 def _clean_text(value: Any) -> str | None:
     """A string with something in it, or None. Empty string is not a label."""
     text = str(value).strip() if value is not None else ""
@@ -508,6 +525,7 @@ class AnnotationStore:
         hands_only: bool = False,
         accepted_only: bool = False,
         source_video_id: str = "",
+        video_ids: Iterable[str] = (),
         limit: int = 50,
         offset: int = 0,
     ) -> tuple[list[Clip], int]:
@@ -532,6 +550,10 @@ class AnnotationStore:
         if source_video_id:
             where.append("c.source_video_id = ?")
             params.append(source_video_id)
+        scope_sql, scope_params = _scope("c.video_id", video_ids)
+        if scope_sql:
+            where.append(scope_sql)
+            params.extend(scope_params)
         if text:
             like = f"%{text.lower()}%"
             # Objects and hands are searched as well as labels: a buyer asks
@@ -577,7 +599,9 @@ class AnnotationStore:
                 clips.append(_clip_from_row(row, [_segment_from_row(r) for r in cur.fetchall()]))
         return clips, total
 
-    def object_vocabulary(self, *, limit: int = 40) -> list[dict[str, Any]]:
+    def object_vocabulary(
+        self, *, limit: int = 40, video_ids: Iterable[str] = ()
+    ) -> list[dict[str, Any]]:
         """The objects actually handled across the store, commonest first.
 
         A facet list for browsing by what was manipulated. Counted in Python
@@ -588,10 +612,13 @@ class AnnotationStore:
         """
         counts: dict[str, int] = {}
         clips: dict[str, set[str]] = {}
+        scope_sql, scope_params = _scope("video_id", video_ids)
         with self._tx() as cur:
             cur.execute(
                 "SELECT video_id, objects FROM segments "
                 "WHERE objects IS NOT NULL AND objects != '' AND objects != '[]'"
+                + (f" AND {scope_sql}" if scope_sql else ""),
+                scope_params,
             )
             rows = cur.fetchall()
         for row in rows:
@@ -611,7 +638,13 @@ class AnnotationStore:
             for name, n in ranked[: max(1, limit)]
         ]
 
-    def labels(self, *, hier_level: str = "action", limit: int = 60) -> list[dict[str, Any]]:
+    def labels(
+        self,
+        *,
+        hier_level: str = "action",
+        limit: int = 60,
+        video_ids: Iterable[str] = (),
+    ) -> list[dict[str, Any]]:
         """The label vocabulary actually in the store, commonest first.
 
         This is what a browse UI offers as filters. Inventing a facet list would
@@ -626,6 +659,10 @@ class AnnotationStore:
             if hier_level:
                 sql += " AND hier_level = ?"
                 params.append(hier_level)
+            scope_sql, scope_params = _scope("video_id", video_ids)
+            if scope_sql:
+                sql += f" AND {scope_sql}"
+                params.extend(scope_params)
             sql += " GROUP BY label ORDER BY n DESC LIMIT ?"
             params.append(max(1, limit))
             cur.execute(sql, params)
@@ -634,18 +671,32 @@ class AnnotationStore:
                 for r in cur.fetchall()
             ]
 
-    def totals(self) -> dict[str, Any]:
-        """What is in here, for a header line that is not a guess."""
+    def totals(self, *, video_ids: Iterable[str] = ()) -> dict[str, Any]:
+        """What is in here, for a header line that is not a guess.
+
+        `video_ids` narrows the count to those clips, so a header can say what
+        one run produced instead of what the store has accumulated.
+        """
+        clip_scope, clip_params = _scope("video_id", video_ids)
+        clip_where = f" WHERE {clip_scope}" if clip_scope else ""
         with self._tx() as cur:
             cur.execute(
                 "SELECT COUNT(*) AS clips, "
                 "COALESCE(SUM(duration_seconds), 0) AS seconds, "
-                "SUM(accepted) AS accepted FROM clips"
+                f"SUM(accepted) AS accepted FROM clips{clip_where}",
+                clip_params,
             )
             row = cur.fetchone()
-            cur.execute("SELECT COUNT(*) AS n FROM segments WHERE hier_level = 'action'")
+            cur.execute(
+                "SELECT COUNT(*) AS n FROM segments WHERE hier_level = 'action'"
+                + (f" AND {clip_scope}" if clip_scope else ""),
+                clip_params,
+            )
             actions = int(cur.fetchone()["n"])
-            cur.execute("SELECT viewpoint, COUNT(*) AS n FROM clips GROUP BY viewpoint")
+            cur.execute(
+                f"SELECT viewpoint, COUNT(*) AS n FROM clips{clip_where} GROUP BY viewpoint",
+                clip_params,
+            )
             # Accumulate rather than assign: an empty viewpoint and a literal
             # "unknown" are different rows that display as the same word, and a
             # dict comprehension keeps only the last of them — which reported

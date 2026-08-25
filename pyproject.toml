@@ -21,7 +21,6 @@ dependencies = [
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.32.0",
     "sse-starlette>=2.0.0",
-    "yt-dlp>=2026.8.19",
 ]
 
 [project.optional-dependencies]

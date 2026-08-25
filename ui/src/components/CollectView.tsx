@@ -16,7 +16,13 @@ import { useMemo, useRef, useState } from "react";
 import { hours, percent, timecode } from "../lib/format";
 import type { OwnKeys } from "../App";
 import { streamRequest } from "../lib/sse";
-import type { CurationResult, GateCheck, IngestClip } from "../lib/types";
+import type {
+  AnnotateReport,
+  CurationResult,
+  GateCheck,
+  IngestClip,
+  RefineResult,
+} from "../lib/types";
 import { AnnotationTreeFor } from "./AnnotationTree";
 import { GateList } from "./GateList";
 import { Empty, Field, Panel, Pill, Stat } from "./primitives";
@@ -237,6 +243,14 @@ export interface CollectViewProps {
   queuedViewpoint?: string;
   /** What the server accepts per request; the queue is sent in batches of it. */
   maxUrlsPerRequest: number;
+  /**
+   * Hand the clips this run cut over to part three.
+   *
+   * Part three reads a durable store that accumulates every run ever made, so
+   * it is told which clips belong to this one. Without that it shows a corpus
+   * and calls it a result.
+   */
+  onCollected?: (clipIds: string[]) => void;
 }
 
 export function CollectView({
@@ -245,6 +259,7 @@ export function CollectView({
   queuedUrls,
   queuedViewpoint = "",
   maxUrlsPerRequest,
+  onCollected,
 }: CollectViewProps) {
   const [urlText, setUrlText] = useState(queuedUrls.join("\n"));
   const [requireHands, setRequireHands] = useState(true);
@@ -261,6 +276,10 @@ export function CollectView({
   const [tag, setTag] = useState("clean_pass");
   const [curating, setCurating] = useState(false);
   const [curation, setCuration] = useState<CurationResult | null>(null);
+  const [refined, setRefined] = useState<RefineResult | null>(null);
+  const [labelled, setLabelled] = useState<AnnotateReport | null>(null);
+  const [cutting, setCutting] = useState("");
+  const [noAnchors, setNoAnchors] = useState("");
 
   const controller = useRef<AbortController | null>(null);
 
@@ -358,11 +377,149 @@ export function CollectView({
       indexed.length ? { video_ids: indexed, require_hands: requireHands } : { tag },
       {
         onEvent: (event, data) => {
-          if (event === "complete") setCuration(data as unknown as CurationResult);
-          else if (event === "error") setError(String(data.message ?? "Curation failed"));
+          if (event === "complete") {
+            const result = data as unknown as CurationResult;
+            setCuration(result);
+            // Curation marks spans on whole source videos. On its own that is
+            // not a deliverable, and part three reads clips — so keep going.
+            void cutAndLabel(result);
+          } else if (event === "error") setError(String(data.message ?? "Curation failed"));
         },
         onError: setError,
         onDone: () => setCurating(false),
+      },
+      { apiKey, keys: ownKeys },
+    );
+  }
+
+  /** The action anchors curation found, as spans worth cutting.
+   *
+   * Only `action` level, and only a span that actually spans something: a
+   * zero-length anchor is an upstream bug and cutting it costs real money.
+   */
+  function anchorsFrom(result: CurationResult): Record<string, unknown>[] {
+    const anchors: Record<string, unknown>[] = [];
+    const add = (
+      videoId: unknown,
+      segments: Record<string, unknown>[],
+      fallbackTitle: string,
+    ) => {
+      for (const segment of segments) {
+        if (segment.hier_level !== "action") continue;
+        const start = Number(segment.span_start);
+        const end = Number(segment.span_end);
+        if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) continue;
+        anchors.push({ video_id: videoId, start, end, title: segment.label ?? fallbackTitle });
+      }
+    };
+
+    // Only clips this session collected. When collection produced nothing,
+    // curation falls back to grading a worklist tag, which is somebody else's
+    // backlog — cutting from that would spend money on clips the person in
+    // front of the screen never asked for.
+    const mine = new Set(results.map((clip) => clip.video_id).filter(Boolean));
+
+    for (const raw of result.clips ?? []) {
+      const clip = raw as Record<string, unknown>;
+      if (!clip.accepted || !clip.video_id) continue;
+      if (mine.size && !mine.has(String(clip.video_id))) continue;
+      const cleaning = (clip.cleaning ?? {}) as Record<string, unknown>;
+      const fromCuration = (cleaning.segments ?? []) as Record<string, unknown>[];
+      if (fromCuration.length) {
+        add(clip.video_id, fromCuration, String(result.query ?? ""));
+        continue;
+      }
+      // A video that was already indexed makes curation skip the cleaning pass,
+      // so the anchors are not in its payload — but collection found them
+      // earlier in this same session, and they are still on screen.
+      const collected = results.find((candidate) => candidate.video_id === clip.video_id);
+      add(
+        clip.video_id,
+        (collected?.segments ?? []) as unknown as Record<string, unknown>[],
+        String(collected?.title ?? result.query ?? ""),
+      );
+    }
+    return anchors;
+  }
+
+  /** Cut the anchors into clips, then give the clips trees of their own.
+   *
+   * These two used to run only from the command line, which is why a run that
+   * plainly worked left part three empty: nothing had cut a clip.
+   */
+  async function cutAndLabel(result: CurationResult) {
+    const anchors = anchorsFrom(result);
+    if (!anchors.length) {
+      setCutting("");
+      // Why there is nothing to cut matters. A set where nothing was accepted
+      // is a different problem from one where accepted clips carried no action
+      // anchors, and telling somebody to turn annotation on when their only
+      // clip was rejected for a stranger's face in frame sends them nowhere.
+      const collectedIds = new Set(results.map((clip) => clip.video_id).filter(Boolean));
+      const kept = (result.clips ?? []).filter((raw) => {
+        const clip = raw as Record<string, unknown>;
+        return (
+          clip.accepted && (!collectedIds.size || collectedIds.has(String(clip.video_id)))
+        );
+      });
+      setNoAnchors(
+        kept.length
+          ? `Nothing was cut: ${kept.length} clip${kept.length === 1 ? "" : "s"} passed the ` +
+            "gates but carried no action anchors, and an anchor is what a clip is cut from. " +
+            "Collect again with \u201cAnnotate what survives\u201d on, which is what proposes them."
+          : "Nothing was cut, because nothing was accepted. Every clip above says which " +
+            "gate stopped it. Nothing reached the library, and nothing was spent on cutting.",
+      );
+      return;
+    }
+    setNoAnchors("");
+
+    setCutting(`cutting ${anchors.length} anchor${anchors.length === 1 ? "" : "s"}`);
+    const held: { cut: RefineResult | null } = { cut: null };
+    await streamRequest(
+      "/api/v1/refine/stream",
+      { anchors, query: result.query ?? "" },
+      {
+        onEvent: (event, data) => {
+          if (event === "indexing") {
+            const n = Number(data.clips ?? 0);
+            setCutting(`waiting for ${n} clip${n === 1 ? "" : "s"} to finish indexing`);
+          } else if (event === "complete") {
+            held.cut = data as unknown as RefineResult;
+            setRefined(held.cut);
+          } else if (event === "error") setError(String(data.message ?? "Cutting failed"));
+        },
+        onError: setError,
+      },
+      { apiKey, keys: ownKeys },
+    );
+
+    // `skipped_reason` is the host saying it cannot do this, which is not the
+    // same as a run that produced nothing, and is worth showing rather than
+    // silently moving on.
+    const cut = held.cut;
+    if (!cut || cut.skipped_reason || !cut.clip_ids?.length) {
+      setCutting("");
+      return;
+    }
+
+    setCutting(`labelling ${cut.clip_ids.length} clip${cut.clip_ids.length === 1 ? "" : "s"}`);
+    await streamRequest(
+      "/api/v1/annotate-clean/stream",
+      {
+        collection_id: cut.collection_id ?? "",
+        // Name the clips. Without this the pass walks the whole collection and
+        // spends the budget on whatever else is unlabelled.
+        video_ids: cut.clip_ids,
+        limit: Math.max(1, cut.clip_ids.length),
+      },
+      {
+        onEvent: (event, data) => {
+          if (event === "complete") setLabelled(data as unknown as AnnotateReport);
+          else if (event === "error") setError(String(data.message ?? "Labelling failed"));
+        },
+        onError: setError,
+        onDone: () => setCutting(""),
       },
       { apiKey, keys: ownKeys },
     );
@@ -376,9 +533,9 @@ export function CollectView({
       <header className="page-head">
         <h1>Curate &amp; annotate</h1>
         <p>
-          Download what the search found, index it into the Video Datalake, then let the cleaning
-          agent judge the frames and the annotation agent write the task → action → event tree. A
-          clip whose frames show no hands is dropped.
+          Download what the search found, index it into the Video Datalake, let the cleaning agent
+          judge the frames, then cut the action anchors into clips of their own and give each one a
+          task → action → event tree. A clip whose frames show no hands is dropped.
         </p>
       </header>
 
@@ -560,6 +717,62 @@ export function CollectView({
                   <div key={message}>{message}</div>
                 ))}
               </div>
+            ) : null}
+
+            {cutting ? <div className="notice">{cutting}…</div> : null}
+
+            {noAnchors ? <div className="notice notice--error">{noAnchors}</div> : null}
+
+            {refined?.skipped_reason ? (
+              <div className="notice notice--error">
+                No clips were cut: {refined.skipped_reason}
+              </div>
+            ) : null}
+
+            {refined && !refined.skipped_reason ? (
+              <>
+                <div className="stats">
+                  <Stat
+                    label="Clips cut"
+                    value={String(refined.uploaded)}
+                    note={`${refined.attempted} anchors attempted`}
+                  />
+                  <Stat
+                    label="Dropped by the pixel pass"
+                    value={String(refined.rejected_by_the_pixel_pass)}
+                    note="cut, looked at, thrown away"
+                    small
+                  />
+                  <Stat
+                    label="Cutting cost"
+                    value={`$${refined.cut_cost_usd.toFixed(4)}`}
+                    note="every cut, including the discarded ones"
+                    small
+                  />
+                  {labelled ? (
+                    <Stat
+                      label="Labelled"
+                      value={`${labelled.annotated}/${refined.uploaded}`}
+                      note={
+                        labelled.refused_wrong_viewpoint
+                          ? `${labelled.refused_wrong_viewpoint} refused on viewpoint`
+                          : `${labelled.with_hands} with hands named`
+                      }
+                    />
+                  ) : null}
+                </div>
+                {refined.clip_ids.length && onCollected ? (
+                  <button
+                    type="button"
+                    className="button"
+                    style={{ alignSelf: "flex-start" }}
+                    onClick={() => onCollected(refined.clip_ids)}
+                  >
+                    See the {refined.clip_ids.length} clip
+                    {refined.clip_ids.length === 1 ? "" : "s"} →
+                  </button>
+                ) : null}
+              </>
             ) : null}
           </>
         ) : (

@@ -7,7 +7,6 @@ pydantic>=2.0.0
 pydantic-settings>=2.0.0
 httpx>=0.25.0
 python-dotenv>=1.0.0
-yt-dlp>=2026.8.19
 exa-py>=1.0.0
 google-genai>=1.0.0
 google-api-python-client>=2.100.0

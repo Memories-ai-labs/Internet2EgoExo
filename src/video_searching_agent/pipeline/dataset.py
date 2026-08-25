@@ -69,6 +69,7 @@ import argparse
 import asyncio
 import json
 import logging
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -202,6 +203,7 @@ async def export_dataset(
     out_dir: str | Path,
     *,
     collection_id: str = "",
+    video_ids: Iterable[str] = (),
     limit: int = 500,
     media: bool = True,
     refresh_media: bool = False,
@@ -216,6 +218,8 @@ async def export_dataset(
             same names are replaced.
         collection_id: Restrict to one collection, or empty for every clip the
             store knows.
+        video_ids: Restrict to exactly these clips. What one run produced,
+            rather than everything the store has accumulated since.
         limit: Most clips to export in one pass.
         media: Download the footage. `False` writes the JSON only, which is fast
             and needs no network beyond the store.
@@ -235,7 +239,7 @@ async def export_dataset(
     (out / "thumbnails").mkdir(parents=True, exist_ok=True)
 
     target = store or open_store()
-    rows, _total = target.search(limit=limit)
+    rows, _total = target.search(limit=limit, video_ids=video_ids)
     if collection_id:
         rows = [clip for clip in rows if clip.collection_id == collection_id]
 

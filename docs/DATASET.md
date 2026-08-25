@@ -135,11 +135,14 @@ field means "not established", never "no hand there".
 
 Five steps. Each one spends money and each one is off unless asked for.
 
-| # | What | How |
-|---|------|-----|
-| 1–3 | search → collect → curate → refine | `eval/run.sh` |
-| 4 | annotate the clean clips | `python -m video_searching_agent.pipeline.annotate_clean` |
-| 5 | write the directory | `python -m video_searching_agent.pipeline.dataset` |
+| # | What | On the command line | Over the API |
+|---|------|---------------------|--------------|
+| 1–3 | search → collect → curate → refine | `eval/run.sh` | `/search-loop/stream`, `/collect/stream`, `/curate/stream`, `/refine/stream` |
+| 4 | annotate the clean clips | `python -m video_searching_agent.pipeline.annotate_clean` | `/annotate-clean/stream` |
+| 5 | write the directory | `python -m video_searching_agent.pipeline.dataset` | `/export/stream` |
+
+The API column is what the web UI drives, so a run started in a browser ends
+with the same directory a command-line run produces.
 
 ### Steps 1–3 — `eval/run.sh`
 
