@@ -59,6 +59,7 @@ dropped from the score rather than assumed to have passed.
 
 | Section | For |
 |---------|-----|
+| [How the agent decides](#how-the-agent-decides-what-to-do) | slots, the loop, the answer |
 | [The pipeline, end to end](#the-pipeline-end-to-end) | one request, followed all the way through |
 | [The agents](#the-agents) | what each agent is judged on |
 | [How a candidate is judged](#how-a-candidate-is-judged) | the standard, as executable checks |
@@ -66,103 +67,58 @@ dropped from the score rather than assumed to have passed.
 | [Cost per hour](#cost-per-hour) | how the bill is worked out |
 | [Web UI](#web-ui) | run the whole loop in a browser |
 
-## Features
+## What you get
 
-- **Viewpoint-aware search**: Every candidate is classified egocentric /
-  exocentric / unknown with the cues behind the verdict, and footage from the
-  wrong perspective is dropped rather than ranked low
-- **Usability ranking**: Viewpoint match, then duration, then licence — with the
-  popularity sorts kept only for reporting
-- **Licence filtering**: Restrict to Creative-Commons material that is safe to
-  reuse, straight through the YouTube API
-- **Volume goals**: Ask for hours, not clip counts; the run reports progress
-  against the target and what the binding constraint was
-- **Dataset manifest**: Every run emits clips with viewpoint, confidence,
-  duration, licence and usability score, exportable as JSONL or CSV
-- **Cost per hour**: Discovery, download, indexing and annotation costed from
-  published rates, per hour collected and per hour delivered
-- **Video Datalake**: Index footage once into Memories.ai, then read captions,
-  transcription and summary, or search moments across the indexed corpus
-- **Specialized agents**: A cleaning agent for filtering and clipping, an
-  annotation agent for the task → action → event tree, a curation agent for the
-  set — each judged on its own output, with an auditable Thought → Action →
-  Observation trace
-- **The hands gate**: A clip whose frames show no hands is dropped, not ranked
-  low — for manipulation data it is worthless, and this is the one rule with no
-  override
-- **Quality gates as code**: The internal first-person standard as executable
-  checks — rights, media usability, annotation depth L0-L3, diversity — with
-  unmeasured checks excluded from the score rather than assumed to pass
-- **Four hour measures, never mixed**: worn / delivered / accepted /
-  accepted_labeled, so a delivered hour is never quoted as an accepted one
-- **Moment-level annotation tree**: Open a clip to see its viewpoint evidence,
-  provenance and per-span hand/object annotations with the tags written back
-- **Multi-source**: YouTube, TikTok, Instagram, Twitter/X and the open web
-  (dataset pages, lab sites, archives) via Exa neural search and Apify scraping
-- **Interactive Web UI**: Bundled zero-build UI for the whole loop
+| | |
+|---|---|
+| **Sources** | YouTube, TikTok, Instagram, X, and the open web: dataset pages, lab sites, archives. Exa for neural search, Apify for scraping |
+| **Viewpoint verdicts** | Every candidate is called egocentric, exocentric or unknown, and the cues behind the call are kept with it |
+| **Licence filtering** | Narrow to Creative-Commons material that is safe to reuse |
+| **Volume goals** | Ask for hours, not clip counts. The run reports progress against the target and which constraint was binding |
+| **Manifest** | Every clip with its viewpoint, confidence, duration, licence and usability score, as JSONL or CSV |
+| **Annotation tree** | Task, action and event on time anchors, with per-span hand and object labels written back as tags |
+| **Cost ledger** | Discovery, download, indexing and annotation priced from published rates, per hour collected and per hour delivered |
+| **Web UI** | The whole loop in a browser, with no build step |
 
-## How It Works
+## How the agent decides what to do
 
-The Video Searching Agent follows an **agentic loop pattern** where Google Gemini orchestrates which tools to call based on user queries. Here's the core flow:
+Your sentence becomes slots. An agent loop then picks tools until it has enough,
+and reports what it found.
 
-### 1. Query Parsing (LLM-First Slot Extraction)
-
-When you send a query, it first goes through the `QueryParser` which uses Gemini to extract structured **slots**:
+**Slots.** A Gemini model reads the request and pulls out what is actually being
+asked for. It runs through OpenRouter by default, or Google directly; see
+[The models](#the-models-one-key-or-googles).
 
 ```python
-# Input: "first-person cooking footage from YouTube, at least 5 minutes, 2 hours of it"
-# Extracted slots:
+# "first-person cooking footage from YouTube, at least 5 minutes, 2 hours of it"
 ParsedQuery(
     platforms=["youtube"],
     topics=["cooking"],
     viewpoint=Viewpoint.EGOCENTRIC,
-    min_duration_s=300,
+    min_duration_seconds=300,
     target_hours=2.0,
 )
 ```
 
-### 2. The Agentic Loop
+**The loop.** Up to ten steps by default, set with `MAX_AGENT_STEPS`. Results are
+filtered inside the loop, before the model sees them, so it never reasons over
+candidates that already fail the request.
 
-The agent runs an iterative loop (max 10 steps by default) where Gemini decides which tools to call:
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  User Query + Extracted Slots                               │
-└─────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────┐
-│  Gemini: "I need to search TikTok for coffee videos"        │
-│  → Returns function call: tiktok_search(query="coffee")     │
-└─────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────┐
-│  ToolRegistry executes tiktok_search with RetryExecutor     │
-│  → Results filtered by time_frame BEFORE returning          │
-└─────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────┐
-│  Results fed back to Gemini                                 │
-│  → Gemini decides: more tools needed? or final answer?      │
-└─────────────────────────────────────────────────────────────┘
-                              ↓
-                    (loop continues or...)
-                              ↓
-┌─────────────────────────────────────────────────────────────┐
-│  Final Answer: Natural language response with video refs    │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A["Request, parsed into slots"] --> B{"Model picks a tool"}
+    B -->|"search, fetch, classify"| C["Tool registry runs it,<br/>with retry and fallback"]
+    C --> D["Results filtered against the slots<br/>before the model sees them"]
+    D --> B
+    B -->|"enough, or step cap reached"| E["Candidates, viewpoint verdicts,<br/>manifest, cost"]
 ```
 
-### 3. Time Frame Filtering
+**The answer.** An `AgentResponse`: the written `answer`, `video_references`
+with their metadata and viewpoint verdicts, a `dataset` summary, `usage_metrics`
+for tokens and cost, and the `parsed_query` it actually worked from.
 
-A critical feature: tool results are filtered by `time_frame` **inside the loop** before Gemini sees them. This ensures accurate answers even when tools return older content.
-
-### 4. Response Generation
-
-The final `AgentResponse` includes:
-- Natural language answer
-- Video references with metadata and relevance notes
-- Usage metrics (token counts, API costs)
-- The parsed query with all extracted slots
+For what happens to a candidate after it is found, read
+[the pipeline](#the-pipeline-end-to-end).
 
 ## Installation
 
@@ -1294,7 +1250,7 @@ The agent extracts structured **slots** from natural language queries using LLM-
 
 | Slot | Example | Description |
 |------|---------|-------------|
-| `topics` | `["coffee", "latte art"]` | Subject matter keywords |
+| `topics` | `["cooking", "bicycle repair"]` | Subject matter keywords |
 | `brands` | `["Nike", "Adidas"]` | Brand names to search |
 | `creators` | `["@mkbhd", "@charlidamelio"]` | Specific creators to find |
 | `hashtags` | `["#fitness", "#workout"]` | Hashtags to search |
