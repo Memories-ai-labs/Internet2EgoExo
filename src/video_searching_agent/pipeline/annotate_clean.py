@@ -41,6 +41,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import logging
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -337,6 +338,7 @@ async def annotate_clean_collection(
     *,
     collection_id: str = CLEAN_COLLECTION_ID,
     limit: int = 5,
+    only: Iterable[str] = (),
     only_missing: bool = True,
     write_back: bool = False,
     wanted_viewpoint: str = "egocentric",
@@ -371,6 +373,11 @@ async def annotate_clean_collection(
     Args:
         collection_id: Which collection to walk.
         limit: The most clips this pass will pay to annotate.
+        only: Annotate only these clips. The collection is still listed in full,
+            because pruning rows for videos the Datalake no longer has needs the
+            whole listing — but the paid work is confined to these ids. Without
+            it a pass asked to label the four clips a run just cut can spend its
+            whole budget on older clips that happen to still be unlabelled.
         only_missing: Skip clips that already have a tree. Off re-annotates,
             which replaces the tree rather than adding a second copy.
         write_back: Also write the tree onto the Datalake video's metadata.
@@ -414,8 +421,12 @@ async def annotate_clean_collection(
     if report.pruned:
         logger.info("pruned %d row(s) whose video the Datalake no longer has", len(report.pruned))
 
+    wanted_ids = {v for v in only if v}
+
     todo: list[str] = []
     for video_id in ids:
+        if wanted_ids and video_id not in wanted_ids:
+            continue
         clip = store.get(video_id)
         if clip is None:
             # In the collection but not in the store: refine records a row for

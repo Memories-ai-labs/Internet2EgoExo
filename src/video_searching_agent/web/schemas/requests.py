@@ -353,6 +353,14 @@ class AnnotateCleanRequest(BaseModel):
     """Request body for giving the cut clips trees of their own."""
 
     collection_id: str = Field("", max_length=200, description="Which collection to walk")
+    video_ids: list[str] = Field(
+        default_factory=list,
+        max_length=MAX_VIDEOS_PER_CURATION,
+        description=(
+            "Annotate only these clips. Empty walks the whole collection, which will "
+            "spend the budget on whatever is unlabelled rather than on this run."
+        ),
+    )
     limit: int = Field(12, ge=1, le=MAX_VIDEOS_PER_CURATION)
     only_missing: bool = Field(True, description="Skip clips that already have a tree")
     write_back: bool = Field(True, description="Write the tags back onto the clip")

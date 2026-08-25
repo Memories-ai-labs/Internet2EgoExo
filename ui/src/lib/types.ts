@@ -290,8 +290,14 @@ export interface RefineResult {
   cut_cost_usd: number;
   /** Set when the host could not do this step, e.g. no writable directory. */
   skipped_reason: string | null;
-  recorded?: number;
-  /** The clips that now exist. What step three should be scoped to. */
+  /** Per clip: "ready", or why it is not. */
+  index_status?: Record<string, string>;
+  /** Everything uploaded, whether or not it finished indexing. */
+  uploaded_ids?: string[];
+  /**
+   * The clips that exist and are annotatable. What step three is scoped to.
+   * A clip still indexing is left out: annotation cannot start on one.
+   */
   clip_ids: string[];
 }
 

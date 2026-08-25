@@ -508,6 +508,40 @@ async def stream_export(body: ExportRequest) -> EventSourceResponse:
     )
 
 
+async def _wait_until_listed(
+    lake: Any, collection_id: str, video_ids: list[str], *, timeout: float = 420.0
+) -> list[str]:
+    """Poll the collection until it lists the clips just uploaded.
+
+    `wait_for_clean_clips` waits on the operation the upload returned, and when
+    that response carries no operation it has nothing to wait on and returns at
+    once. That is what happened here: four clips were cut, the annotate pass ran
+    two seconds later, listed a collection that did not have them yet, found
+    nothing to do, and every clip kept a blank viewpoint — which the exporter
+    then correctly refused to ship.
+
+    So this waits on the thing the annotate pass actually reads: the listing.
+    """
+    from video_searching_agent.pipeline.annotate_clean import live_video_ids
+
+    want = {v for v in video_ids if v}
+    if not want or not collection_id:
+        return []
+    deadline = time.monotonic() + timeout
+    seen: set[str] = set()
+    while time.monotonic() < deadline:
+        listed = await live_video_ids(lake, collection_id)
+        if listed is not None:
+            seen = want & set(listed)
+            if seen == want:
+                return sorted(seen)
+        await asyncio.sleep(10)
+    logger.info(
+        "%d of %d cut clips were listed before the wait ran out", len(seen), len(want)
+    )
+    return sorted(seen)
+
+
 async def _refine_events(
     request: Request, body: RefineRequest
 ) -> AsyncGenerator[dict[str, Any], None]:
@@ -519,7 +553,7 @@ async def _refine_events(
     a cut before uploading it; when the host has none, `refine_anchors` says so
     in `skipped_reason` rather than pretending nothing was asked for.
     """
-    from video_searching_agent.pipeline.refine import record_refined, refine_anchors
+    from video_searching_agent.pipeline.refine import refine_anchors, wait_for_clean_clips
 
     credentials = RequestCredentials.from_headers(request.headers)
     lake = credentials.datalake_client()
@@ -533,25 +567,40 @@ async def _refine_events(
     anchors = [a.model_dump() for a in body.anchors]
     yield {"event": "started", "data": json.dumps({"anchors": len(anchors)})}
     try:
+        # `refine_anchors` records into the annotation store itself; recording
+        # again here wrote every clip a second time.
         result = await refine_anchors(
             lake,
             anchors,
             collection_name=body.collection_name,
             max_clips=body.max_clips,
         )
-        recorded = record_refined(result, query=body.query)
     except Exception as exc:  # noqa: BLE001 - the UI has to be told
         logger.exception("refine failed")
         yield {"event": "error", "data": ErrorEvent(error=str(exc)).model_dump_json()}
         return
 
+    uploaded = [clip.uploaded_video_id for clip in result.uploaded if clip.uploaded_video_id]
+
+    # A clip that was uploaded seconds ago is still indexing, and annotation
+    # cannot start on one that is. Returning here without waiting is why a run
+    # that cut five clips labelled none of them: the annotate pass listed the
+    # collection, found nothing live, and returned in three seconds.
+    statuses: dict[str, str] = {}
+    listed: list[str] = []
+    if uploaded:
+        yield {"event": "indexing", "data": json.dumps({"clips": len(uploaded)})}
+        try:
+            statuses = await wait_for_clean_clips(lake, result)
+        except Exception as exc:  # noqa: BLE001 - a slow index is not a failed cut
+            logger.info("waiting on the cut clips' operations failed: %s", exc)
+        listed = await _wait_until_listed(lake, result.collection_id or "", uploaded)
+
     payload = result.as_dict()
-    payload["recorded"] = recorded
-    # The ids of the clips that now exist, so the caller can ask the library for
-    # exactly them instead of for everything the store has ever held.
-    payload["clip_ids"] = [
-        clip.uploaded_video_id for clip in result.uploaded if clip.uploaded_video_id
-    ]
+    payload["index_status"] = statuses
+    # Only clips the annotate pass will actually be able to see.
+    payload["clip_ids"] = listed
+    payload["uploaded_ids"] = uploaded
     yield {"event": "complete", "data": json.dumps(payload)}
 
 
@@ -579,6 +628,7 @@ async def _annotate_clean_events(
     credentials = RequestCredentials.from_headers(request.headers)
     kwargs: dict[str, Any] = {
         "limit": body.limit,
+        "only": body.video_ids,
         "only_missing": body.only_missing,
         "write_back": body.write_back,
         "wanted_viewpoint": body.wanted_viewpoint,
