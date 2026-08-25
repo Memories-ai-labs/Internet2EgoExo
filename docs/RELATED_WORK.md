@@ -254,6 +254,55 @@ lighting, +6% colour) and task semantics (+11% unseen objects).
 > carry the licence of their inputs**, and that the provenance chain has to be
 > checked at the point of *reuse*, which is the posture §11 argues for.
 
+### EgoEngine
+
+**[arXiv 2606.12604](https://arxiv.org/html/2606.12604v1)** — the fidelity-first
+answer to [Ego2Robot](#ego2robot)'s scale-first one, and a useful contrast in
+what each gives up. Four stages:
+
+1. **Digital twin reconstruction** — FoundationStereo for depth, SAM2 +
+   FoundationPose for object masks and tracking, producing a simulation
+   environment aligned to the real camera geometry and object trajectory.
+2. **Action generation** — inverse kinematics (MINK) retargets hand poses to
+   robot joints, then object-centric trajectory optimisation refines against the
+   demonstrated object motion, with **MCTS-style escalation: replay → MPC → RL
+   (PPO)** as feasibility demands.
+3. **Visual generation** — inpaint the human arms out (Inpaint-Anything v2) and
+   render the robot back into the egocentric viewpoint with occlusion-aware
+   differential blending.
+4. **Policy distillation** — an HPT visuomotor policy with a flow-matching
+   decoder trained on the synthetic demonstrations.
+
+**Results.** Simulation success 83% on TACO and 90% on Aria against a replay
+baseline's 17% / 10%. On a real RB-Y1 humanoid with a 12-DoF XHand, four tasks
+reach 40 / 35 / 70 / 60%, matching or beating real teleoperation on two of them.
+Generation runs at 2.88 demos/hour.
+
+> **The ablation is the transferable finding.** The action branch supplies
+> essentially all the gain — **43% with it against 5% for visual-only**. For a
+> collection pipeline deciding where to spend, that says the *trajectory* is the
+> payload and photorealism is decoration, which is the same conclusion the hands
+> gate encodes from the other direction.
+
+🔴 **Its input requirement is the disqualifier for web footage**: it needs
+**object meshes and camera calibration** (AprilTag-based for the Aria captures,
+heuristic for TACO), plus Aria Gen2 glasses for the self-collected half. Its own
+limitations section names digital-twin reconstruction as the bottleneck, with
+occluded objects and deformables unresolved. Licence: the paper carries only the
+arXiv licence; no code-availability statement, project page at
+egoengine.github.io.
+
+> **And the pattern this completes.** Both published routes for turning human
+> video into robot data by *reconstruction* — [EgoInfinity](#egoinfinity--lift-to-4d-then-reproject)
+> and EgoEngine — carry input requirements the open web structurally cannot
+> satisfy: a roughly static camera in one case, object meshes and calibrated
+> cameras in the other. That is not a coincidence to note in passing; it is why
+> [§8](#8-viewpoint-the-exo--ego-question-answered-three-ways)'s conclusion holds
+> generally rather than for one paper. Reconstruction pipelines are built for
+> footage whose capture conditions you controlled. For footage you found, the
+> viable operations remain **filter, clip and annotate** — which is exactly the
+> chain this repo implements.
+
 ### Open-AoE
 
 **[arXiv 2607.14183](https://arxiv.org/abs/2607.14183)** — ~2,000 hours of
@@ -1243,7 +1292,7 @@ records.
 | Bulk fetch | `video2dataset` (MIT) | **Reuse** | yt-dlp path with per-clip provenance retained |
 | Viewpoint decision | RynnVLA-001 face/hand rule | **Reuse the rule** | Same rule, plus cited cues written to the manifest |
 | Exo → ego conversion | Exo2Ego-V | **Reject** | Needs a 4-view 360° rig; the web has none |
-| 4D lift / any-view | EgoInfinity | **Defer** | Licence-encumbered *and* excludes head-mounted footage |
+| 4D lift / any-view | EgoInfinity, EgoEngine | **Defer** | Both need capture conditions you controlled — a static camera, or object meshes plus calibration |
 | Clipping | Panda-70M `splitting/` | **Reuse the design** | Agentic cleaning + clipping with frame-level evidence |
 | Orchestration at scale | `cosmos-curate` (Apache 2.0 code) | **Reuse** | — |
 | Annotation | Panda-70M select-not-generate; Action100M hierarchy | **Reuse both patterns** | task → action → event tree, L0–L3 gates, refuse-to-label floor |
@@ -1289,6 +1338,7 @@ are the parts that are worth owning.**
 - *EgoScale: Scaling Dexterous Manipulation with Diverse Egocentric Human Data.* https://rpl.cs.utexas.edu/publications/2026/02/18/zheng-arxiv26-egoscale/
 - Deng, Zhou et al. *HumanNet: Scaling Human-centric Video Learning to One Million Hours.* https://arxiv.org/abs/2605.06747
 - *Ego2Robot: Scalable Robot Data Synthesis from Egocentric Human Data.* https://arxiv.org/html/2608.02580
+- *EgoEngine: From Egocentric Human Videos to High-Fidelity Dexterous Robot Demonstrations.* https://arxiv.org/html/2606.12604v1 · https://egoengine.github.io
 - *Open-AoE: An Open Egocentric Manipulation Dataset and Toolchain for Embodied Learning.* (CC BY 4.0) https://arxiv.org/abs/2607.14183
 - *EgoVerse: An Egocentric Human Dataset for Robot Learning from Around the World.* https://arxiv.org/abs/2604.07607
 - *EgoKit: Towards Unified Low-Cost Egocentric Data Collection with Heterogeneous Devices.* (toolkit; no dataset) https://arxiv.org/pdf/2605.16797
