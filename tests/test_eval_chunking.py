@@ -39,7 +39,11 @@ def _cases(name: str) -> list[dict]:
 
 def _todo(cases: list[dict], limit: int, done: set[str]) -> list[str]:
     """What one chunk would actually run, mirroring main()'s two steps."""
-    args = argparse.Namespace(query=None, difficulty=None, family=None, limit=limit or None)
+    # `core` is False because a chunked run covers the whole set, not the
+    # recurring report's fixed slice — the same values main() parses for it.
+    args = argparse.Namespace(
+        core=False, query=None, difficulty=None, family=None, limit=limit or None
+    )
     return [c["id"] for c in runner.select(cases, args) if c["id"] not in done]
 
 

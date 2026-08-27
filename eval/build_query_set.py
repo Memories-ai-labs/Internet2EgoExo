@@ -33,6 +33,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from video_searching_agent.evaluation.task_map import (  # noqa: E402
     DIFFICULTY_MIX,
+    core_slice,
     filmable,
     imperative_verbs,
     load_task_map,
@@ -42,6 +43,12 @@ from video_searching_agent.evaluation.task_map import (  # noqa: E402
 
 EVAL_VERSION = "v1.1"
 DEFAULT_SIZE = 200
+
+# The subset the recurring run uses. Small because it runs three times a day
+# and each query costs real money; fixed because a trend line over a rotating
+# slice measures the slice, not the pipeline.
+CORE_SIZE = 12
+
 # v1.0 lives at eval/queries.json and is FROZEN: every published scorecard
 # cites it, and the filter has since been tightened, so it can no longer be
 # rebuilt byte-for-byte. Each version gets its own file rather than overwriting
@@ -75,6 +82,7 @@ def build(size: int) -> dict[str, object]:
     usable, dropped = filmable(every)
     selection = sample(usable, size)
     flagged = suspect_gerunds(selection.tasks, imperative_verbs(every))
+    core = set(core_slice(selection.tasks, CORE_SIZE))
 
     return {
         "eval_version": EVAL_VERSION,
@@ -87,6 +95,7 @@ def build(size: int) -> dict[str, object]:
             "task_families": len(selection.per_family),
             "per_family": dict(sorted(selection.per_family.items())),
             "shortfall": selection.shortfall,
+            "core_size": len(core),
             "review": flagged,
             "pool": {
                 "rows_in_task_map": len(every),
@@ -94,7 +103,7 @@ def build(size: int) -> dict[str, object]:
                 "dropped": dict(sorted(dropped.items(), key=lambda kv: (-kv[1], kv[0]))),
             },
         },
-        "queries": [task.as_dict() for task in selection.tasks],
+        "queries": [task.as_dict(core=task.rdt_id in core) for task in selection.tasks],
     }
 
 
@@ -131,6 +140,7 @@ def main() -> int:
     print(f"wrote {args.out} — {len(payload['queries'])} queries, {EVAL_VERSION}")
     print(f"  difficulty: {sampling['difficulty']}")
     print(f"  families:   {sampling['task_families']}")
+    print(f"  core slice: {sampling['core_size']} queries, run on every schedule tick")
     print(
         f"  pool:       {sampling['pool']['filmable_by_a_person']} filmable "
         f"of {sampling['pool']['rows_in_task_map']} canonical tasks"

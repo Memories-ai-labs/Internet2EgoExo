@@ -31,18 +31,18 @@
       "Deformable Object Manipulation": 15,
       "Food & Beverage Preparation": 6,
       "Gardening & Outdoor Care": 5,
-      "Grasping & Lifting": 4,
+      "Grasping & Lifting": 5,
       "Handover": 2,
       "Laundry & Clothing Care": 5,
       "Maintenance & Installation": 5,
       "Organization & Storage": 7,
-      "Other": 18,
+      "Other": 19,
       "Personal, Family & Pet Care": 5,
       "Pick–Place & Transport": 14,
       "Planar Pushing / Pulling": 10,
       "Pouring, Filling & Scooping": 7,
-      "Reaching": 4,
-      "Search & Exploration": 7,
+      "Reaching": 3,
+      "Search & Exploration": 6,
       "Shopping & Errands": 5,
       "Sports & Games": 3,
       "Stacking & Arrangement": 15,
@@ -51,17 +51,18 @@
       "Waste & Recycling": 5
     },
     "shortfall": {},
+    "core_size": 12,
     "review": {
       "RDT-01078": "someone distributing Steak on Pans",
       "RDT-01400": "someone organizing measuring cups"
     },
     "pool": {
       "rows_in_task_map": 1965,
-      "filmable_by_a_person": 1699,
+      "filmable_by_a_person": 1697,
       "dropped": {
         "instruction has an unfilled slot, or is not English": 144,
-        "instruction is written for a simulator or a rig": 60,
-        "task is a rendering or benchmark abstraction": 13,
+        "instruction is written for a simulator or a rig": 63,
+        "task is a rendering or benchmark abstraction": 12,
         "domain: Navigation & Exploration": 11,
         "domain: Locomotion & Whole-Body Control": 10,
         "family: Novel concept grounding": 3,
@@ -89,6 +90,7 @@
   "queries": [
     {
       "id": "rdt-00001-adjust-bottle",
+      "core": false,
       "rdt_id": "RDT-00001",
       "task_name": "Adjust Bottle",
       "task_instruction": "Adjust Bottle.",
@@ -100,6 +102,7 @@
     },
     {
       "id": "rdt-00003-assemble-cabinet",
+      "core": false,
       "rdt_id": "RDT-00003",
       "task_name": "Assemble Cabinet",
       "task_instruction": "Assemble the cabinet.",
@@ -111,6 +114,7 @@
     },
     {
       "id": "rdt-00004-assemble-chair",
+      "core": false,
       "rdt_id": "RDT-00004",
       "task_name": "Assemble Chair",
       "task_instruction": "Assemble the chair.",
@@ -122,6 +126,7 @@
     },
     {
       "id": "rdt-00005-assemble-desk",
+      "core": false,
       "rdt_id": "RDT-00005",
       "task_name": "Assemble Desk",
       "task_instruction": "Assemble the desk.",
@@ -133,6 +138,7 @@
     },
     {
       "id": "rdt-00006-assemble-drawer",
+      "core": false,
       "rdt_id": "RDT-00006",
       "task_name": "Assemble Drawer",
       "task_instruction": "Assemble the drawer.",
@@ -144,6 +150,7 @@
     },
     {
       "id": "rdt-00007-assemble-lamp",
+      "core": false,
       "rdt_id": "RDT-00007",
       "task_name": "Assemble Lamp",
       "task_instruction": "Assemble the lamp.",
@@ -155,6 +162,7 @@
     },
     {
       "id": "rdt-00008-assemble-nut",
+      "core": false,
       "rdt_id": "RDT-00008",
       "task_name": "Assemble Nut",
       "task_instruction": "Pick up a nut and place it onto a peg.",
@@ -166,6 +174,7 @@
     },
     {
       "id": "rdt-00012-assembling-kits",
+      "core": false,
       "rdt_id": "RDT-00012",
       "task_name": "Assembling Kits",
       "task_instruction": "Insert the misplaced shape into the matching kit slot.",
@@ -177,6 +186,7 @@
     },
     {
       "id": "rdt-00013-attach-one-table-leg",
+      "core": false,
       "rdt_id": "RDT-00013",
       "task_name": "Attach One Table Leg",
       "task_instruction": "Attach one leg to the table.",
@@ -187,18 +197,8 @@
       "difficulty": "easy"
     },
     {
-      "id": "rdt-00015-avoid-obstacles",
-      "rdt_id": "RDT-00015",
-      "task_name": "Avoid Obstacles",
-      "task_instruction": "Reach the goal while avoiding obstacles.",
-      "query": "someone reaching the goal while avoiding obstacles",
-      "domain": "Manipulation",
-      "task_family": "Search & Exploration",
-      "granularity": "Benchmark Task",
-      "difficulty": "medium"
-    },
-    {
       "id": "rdt-00016-bag-opening",
+      "core": false,
       "rdt_id": "RDT-00016",
       "task_name": "Bag Opening",
       "task_instruction": "Open the mouth of the flexible bag and keep it accessible.",
@@ -210,6 +210,7 @@
     },
     {
       "id": "rdt-00017-basketball",
+      "core": false,
       "rdt_id": "RDT-00017",
       "task_name": "Basketball",
       "task_instruction": "Dunk the basketball into the basket.",
@@ -221,6 +222,7 @@
     },
     {
       "id": "rdt-00018-basketball-in-hoop",
+      "core": false,
       "rdt_id": "RDT-00018",
       "task_name": "Basketball in Hoop",
       "task_instruction": "Basketball in Hoop.",
@@ -232,6 +234,7 @@
     },
     {
       "id": "rdt-00019-beat-block-hammer",
+      "core": true,
       "rdt_id": "RDT-00019",
       "task_name": "Beat Block Hammer",
       "task_instruction": "Beat Block Hammer.",
@@ -243,6 +246,7 @@
     },
     {
       "id": "rdt-00020-beat-the-buzz",
+      "core": false,
       "rdt_id": "RDT-00020",
       "task_name": "Beat the Buzz",
       "task_instruction": "Beat the Buzz.",
@@ -254,6 +258,7 @@
     },
     {
       "id": "rdt-00027-cap-container",
+      "core": false,
       "rdt_id": "RDT-00027",
       "task_name": "Cap Container",
       "task_instruction": "Place a cap onto a container.",
@@ -265,6 +270,7 @@
     },
     {
       "id": "rdt-00030-click-alarmclock",
+      "core": false,
       "rdt_id": "RDT-00030",
       "task_name": "Click Alarmclock",
       "task_instruction": "Click Alarmclock.",
@@ -276,6 +282,7 @@
     },
     {
       "id": "rdt-00031-click-bell",
+      "core": false,
       "rdt_id": "RDT-00031",
       "task_name": "Click Bell",
       "task_instruction": "Click Bell.",
@@ -287,6 +294,7 @@
     },
     {
       "id": "rdt-00032-close-articulated-receptacle",
+      "core": false,
       "rdt_id": "RDT-00032",
       "task_name": "Close Articulated Receptacle",
       "task_instruction": "Close the target articulated receptacle.",
@@ -298,6 +306,7 @@
     },
     {
       "id": "rdt-00033-close-box",
+      "core": false,
       "rdt_id": "RDT-00033",
       "task_name": "Close Box",
       "task_instruction": "Grasp the cover and close the box.",
@@ -309,6 +318,7 @@
     },
     {
       "id": "rdt-00035-close-drawer",
+      "core": false,
       "rdt_id": "RDT-00035",
       "task_name": "Close Drawer",
       "task_instruction": "Push the handle to close the drawer.",
@@ -320,6 +330,7 @@
     },
     {
       "id": "rdt-00043-close-the-bottom-drawer-of-the-cabinet-a",
+      "core": false,
       "rdt_id": "RDT-00043",
       "task_name": "Close the bottom drawer of the cabinet and open the top drawer",
       "task_instruction": "Close the bottom drawer of the cabinet and open the top drawer.",
@@ -331,6 +342,7 @@
     },
     {
       "id": "rdt-00046-close-the-top-drawer-of-the-cabinet-and",
+      "core": false,
       "rdt_id": "RDT-00046",
       "task_name": "Close the top drawer of the cabinet and put the black bowl on top of it",
       "task_instruction": "Close the top drawer of the cabinet and put the black bowl on top of it.",
@@ -342,6 +354,7 @@
     },
     {
       "id": "rdt-00048-coffee-preparation",
+      "core": false,
       "rdt_id": "RDT-00048",
       "task_name": "Coffee Preparation",
       "task_instruction": "Complete the multi-stage coffee preparation task.",
@@ -353,6 +366,7 @@
     },
     {
       "id": "rdt-00049-coffee-serving",
+      "core": false,
       "rdt_id": "RDT-00049",
       "task_name": "Coffee Serving",
       "task_instruction": "Place the mug under the coffee machine and operate the machine.",
@@ -364,6 +378,7 @@
     },
     {
       "id": "rdt-00054-draw-triangle",
+      "core": false,
       "rdt_id": "RDT-00054",
       "task_name": "Draw Triangle",
       "task_instruction": "Draw Triangle.",
@@ -375,6 +390,7 @@
     },
     {
       "id": "rdt-00056-drop-cloth-flat",
+      "core": false,
       "rdt_id": "RDT-00056",
       "task_name": "Drop Cloth Flat",
       "task_instruction": "Lay a piece of cloth in the air flat on the floor.",
@@ -386,6 +402,7 @@
     },
     {
       "id": "rdt-00060-excavate",
+      "core": false,
       "rdt_id": "RDT-00060",
       "task_name": "Excavate",
       "task_instruction": "Lift the specified amount of clay to the target height.",
@@ -397,6 +414,7 @@
     },
     {
       "id": "rdt-00062-fabric-object-covering",
+      "core": false,
       "rdt_id": "RDT-00062",
       "task_name": "Fabric Object Covering",
       "task_instruction": "Drape the fabric over the object so the object is covered.",
@@ -408,6 +426,7 @@
     },
     {
       "id": "rdt-00063-fill",
+      "core": false,
       "rdt_id": "RDT-00063",
       "task_name": "Fill",
       "task_instruction": "Fill clay from the bucket into the target beaker.",
@@ -419,6 +438,7 @@
     },
     {
       "id": "rdt-00064-flip-light-switch",
+      "core": false,
       "rdt_id": "RDT-00064",
       "task_name": "Flip Light Switch",
       "task_instruction": "Flip the light switch.",
@@ -430,6 +450,7 @@
     },
     {
       "id": "rdt-00065-flip-pot-upright",
+      "core": false,
       "rdt_id": "RDT-00065",
       "task_name": "Flip Pot Upright",
       "task_instruction": "flip pot upright",
@@ -441,6 +462,7 @@
     },
     {
       "id": "rdt-00067-fold-cloth",
+      "core": false,
       "rdt_id": "RDT-00067",
       "task_name": "Fold Cloth",
       "task_instruction": "fold cloth",
@@ -452,6 +474,7 @@
     },
     {
       "id": "rdt-00070-fold-crumpled-cloth",
+      "core": false,
       "rdt_id": "RDT-00070",
       "task_name": "Fold Crumpled Cloth",
       "task_instruction": "Fold a cloth that is initially crumpled.",
@@ -463,6 +486,7 @@
     },
     {
       "id": "rdt-00072-fold-thick-cloth",
+      "core": false,
       "rdt_id": "RDT-00072",
       "task_name": "Fold Thick Cloth",
       "task_instruction": "fold thick cloth",
@@ -474,6 +498,7 @@
     },
     {
       "id": "rdt-00073-get-coffee",
+      "core": true,
       "rdt_id": "RDT-00073",
       "task_name": "Get Coffee",
       "task_instruction": "Push the button on the coffee machine.",
@@ -485,6 +510,7 @@
     },
     {
       "id": "rdt-00078-grab-roller",
+      "core": false,
       "rdt_id": "RDT-00078",
       "task_name": "Grab Roller",
       "task_instruction": "Grab Roller.",
@@ -496,6 +522,7 @@
     },
     {
       "id": "rdt-00083-hammer-cleanup",
+      "core": true,
       "rdt_id": "RDT-00083",
       "task_name": "Hammer Cleanup",
       "task_instruction": "Place the hammer in its designated storage location.",
@@ -507,6 +534,7 @@
     },
     {
       "id": "rdt-00084-handover-block",
+      "core": false,
       "rdt_id": "RDT-00084",
       "task_name": "Handover Block",
       "task_instruction": "Handover Block.",
@@ -518,6 +546,7 @@
     },
     {
       "id": "rdt-00085-handover-mic",
+      "core": false,
       "rdt_id": "RDT-00085",
       "task_name": "Handover Mic",
       "task_instruction": "Handover Mic.",
@@ -529,6 +558,7 @@
     },
     {
       "id": "rdt-00086-hang",
+      "core": false,
       "rdt_id": "RDT-00086",
       "task_name": "Hang",
       "task_instruction": "Hang the noodle on the target rod.",
@@ -540,6 +570,7 @@
     },
     {
       "id": "rdt-00089-hit-ball-with-cue",
+      "core": false,
       "rdt_id": "RDT-00089",
       "task_name": "Hit Ball with Cue",
       "task_instruction": "Hit Ball with Cue.",
@@ -551,6 +582,7 @@
     },
     {
       "id": "rdt-00098-kitchen-sequence",
+      "core": true,
       "rdt_id": "RDT-00098",
       "task_name": "Kitchen Sequence",
       "task_instruction": "Complete the specified multi-stage kitchen manipulation sequence.",
@@ -562,6 +594,7 @@
     },
     {
       "id": "rdt-00099-knock-object-over",
+      "core": false,
       "rdt_id": "RDT-00099",
       "task_name": "Knock Object Over",
       "task_instruction": "knock redbull can over",
@@ -573,6 +606,7 @@
     },
     {
       "id": "rdt-00104-lift-blue-block-table",
+      "core": false,
       "rdt_id": "RDT-00104",
       "task_name": "Lift Blue Block Table",
       "task_instruction": "Grasp and lift the blue block.",
@@ -584,6 +618,7 @@
     },
     {
       "id": "rdt-00106-lift-peg-upright",
+      "core": false,
       "rdt_id": "RDT-00106",
       "task_name": "Lift Peg Upright",
       "task_instruction": "Lift Peg Upright.",
@@ -595,6 +630,7 @@
     },
     {
       "id": "rdt-00109-lift-pink-block-table",
+      "core": false,
       "rdt_id": "RDT-00109",
       "task_name": "Lift Pink Block Table",
       "task_instruction": "Grasp and lift the pink block.",
@@ -605,7 +641,20 @@
       "difficulty": "easy"
     },
     {
+      "id": "rdt-00110-lift-pot",
+      "core": false,
+      "rdt_id": "RDT-00110",
+      "task_name": "Lift Pot",
+      "task_instruction": "Lift Pot.",
+      "query": "someone lifting pot",
+      "domain": "Manipulation",
+      "task_family": "Grasping & Lifting",
+      "granularity": "Atomic Task",
+      "difficulty": "easy"
+    },
+    {
       "id": "rdt-00128-move-object-near-object",
+      "core": false,
       "rdt_id": "RDT-00128",
       "task_name": "Move Object Near Object",
       "task_instruction": "move pepsi can near rxbar blueberry",
@@ -617,6 +666,7 @@
     },
     {
       "id": "rdt-00134-mug-cleanup",
+      "core": false,
       "rdt_id": "RDT-00134",
       "task_name": "Mug Cleanup",
       "task_instruction": "Place the mug in its designated storage location.",
@@ -628,6 +678,7 @@
     },
     {
       "id": "rdt-00135-multi-item-bagging",
+      "core": false,
       "rdt_id": "RDT-00135",
       "task_name": "Multi-Item Bagging",
       "task_instruction": "Place all requested items in the bag and move it to the target.",
@@ -639,6 +690,7 @@
     },
     {
       "id": "rdt-00138-nut-assembly",
+      "core": false,
       "rdt_id": "RDT-00138",
       "task_name": "Nut Assembly",
       "task_instruction": "Place the nut onto the matching peg.",
@@ -650,6 +702,7 @@
     },
     {
       "id": "rdt-00144-open-drawer",
+      "core": false,
       "rdt_id": "RDT-00144",
       "task_name": "Open Drawer",
       "task_instruction": "open drawer",
@@ -661,6 +714,7 @@
     },
     {
       "id": "rdt-00158-open-the-top-drawer-and-put-the-bowl-ins",
+      "core": false,
       "rdt_id": "RDT-00158",
       "task_name": "Open the top drawer and put the bowl inside",
       "task_instruction": "Open the top drawer and put the bowl inside.",
@@ -672,6 +726,7 @@
     },
     {
       "id": "rdt-00160-open-the-top-drawer-of-the-cabinet-and-p",
+      "core": false,
       "rdt_id": "RDT-00160",
       "task_name": "Open the top drawer of the cabinet and put the bowl in it",
       "task_instruction": "Open the top drawer of the cabinet and put the bowl in it.",
@@ -683,6 +738,7 @@
     },
     {
       "id": "rdt-00167-perform-practical-long-horizon-manipulat",
+      "core": false,
       "rdt_id": "RDT-00167",
       "task_name": "Perform Practical Long-Horizon Manipulation",
       "task_instruction": "Perform a practical multi-stage manipulation specified in natural language.",
@@ -694,6 +750,7 @@
     },
     {
       "id": "rdt-00170-pick-and-lift",
+      "core": false,
       "rdt_id": "RDT-00170",
       "task_name": "Pick and Lift",
       "task_instruction": "Pick and Lift.",
@@ -705,6 +762,7 @@
     },
     {
       "id": "rdt-00171-pick-and-lift-small",
+      "core": false,
       "rdt_id": "RDT-00171",
       "task_name": "Pick and Lift Small",
       "task_instruction": "Pick and Lift Small.",
@@ -716,6 +774,7 @@
     },
     {
       "id": "rdt-00174-pick-and-place-object",
+      "core": true,
       "rdt_id": "RDT-00174",
       "task_name": "Pick and Place Object",
       "task_instruction": "Pick up an object and place or reorient it at a target.",
@@ -727,6 +786,7 @@
     },
     {
       "id": "rdt-00175-pick-between-bins",
+      "core": false,
       "rdt_id": "RDT-00175",
       "task_name": "Pick between Bins",
       "task_instruction": "Grasp the puck from one bin and place it into another.",
@@ -738,6 +798,7 @@
     },
     {
       "id": "rdt-00182-pick-in-order-then-restore",
+      "core": false,
       "rdt_id": "RDT-00182",
       "task_name": "Pick in Order then Restore",
       "task_instruction": "Pick the objects in the demonstrated order, then restore the scene.",
@@ -749,6 +810,7 @@
     },
     {
       "id": "rdt-00188-pick-up-the-alphabet-soup-and-place-it-i",
+      "core": false,
       "rdt_id": "RDT-00188",
       "task_name": "Pick up the alphabet soup and place it in the basket",
       "task_instruction": "Pick up the alphabet soup and place it in the basket.",
@@ -760,6 +822,7 @@
     },
     {
       "id": "rdt-00189-pick-up-the-alphabet-soup-and-put-it-in",
+      "core": false,
       "rdt_id": "RDT-00189",
       "task_name": "Pick up the alphabet soup and put it in the basket",
       "task_instruction": "Pick up the alphabet soup and put it in the basket.",
@@ -771,6 +834,7 @@
     },
     {
       "id": "rdt-00190-pick-up-the-alphabet-soup-and-put-it-in",
+      "core": false,
       "rdt_id": "RDT-00190",
       "task_name": "Pick up the alphabet soup and put it in the tray",
       "task_instruction": "Pick up the alphabet soup and put it in the tray.",
@@ -782,6 +846,7 @@
     },
     {
       "id": "rdt-00191-pick-up-the-bbq-sauce-and-place-it-in-th",
+      "core": false,
       "rdt_id": "RDT-00191",
       "task_name": "Pick up the bbq sauce and place it in the basket",
       "task_instruction": "Pick up the bbq sauce and place it in the basket.",
@@ -793,6 +858,7 @@
     },
     {
       "id": "rdt-00192-pick-up-the-black-bowl-between-the-plate",
+      "core": false,
       "rdt_id": "RDT-00192",
       "task_name": "Pick up the black bowl between the plate and the ramekin and place it on the plate",
       "task_instruction": "Pick up the black bowl between the plate and the ramekin and place it on the plate.",
@@ -804,6 +870,7 @@
     },
     {
       "id": "rdt-00193-pick-up-the-black-bowl-from-table-center",
+      "core": false,
       "rdt_id": "RDT-00193",
       "task_name": "Pick up the black bowl from table center and place it on the plate",
       "task_instruction": "Pick up the black bowl from table center and place it on the plate.",
@@ -815,6 +882,7 @@
     },
     {
       "id": "rdt-00194-pick-up-the-black-bowl-in-the-top-drawer",
+      "core": false,
       "rdt_id": "RDT-00194",
       "task_name": "Pick up the black bowl in the top drawer of the wooden cabinet and place it on the plate",
       "task_instruction": "Pick up the black bowl in the top drawer of the wooden cabinet and place it on the plate.",
@@ -826,6 +894,7 @@
     },
     {
       "id": "rdt-00195-pick-up-the-black-bowl-next-to-the-cooki",
+      "core": false,
       "rdt_id": "RDT-00195",
       "task_name": "Pick up the black bowl next to the cookie box and place it on the plate",
       "task_instruction": "Pick up the black bowl next to the cookie box and place it on the plate.",
@@ -837,6 +906,7 @@
     },
     {
       "id": "rdt-00196-pick-up-the-black-bowl-next-to-the-plate",
+      "core": false,
       "rdt_id": "RDT-00196",
       "task_name": "Pick up the black bowl next to the plate and place it on the plate",
       "task_instruction": "Pick up the black bowl next to the plate and place it on the plate.",
@@ -848,6 +918,7 @@
     },
     {
       "id": "rdt-00197-pick-up-the-black-bowl-next-to-the-ramek",
+      "core": false,
       "rdt_id": "RDT-00197",
       "task_name": "Pick up the black bowl next to the ramekin and place it on the plate",
       "task_instruction": "Pick up the black bowl next to the ramekin and place it on the plate.",
@@ -859,6 +930,7 @@
     },
     {
       "id": "rdt-00202-pick-up-the-black-bowl-on-the-wooden-cab",
+      "core": false,
       "rdt_id": "RDT-00202",
       "task_name": "Pick up the black bowl on the wooden cabinet and place it on the plate",
       "task_instruction": "Pick up the black bowl on the wooden cabinet and place it on the plate.",
@@ -870,6 +942,7 @@
     },
     {
       "id": "rdt-00207-pick-up-the-book-in-the-middle-and-place",
+      "core": false,
       "rdt_id": "RDT-00207",
       "task_name": "Pick up the book in the middle and place it on the cabinet shelf",
       "task_instruction": "Pick up the book in the middle and place it on the cabinet shelf.",
@@ -881,6 +954,7 @@
     },
     {
       "id": "rdt-00209-pick-up-the-book-on-the-right-and-place",
+      "core": false,
       "rdt_id": "RDT-00209",
       "task_name": "Pick up the book on the right and place it on the cabinet shelf",
       "task_instruction": "Pick up the book on the right and place it on the cabinet shelf.",
@@ -892,6 +966,7 @@
     },
     {
       "id": "rdt-00210-pick-up-the-book-on-the-right-and-place",
+      "core": true,
       "rdt_id": "RDT-00210",
       "task_name": "Pick up the book on the right and place it under the cabinet shelf",
       "task_instruction": "Pick up the book on the right and place it under the cabinet shelf.",
@@ -903,6 +978,7 @@
     },
     {
       "id": "rdt-00234-pinch",
+      "core": false,
       "rdt_id": "RDT-00234",
       "task_name": "Pinch",
       "task_instruction": "Deform the plasticine from its initial shape into the target shape.",
@@ -914,6 +990,7 @@
     },
     {
       "id": "rdt-00261-place-object-upright",
+      "core": false,
       "rdt_id": "RDT-00261",
       "task_name": "Place Object Upright",
       "task_instruction": "place water bottle upright",
@@ -925,6 +1002,7 @@
     },
     {
       "id": "rdt-00269-plug-charger",
+      "core": false,
       "rdt_id": "RDT-00269",
       "task_name": "Plug Charger",
       "task_instruction": "Pick up the charger and plug it into the vertical receptacle.",
@@ -936,6 +1014,7 @@
     },
     {
       "id": "rdt-00271-poke-cube",
+      "core": false,
       "rdt_id": "RDT-00271",
       "task_name": "Poke Cube",
       "task_instruction": "Poke Cube.",
@@ -947,6 +1026,7 @@
     },
     {
       "id": "rdt-00273-pour-from-cup-to-cup",
+      "core": false,
       "rdt_id": "RDT-00273",
       "task_name": "Pour from Cup to Cup",
       "task_instruction": "Pour from Cup to Cup.",
@@ -958,6 +1038,7 @@
     },
     {
       "id": "rdt-00274-pour-soup",
+      "core": false,
       "rdt_id": "RDT-00274",
       "task_name": "Pour Soup",
       "task_instruction": "Pour a bowl of soup with solid ingredients into the target bowl.",
@@ -969,6 +1050,7 @@
     },
     {
       "id": "rdt-00275-pour-specified-water-amount",
+      "core": false,
       "rdt_id": "RDT-00275",
       "task_name": "Pour Specified Water Amount",
       "task_instruction": "Pour a specified amount of water into the target cup up to the indicated level.",
@@ -980,6 +1062,7 @@
     },
     {
       "id": "rdt-00276-pour-water",
+      "core": false,
       "rdt_id": "RDT-00276",
       "task_name": "Pour Water",
       "task_instruction": "Pour a bowl of water into the target bowl.",
@@ -991,6 +1074,7 @@
     },
     {
       "id": "rdt-00287-pull-cube",
+      "core": false,
       "rdt_id": "RDT-00287",
       "task_name": "Pull Cube",
       "task_instruction": "Pull Cube.",
@@ -1002,6 +1086,7 @@
     },
     {
       "id": "rdt-00288-pull-cube-tool",
+      "core": false,
       "rdt_id": "RDT-00288",
       "task_name": "Pull Cube Tool",
       "task_instruction": "Pull Cube Tool.",
@@ -1013,6 +1098,7 @@
     },
     {
       "id": "rdt-00301-push-cube",
+      "core": false,
       "rdt_id": "RDT-00301",
       "task_name": "Push Cube",
       "task_instruction": "Push Cube.",
@@ -1024,6 +1110,7 @@
     },
     {
       "id": "rdt-00309-push-rope-to-target-shape",
+      "core": false,
       "rdt_id": "RDT-00309",
       "task_name": "Push Rope to Target Shape",
       "task_instruction": "Push the rope into the prespecified configuration.",
@@ -1035,6 +1122,7 @@
     },
     {
       "id": "rdt-00310-push-rope-to-target-shape-hard",
+      "core": false,
       "rdt_id": "RDT-00310",
       "task_name": "Push Rope to Target Shape — Hard",
       "task_instruction": "Push a rope with a complex initial configuration into the prespecified configuration.",
@@ -1046,6 +1134,7 @@
     },
     {
       "id": "rdt-00311-push-t",
+      "core": false,
       "rdt_id": "RDT-00311",
       "task_name": "Push T",
       "task_instruction": "Push T.",
@@ -1057,6 +1146,7 @@
     },
     {
       "id": "rdt-00337-put-the-black-bowl-in-the-bottom-drawer",
+      "core": false,
       "rdt_id": "RDT-00337",
       "task_name": "Put the black bowl in the bottom drawer of the cabinet and close it",
       "task_instruction": "Put the black bowl in the bottom drawer of the cabinet and close it.",
@@ -1068,6 +1158,7 @@
     },
     {
       "id": "rdt-00380-reach-and-drag",
+      "core": false,
       "rdt_id": "RDT-00380",
       "task_name": "Reach and Drag",
       "task_instruction": "Reach and Drag.",
@@ -1078,18 +1169,8 @@
       "difficulty": "medium"
     },
     {
-      "id": "rdt-00381-reach-beyond-wall",
-      "rdt_id": "RDT-00381",
-      "task_name": "Reach beyond Wall",
-      "task_instruction": "Bypass the wall and reach the goal.",
-      "query": "someone bypassing the wall and reach the goal",
-      "domain": "Manipulation",
-      "task_family": "Reaching",
-      "granularity": "Atomic Task",
-      "difficulty": "easy"
-    },
-    {
       "id": "rdt-00382-reach-target",
+      "core": false,
       "rdt_id": "RDT-00382",
       "task_name": "Reach Target",
       "task_instruction": "Reach Target.",
@@ -1101,6 +1182,7 @@
     },
     {
       "id": "rdt-00389-robo-casa-kitchen",
+      "core": false,
       "rdt_id": "RDT-00389",
       "task_name": "Robo Casa Kitchen",
       "task_instruction": "Robo Casa Kitchen.",
@@ -1112,6 +1194,7 @@
     },
     {
       "id": "rdt-00390-roll-ball",
+      "core": false,
       "rdt_id": "RDT-00390",
       "task_name": "Roll Ball",
       "task_instruction": "Roll Ball.",
@@ -1123,6 +1206,7 @@
     },
     {
       "id": "rdt-00393-rotate-object",
+      "core": false,
       "rdt_id": "RDT-00393",
       "task_name": "Rotate Object",
       "task_instruction": "Rotate the referenced object by the specified amount.",
@@ -1134,6 +1218,7 @@
     },
     {
       "id": "rdt-00411-scoop-with-spatula",
+      "core": false,
       "rdt_id": "RDT-00411",
       "task_name": "Scoop with Spatula",
       "task_instruction": "Scoop with Spatula.",
@@ -1145,6 +1230,7 @@
     },
     {
       "id": "rdt-00416-set-the-table",
+      "core": false,
       "rdt_id": "RDT-00416",
       "task_name": "Set the Table",
       "task_instruction": "Set the Table.",
@@ -1156,6 +1242,7 @@
     },
     {
       "id": "rdt-00433-soccer",
+      "core": false,
       "rdt_id": "RDT-00433",
       "task_name": "Soccer",
       "task_instruction": "Kick the soccer ball into the goal.",
@@ -1167,6 +1254,7 @@
     },
     {
       "id": "rdt-00435-spread-cloth",
+      "core": false,
       "rdt_id": "RDT-00435",
       "task_name": "Spread Cloth",
       "task_instruction": "Spread a crumpled cloth on the floor.",
@@ -1178,6 +1266,7 @@
     },
     {
       "id": "rdt-00436-square-nut-assembly",
+      "core": false,
       "rdt_id": "RDT-00436",
       "task_name": "Square Nut Assembly",
       "task_instruction": "Insert the square nut onto its peg.",
@@ -1189,6 +1278,7 @@
     },
     {
       "id": "rdt-00437-stack-block",
+      "core": false,
       "rdt_id": "RDT-00437",
       "task_name": "Stack Block",
       "task_instruction": "stack block",
@@ -1200,6 +1290,7 @@
     },
     {
       "id": "rdt-00438-stack-blocks",
+      "core": false,
       "rdt_id": "RDT-00438",
       "task_name": "Stack Blocks",
       "task_instruction": "Stack Blocks.",
@@ -1211,6 +1302,7 @@
     },
     {
       "id": "rdt-00439-stack-blocks-three",
+      "core": false,
       "rdt_id": "RDT-00439",
       "task_name": "Stack Blocks Three",
       "task_instruction": "Stack Blocks Three.",
@@ -1222,6 +1314,7 @@
     },
     {
       "id": "rdt-00444-stack-cube",
+      "core": false,
       "rdt_id": "RDT-00444",
       "task_name": "Stack Cube",
       "task_instruction": "Pick up one cube and place it on another cube.",
@@ -1233,6 +1326,7 @@
     },
     {
       "id": "rdt-00448-stack-pyramid",
+      "core": false,
       "rdt_id": "RDT-00448",
       "task_name": "Stack Pyramid",
       "task_instruction": "Stack Pyramid.",
@@ -1244,6 +1338,7 @@
     },
     {
       "id": "rdt-00450-stack-the-left-bowl-on-the-right-bowl-an",
+      "core": false,
       "rdt_id": "RDT-00450",
       "task_name": "Stack the left bowl on the right bowl and place them in the tray",
       "task_instruction": "Stack the left bowl on the right bowl and place them in the tray.",
@@ -1255,6 +1350,7 @@
     },
     {
       "id": "rdt-00452-stack-the-right-bowl-on-the-left-bowl-an",
+      "core": false,
       "rdt_id": "RDT-00452",
       "task_name": "Stack the right bowl on the left bowl and place them in the tray",
       "task_instruction": "Stack the right bowl on the left bowl and place them in the tray.",
@@ -1266,6 +1362,7 @@
     },
     {
       "id": "rdt-00453-stack-three-objects",
+      "core": true,
       "rdt_id": "RDT-00453",
       "task_name": "Stack Three Objects",
       "task_instruction": "Stack three objects into a stable tower.",
@@ -1277,6 +1374,7 @@
     },
     {
       "id": "rdt-00454-stack-two-objects",
+      "core": false,
       "rdt_id": "RDT-00454",
       "task_name": "Stack Two Objects",
       "task_instruction": "Stack one object on top of another.",
@@ -1288,6 +1386,7 @@
     },
     {
       "id": "rdt-00457-straighten-rope",
+      "core": false,
       "rdt_id": "RDT-00457",
       "task_name": "Straighten Rope",
       "task_instruction": "Straighten a rope starting from a random configuration.",
@@ -1299,6 +1398,7 @@
     },
     {
       "id": "rdt-00459-sweep-beans-into-a-pile",
+      "core": false,
       "rdt_id": "RDT-00459",
       "task_name": "Sweep Beans into a Pile",
       "task_instruction": "sweeping beans into pile",
@@ -1310,6 +1410,7 @@
     },
     {
       "id": "rdt-00462-sweep-rice-into-a-pile",
+      "core": false,
       "rdt_id": "RDT-00462",
       "task_name": "Sweep Rice into a Pile",
       "task_instruction": "sweep rice into pile",
@@ -1321,6 +1422,7 @@
     },
     {
       "id": "rdt-00464-sweep-without-exceeding-boundary",
+      "core": false,
       "rdt_id": "RDT-00464",
       "task_name": "Sweep without Exceeding Boundary",
       "task_instruction": "Sweep the target while keeping it within the specified boundary.",
@@ -1332,6 +1434,7 @@
     },
     {
       "id": "rdt-00467-table-top-free-draw",
+      "core": false,
       "rdt_id": "RDT-00467",
       "task_name": "Table Top Free Draw",
       "task_instruction": "Table Top Free Draw.",
@@ -1343,6 +1446,7 @@
     },
     {
       "id": "rdt-00494-turn-faucet",
+      "core": false,
       "rdt_id": "RDT-00494",
       "task_name": "Turn Faucet",
       "task_instruction": "Turn the faucet to the target state.",
@@ -1354,6 +1458,7 @@
     },
     {
       "id": "rdt-00511-twist-object",
+      "core": false,
       "rdt_id": "RDT-00511",
       "task_name": "Twist Object",
       "task_instruction": "Twist the referenced object according to the demonstrated relation.",
@@ -1365,6 +1470,7 @@
     },
     {
       "id": "rdt-00522-water-plants",
+      "core": true,
       "rdt_id": "RDT-00522",
       "task_name": "Water Plants",
       "task_instruction": "Water Plants.",
@@ -1376,6 +1482,7 @@
     },
     {
       "id": "rdt-00525-wipe-desk",
+      "core": false,
       "rdt_id": "RDT-00525",
       "task_name": "Wipe Desk",
       "task_instruction": "Wipe Desk.",
@@ -1387,6 +1494,7 @@
     },
     {
       "id": "rdt-00526-wipe-surface",
+      "core": false,
       "rdt_id": "RDT-00526",
       "task_name": "Wipe Surface",
       "task_instruction": "Wipe a surface with a cloth or similar tool.",
@@ -1398,6 +1506,7 @@
     },
     {
       "id": "rdt-00527-wipe-table-with-cloth",
+      "core": false,
       "rdt_id": "RDT-00527",
       "task_name": "Wipe Table with Cloth",
       "task_instruction": "wipe table with cloth",
@@ -1409,6 +1518,7 @@
     },
     {
       "id": "rdt-00536-adding-chemicals-to-hot-tub",
+      "core": false,
       "rdt_id": "RDT-00536",
       "task_name": "Adding Chemicals to Hot Tub",
       "task_instruction": "Adding chemicals to hot tub.",
@@ -1420,6 +1530,7 @@
     },
     {
       "id": "rdt-00537-adding-chemicals-to-lawn",
+      "core": false,
       "rdt_id": "RDT-00537",
       "task_name": "Adding Chemicals to Lawn",
       "task_instruction": "Adding chemicals to lawn.",
@@ -1431,6 +1542,7 @@
     },
     {
       "id": "rdt-00538-adding-chemicals-to-pool",
+      "core": false,
       "rdt_id": "RDT-00538",
       "task_name": "Adding Chemicals to Pool",
       "task_instruction": "Adding chemicals to pool.",
@@ -1442,6 +1554,7 @@
     },
     {
       "id": "rdt-00539-adding-fabric-softener",
+      "core": false,
       "rdt_id": "RDT-00539",
       "task_name": "Adding Fabric Softener",
       "task_instruction": "Adding fabric softener.",
@@ -1453,6 +1566,7 @@
     },
     {
       "id": "rdt-00547-applying-pesticides",
+      "core": false,
       "rdt_id": "RDT-00547",
       "task_name": "Applying Pesticides",
       "task_instruction": "Applying pesticides.",
@@ -1464,6 +1578,7 @@
     },
     {
       "id": "rdt-00553-arrange-drinkware",
+      "core": false,
       "rdt_id": "RDT-00553",
       "task_name": "Arrange Drinkware",
       "task_instruction": "Place the pitcher and cup on the dining counter for serving.",
@@ -1475,6 +1590,7 @@
     },
     {
       "id": "rdt-00554-arrange-sink-sanitization",
+      "core": false,
       "rdt_id": "RDT-00554",
       "task_name": "Arrange Sink Sanitization",
       "task_instruction": "Place the sponge and dishbrush next to the sink on the counter.",
@@ -1486,6 +1602,7 @@
     },
     {
       "id": "rdt-00558-arrange-vegetables",
+      "core": false,
       "rdt_id": "RDT-00558",
       "task_name": "Arrange Vegetables",
       "task_instruction": "Pick the vegetables from the sink and place them on the cutting board.",
@@ -1497,6 +1614,7 @@
     },
     {
       "id": "rdt-00560-assembling-furniture",
+      "core": false,
       "rdt_id": "RDT-00560",
       "task_name": "Assembling Furniture",
       "task_instruction": "Assembling furniture.",
@@ -1508,6 +1626,7 @@
     },
     {
       "id": "rdt-00561-assembling-gift-baskets",
+      "core": false,
       "rdt_id": "RDT-00561",
       "task_name": "Assembling Gift Baskets",
       "task_instruction": "Assembling gift baskets.",
@@ -1519,6 +1638,7 @@
     },
     {
       "id": "rdt-00564-baking-cookies-for-the-pta-bake-sale",
+      "core": false,
       "rdt_id": "RDT-00564",
       "task_name": "Baking Cookies For the Pta Bake Sale",
       "task_instruction": "Baking cookies for the PTA bake sale.",
@@ -1530,6 +1650,7 @@
     },
     {
       "id": "rdt-00565-baking-sugar-cookies",
+      "core": false,
       "rdt_id": "RDT-00565",
       "task_name": "Baking Sugar Cookies",
       "task_instruction": "Baking sugar cookies.",
@@ -1541,6 +1662,7 @@
     },
     {
       "id": "rdt-00567-basic-bathroom-tasks",
+      "core": false,
       "rdt_id": "RDT-00567",
       "task_name": "Basic Bathroom Tasks",
       "task_instruction": "Complete the requested basic bathroom tasks.",
@@ -1552,6 +1674,7 @@
     },
     {
       "id": "rdt-00568-basic-kitchen-tasks",
+      "core": false,
       "rdt_id": "RDT-00568",
       "task_name": "Basic Kitchen Tasks",
       "task_instruction": "Complete the requested basic kitchen tasks.",
@@ -1563,6 +1686,7 @@
     },
     {
       "id": "rdt-00570-beverage-organization",
+      "core": false,
       "rdt_id": "RDT-00570",
       "task_name": "Beverage Organization",
       "task_instruction": "Move the drinks to the dining counter.",
@@ -1574,6 +1698,7 @@
     },
     {
       "id": "rdt-00590-bringing-glass-to-recycling",
+      "core": false,
       "rdt_id": "RDT-00590",
       "task_name": "Bringing Glass to Recycling",
       "task_instruction": "Bringing glass to recycling.",
@@ -1585,6 +1710,7 @@
     },
     {
       "id": "rdt-00592-bringing-in-mail",
+      "core": false,
       "rdt_id": "RDT-00592",
       "task_name": "Bringing in Mail",
       "task_instruction": "Bringing in mail.",
@@ -1596,6 +1722,7 @@
     },
     {
       "id": "rdt-00594-bringing-laundry",
+      "core": true,
       "rdt_id": "RDT-00594",
       "task_name": "Bringing Laundry",
       "task_instruction": "Bringing laundry.",
@@ -1607,6 +1734,7 @@
     },
     {
       "id": "rdt-00596-bringing-paper-to-recycling",
+      "core": false,
       "rdt_id": "RDT-00596",
       "task_name": "Bringing Paper to Recycling",
       "task_instruction": "Bringing paper to recycling.",
@@ -1618,6 +1746,7 @@
     },
     {
       "id": "rdt-00598-brushing-lint-off-clothing",
+      "core": false,
       "rdt_id": "RDT-00598",
       "task_name": "Brushing Lint Off Clothing",
       "task_instruction": "Brushing lint off clothing.",
@@ -1629,6 +1758,7 @@
     },
     {
       "id": "rdt-00606-buy-and-clean-mussels",
+      "core": false,
       "rdt_id": "RDT-00606",
       "task_name": "Buy and Clean Mussels",
       "task_instruction": "Buy and clean mussels.",
@@ -1640,6 +1770,7 @@
     },
     {
       "id": "rdt-00607-buy-basic-garden-tools",
+      "core": false,
       "rdt_id": "RDT-00607",
       "task_name": "Buy Basic Garden Tools",
       "task_instruction": "Buy basic garden tools.",
@@ -1651,6 +1782,7 @@
     },
     {
       "id": "rdt-00608-buy-boxes-for-packing",
+      "core": false,
       "rdt_id": "RDT-00608",
       "task_name": "Buy Boxes For Packing",
       "task_instruction": "Buy boxes for packing.",
@@ -1662,6 +1794,7 @@
     },
     {
       "id": "rdt-00626-buy-used-gardening-equipment",
+      "core": false,
       "rdt_id": "RDT-00626",
       "task_name": "Buy Used Gardening Equipment",
       "task_instruction": "Buy used gardening equipment.",
@@ -1673,6 +1806,7 @@
     },
     {
       "id": "rdt-00627-buying-cleaning-supplies",
+      "core": false,
       "rdt_id": "RDT-00627",
       "task_name": "Buying Cleaning Supplies",
       "task_instruction": "Buying cleaning supplies.",
@@ -1684,6 +1818,7 @@
     },
     {
       "id": "rdt-00648-changing-dogs-water",
+      "core": false,
       "rdt_id": "RDT-00648",
       "task_name": "Changing Dogs Water",
       "task_instruction": "Changing dogs water.",
@@ -1695,6 +1830,7 @@
     },
     {
       "id": "rdt-00658-clean-a-air-conditioner",
+      "core": false,
       "rdt_id": "RDT-00658",
       "task_name": "Clean a Air Conditioner",
       "task_instruction": "Clean a air conditioner.",
@@ -1706,6 +1842,7 @@
     },
     {
       "id": "rdt-00932-clear-food-waste",
+      "core": false,
       "rdt_id": "RDT-00932",
       "task_name": "Clear Food Waste",
       "task_instruction": "Move the food items out of the sink and into the colander.",
@@ -1717,6 +1854,7 @@
     },
     {
       "id": "rdt-00936-clear-sink-area",
+      "core": false,
       "rdt_id": "RDT-00936",
       "task_name": "Clear Sink Area",
       "task_instruction": "Clear the mugs and bowl far away from the sink.",
@@ -1728,6 +1866,7 @@
     },
     {
       "id": "rdt-00962-collecting-childrens-toys",
+      "core": false,
       "rdt_id": "RDT-00962",
       "task_name": "Collecting Childrens Toys",
       "task_instruction": "Collecting childrens toys.",
@@ -1739,6 +1878,7 @@
     },
     {
       "id": "rdt-00965-collecting-mail-from-the-letterbox",
+      "core": false,
       "rdt_id": "RDT-00965",
       "task_name": "Collecting Mail from the Letterbox",
       "task_instruction": "Collecting mail from the letterbox.",
@@ -1750,6 +1890,7 @@
     },
     {
       "id": "rdt-00968-composting-waste",
+      "core": false,
       "rdt_id": "RDT-00968",
       "task_name": "Composting Waste",
       "task_instruction": "Composting waste.",
@@ -1761,6 +1902,7 @@
     },
     {
       "id": "rdt-01043-cool-kettle",
+      "core": false,
       "rdt_id": "RDT-01043",
       "task_name": "Cool Kettle",
       "task_instruction": "The kettle is done boiling. Turn off the stove, then wait for 300 timesteps before moving the kettle to the dining table.",
@@ -1772,6 +1914,7 @@
     },
     {
       "id": "rdt-01055-decorating-for-religious-ceremony",
+      "core": false,
       "rdt_id": "RDT-01055",
       "task_name": "Decorating For Religious Ceremony",
       "task_instruction": "Decorating for religious ceremony.",
@@ -1783,6 +1926,7 @@
     },
     {
       "id": "rdt-01056-decorating-outside-for-holidays",
+      "core": false,
       "rdt_id": "RDT-01056",
       "task_name": "Decorating Outside For Holidays",
       "task_instruction": "Decorating outside for holidays.",
@@ -1794,6 +1938,7 @@
     },
     {
       "id": "rdt-01057-decorating-outside-for-parties",
+      "core": true,
       "rdt_id": "RDT-01057",
       "task_name": "Decorating Outside For Parties",
       "task_instruction": "Decorating outside for parties.",
@@ -1805,6 +1950,7 @@
     },
     {
       "id": "rdt-01058-defrost-by-category",
+      "core": false,
       "rdt_id": "RDT-01058",
       "task_name": "Defrost By Category",
       "task_instruction": "There is a mixed pile of frozen fruits and vegetables on the counter. Locate all the frozen vegetables and place the items in a bowl on the counter. Take all the frozen fruits and defrost them in a running sink.",
@@ -1816,6 +1962,7 @@
     },
     {
       "id": "rdt-01063-delivering-groceries-to-doorstep",
+      "core": false,
       "rdt_id": "RDT-01063",
       "task_name": "Delivering Groceries to Doorstep",
       "task_instruction": "Delivering groceries to doorstep.",
@@ -1827,6 +1974,7 @@
     },
     {
       "id": "rdt-01065-dessert-upgrade",
+      "core": false,
       "rdt_id": "RDT-01065",
       "task_name": "Dessert Upgrade",
       "task_instruction": "Move the dessert items from the plates to the tray.",
@@ -1838,6 +1986,7 @@
     },
     {
       "id": "rdt-01066-disinfect-laundry",
+      "core": false,
       "rdt_id": "RDT-01066",
       "task_name": "Disinfect Laundry",
       "task_instruction": "Disinfect laundry.",
@@ -1849,6 +1998,7 @@
     },
     {
       "id": "rdt-01073-dispose-of-medication",
+      "core": false,
       "rdt_id": "RDT-01073",
       "task_name": "Dispose of Medication",
       "task_instruction": "Dispose of medication.",
@@ -1860,6 +2010,7 @@
     },
     {
       "id": "rdt-01076-disposing-of-trash-for-adult",
+      "core": false,
       "rdt_id": "RDT-01076",
       "task_name": "Disposing of Trash For Adult",
       "task_instruction": "Disposing of trash for adult.",
@@ -1871,6 +2022,7 @@
     },
     {
       "id": "rdt-01078-distribute-steak-on-pans",
+      "core": false,
       "rdt_id": "RDT-01078",
       "task_name": "Distribute Steak on Pans",
       "task_instruction": "Turn on the stove burner for the empty pan. Then move one steak from the full pan to the empty pan to achieve better heat distribution and more room for maneuverability.",
@@ -1882,6 +2034,7 @@
     },
     {
       "id": "rdt-01079-distributing-event-t-shirts",
+      "core": false,
       "rdt_id": "RDT-01079",
       "task_name": "Distributing Event T Shirts",
       "task_instruction": "Distributing event T shirts.",
@@ -1893,6 +2046,7 @@
     },
     {
       "id": "rdt-01085-doing-laundry",
+      "core": false,
       "rdt_id": "RDT-01085",
       "task_name": "Doing Laundry",
       "task_instruction": "Doing laundry.",
@@ -1904,6 +2058,7 @@
     },
     {
       "id": "rdt-01101-emptying-trash-cans",
+      "core": false,
       "rdt_id": "RDT-01101",
       "task_name": "Emptying Trash Cans",
       "task_instruction": "Emptying trash cans.",
@@ -1915,6 +2070,7 @@
     },
     {
       "id": "rdt-01120-fixing-broken-chair",
+      "core": false,
       "rdt_id": "RDT-01120",
       "task_name": "Fixing Broken Chair",
       "task_instruction": "Fixing broken chair.",
@@ -1926,6 +2082,7 @@
     },
     {
       "id": "rdt-01121-fixing-broken-table",
+      "core": false,
       "rdt_id": "RDT-01121",
       "task_name": "Fixing Broken Table",
       "task_instruction": "Fixing broken table.",
@@ -1937,6 +2094,7 @@
     },
     {
       "id": "rdt-01122-fixing-mailbox",
+      "core": false,
       "rdt_id": "RDT-01122",
       "task_name": "Fixing Mailbox",
       "task_instruction": "Fixing mailbox.",
@@ -1948,6 +2106,7 @@
     },
     {
       "id": "rdt-01147-garnish-pancake",
+      "core": false,
       "rdt_id": "RDT-01147",
       "task_name": "Garnish Pancake",
       "task_instruction": "Take the strawberry from the fridge and place it on top of the pancake, located on the dining counter.",
@@ -1959,6 +2118,7 @@
     },
     {
       "id": "rdt-01154-get-toasted-bread",
+      "core": false,
       "rdt_id": "RDT-01154",
       "task_name": "Get Toasted Bread",
       "task_instruction": "Start the toaster. Once the lever pops up, take the bread to the plate on the dining counter.",
@@ -1970,6 +2130,7 @@
     },
     {
       "id": "rdt-01156-getting-organized-for-work",
+      "core": false,
       "rdt_id": "RDT-01156",
       "task_name": "Getting Organized For Work",
       "task_instruction": "Getting organized for work.",
@@ -1981,6 +2142,7 @@
     },
     {
       "id": "rdt-01190-installing-a-fax-machine",
+      "core": false,
       "rdt_id": "RDT-01190",
       "task_name": "Installing a Fax Machine",
       "task_instruction": "Installing a fax machine.",
@@ -1992,6 +2154,7 @@
     },
     {
       "id": "rdt-01191-installing-a-fence",
+      "core": false,
       "rdt_id": "RDT-01191",
       "task_name": "Installing a Fence",
       "task_instruction": "Installing a fence.",
@@ -2003,6 +2166,7 @@
     },
     {
       "id": "rdt-01223-loading-shopping-into-car",
+      "core": false,
       "rdt_id": "RDT-01223",
       "task_name": "Loading Shopping Into Car",
       "task_instruction": "Loading shopping into car.",
@@ -2014,6 +2178,7 @@
     },
     {
       "id": "rdt-01228-mailing-letters",
+      "core": true,
       "rdt_id": "RDT-01228",
       "task_name": "Mailing Letters",
       "task_instruction": "Mailing letters.",
@@ -2025,6 +2190,7 @@
     },
     {
       "id": "rdt-01237-make-a-christmas-gift-box",
+      "core": false,
       "rdt_id": "RDT-01237",
       "task_name": "Make a Christmas Gift Box",
       "task_instruction": "Make a christmas gift box.",
@@ -2036,6 +2202,7 @@
     },
     {
       "id": "rdt-01241-make-a-military-care-package",
+      "core": false,
       "rdt_id": "RDT-01241",
       "task_name": "Make a Military Care Package",
       "task_instruction": "Make a military care package.",
@@ -2047,6 +2214,7 @@
     },
     {
       "id": "rdt-01272-make-cheesecake-filling",
+      "core": false,
       "rdt_id": "RDT-01272",
       "task_name": "Make Cheesecake Filling",
       "task_instruction": "Add the butter stick, sugar cube, and cream cheese stick to the stand mixer bowl and then turn the speed knob to begin making cheesecake filling.",
@@ -2058,6 +2226,7 @@
     },
     {
       "id": "rdt-01299-make-gift-bags-for-baby-showers",
+      "core": false,
       "rdt_id": "RDT-01299",
       "task_name": "Make Gift Bags For Baby Showers",
       "task_instruction": "Make gift bags for baby showers.",
@@ -2069,6 +2238,7 @@
     },
     {
       "id": "rdt-01357-manage-candles",
+      "core": false,
       "rdt_id": "RDT-01357",
       "task_name": "Manage Candles",
       "task_instruction": "Light or extinguish the candles as requested.",
@@ -2080,6 +2250,7 @@
     },
     {
       "id": "rdt-01361-meat-skewer-assembly",
+      "core": false,
       "rdt_id": "RDT-01361",
       "task_name": "Meat Skewer Assembly",
       "task_instruction": "Move the kebab skewers from the plate to the oven tray for oven preparation.",
@@ -2091,6 +2262,7 @@
     },
     {
       "id": "rdt-01368-mix-cake-frosting",
+      "core": false,
       "rdt_id": "RDT-01368",
       "task_name": "Mix Cake Frosting",
       "task_instruction": "Add butter and sugar cubes to the stand mixer bowl and then turn on the stand mixer to begin making frosting.",
@@ -2102,6 +2274,7 @@
     },
     {
       "id": "rdt-01396-organize-baking-ingredients",
+      "core": true,
       "rdt_id": "RDT-01396",
       "task_name": "Organize Baking Ingredients",
       "task_instruction": "Gather the eggs and milk located in the vicinity of the sink area and place them right next to the bowl.",
@@ -2113,6 +2286,7 @@
     },
     {
       "id": "rdt-01400-organize-measuring-cups",
+      "core": false,
       "rdt_id": "RDT-01400",
       "task_name": "Organize Measuring Cups",
       "task_instruction": "Organize the measuring cups left to right, smallest to largest. The measuring cups must be rotated so the handle points directly outward towards the front of the counter. Make sure the measuring cups are upright.",
@@ -2124,6 +2298,7 @@
     },
     {
       "id": "rdt-01423-packing-art-supplies-into-car",
+      "core": false,
       "rdt_id": "RDT-01423",
       "task_name": "Packing Art Supplies Into Car",
       "task_instruction": "Packing art supplies into car.",
@@ -2135,6 +2310,7 @@
     },
     {
       "id": "rdt-01424-packing-bags-or-suitcase",
+      "core": false,
       "rdt_id": "RDT-01424",
       "task_name": "Packing Bags or Suitcase",
       "task_instruction": "Packing bags or suitcase.",
@@ -2146,6 +2322,7 @@
     },
     {
       "id": "rdt-01425-packing-books-into-car",
+      "core": false,
       "rdt_id": "RDT-01425",
       "task_name": "Packing Books Into Car",
       "task_instruction": "Packing books into car.",
@@ -2157,6 +2334,7 @@
     },
     {
       "id": "rdt-01458-pick-place-microwave-to-counter",
+      "core": false,
       "rdt_id": "RDT-01458",
       "task_name": "Pick Place Microwave to Counter",
       "task_instruction": "Pick the item from the microwave and place it on container located on the counter.",
@@ -2168,6 +2346,7 @@
     },
     {
       "id": "rdt-01459-pick-place-sink-to-counter",
+      "core": false,
       "rdt_id": "RDT-01459",
       "task_name": "Pick Place Sink to Counter",
       "task_instruction": "Pick the item from the sink and place it on the container located on the counter.",
@@ -2179,6 +2358,7 @@
     },
     {
       "id": "rdt-01474-pj-sandwich-prep",
+      "core": false,
       "rdt_id": "RDT-01474",
       "task_name": "Pj Sandwich Prep",
       "task_instruction": "Pick up the two toasted bread slices and place them in a bowl next to the toaster. Then carry the bowl to the dining counter and place it next to the peanut butter bottle and jelly jar to make a peanut butter and jelly sandwich.",
@@ -2189,7 +2369,20 @@
       "difficulty": "medium"
     },
     {
+      "id": "rdt-01632-recycle-bottles-by-type",
+      "core": false,
+      "rdt_id": "RDT-01632",
+      "task_name": "Recycle Bottles By Type",
+      "task_instruction": "Move the plastic bottles in the middle to the plastics group, and the glass bottles in the middle to the glass group.",
+      "query": "someone moving the plastic bottles in the middle to the plastics group,",
+      "domain": "Household & Daily-Living Robotics",
+      "task_family": "Other",
+      "granularity": "Composite Task",
+      "difficulty": "medium"
+    },
+    {
       "id": "rdt-01634-recycle-stacked-yogurt",
+      "core": false,
       "rdt_id": "RDT-01634",
       "task_name": "Recycle Stacked Yogurt",
       "task_instruction": "Stack the yogurt containers by placing the smaller containers on top of the larger containers.",
@@ -2201,6 +2394,7 @@
     },
     {
       "id": "rdt-01667-rinse-cutting-board",
+      "core": false,
       "rdt_id": "RDT-01667",
       "task_name": "Rinse Cutting Board",
       "task_instruction": "Turn on the sink faucet with hot water and rinse the cutting board for ten seconds, then turn off the faucet. Push the cutting board to reach the water if necessary.",
@@ -2212,6 +2406,7 @@
     },
     {
       "id": "rdt-01669-rinse-sink-basin",
+      "core": false,
       "rdt_id": "RDT-01669",
       "task_name": "Rinse Sink Basin",
       "task_instruction": "Turn on the sink and manuever the spout to wash all locations of the sink basin.",
@@ -2223,6 +2418,7 @@
     },
     {
       "id": "rdt-01693-serve-tea",
+      "core": false,
       "rdt_id": "RDT-01693",
       "task_name": "Serve Tea",
       "task_instruction": "Pick the cup of tea, navigate to the dining table, and place it on the saucer.",
@@ -2234,6 +2430,7 @@
     },
     {
       "id": "rdt-01749-soak-sponge",
+      "core": false,
       "rdt_id": "RDT-01749",
       "task_name": "Soak Sponge",
       "task_instruction": "Soak the sponge with water for a few seconds and then drop it inside the sink.",
@@ -2245,6 +2442,7 @@
     },
     {
       "id": "rdt-01772-stack-bowls-in-sink",
+      "core": false,
       "rdt_id": "RDT-01772",
       "task_name": "Stack Bowls in Sink",
       "task_instruction": "Stack the bowls in the sink.",
@@ -2256,6 +2454,7 @@
     },
     {
       "id": "rdt-01854-toast-one-slot-pair",
+      "core": false,
       "rdt_id": "RDT-01854",
       "task_name": "Toast One Slot Pair",
       "task_instruction": "Move the bread slice from the broken *left/right* slot to the working *right/left* slot-pair so both slices can toast together. Then press that lever to start toasting.",
@@ -2267,6 +2466,7 @@
     },
     {
       "id": "rdt-01866-turn-off-simmered-sauce-heat",
+      "core": false,
       "rdt_id": "RDT-01866",
       "task_name": "Turn Off Simmered Sauce Heat",
       "task_instruction": "Wait until the marinara sauce is simmered to a deep red color and then turn off the stove.",
@@ -2278,6 +2478,7 @@
     },
     {
       "id": "rdt-01919-wash-lettuce",
+      "core": false,
       "rdt_id": "RDT-01919",
       "task_name": "Wash Lettuce",
       "task_instruction": "Wash the lettuce in the sink by running water over it.",

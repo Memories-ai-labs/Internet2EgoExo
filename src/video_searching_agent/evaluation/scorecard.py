@@ -98,7 +98,9 @@ def render(card: Scorecard, *, title: str = "Eval scorecard") -> str:
         f"{_pct(chain.candidates, chain.found or chain.candidates)} |",
         f"| candidates we tried to collect | {chain.attempted} | "
         f"{_pct(chain.attempted, chain.candidates)} |",
-        f"| reached the Datalake | {chain.indexed} | {_pct(chain.indexed, chain.attempted)} |",
+        f"| reached the Datalake | {chain.indexed} | "
+        f"{_pct(chain.indexed, chain.attempted)}"
+        f"{' (a floor — see below)' if chain.index_rate_is_a_floor else ''} |",
         f"| graded by the gates | {chain.graded} | {_pct(chain.graded, chain.indexed)} |",
         f"| **valid** | **{chain.valid}** | **{_pct(chain.valid, chain.graded)}** |",
         f"| accepted by the gates | {chain.accepted} | "
@@ -140,6 +142,17 @@ def render(card: Scorecard, *, title: str = "Eval scorecard") -> str:
                 "footage and kept none of it. That is the pipeline working: the footage "
                 "of a named task usually exists and is usually shot on a tripod.",
             ]
+
+    if chain.index_rate_is_a_floor:
+        lines += [
+            "",
+            f"> ⚠️ {chain.queries_blocked} of {chain.queries} queries were refused by the "
+            "platform rather than by the footage — a spent prepaid balance, an expired "
+            "key or a rate limit on upload. Those candidates never reached a verdict, so "
+            "the index rate above is a floor and the acceptance rate is computed over a "
+            "smaller set than the run attempted. Fix the credential or the balance and "
+            "re-run before reading this as yield.",
+        ]
 
     lines += [
         "",

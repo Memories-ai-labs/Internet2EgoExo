@@ -103,7 +103,6 @@ ROBOT_WORDING = (
     "simulat",
     "goal image",
     "goal position",
-    "goal zone",
     "manipulation range",
     "initial state",
     "target location",
@@ -115,6 +114,7 @@ ROBOT_WORDING = (
     "target region",
     # Dataset and benchmark object sets, and their difficulty suffixes.
     "egad object",
+    "baked tex",
     "ycb object",
     "subtask",
 )
@@ -169,10 +169,16 @@ BENCHMARK_WORDING = (
 
 # Two more simulator tells that need a pattern rather than a phrase: a success
 # condition stated against "the goal", and a benchmark's difficulty suffix.
-# Also catches "to its goal", which the phrase list missed: a success condition
-# stated against a possessive reads as English but is still a benchmark.
+# "Kick the soccer ball into the goal" is the one real goal in the vocabulary,
+# so that is the exception rather than the rule. Possessives ("to its goal")
+# and "goal configuration" read as English but are still benchmark success
+# conditions.
 SIM_WORDING = re.compile(
-    r"\b(?:at|to) (?:the|its|their) goal\b|\blevel\s?\d\b|\bgoal configuration\b",
+    r"(?<!into )\bthe goal\b"
+    r"|\b(?:at|to) (?:its|their) goal\b"
+    r"|\bgoal zone\b"
+    r"|\bgoal configuration\b"
+    r"|\blevel\s?\d\b",
     re.IGNORECASE,
 )
 
@@ -389,9 +395,10 @@ class Task:
         slug = re.sub(r"[^a-z0-9]+", "-", self.task_name.lower()).strip("-")
         return f"{self.rdt_id.lower()}-{slug[:40].rstrip('-')}"
 
-    def as_dict(self) -> dict[str, object]:
+    def as_dict(self, *, core: bool = False) -> dict[str, object]:
         return {
             "id": self.query_id,
+            "core": core,
             "rdt_id": self.rdt_id,
             "task_name": self.task_name,
             "task_instruction": self.instruction,
@@ -717,6 +724,49 @@ def sample(
     selection.per_difficulty = Counter(task.difficulty for task in selection.tasks)
     selection.per_family = Counter(task.task_family for task in selection.tasks)
     return selection
+
+
+def core_slice(tasks: list[Task], size: int) -> list[str]:
+    """The subset run on every schedule tick, rather than the whole set.
+
+    The full set costs real money and hours, so it cannot run three times a
+    day. What runs instead has to be *the same* subset every time — a rotating
+    slice would confound "the pipeline changed" with "the queries changed",
+    which is the one thing a trend line must not do.
+
+    So: a fixed, stratified subset, balanced across difficulty and drawn
+    round-robin over families in the same fixed order as the parent set.
+    Returns RDT ids so the choice is visible in the frozen file rather than
+    recomputed by whatever is running.
+    """
+    per_tier = max(size // len(DIFFICULTY_MIX), 1)
+    chosen: list[str] = []
+    for tier in sorted(DIFFICULTY_MIX):
+        tier_tasks = [task for task in tasks if task.difficulty == tier]
+        if not tier_tasks:
+            continue
+        # Walk the tier at a stride rather than taking its head. The ids are
+        # not arbitrary: the low ones are the robot-benchmark rows the map was
+        # seeded from, so the first four of any tier are the four least
+        # footage-like queries in it.
+        stride = max(len(tier_tasks) // per_tier, 1)
+        order = [tier_tasks[i] for i in range(stride // 2, len(tier_tasks), stride)]
+        order += [task for task in tier_tasks if task not in order]
+
+        seen_families: set[str] = set()
+        picked: list[Task] = []
+        for want_new_family in (True, False):
+            for task in order:
+                if len(picked) >= per_tier:
+                    break
+                if task in picked:
+                    continue
+                if want_new_family and task.task_family in seen_families:
+                    continue
+                seen_families.add(task.task_family)
+                picked.append(task)
+        chosen.extend(task.rdt_id for task in picked)
+    return sorted(chosen)
 
 
 def _quotas(size: int, mix: dict[str, float]) -> dict[str, int]:

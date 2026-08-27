@@ -67,6 +67,24 @@ DISPOSITION: dict[str, str] = {
 # A and B are the bands the standard lets a batch count as high-quality hours.
 HIGH_QUALITY = frozenset({Grade.A.value, Grade.B.value})
 
+# A collect can fail because the footage is wrong, or because the platform
+# refused us — a spent prepaid balance, an expired key, a rate limit. Only the
+# first is a fact about the pipeline, and the two arrive down the same pipe as
+# "nothing reached the Datalake". Measured: a run where the deployment's
+# Datalake credit ran out reported five of ten candidates lost "at download",
+# and three of those five were a 402.
+BLOCKED_SIGNS = (
+    "quota_exceeded",
+    "insufficient",
+    "returned 401",
+    "returned 402",
+    "returned 403",
+    "returned 429",
+    "rate limit",
+    "payment required",
+)
+
+
 
 @dataclass
 class ClipOutcome:
@@ -200,6 +218,21 @@ class QueryOutcome:
     # A dry run searched and stopped. Recorded, because a dry-run record scored
     # later is otherwise indistinguishable from a run where everything failed.
     dry_run: bool = False
+    # The collect step failed on billing or credentials rather than on the
+    # footage — a 402 on upload, an expired key. The pipeline never got to have
+    # an opinion about this query, so counting it as a yield failure would blame
+    # the footage for an invoice.
+    blocked: bool = False
+
+    @property
+    def was_refused(self) -> bool:
+        """Whether the platform refused this query rather than judging it.
+
+        Computed rather than read straight off the field, so a record written
+        before the field existed — or by any producer that did not set it — is
+        still not re-scored as a clean zero. The stored flag wins when set.
+        """
+        return self.blocked or was_blocked(self.error)
 
     @property
     def graded(self) -> int:
@@ -223,6 +256,7 @@ class YieldChain:
     queries_with_an_accepted_clip: int = 0
     queries_errored: int = 0
     queries_dry_run: int = 0
+    queries_blocked: int = 0
     # A query the search answered and the screen emptied. Its own row, because
     # "the footage does not exist" and "the footage exists and is the wrong
     # viewpoint" are different findings and only one of them is about us.
@@ -269,8 +303,18 @@ class YieldChain:
 
     @property
     def index_rate(self) -> float:
-        """Of the candidates we tried to collect, how many reached the Datalake."""
+        """Of the candidates we tried to collect, how many reached the Datalake.
+
+        A floor rather than a measurement when `queries_blocked` is non-zero:
+        a query the platform refused on billing never got as far as being
+        judged, and its URL is counted in `attempted` because we did attempt it.
+        """
         return _ratio(self.indexed, self.attempted)
+
+    @property
+    def index_rate_is_a_floor(self) -> bool:
+        """Whether something other than the footage stopped a collect."""
+        return self.queries_blocked > 0
 
     @property
     def acceptance_rate(self) -> float:
@@ -533,6 +577,8 @@ def score_run(
     for outcome in outcomes:
         if outcome.dry_run:
             chain.queries_dry_run += 1
+        if outcome.was_refused:
+            chain.queries_blocked += 1
         if outcome.error:
             chain.queries_errored += 1
             card.errors.append(f"{outcome.query_id}: {outcome.error}")
@@ -737,3 +783,9 @@ def outcome_from_dict(data: dict[str, Any]) -> QueryOutcome:
     )
     outcome.clips = [clip_from_dict(clip) for clip in data.get("clips") or []]
     return outcome
+
+
+def was_blocked(error: str) -> bool:
+    """Whether this failure was the platform refusing us rather than a verdict."""
+    lowered = (error or "").lower()
+    return any(sign in lowered for sign in BLOCKED_SIGNS)
