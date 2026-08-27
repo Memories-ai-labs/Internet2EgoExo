@@ -93,6 +93,49 @@ geometric ground truth that monocular pipelines like
 from RGB — and, being non-commercial, another entry for
 [§11](#11-the-licence-trap).
 
+### HoloAssist
+
+**[holoassist.github.io](https://holoassist.github.io/)** — 169 hours from **350
+unique instructor–performer pairs**, and the only dataset here that captures a
+*second person's judgement* alongside the footage. The performer wears a
+mixed-reality headset streaming **seven synchronised channels** (RGB, depth,
+hand pose, eye gaze, head pose, IMU); a remote instructor watches that egocentric
+feed live and talks them through the task. Annotations cover actions,
+conversation, and how the instructor corrects errors, intervenes and grounds
+instructions in the scene. Benchmarks: mistake detection, intervention-type
+prediction, hand forecasting, action recognition and anticipation. **Licence
+CDLA v2**, permissive.
+
+> **Bearing here.** Mistake detection is the label almost nobody else ships, and
+> it is the one a curation pipeline would most like to have: a corpus where
+> *"this attempt went wrong, and here is where"* is annotated is the natural
+> training signal for judging whether a found clip shows a task done competently.
+> Our quality gates currently judge legibility and rights, not competence; this
+> is where a competence gate would come from if one is ever wanted.
+
+### Ego-1K
+
+**[arXiv 2603.13741](https://arxiv.org/html/2603.13741v1)** (Meta Reality Labs) —
+🔴 **not what the name suggests, and worth stating plainly because the name
+invites the wrong reading: it is not 1,000 hours.** It is **956 videos of roughly
+8–10 seconds each**, about **514,000 frames**, captured on a rig of **16
+hardware-synchronised 60 Hz global-shutter cameras** — 12 fisheye surrounding a
+Meta Quest 3 plus its 4 forward-facing — all moving with the wearer's head.
+Activities are hand–object interaction: gestures, simulated typing, object
+manipulation. Metadata covers lighting, scene type, actions, objects held, head
+motion, clothing. Benchmarks are stereo consistency, per-frame 3D Gaussian
+splatting and **4D dynamic novel-view synthesis**. **CC BY 4.0**; 17.5 TB research
+version on Hugging Face, 88 TB raw on request.
+
+> **Why it sits in this document.** It is a *view-synthesis* dataset, not a
+> manipulation corpus — but it is exactly the rig-captured multiview input that
+> [Exo2Ego-V](#exo2ego-v--why-generative-conversion-does-not-apply)-style methods
+> require and the web cannot supply, and it is an unusual middle case: the
+> surrounding views are head-mounted rather than fixed in the room. Its own
+> stated difficulty is instructive too — large disparities and image motion from
+> close dynamic objects and rig egomotion, which is to say that even with sixteen
+> synchronised cameras, hands moving near the face remain the hard part.
+
 ### ENIGMA-360
 
 **[arXiv 2603.09741](https://arxiv.org/html/2603.09741v1)** — the industrial
@@ -1047,8 +1090,8 @@ Reading the licences across this document produces the wider pattern:
 | EgoVid-5M | inherits Ego4D | ⚠️ check upstream |
 
 | DreamDojo code | Apache 2.0 | ✅ (the 43,827 crowdsourced hours have **no stated terms**) |
-| HoloAssist | CDLA v2 | ✅ |
-| Ego-1K | CC BY 4.0 | ✅ with attribution |
+| [HoloAssist](#holoassist) | CDLA v2 | ✅ |
+| [Ego-1K](#ego-1k) | CC BY 4.0 | ✅ with attribution (17.5 TB research / 88 TB raw on request) |
 
 Note what the bottom half of that table has in common: the field's **most-cited**
 reference datasets are the ones you cannot use commercially, or cannot even read
@@ -1480,7 +1523,8 @@ are the parts that are worth owning.**
 - NVIDIA. *Cosmos World Foundation Model Platform for Physical AI.* https://arxiv.org/abs/2501.03575
 - NVIDIA. *NeMo Curator.* https://github.com/NVIDIA-NeMo/Curator
 - NVIDIA. *DreamDojo: A Generalist Robot World Model from Large-Scale Human Videos.* ICML 2026. (code Apache 2.0; video terms unstated) https://arxiv.org/html/2602.06949 · https://github.com/NVIDIA/DreamDojo
-- *Ego-1K: A Large-Scale Multiview Video Dataset for Egocentric Vision.* (CC BY 4.0) https://arxiv.org/html/2603.13741v1
+- Meta Reality Labs. *Ego-1K: A Large-Scale Multiview Video Dataset for Egocentric Vision.* (CC BY 4.0) https://arxiv.org/html/2603.13741v1
+- *HoloAssist.* (CDLA v2) https://holoassist.github.io/
 - EGXO Data. *Robotics Data Release Tracker 2026.* (third-party tracker, v1.1.1, last updated 2026-07-25 — useful for monitoring, but it collapses licence and access; verify at the publisher) https://egxodata.com/resources/robotics-data-release-tracker-2026
 - Memories.ai Research. *OmniRetriever: Any-to-Any Audio-Video-Text Retrieval via Fusion-as-Teacher Distillation.* https://arxiv.org/abs/2605.26641
 - *S-EMBER: A Large-Scale Benchmark for Streaming Egocentric Memory Retrieval.* https://arxiv.org/pdf/2607.02689
