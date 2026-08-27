@@ -545,8 +545,9 @@ separate checkpoints per subset, so the subsets double as an ablation over data
 quality.
 
 Stated caveats: 15% of clips are only 360P–720P and "may not perform as well"
-for generation, and 85% run under 10 seconds. ⚠️ The dataset page does not state
-a licence; treat it as unresolved until asked.
+for generation, and 85% run under 10 seconds. ⚠️ **No licence is stated on either surface** — not the Hugging Face dataset
+page and not the `Data/InternVid` README in the source repository — for a corpus
+built from YouTube video. Unresolved, and worth resolving before redistribution.
 
 ### NeMo Curator
 
@@ -581,6 +582,42 @@ high visual quality, and **extracts ~100 M clips of 2–60 s from a 20 M-hour
 collection**. The 2026 line (Cosmos 3, and the Physical AI Data Factory blueprint
 announced at GTC 2026) folds world modelling, multimodal understanding, action
 and reasoning into one family.
+
+### DreamDojo — and the strongest evidence in this document for §13
+
+**[arXiv 2602.06949](https://arxiv.org/html/2602.06949)** (NVIDIA, ICML 2026;
+code [Apache 2.0](https://github.com/NVIDIA/DreamDojo), 2B and 14B checkpoints
+released Feb 2026) — a generalist robot world model trained on **44,711 hours of
+egocentric human video**, reported as 15× the duration, 96× the skills and
+2,000× the scenes of the previously largest world-model training set.
+
+The composition is the part that matters here:
+
+| Source | Hours | How obtained |
+|---|---|---|
+| **DreamDojo-HV** | **43,827** | **Crowdsourced** — loco-manipulation across household, industrial, retail, educational and administrative settings |
+| [EgoDex](#egodex) | 829 | Existing public dataset (**CC-BY-NC-ND**) |
+| In-lab | 55 | Self-captured, Manus gloves + Vive Ultimate Tracker |
+
+> **Read that first row again.** The largest egocentric corpus ever assembled for
+> a world model — by NVIDIA, a company with every incentive and every resource to
+> scrape the web instead — was **paid for and crowdsourced**. Not one of the
+> 44,711 hours is described as found footage. If the acquisition layer
+> ([§13](#13-why-no-open-source-project-does-exactly-this)) were easy, or even
+> merely tractable, this is the project that would have used it.
+
+Two further observations, both about what the paper does *not* say:
+
+- **No filtering or quality-control pipeline is described.** For a corpus of this
+  size that is a striking omission, and it is the same gap this repo's cleaning
+  and curation agents fill. Scale was reported; selection was not.
+- 🔴 **Nothing is said about data licensing, redistribution, or dataset
+  availability.** The code is Apache 2.0 and the checkpoints are on Hugging Face;
+  the 43,827 crowdsourced hours have no stated terms. Note also that 829 of the
+  hours are EgoDex, which is CC-BY-NC-ND — no-derivatives and non-commercial.
+  Nothing here alleges non-compliance; as with the [WiLoR pattern](#11-the-licence-trap),
+  the point is that the provenance chain has to be checked at the point of reuse,
+  and here it currently cannot be, because the terms are unpublished.
 
 **Relationship.** Cosmos *generates and evaluates*; this repo *sources*. The seam
 is the interesting part: **Cosmos Curator presupposes the 20 M-hour archive.**
@@ -1009,10 +1046,23 @@ Reading the licences across this document produces the wider pattern:
 | Panda-70M (data) | inherits HD-VILA-100M | ⚠️ check upstream |
 | EgoVid-5M | inherits Ego4D | ⚠️ check upstream |
 
+| DreamDojo code | Apache 2.0 | ✅ (the 43,827 crowdsourced hours have **no stated terms**) |
+| HoloAssist | CDLA v2 | ✅ |
+| Ego-1K | CC BY 4.0 | ✅ with attribution |
+
 Note what the bottom half of that table has in common: the field's **most-cited**
 reference datasets are the ones you cannot use commercially, or cannot even read
 the terms of without signing first. The permissive corner is occupied almost
 entirely by 2026 releases and by tooling.
+
+⚠️ **Licence and access are separate axes, and collapsing them misleads.** A
+third-party [release tracker](https://egxodata.com/resources/robotics-data-release-tracker-2026)
+records Egocentric-10K as "gated; terms require review" — true of *access*, and
+compatible with the card's Apache 2.0 *licence*: the Build AI sets ask for
+contact details before download while granting permissive terms afterwards.
+Conversely [Xperience-10M](#ropedia-xperience-10m--the-fidelity-wings-extreme-and-a-caution-about-reading-press-releases-as-availability)
+is gated **and** non-commercial. When recording rights per clip, record both:
+*can I get it* and *what may I do with it* fail independently.
 
 **Why this belongs in a Related Work document.** This repo already treats licence
 as a first-class per-clip field — CC filtering at search time, licence in the
@@ -1282,6 +1332,13 @@ keypoints, depth, hand and object masks and sub-task segmentation;
 recipe; [annotated-egocentric-10k](#annotated-egocentric-10k-dataset) does
 process mining over a corpus someone else released.
 
+**And the scale case is settled the same way.** When NVIDIA needed the largest
+egocentric corpus ever assembled for a world model, it **crowdsourced 43,827
+hours** ([DreamDojo](#dreamdojo--and-the-strongest-evidence-in-this-document-for-13))
+rather than mine the web. That is the strongest available evidence that the
+acquisition layer is genuinely absent rather than merely unfashionable: the
+best-resourced actor in the field paid for capture instead.
+
 **Acquisition from the web is the hole between them.** The tools that touch the
 internet — [video2dataset](#video2dataset), [LAION-BVD](#laion-bvd) — are
 viewpoint-blind by design: they fetch and package whatever URLs you hand them,
@@ -1422,6 +1479,9 @@ are the parts that are worth owning.**
 - Wang et al. *InternVid.* https://arxiv.org/abs/2307.06942
 - NVIDIA. *Cosmos World Foundation Model Platform for Physical AI.* https://arxiv.org/abs/2501.03575
 - NVIDIA. *NeMo Curator.* https://github.com/NVIDIA-NeMo/Curator
+- NVIDIA. *DreamDojo: A Generalist Robot World Model from Large-Scale Human Videos.* ICML 2026. (code Apache 2.0; video terms unstated) https://arxiv.org/html/2602.06949 · https://github.com/NVIDIA/DreamDojo
+- *Ego-1K: A Large-Scale Multiview Video Dataset for Egocentric Vision.* (CC BY 4.0) https://arxiv.org/html/2603.13741v1
+- EGXO Data. *Robotics Data Release Tracker 2026.* (third-party tracker, v1.1.1, last updated 2026-07-25 — useful for monitoring, but it collapses licence and access; verify at the publisher) https://egxodata.com/resources/robotics-data-release-tracker-2026
 - Memories.ai Research. *OmniRetriever: Any-to-Any Audio-Video-Text Retrieval via Fusion-as-Teacher Distillation.* https://arxiv.org/abs/2605.26641
 - *S-EMBER: A Large-Scale Benchmark for Streaming Egocentric Memory Retrieval.* https://arxiv.org/pdf/2607.02689
 - Ropedia. *Xperience-10M.* (gated, non-commercial) https://huggingface.co/datasets/ropedia-ai/xperience-10m · release note: https://ropedia.com/blog/20260316_xperience_10m · critique: https://technologies.org/ropedia-raises-30-million-for-physical-ai-training-data-but-the-dataset-math-doesnt-hold-up/
