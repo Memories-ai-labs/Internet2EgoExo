@@ -929,8 +929,19 @@ action localization with iterative visual prompting*, IEEE Access 2025; **code
 MIT**. Evaluated on the Breakfast dataset, and demonstrated qualitatively on a
 10-minute first-person cooking video (cutting vegetables, washing vegetables).
 
-⚠️ Which VLM it runs is not stated on either the project page or the repository
-front page — worth reading `src/` before quoting a cost or latency figure for it.
+**Which VLM it runs**, resolved: the repository names no model, but requires an
+`auth.env` carrying either **Azure OpenAI** credentials (deployment name,
+endpoint, key) or an **OpenAI** API key — so it is OpenAI-family, with the actual
+model chosen by whoever deploys it. The sample invocation is
+`python example.py --credentials auth.env --video sample.mp4 --grid 3 --action
+"Grasping the can"`, and it ships Breakfast and THUMOS14 samples. MIT, 26 stars.
+
+> Two consequences worth noting: there is **no pinned model to reproduce
+> against**, so published numbers are only as stable as the deployment behind
+> them; and cost per clip is set by your own deployment rather than by the
+> method. For a floor-setting baseline that is acceptable — but it means "beat
+> the learning-free baseline" needs the baseline's model named before the claim
+> means anything.
 
 ⚠️ **The authors state plainly that it does not surpass current model-based
 approaches.** That is exactly what makes it useful: zero training cost and no
@@ -974,7 +985,7 @@ Reading the licences across this document produces the wider pattern:
 | Asset | Licence | Commercial use |
 |---|---|---|
 | Egocentric-10K / -100K | Apache 2.0 | ✅ (see §12 caveats) |
-| Egocentric-1M | Apache 2.0 *(reported; card gated, unverified)* | ⚠️ verify before relying on it |
+| Egocentric-1M | Apache 2.0 *(reported only; absent from the publisher's own dataset listing)* | ⚠️ confirm the release exists before relying on it |
 | Action100M | CC BY 4.0 | ✅ with attribution |
 | Open-AoE | CC BY 4.0 | ✅ with attribution |
 | EgoLive | CC BY 4.0 | ✅ with attribution (distributed via JD Cloud) |
@@ -1058,14 +1069,36 @@ frames**, 2,010,759 clips, 24.79 TB, 30 fps H.265, monocular head-mounted
 **fisheye** Build AI Gen 1, per-worker calibrated camera intrinsics, mean 7.06
 hours per worker, Apache 2.0, access gated behind sharing contact information.
 
-⚠️ **Egocentric-1M is still not source-verified, after two attempts.** Its
-Hugging Face card returns 401 to an unauthenticated fetch, and it does not
-surface in dataset search either — searching `builddotai` returns
-Egocentric-100K and Egocentric-10K-Evaluation but no 1M card. So the ~1 M hours,
-the April 2026 date and the Apache 2.0 terms rest entirely on secondary
-coverage. Treat them as indicated, not confirmed, and open the card while logged
-in before planning around this table's last row. The 100K row, by contrast, is
-read straight off the card.
+🔴 **Egocentric-1M could not be found at the publisher, across three separate
+attempts.** In order: its Hugging Face card returns 401 to an unauthenticated
+fetch; it does not surface in dataset search, where the 100K and 10K-Evaluation
+cards do; and — the decisive one — **Build AI's own Hugging Face organisation
+page lists exactly four datasets, and Egocentric-1M is not among them**:
+
+| Dataset | Last updated | Downloads |
+|---|---|---|
+| Egocentric-10K | Feb 16 | 343 |
+| **Egocentric-100K** | Feb 16 | **161,000** |
+| Egocentric-100K-Evaluation | Dec 9, 2025 | 198 |
+| Egocentric-10K-Evaluation | Nov 10, 2025 | 158 |
+
+This document does not claim the release does not exist — it may be private,
+gated below the listing, or planned. What it claims is narrower and checkable:
+**the ~1 M hours, the April 2026 date and the Apache 2.0 terms rest entirely on
+secondary coverage, and three attempts at the publisher's own surfaces found
+nothing.** Anyone sizing a plan against it should get it confirmed first.
+
+**The argument in this section does not depend on that row.** The verified step —
+10,000 h at 1080p to 100,405 h at 456×256 — is the whole of the point, and it is
+read straight off the cards.
+
+> **And the download counts are their own finding.** Egocentric-100K has been
+> pulled **161,000 times against Egocentric-10K's 343** — roughly 470:1 for the
+> 256p corpus over the 1080p one. That is the field revealing its preference
+> rather than an author asserting one: offered the same footage at ten times the
+> hours and a seventeenth of the pixels, it took the hours, overwhelmingly. Which
+> makes the counter-position — that legibility is what a manipulation dataset is
+> for — less crowded than the raw hour counts suggest.
 
 **The part nobody leads with: hours scaled 10×, and pixels per hour collapsed.**
 Egocentric-10K ships 1080p. Egocentric-100K ships **456×256**. That is roughly a
