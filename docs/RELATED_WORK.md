@@ -10,13 +10,85 @@ Almost everything below either *commissions* footage, or *consumes* a corpus
 somebody else already owns. Very little of it is about acquisition against a
 stated requirement.
 
-Two halves:
+Two halves: **Part I** is the datasets and systems this work is positioned
+against; **Part II** is the crawl → viewpoint → clip → annotate chain as
+downloadable code, stage by stage, with what is safe to reuse and what is not.
 
-- **[Part I — The literature](#part-i--the-literature)**: the datasets and systems
-  this work is positioned against.
-- **[Part II — The open-source pipeline](#part-ii--the-open-source-pipeline)**:
-  crawl → viewpoint → clip → annotate as downloadable code, stage by stage, with
-  what is safe to reuse and what is not.
+<details>
+<summary><strong>Contents</strong></summary>
+
+**[Part I — The literature](#part-i--the-literature)**
+
+- [1. Commissioned egocentric and ego–exo capture](#1-commissioned-egocentric-and-egoexo-capture)
+  - [HoloAssist](#holoassist)
+  - [Ego-1K](#ego-1k)
+  - [ENIGMA-360](#enigma-360)
+- [2. Scaling human video for robot learning](#2-scaling-human-video-for-robot-learning)
+  - [The robot-native denominator](#the-robot-native-denominator)
+  - [EgoDex](#egodex)
+  - [EgoScale](#egoscale)
+  - [HumanNet](#humannet)
+  - [Ego2Robot](#ego2robot)
+  - [EgoEngine](#egoengine)
+  - [EgoMimic](#egomimic)
+  - [Open-AoE](#open-aoe)
+  - [EgoVerse](#egoverse)
+  - [MobileEgo Anywhere](#mobileego-anywhere)
+  - [EgoKit](#egokit)
+  - [EgoLive](#egolive)
+  - [ACE-Ego-0](#ace-ego-0)
+- [3. Selection is the hard part, not collection](#3-selection-is-the-hard-part-not-collection)
+  - [SiMDex](#simdex)
+  - [Panda-70M](#panda-70m)
+  - [InternVid](#internvid)
+  - [NeMo Curator](#nemo-curator)
+- [4. World-model and physical-AI stacks](#4-world-model-and-physical-ai-stacks)
+  - [DreamDojo](#dreamdojo--and-the-strongest-evidence-in-this-document-for-13)
+- [5. Retrieval as the substrate — and the gap it leaves](#5-retrieval-as-the-substrate--and-the-gap-it-leaves)
+  - [OmniRetriever](#omniretriever)
+  - [S-EMBER](#s-ember)
+  - [The gap this project fills](#the-gap-this-project-fills)
+- [6. Rights, provenance and the licence problem](#6-rights-provenance-and-the-licence-problem)
+
+**[Part II — The open-source pipeline](#part-ii--the-open-source-pipeline)**
+
+- [7. Crawl: URL → video](#7-crawl-url--video)
+  - [video2dataset](#video2dataset)
+  - [LAION-BVD](#laion-bvd)
+  - [yt-fts](#yt-fts)
+  - [YT_crawler](#yt_crawler)
+  - [The gap](#the-gap)
+- [8. Viewpoint: the exo → ego question, answered three ways](#8-viewpoint-the-exo--ego-question-answered-three-ways)
+  - [Exo2Ego-V](#exo2ego-v--why-generative-conversion-does-not-apply)
+  - [RynnVLA-001](#rynnvla-001--filter-dont-convert)
+  - [EgoInfinity](#egoinfinity--lift-to-4d-then-reproject)
+- [9. Clip](#9-clip)
+  - [Panda-70M splitting](#panda-70m-splitting)
+  - [cosmos-curate](#cosmos-curate)
+- [10. Annotate](#10-annotate)
+  - [Panda-70M's select-don't-generate design](#panda-70ms-select-dont-generate-design)
+  - [Action100M](#action100m)
+  - [VLM-Video-Action-Localization](#vlm-video-action-localization)
+- [11. The licence trap](#11-the-licence-trap)
+- [12. Free hours, and what they do to the moat](#12-free-hours-and-what-they-do-to-the-moat)
+  - [Egocentric-10K](#egocentric-10k)
+  - [Egocentric-100K and Egocentric-1M](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost)
+  - [Ropedia Xperience-10M](#ropedia-xperience-10m--the-fidelity-wings-extreme-and-a-caution-about-reading-press-releases-as-availability)
+  - [Consent is a design choice, not a casualty of scale](#consent-is-a-design-choice-not-a-casualty-of-scale)
+  - [annotated-egocentric-10k-dataset](#annotated-egocentric-10k-dataset)
+  - [EgoVid-5M](#egovid-5m)
+  - [The structural read](#the-structural-read)
+- [13. Why no open-source project does exactly this](#13-why-no-open-source-project-does-exactly-this)
+  - [Where the effort actually went](#where-the-effort-actually-went)
+  - [Six reasons the hole persists](#six-reasons-the-hole-persists)
+  - [What this does and does not license us to claim](#what-this-does-and-does-not-license-us-to-claim)
+- [14. Build vs. reuse, per stage](#14-build-vs-reuse-per-stage)
+- [Positioning, in one table](#positioning-in-one-table)
+- [References](#references)
+  - [Part I](#part-i--datasets-and-models)
+  - [Part II](#part-ii--pipeline-and-tooling)
+
+</details>
 
 Every entry below was read at the source — repository README, dataset card, or
 paper — rather than summarised from memory. Where a widely-repeated number turned
@@ -562,6 +634,41 @@ tasks.
 > the axis this repo competes on. Its pipeline is also the most complete public
 > answer to "what does a full annotation stack look like" — and, like every other
 > one in §13, it runs on footage the authors captured themselves.
+
+### ACE-Ego-0
+
+**[arXiv 2606.17200](https://arxiv.org/pdf/2606.17200)** ([project](https://acerobotics-vla.github.io/ACE-Ego/))
+— unifies egocentric human demonstrations and robot trajectories into a single
+VLA pretraining framework rather than treating them as separate stages, so one
+architecture learns visuomotor representations from human footage that transfer
+to robot control.
+
+⚠️ **Read partially.** The mixture ratios, scale figures and benchmark numbers
+were not extractable from the PDF at fetch time, and are not asserted here. What
+*is* verified is the pretraining pool, and that turns out to be the interesting
+part.
+
+**It pools Ego4D + EPIC-KITCHENS + Ego-Exo4D + EgoDex + EgoScale**, alongside
+robot datasets. Set that against [§11](#11-the-licence-trap):
+
+| Component | Terms |
+|---|---|
+| EPIC-KITCHENS-100 | CC BY-NC 4.0 — non-commercial |
+| EgoDex | CC-BY-NC-ND — non-commercial, **no derivatives** |
+| Ego4D / Ego-Exo4D | signed agreement, **terms not published publicly** |
+| EgoScale | per its release |
+
+> **Why this belongs in the document.** [Open X-Embodiment](#the-robot-native-denominator)
+> pools 60 datasets whose terms are *unstated*. ACE-Ego-0 pools five whose terms
+> are individually **stated and restrictive**. Those are different problems and
+> both land on the same person: whoever wants to ship something built on the
+> resulting model. Nothing here alleges non-compliance — research pretraining and
+> commercial deployment are different questions, and the paper is doing the
+> former. The point is that **the provenance chain has now appeared at the model
+> layer, not just the dataset layer**: by the time a checkpoint is public, the
+> restrictions of five upstream corpora are baked into it and are no longer
+> visible from the artefact. Recording rights per clip at collection time is the
+> only place that information survives.
 
 **[From Human Videos to Robot Manipulation](https://arxiv.org/html/2606.00054v1)** —
 the survey that maps this whole cluster; useful as an index, not as evidence.
