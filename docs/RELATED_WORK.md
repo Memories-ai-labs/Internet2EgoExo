@@ -212,6 +212,7 @@ side actually is, and the answer is smaller than the rhetoric suggests.
 |---|---|---|---|
 | **[DROID](https://droid-dataset.github.io/)** | **350 hours**, 76,000 trajectories, 564 scenes, 86 tasks, 1,417 camera viewpoints | Teleoperation on a standardised rig (Franka Panda 7-DoF, two Zed 2 stereo + wrist Zed Mini, Quest 2 controllers), **13 institutions, 50 collectors, 12 months** | Open dataset; terms not stated on the project page |
 | **[AgiBotWorld-Beta](https://huggingface.co/datasets/agibot-world/AgiBotWorld-Beta)** | **2,976.4 hours**, 1 M+ trajectories, 200+ task types, 87 atomic skills | **100 robots** — mobile dual-arm, 6-DoF dexterous hands, visual-tactile sensors; video, depth, joint positions/velocities/forces, end-effector state, odometry | 🔴 **CC BY-NC-SA 4.0**, contact-gated |
+| **[Open X-Embodiment](https://robotics-transformer-x.github.io/)** | 1 M+ trajectories, **22 embodiments**, 527 skills, 160,266 tasks — **hours not stated** | **60 existing datasets pooled** from 34 labs across 21 institutions; single arms through bimanual robots and quadrupeds | 🔴 **No overall licence stated on the project page**, and no statement of whether the 60 components retain their own |
 | Human ego, for scale | [Egocentric-100K](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) 100,405 h · [DreamDojo](#dreamdojo--and-the-strongest-evidence-in-this-document-for-13) 44,711 h | Crowdsourced / commissioned capture | Apache 2.0 / unstated |
 
 **The ratios are the point.** Egocentric-100K is roughly **287× DROID** and **34×
@@ -226,12 +227,28 @@ third of the whole of DROID**. "1,000 h of ego video matched or modestly
 surpassed 100 h of robot data" is a comparison against a meaningful fraction of
 the field's open robot corpus, not against a toy.
 
-🔴 **And the licence pattern extends to this side.** AgiBotWorld-Beta — the
-largest open robot-native corpus here — is **CC BY-NC-SA 4.0**: non-commercial
-*and* share-alike, so derivatives must carry the same terms. That is the most
-restrictive combination anywhere in this document, and it sits on the corpus a
-team is most likely to want as its robot-side anchor. See
-[§11](#11-the-licence-trap).
+🔴 **And the licence pattern extends to this side — in both of its forms.**
+AgiBotWorld-Beta is **CC BY-NC-SA 4.0**: non-commercial *and* share-alike, so
+derivatives must carry the same terms. That is the most restrictive combination
+anywhere in this document, and it sits on the corpus a team is most likely to
+want as its robot-side anchor.
+
+Open X-Embodiment is the other failure mode, and the cleaner illustration of
+[§11](#11-the-licence-trap)'s thesis: it is **60 datasets pooled from 34 labs**,
+and its project page states **no overall licence and no position on whether the
+components keep their own**. You cannot know what you may do with the pooled
+corpus without tracing sixty upstream terms yourself. A provenance chain that
+long, undocumented at the join, is not a licensing footnote — it is the reason
+per-clip rights have to be recorded at collection time rather than reconstructed
+later.
+
+> **One more thing OpenX does not report: hours.** It gives trajectories, skills
+> and tasks. Trajectory counts and hour counts are not interchangeable, and the
+> largest pooled robot corpus declines to state the figure that every
+> human-video corpus leads with — which is the same problem the
+> [Xperience-10M critique](#ropedia-xperience-10m--the-fidelity-wings-extreme-and-a-caution-about-reading-press-releases-as-availability)
+> identifies from the other direction. **A unit count means nothing until you say
+> what a unit contains.**
 
 ### EgoDex
 
@@ -1125,6 +1142,7 @@ Reading the licences across this document produces the wider pattern:
 | [Ego-1K](#ego-1k) | CC BY 4.0 | ✅ with attribution (17.5 TB research / 88 TB raw on request) |
 | **AgiBotWorld-Beta** | **CC BY-NC-SA 4.0**, contact-gated | ❌ non-commercial **and** share-alike — the most restrictive terms here |
 | DROID | open dataset; terms not stated on the project page | ⚠️ unresolved |
+| **Open X-Embodiment** | **none stated; 60 pooled components, position unstated** | ⚠️ unknowable without tracing 60 upstream datasets |
 
 Note what the bottom half of that table has in common: the field's **most-cited**
 reference datasets are the ones you cannot use commercially, or cannot even read
@@ -1560,6 +1578,7 @@ are the parts that are worth owning.**
 - *HoloAssist.* (CDLA v2) https://holoassist.github.io/
 - *DROID: A Large-Scale In-The-Wild Robot Manipulation Dataset.* https://droid-dataset.github.io/
 - *AgiBotWorld-Beta.* (CC BY-NC-SA 4.0, gated) https://huggingface.co/datasets/agibot-world/AgiBotWorld-Beta
+- *Open X-Embodiment.* (no licence stated on the project page) https://robotics-transformer-x.github.io/
 - EGXO Data. *Robotics Data Release Tracker 2026.* (third-party tracker, v1.1.1, last updated 2026-07-25 — useful for monitoring, but it collapses licence and access; verify at the publisher) https://egxodata.com/resources/robotics-data-release-tracker-2026
 - Memories.ai Research. *OmniRetriever: Any-to-Any Audio-Video-Text Retrieval via Fusion-as-Teacher Distillation.* https://arxiv.org/abs/2605.26641
 - *S-EMBER: A Large-Scale Benchmark for Streaming Egocentric Memory Retrieval.* https://arxiv.org/pdf/2607.02689
