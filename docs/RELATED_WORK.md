@@ -202,6 +202,37 @@ because the doc keeps returning to them:
 Only the first is even in principle compatible with footage found rather than
 shot — and even Ego2Robot's published corpus is built from curated sets.
 
+### The robot-native denominator
+
+Several entries below argue that an hour of human video is worth more than an
+hour of robot data. That claim is meaningless without knowing how big the robot
+side actually is, and the answer is smaller than the rhetoric suggests.
+
+| Corpus | Scale | How it was made | Licence |
+|---|---|---|---|
+| **[DROID](https://droid-dataset.github.io/)** | **350 hours**, 76,000 trajectories, 564 scenes, 86 tasks, 1,417 camera viewpoints | Teleoperation on a standardised rig (Franka Panda 7-DoF, two Zed 2 stereo + wrist Zed Mini, Quest 2 controllers), **13 institutions, 50 collectors, 12 months** | Open dataset; terms not stated on the project page |
+| **[AgiBotWorld-Beta](https://huggingface.co/datasets/agibot-world/AgiBotWorld-Beta)** | **2,976.4 hours**, 1 M+ trajectories, 200+ task types, 87 atomic skills | **100 robots** — mobile dual-arm, 6-DoF dexterous hands, visual-tactile sensors; video, depth, joint positions/velocities/forces, end-effector state, odometry | 🔴 **CC BY-NC-SA 4.0**, contact-gated |
+| Human ego, for scale | [Egocentric-100K](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) 100,405 h · [DreamDojo](#dreamdojo--and-the-strongest-evidence-in-this-document-for-13) 44,711 h | Crowdsourced / commissioned capture | Apache 2.0 / unstated |
+
+**The ratios are the point.** Egocentric-100K is roughly **287× DROID** and **34×
+AgiBotWorld-Beta**. The flagship open teleoperated dataset — thirteen
+institutions, fifty people, a year — is **350 hours**. That is why the
+substitution arguments matter economically at all: robot data is not merely
+expensive per hour, there is *almost none of it* by comparison.
+
+It also recalibrates a result quoted earlier. [HumanNet](#humannet)'s baseline of
+**100 h of real-robot data** sounds modest until you notice it is **close to a
+third of the whole of DROID**. "1,000 h of ego video matched or modestly
+surpassed 100 h of robot data" is a comparison against a meaningful fraction of
+the field's open robot corpus, not against a toy.
+
+🔴 **And the licence pattern extends to this side.** AgiBotWorld-Beta — the
+largest open robot-native corpus here — is **CC BY-NC-SA 4.0**: non-commercial
+*and* share-alike, so derivatives must carry the same terms. That is the most
+restrictive combination anywhere in this document, and it sits on the corpus a
+team is most likely to want as its robot-side anchor. See
+[§11](#11-the-licence-trap).
+
 ### EgoDex
 
 **[arXiv 2505.11709](https://arxiv.org/html/2505.11709v1)** — 829 hours, **90 M
@@ -1092,6 +1123,8 @@ Reading the licences across this document produces the wider pattern:
 | DreamDojo code | Apache 2.0 | ✅ (the 43,827 crowdsourced hours have **no stated terms**) |
 | [HoloAssist](#holoassist) | CDLA v2 | ✅ |
 | [Ego-1K](#ego-1k) | CC BY 4.0 | ✅ with attribution (17.5 TB research / 88 TB raw on request) |
+| **AgiBotWorld-Beta** | **CC BY-NC-SA 4.0**, contact-gated | ❌ non-commercial **and** share-alike — the most restrictive terms here |
+| DROID | open dataset; terms not stated on the project page | ⚠️ unresolved |
 
 Note what the bottom half of that table has in common: the field's **most-cited**
 reference datasets are the ones you cannot use commercially, or cannot even read
@@ -1525,6 +1558,8 @@ are the parts that are worth owning.**
 - NVIDIA. *DreamDojo: A Generalist Robot World Model from Large-Scale Human Videos.* ICML 2026. (code Apache 2.0; video terms unstated) https://arxiv.org/html/2602.06949 · https://github.com/NVIDIA/DreamDojo
 - Meta Reality Labs. *Ego-1K: A Large-Scale Multiview Video Dataset for Egocentric Vision.* (CC BY 4.0) https://arxiv.org/html/2603.13741v1
 - *HoloAssist.* (CDLA v2) https://holoassist.github.io/
+- *DROID: A Large-Scale In-The-Wild Robot Manipulation Dataset.* https://droid-dataset.github.io/
+- *AgiBotWorld-Beta.* (CC BY-NC-SA 4.0, gated) https://huggingface.co/datasets/agibot-world/AgiBotWorld-Beta
 - EGXO Data. *Robotics Data Release Tracker 2026.* (third-party tracker, v1.1.1, last updated 2026-07-25 — useful for monitoring, but it collapses licence and access; verify at the publisher) https://egxodata.com/resources/robotics-data-release-tracker-2026
 - Memories.ai Research. *OmniRetriever: Any-to-Any Audio-Video-Text Retrieval via Fusion-as-Teacher Distillation.* https://arxiv.org/abs/2605.26641
 - *S-EMBER: A Large-Scale Benchmark for Streaming Egocentric Memory Retrieval.* https://arxiv.org/pdf/2607.02689
