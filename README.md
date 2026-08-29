@@ -124,10 +124,17 @@ funded. Here the footage already exists, so the budget goes into *verification*
 instead of recording.
 
 **Consuming a pool somebody else built.** [EgoDex](https://arxiv.org/html/2505.11709v1)
-(829 h, SE(3) hand annotations), [EgoScale](https://rpl.cs.utexas.edu/publications/2026/02/18/zheng-arxiv26-egoscale/)
+(829 h, SE(3) hand annotations), [EgoScale](https://arxiv.org/abs/2602.16710)
 (20,854 h), [HumanNet](https://arxiv.org/abs/2605.06747) (1 M h — where 1,000 h
-of egocentric human video beat 100 h of real-robot data under fixed validation).
+of egocentric human video *matched or modestly surpassed* 100 h of real-robot
+data under fixed validation, against a 20,000 h upper bound it does not reach).
 Those results are the economic case for collection; this repo is the collection.
+
+Worth keeping the denominator in view: **[DROID](https://droid-dataset.github.io/),
+the flagship open teleoperated robot dataset, is 350 hours** — thirteen
+institutions, fifty collectors, twelve months. HumanNet's "100 h of robot data"
+baseline is close to a third of it. Robot data is not merely expensive per hour;
+there is almost none of it by comparison.
 
 Two neighbours are worth calling out directly:
 
@@ -178,15 +185,18 @@ them:
   [Egocentric-10K](https://www.humanoidsdaily.com/news/build-ai-open-sources-10-000-hours-of-factory-worker-video-to-scale-robot-learning)
   (10,000 h, 1080p) to
   [Egocentric-100K](https://huggingface.co/datasets/builddotai/Egocentric-100K)
-  (100,405 h, 10.8 B frames, **456×256**) to a reported ~1 M hours, all Apache
-  2.0, in five months. Note what scaling cost: a 17× drop in pixels per frame,
-  in a domain where finger articulation is the payload. And the 10K card warns
+  (100,405 h, 10.8 B frames, **456×256**), both Apache 2.0. Note what scaling
+  cost: a 17× drop in pixels per frame, in a domain where finger articulation is
+  the payload. And note how it landed — the publisher's own listing shows
+  **161,000 downloads for the 256p corpus against 343 for the 1080p one**,
+  roughly 470:1. That is the field revealing its preference, and it makes the
+  opposite bet — that legibility is what a manipulation corpus is *for* — a much
+  less crowded place to stand. (A widely-reported ~1 M-hour follow-up could not
+  be found at the publisher across three attempts; the survey records why.)
+  Consent posture is a design choice, not a casualty of scale: the 10K card warns
   against surveillance uses while carrying no consent documentation, where
   [Open-AoE](https://arxiv.org/abs/2607.14183) collects under explicit informed
-  consent with face masking in-pipeline — same modality, same year, opposite
-  posture. So "we can get you N hours" is competing with a million free ones,
-  while "N hours at a resolution and viewpoint where the hands are legible, with
-  the rights cleared" is competing with far less.
+  consent with face masking in-pipeline.
 
 ### Why no open-source project does exactly this
 
@@ -199,6 +209,14 @@ Action100M — how to label footage you already hold). Acquisition from the open
 web is the hole between them: the tools that touch the internet are
 viewpoint-blind by construction, and published guidance for sourcing ego footage
 still amounts to *manually searching YouTube for "egocentric view"*.
+
+**The strongest single piece of evidence is what the best-resourced actor did.**
+When NVIDIA needed the largest egocentric corpus ever assembled for a world model
+— [DreamDojo](https://arxiv.org/html/2602.06949), 44,711 hours — it
+**crowdsourced 43,827 of them**, took 829 from EgoDex and shot 55 in-lab. Not one
+hour is described as found footage. The company that also ships the world-model
+platform, the curation substrate and the largest ego VLA still paid for capture
+rather than mining the web.
 
 It stays a hole because the citable unit is a corpus rather than a machine;
 because where it pays, the sourcing pipeline is the product and gets kept;
