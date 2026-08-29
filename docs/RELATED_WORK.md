@@ -351,12 +351,25 @@ demonstrators work bare-handed with no instrumentation. 2.0 TB compressed
 
 ### EgoScale
 
-**[UT Austin RPL, 2026](https://rpl.cs.utexas.edu/publications/2026/02/18/zheng-arxiv26-egoscale/)** —
-a VLA trained on **20,854 hours of action-labelled egocentric human video**,
-described as 20× prior efforts. Two-stage recipe: large-scale human pretraining,
-then lightweight aligned human–robot mid-training. Transfers to a **22-DoF
-dexterous hand** and down to lower-DoF hands. **+54% average success rate over a
-no-pretraining baseline.**
+**[arXiv 2602.16710](https://arxiv.org/abs/2602.16710)** ·
+[project: GEAR @ NVIDIA Research](https://research.nvidia.com/labs/gear/egoscale/)
+— a VLA trained on **20,854 hours of action-labelled egocentric human video**,
+described as 20× prior efforts. A flow-based VLA: VLM backbone plus a DiT action
+expert over a common wrist-level action representation. Two-stage recipe:
+large-scale human pretraining, then lightweight aligned human–robot mid-training.
+Transfers to a **22-DoF dexterous hand** and down to lower-DoF hands. **+54%
+average success rate over a no-pretraining baseline.**
+
+> ⚠️ **Attribution corrected.** An earlier revision of this document credited
+> EgoScale to UT Austin RPL on the strength of a lab publication listing. The
+> project page sits under **GEAR @ NVIDIA Research**, with a sixteen-author list
+> spanning several institutions. Recorded here rather than silently amended,
+> because getting provenance right is the thing this document keeps asking of
+> everyone else.
+>
+> **Code is marked "Coming Soon"**; no licence is stated. So the largest
+> action-labelled ego corpus in this section is, at time of writing, not
+> obtainable.
 
 Its most useful result for a collection system is methodological: a **log-linear
 scaling law between human-data scale and validation loss**, with validation loss
@@ -694,7 +707,7 @@ alongside robot datasets. Set that against [§11](#11-the-licence-trap):
 | EPIC-KITCHENS-100 | CC BY-NC 4.0 — non-commercial |
 | EgoDex | CC-BY-NC-ND — non-commercial, **no derivatives** |
 | Ego4D / Ego-Exo4D | signed agreement, **terms not published publicly** |
-| EgoScale | per its release |
+| EgoScale | **not yet released** — code "coming soon", no licence stated |
 
 > **Why this belongs in the document.** [Open X-Embodiment](#the-robot-native-denominator)
 > pools 60 datasets whose terms are *unstated*. ACE-Ego-0 pools five whose terms
@@ -818,6 +831,20 @@ high visual quality, and **extracts ~100 M clips of 2–60 s from a 20 M-hour
 collection**. The 2026 line (Cosmos 3, and the Physical AI Data Factory blueprint
 announced at GTC 2026) folds world modelling, multimodal understanding, action
 and reasoning into one family.
+
+> **One vendor now occupies four positions in this document.** NVIDIA ships the
+> world-model platform ([Cosmos](#4-world-model-and-physical-ai-stacks)), the
+> curation substrate ([NeMo Curator](#nemo-curator) and
+> [cosmos-curate](#cosmos-curate)), the largest crowdsourced egocentric corpus
+> ([DreamDojo](#dreamdojo--and-the-strongest-evidence-in-this-document-for-13),
+> 44,711 h), and the largest action-labelled ego VLA ([EgoScale](#egoscale),
+> 20,854 h). Generation, curation, corpus and policy, in one house. That is worth
+> noticing for two reasons: it explains why the *tooling* layer is unusually
+> well-served by open source here — a GPU vendor benefits when anyone runs a
+> large pipeline on anything — and it sharpens
+> [§13](#13-why-no-open-source-project-does-exactly-this)'s point that the
+> **acquisition** layer stayed closed even so. The company with the most complete
+> stack in the field still bought its hours rather than mining them.
 
 ### DreamDojo — and the strongest evidence in this document for §13
 
@@ -1285,6 +1312,7 @@ Reading the licences across this document produces the wider pattern:
 | DreamDojo code | Apache 2.0 | ✅ (the 43,827 crowdsourced hours have **no stated terms**) |
 | [HoloAssist](#holoassist) | CDLA v2 | ✅ |
 | [Ego-1K](#ego-1k) | CC BY 4.0 | ✅ with attribution (17.5 TB research / 88 TB raw on request) |
+| [EgoScale](#egoscale) | none stated; code "coming soon" | ⚠️ not obtainable at time of writing |
 | **AgiBotWorld-Beta** | **CC BY-NC-SA 4.0**, contact-gated | ❌ non-commercial **and** share-alike — the most restrictive terms here |
 | DROID | open dataset; terms not stated on the project page | ⚠️ unresolved |
 | **Open X-Embodiment** | **none stated; 60 pooled components, position unstated** | ⚠️ unknowable without tracing 60 upstream datasets |
@@ -1701,7 +1729,7 @@ are the parts that are worth owning.**
 - *HOI4D.* (CC BY-NC 4.0) https://arxiv.org/pdf/2404.09933 · https://hoi4d.github.io/
 - *ENIGMA-360: An Ego-Exo Dataset for Human Behavior Understanding in Industrial Scenarios.* (CC BY 4.0) https://arxiv.org/html/2603.09741v1 · https://iplab.dmi.unict.it/ENIGMA-360
 - *EgoDex: Learning Dexterous Manipulation from Large-Scale Egocentric Video.* (CC-BY-NC-ND) https://arxiv.org/html/2505.11709v1
-- *EgoScale: Scaling Dexterous Manipulation with Diverse Egocentric Human Data.* https://rpl.cs.utexas.edu/publications/2026/02/18/zheng-arxiv26-egoscale/
+- *EgoScale: Scaling Dexterous Manipulation with Diverse Egocentric Human Data.* GEAR @ NVIDIA Research. (code "coming soon"; no licence stated) https://arxiv.org/abs/2602.16710 · https://research.nvidia.com/labs/gear/egoscale/
 - Deng, Zhou et al. *HumanNet: Scaling Human-centric Video Learning to One Million Hours.* https://arxiv.org/abs/2605.06747
 - *Ego2Robot: Scalable Robot Data Synthesis from Egocentric Human Data.* https://arxiv.org/html/2608.02580
 - *EgoEngine: From Egocentric Human Videos to High-Fidelity Dexterous Robot Demonstrations.* https://arxiv.org/html/2606.12604v1 · https://egoengine.github.io
