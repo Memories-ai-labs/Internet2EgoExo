@@ -637,19 +637,57 @@ tasks.
 
 ### ACE-Ego-0
 
-**[arXiv 2606.17200](https://arxiv.org/pdf/2606.17200)** ([project](https://acerobotics-vla.github.io/ACE-Ego/))
-— unifies egocentric human demonstrations and robot trajectories into a single
-VLA pretraining framework rather than treating them as separate stages, so one
-architecture learns visuomotor representations from human footage that transfer
-to robot control.
+**[arXiv 2606.17200](https://arxiv.org/html/2606.17200v1)** — unifies egocentric
+human demonstrations and robot trajectories into a single VLA pretraining
+framework rather than treating them as separate stages. (The project URL printed
+in the paper, `acerobotics-vla.github.io/ACE-Ego/`, returns 404 as of this
+writing; the arXiv HTML is the working source.)
 
-⚠️ **Read partially.** The mixture ratios, scale figures and benchmark numbers
-were not extractable from the PDF at fetch time, and are not asserted here. What
-*is* verified is the pretraining pool, and that turns out to be the interesting
-part.
+**Scale, quoted from the paper**: *"4.53K hours of robot and simulation data,
+together with 1.48K hours of pseudo-action-labeled egocentric human data."*
 
-**It pools Ego4D + EPIC-KITCHENS + Ego-Exo4D + EgoDex + EgoScale**, alongside
-robot datasets. Set that against [§11](#11-the-licence-trap):
+Two mechanisms carry it, and both are worth reading closely because they are the
+modelling-side answers to problems this repo solves on the data side.
+
+**1. A unified action representation**, aligning heterogeneous sources on three
+axes: **spatial** — actions expressed in the head-camera frame, so no
+platform-specific transform is needed; **structural** — cross-embodiment
+morphology conditioning, URDF encoding for robots and *learned surrogate
+embeddings for humans*; **temporal** — action chunking indexed by **physical
+duration rather than frame count**, so sources at different control frequencies
+stay comparable.
+
+**2. A reliability-aware training objective**, which is the important one. Robot
+data gets a primary flow-matching loss on sensor-logged trajectories. Human data
+gets an *auxiliary* loss: weighted supervision concentrated on the reliable
+position channels, Huber regression to absorb noisy pseudo-actions, and — the
+detail that matters here — **step-level *and* dataset-level quality estimates**.
+
+> **Bearing here, and it is direct.** ACE-Ego-0 wants a per-source *and*
+> per-timestep confidence on every human-derived label, because pseudo-actions
+> recovered from video are not equally trustworthy across clips or across
+> moments within a clip. That is exactly what a manifest carrying per-clip
+> viewpoint confidence, hands evidence and annotation depth provides — and it is
+> information that **only exists if it was recorded at collection time**. A
+> corpus shipped as undifferentiated hours forces the trainer to estimate
+> reliability from the pixels; a corpus shipped with the evidence lets it read
+> reliability off the metadata. Our four hour measures and L0–L3 depth grades are
+> the right shape for the second.
+
+Results: **72.8%** average success on RoboCasa GR1 TableTop, **91.12% / 90.62%**
+Easy/Hard on RoboTwin 2.0, and **78.3%** across six tasks on a real ARX bimanual
+platform.
+
+⚠️ **On the mixture ratio.** Roughly **3:1 robot-and-sim to human** — the reverse
+of what "an hour of hand data beats an hour of robot data" might lead you to
+expect. Note the "and simulation" though: 4.53K hours dwarfs
+[DROID's 350 real teleoperated hours](#the-robot-native-denominator), so most of
+that side is simulated or proprietary rather than real-robot. One recipe's
+proportions, not a law — but a concrete data point on a question the rest of this
+section leaves open.
+
+**Its pretraining pool is Ego4D + EPIC-KITCHENS + Ego-Exo4D + EgoDex + EgoScale**,
+alongside robot datasets. Set that against [§11](#11-the-licence-trap):
 
 | Component | Terms |
 |---|---|
@@ -1668,6 +1706,7 @@ are the parts that are worth owning.**
 - *Ego2Robot: Scalable Robot Data Synthesis from Egocentric Human Data.* https://arxiv.org/html/2608.02580
 - *EgoEngine: From Egocentric Human Videos to High-Fidelity Dexterous Robot Demonstrations.* https://arxiv.org/html/2606.12604v1 · https://egoengine.github.io
 - *EgoMimic: Scaling Imitation Learning via Egocentric Video.* https://arxiv.org/abs/2410.24221
+- *ACE-Ego-0: Unifying Egocentric Human and Robotic Data for VLA Pretraining.* https://arxiv.org/html/2606.17200v1 (the project URL printed in the paper 404s)
 - *Open-AoE: An Open Egocentric Manipulation Dataset and Toolchain for Embodied Learning.* (CC BY 4.0) https://arxiv.org/abs/2607.14183
 - *EgoVerse: An Egocentric Human Dataset for Robot Learning from Around the World.* https://arxiv.org/abs/2604.07607
 - *EgoKit: Towards Unified Low-Cost Egocentric Data Collection with Heterogeneous Devices.* (toolkit; no dataset) https://arxiv.org/pdf/2605.16797
