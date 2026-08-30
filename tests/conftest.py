@@ -43,3 +43,21 @@ def looking(monkeypatch: pytest.MonkeyPatch):
     settings_module.get_settings.cache_clear()
     yield
     settings_module.get_settings.cache_clear()
+
+
+@pytest.fixture(autouse=True)
+def _annotation_store_is_never_the_real_one(tmp_path, monkeypatch):
+    """Point the annotation store at a temp file for every test.
+
+    `refine_anchors` records what it uploaded, and `record_refined` resolves the
+    store through `open_store()` — so without this the suite wrote its fake
+    `vid_clean1` and `vid_clean2` straight into `data/annotations.sqlite3` and
+    they showed up in the browse UI as real clips.
+    """
+    from video_searching_agent.store import annotations as store_module
+
+    monkeypatch.setenv("ANNOTATION_STORE_PATH", str(tmp_path / "annotations.sqlite3"))
+    # The module caches an open handle per path; clear it so a test never
+    # inherits another test's rows.
+    monkeypatch.setattr(store_module, "_OPEN", {})
+    yield

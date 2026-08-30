@@ -1,0 +1,116 @@
+# One chunk of the full eval. Called four times in sequence by eval.yml.
+#
+# Split into its own reusable workflow so the four chunks cannot drift apart:
+# a chunk that started the server differently, or forgot --resume, would bill
+# for queries already paid for and put two populations in one record file.
+
+name: eval-chunk
+
+on:
+  workflow_call:
+    inputs:
+      limit:
+        description: "Run the first N of the set; 0 means no limit (the tail)"
+        required: true
+        type: number
+      chunk:
+        required: true
+        type: number
+      previous:
+        description: "Artifact holding the records so far; empty for the first chunk"
+        required: true
+        type: string
+      queries:
+        required: false
+        type: string
+      per_query:
+        required: false
+        type: string
+
+env:
+  QA_DEPLOYMENT: http://127.0.0.1:8099
+  DEMO_MODE: "0"
+  OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+  GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+  YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+  MEMORIES_API_KEY: ${{ secrets.MEMORIES_API_KEY }}
+  APIFY_API_TOKEN: ${{ secrets.APIFY_API_TOKEN }}
+  EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    # 5.5h, under the 6h hard cap, so a slow chunk fails with its records
+    # uploaded rather than being killed with them still on the runner.
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --all-extras
+
+      - name: Bring forward what earlier chunks already paid for
+        if: inputs.previous != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.previous }}-${{ github.run_id }}
+          path: eval/results
+
+      # Server start, health wait, resume and scoring all live in eval/run.sh,
+      # so a chunk here cannot drift from the slice job or from the VM unit.
+      - name: Run chunk ${{ inputs.chunk }}
+        run: |
+          set -o pipefail
+          # limit 0 means "no --limit", i.e. the tail of the set.
+          limit_arg=""
+          if [ "${{ inputs.limit }}" -gt 0 ]; then
+            limit_arg="--limit ${{ inputs.limit }}"
+          fi
+          eval/run.sh $limit_arg --resume \
+            --out eval/results/full.jsonl \
+            --queries "${{ inputs.queries || 'eval/queries-v1.1.json' }}" \
+            --per-query "${{ inputs.per_query || '2' }}" 2>&1 | tee chunk.log
+
+      - name: What this chunk added
+        if: always()
+        run: |
+          n=0
+          [ -f eval/results/full.jsonl ] && n=$(wc -l < eval/results/full.jsonl)
+          {
+            echo "### Chunk ${{ inputs.chunk }} — $n/200 records after this chunk"
+            echo
+            echo '```'
+            grep -E "^--- \[|clips graded|scorecard:" chunk.log | tail -20 || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Always uploaded, including on timeout or failure: the records are the
+      # thing that was paid for, and losing them would mean paying again.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: records-${{ inputs.chunk }}-${{ github.run_id }}
+          path: |
+            eval/results/full.jsonl
+            chunk.log
+            server.log
+          retention-days: 30
+
+      # No scoring call here: run.sh already scored the records it wrote, so a
+      # second one would be the same duplicate derivation in miniature.
+      - name: Publish the whole set's scorecard on the last chunk
+        if: always() && inputs.chunk == 4
+        run: |
+          {
+            echo "## Full eval — final scorecard"
+            echo
+            cat eval/results/full.scorecard.md || true
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always() && inputs.chunk == 4
+        with:
+          name: scorecard-${{ github.run_id }}
+          path: eval/results/full.scorecard.*
+          retention-days: 90

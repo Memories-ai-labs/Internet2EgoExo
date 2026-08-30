@@ -831,3 +831,328 @@ code,
     flex-wrap: wrap;
   }
 }
+
+/* --- the pre-download funnel ------------------------------------------- */
+/* The look is now the largest loss in the run, and "0 candidates" reads as a
+   broken search when it usually means the footage exists and is tripod-shot.
+   So the arithmetic gets shown: found, kept, and where the rest went. */
+.funnel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+.funnel__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+.funnel__n {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.funnel__label {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+.funnel__arrow {
+  color: var(--muted);
+  padding: 0 var(--space-1);
+}
+.funnel__reasons {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.funnel__reasons li {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+.funnel__count {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-right: 0.4em;
+}
+
+/* --- the searches the request became ----------------------------------- */
+.searches {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+.searches__intro {
+  margin: 0 0 var(--space-2);
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+.searches__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.searches__item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4em;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--accent-soft);
+  font-size: 0.8125rem;
+}
+.searches__angle {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.searches__text { color: var(--foreground); }
+
+/* --- the library: browsing the clean clips ----------------------------- */
+.library { display: flex; flex-direction: column; gap: var(--space-4); }
+.library__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  margin: var(--space-4) 0 var(--space-3);
+}
+.library__controls .input { flex: 1 1 260px; }
+.input--select { flex: 0 0 auto; }
+.library__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+.library__labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+.chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4em;
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+.chip:hover { background: var(--default-hover); }
+.chip--static { cursor: default; background: var(--accent-soft); }
+.chip__count {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.library__note, .library__warning {
+  margin: var(--space-2) 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+.library__warning { color: var(--danger); }
+.library__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.clipRow {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "thumb body meta";
+  align-items: center;
+  gap: 2px var(--space-3);
+  padding: var(--space-3) var(--space-2);
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.clipRow:hover { background: var(--default-hover); }
+.clipRow--open { background: var(--accent-soft); }
+.clipRow__body {
+  grid-area: body;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.clipRow__title { font-weight: 500; }
+.clipRow__meta {
+  grid-area: meta;
+  align-self: center;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.clipRow__source {
+  font-size: 0.6875rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A still from the clip. Fixed 16:9 so a portrait clip does not shove the
+   whole row sideways, and the empty state is the same box rather than a
+   collapsed one, so the list does not jump as thumbnails arrive. */
+.thumb {
+  grid-area: thumb;
+  width: 96px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 4px;
+  background: var(--default-hover);
+  display: block;
+}
+.thumb--empty { border: 1px dashed var(--border); }
+
+/* Where the clip came from, said in full and selectable. */
+.prov {
+  margin: 0 0 var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.prov__row {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  gap: var(--space-2);
+  align-items: baseline;
+}
+.prov__row dt {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.prov__row dd {
+  margin: 0;
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+.library__video {
+  width: 100%;
+  max-height: 420px;
+  border-radius: 6px;
+  background: #000;
+  margin-bottom: var(--space-3);
+}
+.ltree { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.ltree__node {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-left: 2px solid var(--border);
+  font-size: 0.8125rem;
+}
+.ltree__node--action { margin-left: var(--space-4); border-left-color: var(--accent); }
+.ltree__node--event { margin-left: calc(var(--space-4) * 2); }
+.ltree__span {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.ltree__level {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.ltree__label { font-weight: 500; }
+.ltree__narration { color: var(--muted); flex: 1 1 100%; min-width: 0; overflow-wrap: anywhere; }
+.ltree__hands { flex: 1 1 100%; min-width: 0; overflow-wrap: anywhere; font-size: 0.75rem; color: var(--muted); }
+/* What was handled, set apart from what the hands did: the objects are the
+   facet somebody browses by, so they read as data rather than prose. */
+.ltree__objects { flex: 1 1 100%; min-width: 0; overflow-wrap: anywhere; font-size: 0.72rem; color: var(--muted); font-variant: all-small-caps; letter-spacing: 0.04em; }
+.library__facetLabel { font-size: 0.72rem; color: var(--muted); font-variant: all-small-caps; letter-spacing: 0.06em; align-self: center; margin-right: 0.25rem; }
+
+/* The loop's target sits inline with the buttons rather than up in the fields:
+   it is a property of one action, not of the search everybody runs. */
+.field--inline {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+}
+.input--tiny {
+  width: 4.5rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* "Where the footage is". The answer to the question people actually ask after
+   a run finishes, so it gets its own block above the filters rather than a line
+   of small print underneath them. */
+.library__where {
+  margin: var(--space-4) 0 0;
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.library__whereTitle {
+  margin: 0 0 var(--space-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.library__whereList {
+  display: grid;
+  grid-template-columns: 9rem 1fr;
+  gap: 6px var(--space-3);
+  margin: 0;
+  align-items: baseline;
+}
+.library__whereList dt {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+.library__whereList dd {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+/* The path is the deliverable: it has to be selectable and not truncated. */
+.library__whereList dd code {
+  font-size: 0.8125rem;
+  word-break: break-all;
+  user-select: all;
+}
+.library__whereNote {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}

@@ -1,111 +1,125 @@
-# Internet Video Search
+# Internet2EgoExo
 
-An agent that finds, filters and documents video footage for model training —
-**egocentric** (first-person, head or body mounted) and **exocentric**
-(third-person, fixed camera, multi-view) — and reports what an hour of it costs.
+**Turn internet-scale video into egocentric and exocentric training data.**
 
-Popularity is not a signal here. A 200-view head-mounted recording of someone
-assembling a bicycle is worth more than a 10M-view edit of the same task, so
-candidates are ranked by viewpoint match, clip length and licence — never by
-views, likes or engagement.
+Search the open web for first-person and third-person footage, confirm the
+viewpoint against real frames before paying for anything, then let agents on the
+[Memories.ai](https://memories.ai) video datalake curate and annotate whatever
+survives.
 
-## Features
+[![License: MIT](https://img.shields.io/badge/licence-MIT-0E0E10.svg)](LICENSE)
+![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-0E0E10.svg)
+![Status: early](https://img.shields.io/badge/status-early-6B6B70.svg)
 
-- **Viewpoint-aware search**: Every candidate is classified egocentric /
-  exocentric / unknown with the cues behind the verdict, and footage from the
-  wrong perspective is dropped rather than ranked low
-- **Usability ranking**: Viewpoint match, then duration, then licence — with the
-  popularity sorts kept only for reporting
-- **Licence filtering**: Restrict to Creative-Commons material that is safe to
-  reuse, straight through the YouTube API
-- **Volume goals**: Ask for hours, not clip counts; the run reports progress
-  against the target and what the binding constraint was
-- **Dataset manifest**: Every run emits clips with viewpoint, confidence,
-  duration, licence and usability score, exportable as JSONL or CSV
-- **Cost per hour**: Discovery, download, indexing and annotation costed from
-  published rates, per hour collected and per hour delivered
-- **Video Datalake**: Index footage once into Memories.ai, then read captions,
-  transcription and summary, or search moments across the indexed corpus
-- **Specialized agents**: A cleaning agent for filtering and clipping, an
-  annotation agent for the task → action → event tree, a curation agent for the
-  set — each judged on its own output, with an auditable Thought → Action →
-  Observation trace
-- **The hands gate**: A clip whose frames show no hands is dropped, not ranked
-  low — for manipulation data it is worthless, and this is the one rule with no
-  override
-- **Quality gates as code**: The internal first-person standard as executable
-  checks — rights, media usability, annotation depth L0-L3, diversity — with
-  unmeasured checks excluded from the score rather than assumed to pass
-- **Four hour measures, never mixed**: worn / delivered / accepted /
-  accepted_labeled, so a delivered hour is never quoted as an accepted one
-- **Moment-level annotation tree**: Open a clip to see its viewpoint evidence,
-  provenance and per-span hand/object annotations with the tags written back
-- **Multi-source**: YouTube, TikTok, Instagram, Twitter/X and the open web
-  (dataset pages, lab sites, archives) via Exa neural search and Apify scraping
-- **Interactive Web UI**: Bundled zero-build UI for the whole loop
+## Demo
 
-## How It Works
+One real run: a plain-language ask, a live search, the frame check that rejects
+the wrong viewpoint before anything is paid for, the cost ledger, and a finished
+clip with its task and action tree.
 
-The Video Searching Agent follows an **agentic loop pattern** where Google Gemini orchestrates which tools to call based on user queries. Here's the core flow:
+[![Internet2EgoExo, one real run](docs/demo.gif)](docs/demo.mp4)
 
-### 1. Query Parsing (LLM-First Slot Extraction)
+**[Watch the full 92-second run](docs/demo.mp4)** (1280x720). The search in it
+really took 71 seconds, and that stretch is labelled as sped up on screen rather
+than passed off as real time.
 
-When you send a query, it first goes through the `QueryParser` which uses Gemini to extract structured **slots**:
+## What it does
+
+You state a goal the way you would say it out loud, not as a set of filters:
+
+> find me first-person cooking footage, hands must be visible, two hours of it
+
+and the loop runs:
+
+| Stage | What happens |
+|-------|--------------|
+| **Search** | YouTube, TikTok, Instagram, X and the open web, in one pass |
+| **Fetch** | The bytes come from a paid provider, routed per platform. No extractor |
+| **Frame check** | Frames are sampled and the viewpoint is decided on pixels, before a cent is spent on indexing |
+| **Index** | Whatever passes goes into the Memories.ai video datalake |
+| **Clean** | A cleaning agent cuts the usable spans out of long recordings |
+| **Annotate** | An annotation agent writes the task, action and event tree |
+| **Curate** | A curation agent grades the set against executable quality gates |
+
+What comes out is a directory of clips with annotations, a manifest, and a bill
+for what an hour of it cost.
+
+## What it is strict about
+
+**No hands, no clip.** First-person footage without hands in it is just ordinary
+footage. This is the one rule with no override.
+
+**Never mix hour counts.** `worn`, `delivered`, `accepted` and
+`accepted_labeled` are four different numbers. Only `accepted_labeled` is safe
+to quote outward.
+
+**Unmeasured is not passed.** A quality check that could not be measured is
+dropped from the score rather than assumed to have passed.
+
+## Where to look
+
+| Section | For |
+|---------|-----|
+| [How the agent decides](#how-the-agent-decides-what-to-do) | slots, the loop, the answer |
+| [The pipeline, end to end](#the-pipeline-end-to-end) | one request, followed all the way through |
+| [The agents](#the-agents) | what each agent is judged on |
+| [How a candidate is judged](#how-a-candidate-is-judged) | the standard, as executable checks |
+| [The dataset on disk](#the-dataset-on-disk) | what you actually get handed |
+| [Cost per hour](#cost-per-hour) | how the bill is worked out |
+| [Web UI](#web-ui) | run the whole loop in a browser |
+
+## What you get
+
+| | |
+|---|---|
+| **Sources** | YouTube, TikTok, Instagram, X, and the open web: dataset pages, lab sites, archives. Exa for neural search, Apify for scraping |
+| **Viewpoint verdicts** | Every candidate is called egocentric, exocentric or unknown, and the cues behind the call are kept with it |
+| **Licence filtering** | Narrow to Creative-Commons material that is safe to reuse |
+| **Volume goals** | Ask for hours, not clip counts. The run reports progress against the target and which constraint was binding |
+| **Manifest** | Every clip with its viewpoint, confidence, duration, licence and usability score, as JSONL or CSV |
+| **Annotation tree** | Task, action and event on time anchors, with per-span hand and object labels written back as tags |
+| **Cost ledger** | Discovery, download, indexing and annotation priced from published rates, per hour collected and per hour delivered |
+| **Web UI** | The whole loop in a browser, with no build step |
+
+## How the agent decides what to do
+
+Your sentence becomes slots. An agent loop then picks tools until it has enough,
+and reports what it found.
+
+**Slots.** A Gemini model reads the request and pulls out what is actually being
+asked for. It runs through OpenRouter by default, or Google directly; see
+[The models](#the-models-one-key-or-googles).
 
 ```python
-# Input: "Find the top 5 most liked TikTok videos about coffee from last week"
-# Extracted slots:
+# "first-person cooking footage from YouTube, at least 5 minutes, 2 hours of it"
 ParsedQuery(
-    platforms=["tiktok"],
-    topics=["coffee"],
-    metric=MetricType.MOST_LIKED,
-    time_frame=TimeFrame.PAST_WEEK,
-    quantity=5
+    platforms=["youtube"],
+    topics=["cooking"],
+    viewpoint=Viewpoint.EGOCENTRIC,
+    min_duration_seconds=300,
+    target_hours=2.0,
 )
 ```
 
-### 2. The Agentic Loop
+**The loop.** Up to ten steps by default, set with `MAX_AGENT_STEPS`. Results are
+filtered inside the loop, before the model sees them, so it never reasons over
+candidates that already fail the request.
 
-The agent runs an iterative loop (max 10 steps by default) where Gemini decides which tools to call:
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  User Query + Extracted Slots                               │
-└─────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────┐
-│  Gemini: "I need to search TikTok for coffee videos"        │
-│  → Returns function call: tiktok_search(query="coffee")     │
-└─────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────┐
-│  ToolRegistry executes tiktok_search with RetryExecutor     │
-│  → Results filtered by time_frame BEFORE returning          │
-└─────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────┐
-│  Results fed back to Gemini                                 │
-│  → Gemini decides: more tools needed? or final answer?      │
-└─────────────────────────────────────────────────────────────┘
-                              ↓
-                    (loop continues or...)
-                              ↓
-┌─────────────────────────────────────────────────────────────┐
-│  Final Answer: Natural language response with video refs    │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A["Request, parsed into slots"] --> B{"Model picks a tool"}
+    B -->|"search, fetch, classify"| C["Tool registry runs it,<br/>with retry and fallback"]
+    C --> D["Results filtered against the slots<br/>before the model sees them"]
+    D --> B
+    B -->|"enough, or step cap reached"| E["Candidates, viewpoint verdicts,<br/>manifest, cost"]
 ```
 
-### 3. Time Frame Filtering
+**The answer.** An `AgentResponse`: the written `answer`, `video_references`
+with their metadata and viewpoint verdicts, a `dataset` summary, `usage_metrics`
+for tokens and cost, and the `parsed_query` it actually worked from.
 
-A critical feature: tool results are filtered by `time_frame` **inside the loop** before Gemini sees them. This ensures accurate answers even when tools return older content.
-
-### 4. Response Generation
-
-The final `AgentResponse` includes:
-- Natural language answer
-- Video references with metadata and relevance notes
-- Usage metrics (token counts, API costs)
-- The parsed query with all extracted slots
+For what happens to a candidate after it is found, read
+[the pipeline](#the-pipeline-end-to-end).
 
 ## Related Work
 
@@ -238,8 +252,8 @@ Full survey — both halves, the positioning table and references:
 
 ```bash
 # Clone the repository
-git clone https://github.com/Memories-ai-labs/Internet-Video-Search.git
-cd Internet-Video-Search
+git clone https://github.com/Memories-ai-labs/Internet2EgoExo.git
+cd Internet2EgoExo
 
 # Install dependencies
 pip install -e .
@@ -295,8 +309,28 @@ VIEWPOINT_CHECK=frames                 # off | frames | watch — see PRE-SIGHT
      residential address into Apify's key-value store, from where this process
      streams it to disk on the way to the Datalake.
 
-   Other platforms still go through yt-dlp, and so does YouTube when you run
-   locally from an address YouTube will serve.
+   The other platforms are fetched the same way, through the scrapers the
+   search already calls, with their download flag on.
+
+   **There is no extractor path at all any more.** `yt-dlp` was the download
+   route for everything except YouTube, and it does not work: TikTok fails with
+   *"Unexpected response from webpage request"* on every attempt, so a run
+   surfaced good TikTok candidates, charged for the search, and then reported
+   `failed` for reasons that said nothing about the footage. Fetching is now
+   routed per platform across providers:
+
+   | `DOWNLOAD_PROVIDERS` | Credentials | State |
+   |---|---|---|
+   | `apify` (default) | `APIFY_API_TOKEN` | Verified against the live API for YouTube, TikTok, Instagram and X |
+   | `rapidapi` | `RAPIDAPI_KEY`, `RAPIDAPI_HOST` | Written to the documented API, **never executed** |
+   | `brightdata` | `BRIGHTDATA_TOKEN`, `BRIGHTDATA_ZONE` | Written to the documented API, **never executed** |
+   | `oxylabs` | `OXYLABS_USERNAME`, `OXYLABS_PASSWORD` | Written to the documented API, **never executed** |
+
+   Set it to an ordered list — `DOWNLOAD_PROVIDERS=apify,brightdata` — and each
+   is tried until one hands back a media URL. A provider with no credentials
+   reports itself unavailable and is never asked, so an unverified one cannot
+   quietly become the provider a run depends on. When all of them refuse, the
+   error names every attempt rather than one extractor.
 
 ## Quick Start
 
@@ -305,16 +339,14 @@ import asyncio
 from video_searching_agent import VideoSearchingAgent
 
 async def main():
-    # Initialize the agent
     agent = VideoSearchingAgent()
 
-    # Simple query
     response = await agent.query(
-        "What are the trending UGC videos for SaaS products?"
+        "find me first-person cooking footage, hands must be visible"
     )
     print(response.answer)
 
-    # Show video references
+    # Every candidate carries its viewpoint verdict and the cues behind it.
     for ref in response.video_references:
         print(f"- {ref.title}: {ref.url}")
 
@@ -341,7 +373,7 @@ own output.
  3  LOOK          cleaning agent      a few real frames, not the words about them
                                      wrong viewpoint stops here, for ~$0.002
                                                   ▼
- 4  DOWNLOAD      Apify · yt-dlp      platform pages are not fetchable media
+ 4  DOWNLOAD      provider routing    platform pages are not fetchable media
                                                   ▼
  5  INDEX         Video Datalake      upload → captions · transcription · embeddings
                                                   ▼
@@ -965,6 +997,114 @@ caption wording, not from a hand-tracking or pose model.
 - The UI is public (so it can load and ask for a key); `/api/v1/*` stays behind
   API-key auth and rate limiting.
 
+## Keep searching until it passes
+
+One search is a guess about vocabulary. `first-person fixing bikes, hands
+visible` returns twenty candidates and the frame check keeps none — on YouTube
+"POV" plus "bike" selects for action-camera mount reviews and riding footage,
+and no rephrasing of that finds a workshop.
+
+`agent/search_loop.py` closes the loop. Each round the agent proposes searches,
+every candidate is screened on its frames before anything is downloaded, and the
+agent is told what the frames said about what its own words returned — grouped
+by reason, attributed to the phrasing:
+
+```
+Round 1: 54 new candidates, 6 passed the frames. 6 of 3 so far.
+Rejected, by the phrasing that found them:
+  - [POV bike repair] 9 exocentric, 4 wrong activity, 1 unknown
+  - [GoPro fixing bicycle hands] 18 wrong activity
+```
+
+Then it decides where to look next. Nothing prescribes an angle — a rule about
+which vocabulary works is a rule about YouTube in August. It stops on the
+target, on two rounds that add nothing new, or on the bounds, and the target is
+enforced rather than requested.
+
+Both questions the screen answers are used. A helmet cam on a bike *ride* is
+egocentric and is not footage of fixing a bike; keeping it because the viewpoint
+matched is how a run reports fifteen finds and hands over five.
+
+```bash
+python -m video_searching_agent.agent.search_loop "first-person fixing bikes, hands visible" --target 5
+```
+
+In the UI it is **Keep searching until N** on the Search page, next to Search;
+`POST /api/v1/search-loop/stream` streams a `round` event per round so the
+reasons arrive as they land.
+
+By default what it returns are candidates *worth paying to index*, not clips:
+the caption pass after indexing gets the last word and overrules the three-still
+screen often. **Verify by indexing** (`--verify`) closes that gap — everything
+the frames keep is downloaded, indexed and cleaned, and only what survives
+counts, so `target` means deliverable clips. It costs $0.50-$3 a clip against
+$0.002 to look, which is why it is off by default and has its own budget.
+
+Measured on `first-person fixing bikes, hands visible` with `--target 2
+--verify`: six candidates passed the frames, four did not survive indexing —
+two called exocentric once the captions could see the whole video, two failing
+the hands gate — and two were delivered.
+
+## The dataset on disk
+
+Everything above leaves the deliverable spread across two systems: the footage
+in the Datalake behind a signed URL that expires in a day, the tree in a local
+store, the provenance on a third record again. A dataset is a directory that
+survives being copied to another machine, so one more step writes one:
+
+```
+<out>/
+  manifest.json                  every clip in one array, plus the run's totals
+  manifest.jsonl                 the same rows, one per line, for an ingest job
+  clips/<video_id>.mp4           the footage
+  thumbnails/<video_id>.jpg      one still, so the directory is browsable
+  annotations/<video_id>.json    the tree, the provenance, the grade
+```
+
+The filename is the join key — `clips/vid_x.mp4` and `annotations/vid_x.json`
+are the same clip, under the id the Datalake and the store both know it by.
+
+```bash
+set -a && . ./.env && set +a
+eval/run.sh --limit 20 --per-query 1              # 1-3  search → collect → curate → refine
+python -m video_searching_agent.pipeline.annotate_clean --limit 12 --yes   # 4  trees
+python -m video_searching_agent.pipeline.dataset --out ~/egoexo-dataset     # 5  the directory
+```
+
+Step 5 spends nothing on models: it reads what the earlier steps already paid
+for, and skips media already on disk.
+
+**All five steps are also reachable over the API**, which is what the web UI
+uses: `refine` and `annotate-clean` used to be command-line only, and a run
+driven from the browser therefore ended with spans marked on source videos and
+no clips cut — the library stayed empty after a run that had plainly worked.
+`POST /api/v1/refine/stream` and `POST /api/v1/annotate-clean/stream` close
+that gap, and `POST /api/v1/export/stream` writes the directory. Cutting still
+needs a writable directory to hold a clip before it is uploaded; a host without
+one gets `skipped_reason` rather than a silent empty result.
+
+**The deliverable is first-person, and that is enforced twice.** Step 4 looks at
+each cut clip's own frames and refuses to annotate one that is not confirmed
+egocentric — stricter than the screen before the download, because nothing
+downstream re-examines a clip, so "not established" and "wrong" have the same
+consequence. Step 5 then ships only the confirmed ones, removes files an earlier
+export wrote for a clip since withheld, and records what was held back split by
+what the frames said. The candidate screen cannot cover this: a source that is
+egocentric for four of its twelve minutes passes it and can still yield a clip
+that is entirely a presenter talking to camera.
+
+The same clips are browsable in `3 · Library`, which answers what a delivered
+clip has to answer — *which video, which seconds, what is in it*. Every row
+carries a still and the whole source video id with its span; opening one shows a
+selectable provenance block, the footage, and the tree in the clip's own time
+base. Stills come from `GET /api/v1/clips/{id}/thumbnail`, cut locally with
+ffmpeg and cached rather than bought from the Datalake's per-frame endpoint.
+
+**[docs/DATASET.md](docs/DATASET.md)** has the full field-by-field schema, how to
+recover when the store and the collection disagree, how the UI reads the same
+dataset, how to read the counts honestly, and the gaps in what the directory
+currently contains.
+
 ## Deploy it
 
 ### One click, no keys — the demo
@@ -1127,36 +1267,7 @@ Clean, annotate and grade a worklist that is already indexed. Events: `started`,
 
 One of `video_ids` or `tag` is required.
 
-## Usage Examples
-
-### Find Trending Videos
-
-```python
-response = await agent.find_trending(
-    topic="fitness",
-    platform="youtube"
-)
-```
-
-### Analyze a Creator
-
-```python
-response = await agent.analyze_creator(
-    username="mkbhd",
-    platform="youtube"
-)
-```
-
-### Compare Brands
-
-```python
-response = await agent.compare(
-    entities=["Nike", "Adidas"],
-    platform="youtube"
-)
-```
-
-### Analyze a Specific Video
+## Reading one video's content
 
 Ask about a video's own content and the agent indexes it into the Video Datalake,
 then reads back the captions, transcription and summary:
@@ -1170,16 +1281,6 @@ response = await agent.query(
 Indexing takes time. If it is still running when the call's wait budget expires,
 the tool reports `status: "processing"` with a `video_id`, and the next call reads
 the results instead of re-indexing.
-
-### Complex Query
-
-```python
-response = await agent.query("""
-    Analyze the most viral food content on YouTube in 2025.
-    What common patterns in hooks, opening techniques, and
-    storytelling methods make food videos go viral?
-""")
-```
 
 ## Response Structure
 
@@ -1218,20 +1319,6 @@ UsageMetrics:
     gemini_calls: int             # Number of Gemini API calls
     tool_calls: int               # Total tool invocations
 ```
-
-## Supported Query Types
-
-| Type | Example |
-|------|---------|
-| Industry/Topic | "Trending UGC for SaaS" |
-| Brand Analysis | "Analyze Sephora's video content" |
-| Product Search | "Viral videos featuring mugs" |
-| Creator Profile | "What type of blogger is @mkbhd?" |
-| Creator Discovery | "Top 10 pet bloggers on YouTube" |
-| Comparison | "Coca-Cola vs Pepsi on YouTube" |
-| Channel Analysis | "What are @mkbhd's main views on tech trends?" |
-| Video Analysis | "Analyze this video: [URL]" |
-| Creative Inspiration | "Generate video title ideas for..." |
 
 ## Architecture
 
@@ -1318,7 +1405,7 @@ The agent extracts structured **slots** from natural language queries using LLM-
 
 | Slot | Example | Description |
 |------|---------|-------------|
-| `topics` | `["coffee", "latte art"]` | Subject matter keywords |
+| `topics` | `["cooking", "bicycle repair"]` | Subject matter keywords |
 | `brands` | `["Nike", "Adidas"]` | Brand names to search |
 | `creators` | `["@mkbhd", "@charlidamelio"]` | Specific creators to find |
 | `hashtags` | `["#fitness", "#workout"]` | Hashtags to search |
@@ -1475,7 +1562,9 @@ video-searching-agent/
 │   ├── curation/       # Quality gates, scoring, cost, manifest
 │   ├── evaluation/     # Task vocabulary, yield/cost metrics, scorecard
 │   ├── models/         # Pydantic data models
+│   ├── pipeline/       # download → index → refine → annotate_clean → export
 │   ├── router/         # Query classification
+│   ├── store/          # The annotation store: clips and their trees (SQLite)
 │   ├── tools/          # Gemini function calling tools
 │   └── web/            # FastAPI app, SSE streaming, middleware
 │       └── static/     # Zero-build web UI (index.html / styles.css / app.js)

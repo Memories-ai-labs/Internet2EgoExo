@@ -1,0 +1,34 @@
+{
+ "eval_version": "local-exo-2026-08-23",
+ "note": "Two more canonical tasks from task_map.csv, run to exercise the viewpoint gate in both directions.",
+ "source": {
+  "local_copy": "eval/task_map.csv"
+ },
+ "sampling": {
+  "size": 2
+ },
+ "queries": [
+  {
+   "id": "rdt-01197-installing-carpet",
+   "rdt_id": "RDT-01197",
+   "task_name": "Installing Carpet",
+   "task_instruction": "Installing carpet.",
+   "query": "someone installing carpet",
+   "domain": "Household & Daily-Living Robotics",
+   "task_family": "Maintenance & Installation",
+   "granularity": "Long-Horizon Activity",
+   "difficulty": "hard"
+  },
+  {
+   "id": "rdt-01215-lighting-fireplace",
+   "rdt_id": "RDT-01215",
+   "task_name": "Lighting Fireplace",
+   "task_instruction": "Lighting fireplace.",
+   "query": "someone lighting fireplace",
+   "domain": "Household & Daily-Living Robotics",
+   "task_family": "Maintenance & Installation",
+   "granularity": "Long-Horizon Activity",
+   "difficulty": "hard"
+  }
+ ]
+}

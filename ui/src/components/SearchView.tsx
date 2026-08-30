@@ -51,6 +51,12 @@ export function SearchView({
   const [minDuration, setMinDuration] = useState("");
   const [licenceOnly, setLicenceOnly] = useState(false);
   const [targetHours, setTargetHours] = useState("");
+  // How many candidates the loop must see pass the frames before it stops.
+  // Empty means one search and no second attempt.
+  const [keepUntil, setKeepUntil] = useState("");
+  // Off by default and deliberately so: verifying downloads and indexes every
+  // candidate the frames liked, which is $0.50-$3 each against $0.002 to look.
+  const [verify, setVerify] = useState(false);
 
   const [running, setRunning] = useState(false);
   const [activity, setActivity] = useState<ActivityEntry[]>([]);
@@ -73,6 +79,87 @@ export function SearchView({
     setSources((current) =>
       current.includes(source) ? current.filter((item) => item !== source) : [...current, source],
     );
+
+  /** Search, screen, learn from what the frames said, search again.
+   *
+   * One search is a guess about vocabulary — `POV bike repair` returns
+   * action-camera mount reviews, and no amount of rephrasing that finds a
+   * workshop. The loop shows each round's verdict as it lands, because the
+   * reasons are the useful part: "everything this phrasing found was a fixed
+   * camera" is what tells you the angle is wrong rather than the request.
+   */
+  async function runLoop() {
+    const target = Number(keepUntil);
+    if (!query.trim() || running || !Number.isFinite(target) || target < 1) return;
+
+    controller.current?.abort();
+    controller.current = new AbortController();
+    setRunning(true);
+    setError("");
+    setClarification(null);
+    setActivity([]);
+    setClips([]);
+    setManifest(null);
+    setAnswer("");
+
+    await streamRequest(
+      "/api/v1/search-loop/stream",
+      {
+        query: query.trim(),
+        viewpoint: viewpoint || "egocentric",
+        target,
+        min_duration_seconds: minDuration ? Number(minDuration) : undefined,
+        verify,
+      },
+      {
+        onEvent: (event, data) => {
+          switch (event) {
+            case "started":
+              log(
+                "start",
+                `looking for ${target} × ${String(data.viewpoint ?? "")}` +
+                  (data.verify ? ", verified by indexing" : ", screened on frames"),
+              );
+              break;
+            case "round": {
+              const text = String(data.observation ?? "");
+              log("round", `round ${data.round} — ${data.found}/${data.screened} screened`);
+              // The observation is several lines and every one of them is a
+              // reason; flattening it to a summary throws away the part worth
+              // reading.
+              for (const line of text.split("\n").slice(1)) {
+                if (line.trim()) log("saw", line.trim());
+              }
+              break;
+            }
+            case "complete": {
+              const found = Number(data.found ?? 0);
+              const rows = (data.candidates as Clip[]) ?? [];
+              setClips(rows);
+              setAnswer(
+                `${found} of ${data.target} passed the frames in ${data.rounds} round(s), ` +
+                  `${data.screened} screened for $${Number(data.cost_usd ?? 0).toFixed(3)}` +
+                  (data.verified
+                    ? ` plus $${Number(data.verify_usd ?? 0).toFixed(2)} indexing. `
+                    : ". ") +
+                  `Stopped: ${data.stopped_because}.` +
+                  (data.what_worked ? `\n\nWorked: ${data.what_worked}` : "") +
+                  (data.what_did_not ? `\n\nDid not: ${data.what_did_not}` : ""),
+              );
+              log("done", `${found} found, ${data.stopped_because}`);
+              break;
+            }
+            case "error":
+              setError(String(data.message ?? "The search loop failed"));
+              break;
+          }
+        },
+        onError: setError,
+        onDone: () => setRunning(false),
+      },
+      { apiKey, keys: ownKeys, signal: controller.current.signal },
+    );
+  }
 
   async function run(answerToClarification?: string) {
     if (!query.trim() || running) return;
@@ -241,6 +328,38 @@ export function SearchView({
                 Stop
               </button>
             ) : null}
+            {/* One search, or as many as it takes. The second is a different
+                promise, so it is a different button rather than a mode. */}
+            <label className="checkbox" title="Download and index everything the frames keep, and count only what survives. $0.50-$3 a clip">
+              <input
+                type="checkbox"
+                checked={verify}
+                onChange={(event) => setVerify(event.target.checked)}
+              />
+              <span>Verify by indexing</span>
+            </label>
+            <label className="field field--inline">
+              <span className="field__label">Keep searching until</span>
+              <input
+                className="input input--tiny"
+                type="number"
+                min={1}
+                max={25}
+                value={keepUntil}
+                placeholder="—"
+                onChange={(event) => setKeepUntil(event.target.value)}
+                aria-label="Candidates that must pass the frames"
+              />
+            </label>
+            <button
+              type="button"
+              className="button button--ghost"
+              disabled={running || !query.trim() || !Number(keepUntil)}
+              onClick={() => void runLoop()}
+              title="Search, screen on frames, learn from the rejections, search again"
+            >
+              Keep searching
+            </button>
             <button
               type="button"
               className="button button--primary"

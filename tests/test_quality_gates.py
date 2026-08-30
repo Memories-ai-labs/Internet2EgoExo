@@ -3,11 +3,11 @@
 import pytest
 
 from video_searching_agent.curation.quality_gates import (
+    PER_CLIP_CEILING,
     AnnotationLevel,
     Grade,
     build_hours_ledger,
     evaluate_clip,
-    evaluate_dataset,
     grade_annotation_level,
     hand_frame_ratio,
     mentions_idle,
@@ -280,7 +280,14 @@ class TestScorecard:
         assert report.grade in (Grade.A, Grade.B)
         assert report.accepted is True
 
-    def test_a_clip_alone_never_reads_as_an_a_on_diversity(self):
+    def test_a_clip_can_now_reach_a_on_its_own(self):
+        """Diversity used to reserve a quarter of the scale for the batch.
+
+        With diversity, deduplication, annotation depth and licence all out of
+        the score, everything left is a property of the footage, so one clip can
+        earn the whole 100. A grade of A no longer depends on what it shipped
+        alongside.
+        """
         report = evaluate_clip(
             license_value="cc0",
             source_url="https://example.com/v",
@@ -290,8 +297,8 @@ class TestScorecard:
             caption="Both hands work the bead.",
             annotations=_tree(),
         )
-        assert any("Gate 3" in note for note in report.notes)
-        assert report.score < 100
+        assert not any("Gate 3" in note for note in report.notes)
+        assert report.score == 100 and report.grade.value == "A"
 
     def test_unmeasured_checks_are_excluded_rather_than_assumed(self):
         report = evaluate_clip(annotations=_tree())
@@ -335,44 +342,6 @@ class TestHoursLedger:
 
     def test_nothing_delivered_is_a_zero_yield_not_a_crash(self):
         assert build_hours_ledger(0, 0).as_dict()["media_yield"] == 0.0
-
-
-class TestGateThree:
-    """Diversity, across the set."""
-
-    def _clips(self, n, uploader="one", families=("cooking",)):
-        return [
-            {
-                "uploader": f"{uploader}{index % len(families)}",
-                "task_family": families[index % len(families)],
-                "error_sample": False,
-            }
-            for index in range(n)
-        ]
-
-    def test_one_creator_is_not_diversity(self):
-        checks = evaluate_dataset(self._clips(5))
-        assert next(c for c in checks if c.check_id == "G3-OP").passed is False
-
-    def test_ten_task_families_pass_coverage(self):
-        families = tuple(f"family-{index}" for index in range(10))
-        checks = evaluate_dataset(self._clips(20, uploader="op", families=families))
-        assert next(c for c in checks if c.check_id == "G3-SOP").passed is True
-
-    def test_error_samples_are_wanted_at_a_rate(self):
-        clips = self._clips(10)
-        for clip in clips[:2]:
-            clip["error_sample"] = True
-        checks = evaluate_dataset(clips)
-        assert next(c for c in checks if c.check_id == "G3-ERR").passed is True
-
-    def test_public_corpus_overlap_is_reported_unmeasured(self):
-        checks = evaluate_dataset(self._clips(3))
-        dup = next(c for c in checks if c.check_id == "G3-DUP")
-        assert dup.measured is False and dup.detail
-
-    def test_an_empty_set_has_nothing_to_check(self):
-        assert evaluate_dataset([]) == []
 
 
 class TestWhatCountsAsHandsInOneSegment:
@@ -452,3 +421,101 @@ class TestWhatCountsAsHandsInOneSegment:
             anchored = bool(mentions_hands(text)[0])
             if segment_shows_hands(text):
                 assert anchored, f"the gate counts it but no anchor would: {text!r}"
+
+
+class TestLicenceDoesNotMoveTheGrade:
+    """A clip is exactly as trainable whether or not its uploader ticked CC.
+
+    Licence used to be worth 7 points, which was precisely the C/B boundary, so
+    every non-Creative-Commons clip was capped at a C however well it was shot
+    and annotated. It was then still reaching the grade through G0-PROV, which
+    counted licence as one of three provenance fields — the same rights question
+    leaking back in under another name.
+    """
+
+    ANNOTATIONS = [
+        {
+            "hier_level": level,
+            "label": f"step {i}",
+            "narration": "the left hand grips the rail and lifts",
+            "span_start": i * 10.0,
+            "span_end": i * 10.0 + 8.0,
+            "hands_visible": True,
+            "left_hand": "grips the rail",
+            "right_hand": "steadies the panel",
+            "objects": ["rail"],
+        }
+        for i, level in enumerate(["task"] + ["action"] * 7 + ["event"])
+    ]
+    FACTS = {
+        "source_url": "https://example.com/v",
+        "uploader": "someone",
+        "width": 1920,
+        "height": 1080,
+        "fps": 30,
+        "duration_seconds": 660,
+        "container": "mp4",
+        "caption": "assembling a desk",
+        "caption_segments": [
+            {"text": "the left hand grips the rail"},
+            {"text": "fingers seat the dowel"},
+            {"text": "the right hand steadies the panel"},
+        ],
+        "annotations": ANNOTATIONS,
+    }
+
+    @pytest.mark.parametrize("licence", ["CC-BY", "standard", None])
+    def test_the_same_footage_scores_the_same_on_any_licence(self, licence):
+        report = evaluate_clip(
+            license_value=licence, require_commercial_use=False, **self.FACTS
+        )
+        assert report.score == 100, "the per-clip ceiling, unmoved by licence"
+        assert report.grade.value == "A"
+
+    def test_the_ceiling_is_a_full_hundred_and_nothing_is_reserved(self):
+        """Pinned so a re-weighting cannot quietly change what a score means.
+
+        Everything scored is now a property of the footage, so a clip can earn
+        the whole scale. Nothing named G3 survives: diversity and deduplication
+        describe a set rather than a clip, and this project delivers clips.
+        """
+        report = evaluate_clip(
+            license_value="CC-BY", require_commercial_use=False, **self.FACTS
+        )
+        assert report.score == PER_CLIP_CEILING == 100
+        assert not [c for c in report.checks if c.check_id.startswith("G3-")]
+
+    def test_a_blocking_veto_caps_the_grade_at_d(self):
+        """A score without its veto invites somebody to quote it.
+
+        Footage with no hands in frame scored 92 and read as an A while being
+        rejected. The score measures quality; the blocking gates are a veto, and
+        grade decides ingestion — so a vetoed clip's grade has to say so.
+        """
+        report = evaluate_clip(
+            license_value="CC-BY",
+            require_commercial_use=False,
+            **{
+                **self.FACTS,
+                "caption": "a wheel",
+                "caption_segments": [{"text": "the wheel spins"}] * 3,
+            },
+        )
+        assert "G1-HAND" in report.blocking_failures
+        assert report.grade.value == "D" and report.accepted is False
+        assert any("capped at D" in note for note in report.notes)
+
+    def test_licence_still_vetoes_when_commercial_use_is_required(self):
+        """Out of the score is not out of the gates: rights are still rights."""
+        report = evaluate_clip(
+            license_value=None, require_commercial_use=True, **self.FACTS
+        )
+        assert "G0-LIC" in report.blocking_failures
+        assert report.accepted is False
+
+    def test_provenance_no_longer_counts_licence_as_a_field(self):
+        check = evaluate_clip(
+            license_value=None, require_commercial_use=False, **self.FACTS
+        ).check("G0-PROV")
+        assert check.passed is True, "source_url and uploader are the whole test"
+        assert "licence" not in (check.threshold or "")

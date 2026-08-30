@@ -234,3 +234,109 @@ def test_the_rendered_scorecard_carries_the_numbers_and_the_caveats() -> None:
 def test_an_empty_run_renders_without_dividing_by_zero() -> None:
     page = render(score_run([]))
     assert "—" in page
+
+
+class TestTheScreeningStage:
+    """ "0 candidates" was being used to mean two opposite things.
+
+    A query the search cannot answer and a query whose footage all exists and is
+    all shot on a tripod are different findings, and only one of them is about
+    this pipeline. Measured on the real set: "someone assembling the cabinet"
+    finds 18 videos, 14 of which genuinely show cabinet assembly, and every one
+    is exocentric.
+    """
+
+    @staticmethod
+    def _outcome(**kw):
+        from video_searching_agent.evaluation.metrics import QueryOutcome
+
+        base = {"query_id": "q", "query": "someone assembling the cabinet"}
+        return QueryOutcome(**{**base, **kw})
+
+    def test_a_query_screened_to_nothing_is_not_a_query_that_found_nothing(self):
+        from video_searching_agent.evaluation.metrics import score_run
+
+        card = score_run(
+            [
+                self._outcome(
+                    query_id="screened",
+                    found=18,
+                    screened_out=18,
+                    screen_reasons={"frames show exocentric footage": 18},
+                    candidates=0,
+                ),
+                self._outcome(query_id="empty", found=0, candidates=0),
+            ]
+        )
+        chain = card.chain
+        assert chain.found == 18
+        assert chain.screened_out == 18
+        assert chain.queries_screened_to_nothing == 1, "only the one that found footage"
+        assert chain.screen_survival_rate == 0.0
+        assert chain.screen_reasons == {"frames show exocentric footage": 18}
+
+    def test_the_survival_rate_is_against_what_was_found(self):
+        from video_searching_agent.evaluation.metrics import score_run
+
+        card = score_run(
+            [
+                self._outcome(found=10, screened_out=6, candidates=4),
+                self._outcome(query_id="b", found=10, screened_out=4, candidates=6),
+            ]
+        )
+        chain = card.chain
+        assert chain.found == 20
+        assert chain.candidates == 10
+        assert chain.screen_survival_rate == 0.5
+        # Neither query was emptied, so neither is counted as such.
+        assert chain.queries_screened_to_nothing == 0
+
+    def test_reasons_add_up_across_queries(self):
+        from video_searching_agent.evaluation.metrics import score_run
+
+        card = score_run(
+            [
+                self._outcome(
+                    found=5,
+                    screened_out=5,
+                    screen_reasons={"frames show exocentric footage": 4, "x": 1},
+                ),
+                self._outcome(
+                    query_id="b",
+                    found=3,
+                    screened_out=3,
+                    screen_reasons={"frames show exocentric footage": 3},
+                ),
+            ]
+        )
+        assert card.chain.screen_reasons == {
+            "frames show exocentric footage": 7,
+            "x": 1,
+        }
+
+    def test_the_scorecard_shows_the_screen_and_says_what_it_means(self):
+        from video_searching_agent.evaluation.metrics import score_run
+        from video_searching_agent.evaluation.scorecard import render
+
+        card = score_run(
+            [
+                self._outcome(
+                    found=18,
+                    screened_out=18,
+                    screen_reasons={"frames show exocentric footage": 18},
+                )
+            ]
+        )
+        text = render(card)
+        assert "videos the search found" in text
+        assert "survived the pre-download screen" in text
+        assert "frames show exocentric footage | 18" in text
+        assert "found footage and kept none of it" in text
+
+    def test_a_run_with_no_screening_does_not_grow_an_empty_table(self):
+        from video_searching_agent.evaluation.metrics import score_run
+        from video_searching_agent.evaluation.scorecard import render
+
+        card = score_run([self._outcome(found=4, screened_out=0, candidates=4)])
+        text = render(card)
+        assert "screened out before download" not in text

@@ -14,8 +14,12 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+# Anchored. A bare `lib/` matches at every depth, and it swallowed
+# `ui/src/lib/` — four modules every UI component imports — so the source tree
+# in this repository could not be built at all while the committed bundle kept
+# working. These rules are about a Python distribution at the root; say so.
+/lib/
+/lib64/
 parts/
 sdist/
 var/
@@ -103,3 +107,14 @@ npm-debug.log*
 # deployment at one moment, and it can be large; eval/sample-scorecard.md is
 # committed instead so the output's shape is visible from a clean clone.
 eval/results/
+
+# The annotation store is data, not code. Its rows come from runs.
+data/
+
+# A test run that cannot write to data/ falls back to the repo root, leaving a
+# stray annotation store here. Untracked and unignored, one `git add -A` would
+# have committed a database of clip titles.
+annotations.sqlite3
+
+# Exported datasets. Clips and manifests are output, not source.
+dataset/

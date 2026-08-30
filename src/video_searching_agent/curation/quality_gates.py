@@ -46,12 +46,13 @@ class AnnotationLevel(StrEnum):
     L3 = "L3"  # + events, objects, hand state, error/rework samples
 
 
-LEVEL_POINTS = {
-    AnnotationLevel.L0: 0,
-    AnnotationLevel.L1: 10,
-    AnnotationLevel.L2: 22,
-    AnnotationLevel.L3: 30,
-}
+# A clip is scored out of 100 and can earn all of it. Nothing in the scale is
+# reserved for properties of a batch any more.
+PER_CLIP_CEILING = 100
+# What the surviving per-clip checks sum to before rescaling: tree soundness 15
+# + media quality 20 + provenance 3. Diversity/dedup, annotation depth and
+# licence are all deliberately unscored.
+CREDITABLE_PER_CLIP = 38
 
 
 class Grade(StrEnum):
@@ -363,7 +364,8 @@ def evaluate_clip(
 ) -> QualityReport:
     """Run Gate 0-2 over one clip and score it.
 
-    Gate 3 is dataset level; see :func:`evaluate_dataset`.
+    Diversity and deduplication are not judged here or anywhere: they
+    describe a set, and the deliverable is a clip you can train on.
 
     Every argument is optional because a clip is judged at whatever stage it has
     reached — a candidate has no captions yet, and an unindexed download has no
@@ -392,7 +394,12 @@ def evaluate_clip(
         )
     )
 
-    provenance_fields = {"source_url": source_url, "uploader": uploader, "license": license_value}
+    # Traceability only: where the clip came from and who put it there. Licence
+    # used to be counted here as a third field, which meant it kept moving the
+    # grade through provenance after being taken out of the scoring — the same
+    # rights question leaking back in under another name. Rights are G0-LIC's
+    # job and G0-LIC's alone.
+    provenance_fields = {"source_url": source_url, "uploader": uploader}
     missing = [name for name, value in provenance_fields.items() if not value]
     present = len(provenance_fields) - len(missing)
     report.checks.append(
@@ -408,7 +415,7 @@ def evaluate_clip(
             # bars external delivery there, rather than being two vetoes.
             blocking=False,
             value=f"{present}/{len(provenance_fields)} fields",
-            threshold="source_url, uploader and licence all present",
+            threshold="source_url and uploader both present",
             detail=f"missing: {', '.join(missing)}" if missing else None,
         )
     )
@@ -834,8 +841,15 @@ def _score(report: QualityReport) -> None:
         c.check_id for c in report.checks if c.blocking and c.measured and not c.passed
     ]
 
-    # --- annotation depth and quality: 45 -------------------------------
-    score = LEVEL_POINTS[report.annotation_level]
+    # --- the tree is usable: 15 -----------------------------------------
+    #
+    # Annotation *depth* is no longer scored. The L0-L3 ladder describes how
+    # many levels a tree has, and depth for its own sake is not the goal: an L2
+    # that says what both hands did is worth more than an L3 that does not. The
+    # level is still reported, as a description of the tree rather than a score
+    # for it. What is scored is whether the tree is *sound* — spans nested,
+    # siblings not overlapping, each level in its own words.
+    score = 0
     structural = [
         passed("G2-TREE-1"),
         passed("G2-TREE-2"),
@@ -869,17 +883,33 @@ def _score(report: QualityReport) -> None:
     if integrity:
         score += round(4 * sum(integrity) / len(integrity))
 
-    # --- licensability and provenance: 10 -------------------------------
-    if passed("G0-LIC"):
-        score += 7
+    # --- provenance: 3 --------------------------------------------------
+    #
+    # Licence is deliberately NOT scored. It is a rights question, not a quality
+    # one: a clip is exactly as trainable whether or not its uploader ticked
+    # Creative Commons. Scoring it made licence the single biggest lever on the
+    # grade — measured at 7 points, which was precisely the C/B boundary, so
+    # every non-CC clip was capped at a C however well it was shot and
+    # annotated. The check still runs, still appears in the report, and still
+    # blocks outright when `require_commercial_use` is set; it just no longer
+    # moves the number that describes the footage.
+    #
+    # Provenance stays, because it is not the same thing: it says whether we can
+    # trace where a clip came from, which is a property of our own record-keeping.
     if passed("G0-PROV"):
         score += 3
 
-    # Diversity is a dataset property; per clip it stays uncredited and is
-    # noted so a single clip can never read as an A on its own.
-    report.notes.append("Gate 3 (diversity/dedup) is scored per dataset, not per clip")
 
-    report.score = min(score, 100)
+    # Rescale the surviving checks onto the full 100. Three dimensions were
+    # removed as things this project does not judge a clip on — diversity and
+    # deduplication (a property of a set, not a clip), annotation depth (a
+    # description, not a goal), and licence (a rights question) — which left the
+    # creditable weights summing to 38. Scaling by 100/38 preserves every
+    # relative weight exactly, so no constant is invented here, and it makes the
+    # ceiling a real 100: grade A is now reachable by one clip, which it never
+    # was while a quarter of the scale could only be earned by a batch.
+    scaled = score * PER_CLIP_CEILING / CREDITABLE_PER_CLIP
+    report.score = min(round(scaled), 100)
     report.grade = (
         Grade.A
         if report.score >= 85
@@ -889,6 +919,16 @@ def _score(report: QualityReport) -> None:
         if report.score >= 55
         else Grade.D
     )
+    # A veto caps the grade. Without this a clip with no hands in frame scored
+    # 92 and read as an A while being rejected — the score is a quality measure
+    # and the blocking gates are a veto, and a report that shows the first
+    # without the second invites somebody to quote it. Grade decides ingestion,
+    # and a vetoed clip is not ingested, so its grade has to say so.
+    if report.blocking_failures:
+        report.grade = Grade.D
+        report.notes.append(
+            "grade capped at D by a blocking gate: " + ", ".join(report.blocking_failures)
+        )
     report.accepted = not report.blocking_failures and report.grade != Grade.D
 
 
@@ -912,66 +952,3 @@ def build_hours_ledger(
     )
 
 
-def evaluate_dataset(clips: list[dict[str, Any]]) -> list[GateCheck]:
-    """Gate 3 checks, which only mean anything across a whole set.
-
-    Deduplication against public corpora needs embeddings we do not compute
-    here, so `G3-DUP` reports unmeasured rather than guessing.
-    """
-    if not clips:
-        return []
-
-    uploaders = [str(clip.get("creator") or clip.get("uploader") or "") for clip in clips]
-    known = [name for name in uploaders if name]
-    distinct = len(set(known))
-    top_share = (
-        max((known.count(name) for name in set(known)), default=0) / len(known) if known else 0.0
-    )
-
-    checks = [
-        GateCheck(
-            "G3-OP",
-            "Operator diversity",
-            passed=distinct >= 3 and top_share <= 0.5,
-            measured=bool(known),
-            value=f"{distinct} sources, top share {top_share:.0%}",
-            threshold=">=3 sources, none above 50%",
-        )
-    ]
-
-    families = {str(clip.get("task_family") or "").strip() for clip in clips}
-    families.discard("")
-    checks.append(
-        GateCheck(
-            "G3-SOP",
-            "Task-family coverage",
-            passed=len(families) >= 10,
-            measured=bool(families),
-            value=f"{len(families)} families",
-            threshold=">=10 task families",
-        )
-    )
-
-    error_samples = sum(1 for clip in clips if clip.get("error_sample"))
-    error_share = error_samples / len(clips)
-    checks.append(
-        GateCheck(
-            "G3-ERR",
-            "Error / rework samples",
-            passed=0.10 <= error_share <= 0.20,
-            measured=error_samples > 0,
-            value=f"{error_share:.0%}",
-            threshold="10-20% of each task",
-        )
-    )
-
-    checks.append(
-        GateCheck(
-            "G3-DUP",
-            "Overlap with public corpora",
-            measured=False,
-            threshold="<=10%, cosine >=0.95 counts as duplicate",
-            detail="needs OmniRetriever embeddings against the Egocentric-10K base",
-        )
-    )
-    return checks

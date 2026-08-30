@@ -1,7 +1,8 @@
 """Collection and curation streaming router.
 
-Two endpoints for the second half of the product — everything that happens
-after the search has found candidates:
+Three endpoints for the second half of the product — everything that happens
+after the search has found candidates, and the one that keeps looking until it
+has:
 
 * ``POST /api/v1/collect/stream`` — download candidates, index them into the
   Video Datalake, clean them and annotate what survives. Each clip's stage is
@@ -9,6 +10,11 @@ after the search has found candidates:
   that only moves at the end is not a progress bar.
 * ``POST /api/v1/curate/stream`` — run the curation agent over a worklist that
   is already indexed, and stream each clip's verdict as it lands.
+* ``POST /api/v1/search-loop/stream`` — search, screen the candidates on their
+  frames, tell the agent what the frames said, and let it search again. Rounds
+  stream as they finish, because the reasons are what a caller needs to see:
+  a run that found nothing because every phrasing hit the wrong genre reads
+  very differently from one that found nothing at all.
 
 Both stream Server-Sent Events. Both are bounded: a request cannot queue more
 clips than `MAX_URLS_PER_REQUEST`, because every clip costs real money to
@@ -22,6 +28,7 @@ import json
 import logging
 import time
 from collections.abc import AsyncGenerator, Awaitable, Callable
+from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, Request
@@ -33,7 +40,14 @@ from video_searching_agent.pipeline.ingest import IngestPipeline
 from video_searching_agent.web import demo
 from video_searching_agent.web.credentials import RequestCredentials
 from video_searching_agent.web.schemas.events import ErrorEvent
-from video_searching_agent.web.schemas.requests import CollectRequest, CurateRequest
+from video_searching_agent.web.schemas.requests import (
+    AnnotateCleanRequest,
+    CollectRequest,
+    CurateRequest,
+    ExportRequest,
+    RefineRequest,
+    SearchLoopRequest,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -207,9 +221,7 @@ async def _collect_events(
                 "rejected": rejected,
                 "accepted_count": len(accepted),
                 "rejected_count": len(rejected),
-                "video_ids": [
-                    clip["video_id"] for clip in accepted if clip.get("video_id")
-                ],
+                "video_ids": [clip["video_id"] for clip in accepted if clip.get("video_id")],
             }
         ),
     }
@@ -256,11 +268,155 @@ async def _curate_events(
             if kind == "progress":
                 yield {"event": "clip_done", "data": json.dumps({"clip": payload})}
             else:
-                yield {"event": "complete", "data": json.dumps(payload.as_dict())}
+                report = payload.as_dict()
+                report["storage"] = await _where_it_landed(agent, report)
+                yield {"event": "complete", "data": json.dumps(report)}
     except asyncio.CancelledError:
         raise
     except Exception as exc:
         logger.exception("curation failed")
+        error = ErrorEvent.create(code="internal_error", message=str(exc))
+        yield {"event": error.event, "data": json.dumps(error.data)}
+
+
+async def _where_it_landed(agent: Any, report: dict[str, Any]) -> dict[str, Any]:
+    """Say where the graded videos actually are, and what does not exist yet.
+
+    A grade with no location is half an answer: the panel that reports "1 of 5
+    accepted" was read as "there is a clip somewhere", and there is not — this
+    path indexes whole source videos and marks spans on them. Cutting those
+    spans into files is `pipeline/refine.py`, which is deliberately not an API
+    route (it needs a writable directory and a decoder), so nothing reached
+    the clean collection here and nothing was written to disk.
+
+    Saying so is the point. A UI that shows only the grade lets somebody
+    conclude the deliverable exists.
+    """
+    clips = report.get("clips") or []
+    video_ids = [c.get("video_id") for c in clips if c.get("video_id")]
+    storage: dict[str, Any] = {
+        "kind": "source_videos",
+        "collection_id": "",
+        "collection_name": "",
+        "video_ids": video_ids,
+        "clips_cut": 0,
+        "on_disk": False,
+        "note": (
+            "These are whole source videos with spans marked on them, indexed in the "
+            "Video Datalake. No clip files were cut: that is step three (refine), which "
+            "runs from eval/run.sh rather than over the API. Nothing was written to this "
+            "machine's disk."
+        ),
+    }
+    if not video_ids:
+        return storage
+
+    lake = getattr(agent, "client", None)
+    if lake is None:
+        return storage
+    try:
+        record = await lake.get_video(video_ids[0])
+        video = record.get("video") if isinstance(record.get("video"), dict) else record
+        storage["collection_id"] = str(video.get("collection_id") or "")
+        listing = await lake.list_collections()
+        for collection in listing.get("collections") or []:
+            if collection.get("id") == storage["collection_id"]:
+                storage["collection_name"] = str(collection.get("name") or "")
+                break
+    except Exception as exc:  # noqa: BLE001 - a missing name is not a failed run
+        logger.info("could not resolve where the curated videos live: %s", exc)
+    return storage
+
+
+@router.post("/search-loop/stream")
+async def stream_search_loop(
+    request: Request,
+    body: SearchLoopRequest,
+) -> EventSourceResponse:
+    """Search, screen on frames, learn from the rejections, search again.
+
+    Events: `started`, `round` (one per round, with what the frames said),
+    `complete`, `error`. The rounds are the point: a caller watching only the
+    final answer cannot tell a loop that found five things from one that gave
+    up, and the reasons are what say which.
+    """
+    settings = get_settings()
+    return EventSourceResponse(
+        _search_loop_events(request, body),
+        media_type="text/event-stream",
+        ping=settings.sse_ping_interval,
+    )
+
+
+async def _search_loop_events(
+    request: Request,
+    body: SearchLoopRequest,
+) -> AsyncGenerator[dict[str, Any], None]:
+    """Stream one search loop, a round at a time."""
+    from video_searching_agent.agent.search_loop import run_search_loop
+
+    wanted = body.viewpoint.value if body.viewpoint else "egocentric"
+    yield {
+        "event": "started",
+        "data": json.dumps(
+            {
+                "query": body.query,
+                "viewpoint": wanted,
+                "target": body.target,
+                "verify": body.verify,
+            }
+        ),
+    }
+
+    rounds: list[dict[str, Any]] = []
+
+    async def on_round(number: int, observation: str, partial: Any) -> None:
+        rounds.append(
+            {
+                "round": number,
+                "observation": observation,
+                "found": len(partial.kept),
+                "screened": len(partial.candidates),
+                "cost_usd": round(partial.cost_usd, 4),
+                "verify_usd": round(partial.verify_usd, 4),
+            }
+        )
+
+    try:
+        # The loop is one long await, so the rounds are drained after it rather
+        # than during: `on_round` fills a list and the generator hands over
+        # whatever has accumulated between yields. A caller that disconnects
+        # stops being sent to; the loop's own bounds stop the spending.
+        task = asyncio.create_task(
+            run_search_loop(
+                body.query,
+                wanted=wanted,
+                target=body.target,
+                min_duration_seconds=body.min_duration_seconds,
+                max_rounds=body.rounds,
+                budget_usd=body.budget_usd,
+                verify=body.verify,
+                verify_budget_usd=body.verify_budget_usd,
+                on_round=on_round,
+            )
+        )
+        sent = 0
+        while not task.done():
+            await asyncio.sleep(0.5)
+            while sent < len(rounds):
+                if await request.is_disconnected():
+                    task.cancel()
+                    return
+                yield {"event": "round", "data": json.dumps(rounds[sent])}
+                sent += 1
+        while sent < len(rounds):
+            yield {"event": "round", "data": json.dumps(rounds[sent])}
+            sent += 1
+        yield {"event": "complete", "data": json.dumps((await task).as_dict())}
+    except asyncio.CancelledError:
+        raise
+    except Exception as exc:
+        logger.exception("the search loop failed")
         error = ErrorEvent.create(code="internal_error", message=str(exc))
         yield {"event": error.event, "data": json.dumps(error.data)}
 
@@ -294,6 +450,225 @@ async def stream_curation(
     settings = get_settings()
     return EventSourceResponse(
         _curate_events(request, body),
+        media_type="text/event-stream",
+        ping=settings.sse_ping_interval,
+    )
+
+
+async def _export_events(body: ExportRequest) -> AsyncGenerator[dict[str, Any], None]:
+    """Stream one export. Two events, because the work is one call.
+
+    It is a stream rather than a plain POST so the connection carries SSE pings:
+    downloading twenty clips takes minutes, and a proxy that times out a silent
+    request turns a working export into an error the user cannot explain.
+    """
+    from video_searching_agent.pipeline.dataset import export_dataset
+
+    out_dir = Path(get_settings().dataset_dir).expanduser().resolve()
+    yield {
+        "event": "started",
+        "data": json.dumps(
+            {"out_dir": str(out_dir), "clips": len(body.video_ids), "media": body.media}
+        ),
+    }
+    try:
+        report = await export_dataset(
+            out_dir,
+            collection_id=body.collection_id.strip(),
+            video_ids=body.video_ids,
+            media=body.media,
+            refresh_media=body.refresh_media,
+            viewpoint=body.viewpoint,
+        )
+    except Exception as exc:  # noqa: BLE001 - the UI has to be told, not left spinning
+        logger.exception("export failed")
+        yield {"event": "error", "data": ErrorEvent(error=str(exc)).model_dump_json()}
+        return
+
+    payload = report.as_dict()
+    # An absolute path, because the point of this endpoint is to answer "where",
+    # and "./dataset" is only an answer if you know the working directory.
+    payload["out_dir"] = str(out_dir)
+    yield {"event": "complete", "data": json.dumps(payload)}
+
+
+@router.post("/export/stream")
+async def stream_export(body: ExportRequest) -> EventSourceResponse:
+    """Write a run's clips, trees and manifest to this machine's disk.
+
+    Events: `started`, `complete`, `error`. `complete` carries the absolute
+    directory and what was actually written, including what was held back and
+    why — a count of files is not the same claim as a count of clips.
+    """
+    settings = get_settings()
+    return EventSourceResponse(
+        _export_events(body),
+        media_type="text/event-stream",
+        ping=settings.sse_ping_interval,
+    )
+
+
+async def _wait_until_listed(
+    lake: Any, collection_id: str, video_ids: list[str], *, timeout: float = 420.0
+) -> list[str]:
+    """Poll the collection until it lists the clips just uploaded.
+
+    `wait_for_clean_clips` waits on the operation the upload returned, and when
+    that response carries no operation it has nothing to wait on and returns at
+    once. That is what happened here: four clips were cut, the annotate pass ran
+    two seconds later, listed a collection that did not have them yet, found
+    nothing to do, and every clip kept a blank viewpoint — which the exporter
+    then correctly refused to ship.
+
+    So this waits on the thing the annotate pass actually reads: the listing.
+    """
+    from video_searching_agent.pipeline.annotate_clean import live_video_ids
+
+    want = {v for v in video_ids if v}
+    if not want or not collection_id:
+        return []
+    deadline = time.monotonic() + timeout
+    seen: set[str] = set()
+    while time.monotonic() < deadline:
+        listed = await live_video_ids(lake, collection_id)
+        if listed is not None:
+            seen = want & set(listed)
+            if seen == want:
+                return sorted(seen)
+        await asyncio.sleep(10)
+    logger.info(
+        "%d of %d cut clips were listed before the wait ran out", len(seen), len(want)
+    )
+    return sorted(seen)
+
+
+async def _refine_events(
+    request: Request, body: RefineRequest
+) -> AsyncGenerator[dict[str, Any], None]:
+    """Stream one refine pass: cut the anchors, re-house them, record them.
+
+    This is the step that turns "a source video with spans marked on it" into
+    clip files, and it is the step whose absence made the library look empty
+    after a run that had clearly worked. It needs a writable directory to hold
+    a cut before uploading it; when the host has none, `refine_anchors` says so
+    in `skipped_reason` rather than pretending nothing was asked for.
+    """
+    from video_searching_agent.pipeline.refine import refine_anchors, wait_for_clean_clips
+
+    credentials = RequestCredentials.from_headers(request.headers)
+    lake = credentials.datalake_client()
+    if lake is None:
+        from video_searching_agent.api.memories_datalake_client import (
+            MemoriesDatalakeClient,
+        )
+
+        lake = MemoriesDatalakeClient(api_key=get_settings().memories_api_key)
+
+    anchors = [a.model_dump() for a in body.anchors]
+    yield {"event": "started", "data": json.dumps({"anchors": len(anchors)})}
+    try:
+        # `refine_anchors` records into the annotation store itself; recording
+        # again here wrote every clip a second time.
+        result = await refine_anchors(
+            lake,
+            anchors,
+            collection_name=body.collection_name,
+            max_clips=body.max_clips,
+        )
+    except Exception as exc:  # noqa: BLE001 - the UI has to be told
+        logger.exception("refine failed")
+        yield {"event": "error", "data": ErrorEvent(error=str(exc)).model_dump_json()}
+        return
+
+    uploaded = [clip.uploaded_video_id for clip in result.uploaded if clip.uploaded_video_id]
+
+    # A clip that was uploaded seconds ago is still indexing, and annotation
+    # cannot start on one that is. Returning here without waiting is why a run
+    # that cut five clips labelled none of them: the annotate pass listed the
+    # collection, found nothing live, and returned in three seconds.
+    statuses: dict[str, str] = {}
+    listed: list[str] = []
+    if uploaded:
+        yield {"event": "indexing", "data": json.dumps({"clips": len(uploaded)})}
+        try:
+            statuses = await wait_for_clean_clips(lake, result)
+        except Exception as exc:  # noqa: BLE001 - a slow index is not a failed cut
+            logger.info("waiting on the cut clips' operations failed: %s", exc)
+        listed = await _wait_until_listed(lake, result.collection_id or "", uploaded)
+
+    payload = result.as_dict()
+    payload["index_status"] = statuses
+    # Only clips the annotate pass will actually be able to see.
+    payload["clip_ids"] = listed
+    payload["uploaded_ids"] = uploaded
+    yield {"event": "complete", "data": json.dumps(payload)}
+
+
+@router.post("/refine/stream")
+async def stream_refine(request: Request, body: RefineRequest) -> EventSourceResponse:
+    """Cut a curated run's action anchors into clips of their own.
+
+    Events: `started`, `complete`, `error`. `complete` carries `clip_ids`, the
+    clips that now exist, and `skipped_reason` when the host could not do it.
+    """
+    settings = get_settings()
+    return EventSourceResponse(
+        _refine_events(request, body),
+        media_type="text/event-stream",
+        ping=settings.sse_ping_interval,
+    )
+
+
+async def _annotate_clean_events(
+    request: Request, body: AnnotateCleanRequest
+) -> AsyncGenerator[dict[str, Any], None]:
+    """Stream one annotation pass over the cut clips."""
+    from video_searching_agent.pipeline.annotate_clean import annotate_clean_collection
+
+    credentials = RequestCredentials.from_headers(request.headers)
+    kwargs: dict[str, Any] = {
+        "limit": body.limit,
+        "only": body.video_ids,
+        "only_missing": body.only_missing,
+        "write_back": body.write_back,
+        "wanted_viewpoint": body.wanted_viewpoint,
+    }
+    if body.collection_id.strip():
+        kwargs["collection_id"] = body.collection_id.strip()
+    lake = credentials.datalake_client()
+    if lake is not None:
+        kwargs["lake"] = lake
+    llm = credentials.llm_client()
+    if llm is not None:
+        kwargs["llm"] = llm
+
+    yield {"event": "started", "data": json.dumps({"limit": body.limit})}
+    try:
+        report = await annotate_clean_collection(**kwargs)
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("annotating the clean clips failed")
+        yield {"event": "error", "data": ErrorEvent(error=str(exc)).model_dump_json()}
+        return
+
+    payload = report.as_dict()
+    payload["clip_ids"] = [
+        r.video_id for r in report.annotated if getattr(r, "video_id", "")
+    ]
+    yield {"event": "complete", "data": json.dumps(payload)}
+
+
+@router.post("/annotate-clean/stream")
+async def stream_annotate_clean(
+    request: Request, body: AnnotateCleanRequest
+) -> EventSourceResponse:
+    """Give the cut clips their own task, action and event trees.
+
+    Events: `started`, `complete`, `error`. A clip whose frames do not confirm
+    the wanted viewpoint is refused rather than annotated, and counted as such.
+    """
+    settings = get_settings()
+    return EventSourceResponse(
+        _annotate_clean_events(request, body),
         media_type="text/event-stream",
         ping=settings.sse_ping_interval,
     )

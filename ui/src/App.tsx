@@ -8,9 +8,10 @@
 import { useEffect, useState } from "react";
 
 import { CollectView } from "./components/CollectView";
+import { LibraryView } from "./components/LibraryView";
 import { SearchView } from "./components/SearchView";
 
-type View = "search" | "collect";
+type View = "search" | "collect" | "library";
 
 const API_KEY_STORAGE = "ivs.apiKey";
 const THEME_STORAGE = "ivs.theme";
@@ -56,6 +57,10 @@ export function App() {
   // The viewpoint the search checked the queued candidates against. Part two
   // only trusts the search's frame check when it is asking the same question.
   const [queuedViewpoint, setQueuedViewpoint] = useState("");
+  // The clips this session cut. Part three reads a store that outlives the
+  // session, so it is told what belongs to this run rather than showing the
+  // whole corpus and calling it a result.
+  const [runClips, setRunClips] = useState<string[]>([]);
   const [apiKey, setApiKey] = useState(() => readStored(API_KEY_STORAGE));
   const [theme, setTheme] = useState(() => readStored(THEME_STORAGE, "dark"));
   const [ownKeys, setOwnKeys] = useState<OwnKeys>(() => {
@@ -135,6 +140,15 @@ export function App() {
                 ? `${selected.length} clip${selected.length === 1 ? "" : "s"} queued`
                 : "index, clean, annotate"}
             </small>
+          </button>
+          <button
+            type="button"
+            className="nav__item"
+            aria-current={view === "library"}
+            onClick={() => setView("library")}
+          >
+            <span>3 · Library</span>
+            <small>browse the clean clips</small>
           </button>
         </div>
 
@@ -257,14 +271,20 @@ export function App() {
               setView("collect");
             }}
           />
-        ) : (
+        ) : view === "collect" ? (
           <CollectView
             apiKey={apiKey}
             ownKeys={ownKeys}
             queuedUrls={queued}
             queuedViewpoint={queuedViewpoint}
             maxUrlsPerRequest={health?.max_collect_urls ?? 25}
+            onCollected={(clipIds) => {
+              setRunClips(clipIds);
+              setView("library");
+            }}
           />
+        ) : (
+          <LibraryView apiBase="" videoIds={runClips} />
         )}
       </main>
     </div>
