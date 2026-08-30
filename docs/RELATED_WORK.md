@@ -23,6 +23,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [HoloAssist](#holoassist)
   - [Ego-1K](#ego-1k)
   - [ENIGMA-360](#enigma-360)
+  - [SABER](#saber--commissioned-egoexo-capture-in-a-domain-the-internet-is-full-of)
 - [2. Scaling human video for robot learning](#2-scaling-human-video-for-robot-learning)
   - [The robot-native denominator](#the-robot-native-denominator)
   - [EgoDex](#egodex)
@@ -31,6 +32,8 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [Ego2Robot](#ego2robot)
   - [EgoEngine](#egoengine)
   - [EgoMimic](#egomimic)
+  - [EgoAVFlow](#egoavflow--no-robot-demonstrations-still-means-a-board-in-every-scene)
+  - [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean)
   - [Open-AoE](#open-aoe)
   - [EgoVerse](#egoverse)
   - [MobileEgo Anywhere](#mobileego-anywhere)
@@ -249,6 +252,56 @@ Neither is wrong. But a team that needs *industrial procedural data it can
 defend* is choosing between a hundred annotated hours from one room and ten
 thousand unannotated hours of undocumented provenance. That gap is what a
 requirement-driven collector exists to close.
+
+### SABER — commissioned ego–exo capture in a domain the internet is full of
+
+**[arXiv 2605.09613](https://arxiv.org/html/2605.09613v1)** (DreamVu) — the
+most recent commissioned ego–exo corpus in this document, and the one whose
+domain most sharply raises the question §13 answers.
+
+**Approximately 100 hours** of in-store footage, collected across *multiple*
+real grocery stores — the paper says "multiple" and never gives a count.
+Dual-stream capture: **ego on a head-mounted GoPro recording at 480p**, worn by
+the primary actors; **exo on a DreamVu ALIA omnidirectional camera**, one fixed
+unit supplying "six calibrated and synchronized wide-angle views that span the
+full surround environment." Actors perform the full shopping and stocking
+workflow — stocking shelves, retrieving items, navigating aisles — in
+operational stores, with no robot hardware present during collection.
+
+What ships is not hours but retargeted action: **44.8 K training samples** in
+three streams — **25 K** LAPA-style latent action sequences, **18.6 K**
+dexterous hand-pose trajectories retargeted to robot joint space via
+Dex-Retargeting, and **1.2 K** whole-body SMPL sequences retargeted to a
+humanoid. Post-trained into GR00T N1.6, it reports a **29.3% mean success rate
+across ten retail manipulation tasks against a 13.4% fine-tuning baseline**,
+about 2.19×.
+
+**Licence — and the split that matters.** "A 10K-sample subset of SABER is
+released publicly under a CC BY-NC 4.0 license" on Hugging Face
+(`DreamVu/SABER-10K`); the full corpus is reachable only through the vendor's
+own page. So: **less than a quarter of the samples, non-commercial, and the
+rest behind a vendor gate.** A fourth shape for [§11](#11-the-licence-trap) —
+not merely restrictive, unstated, or unreleased, but *partially* released, with
+the restrictive licence attached to the part you can actually have.
+
+**The catch, and it is the one this document keeps finding.** Grocery stocking
+and shelf retrieval are among the most abundantly filmed activities on the open
+internet — retail training footage, shift vlogs, body-cam and helmet-cam uploads.
+A team that needed a hundred hours of it **sent actors into stores with GoPros
+anyway**. The exocentric half explains part of that: a synchronised 360° view
+from a calibrated fixed unit is not something found footage ever supplies. But
+the egocentric half is ordinary head-mounted video, and it was still staged.
+
+**And the resolution is the tell.** The paper does not say which GoPro model or
+why the setting was chosen, but no GoPro's native ceiling is anywhere near
+480p — and SABER's ego stream is **480p**. In a corpus whose declared payload is *dexterous hand-pose
+trajectories*, the first-person view of the hands was recorded at a resolution
+below the one Build AI was criticised for dropping to
+([§12](#12-free-hours-and-what-they-do-to-the-moat)). Two independent teams,
+opposite provenance, same decision: hours over pixels. That is now a pattern
+rather than a Build AI idiosyncrasy — and it makes the counter-position
+legibility is what a manipulation corpus is *for* a lonelier but better-evidenced
+place to stand.
 
 **Where we differ.** Commissioned capture buys control and pays in cost and
 coverage: you get exactly the 123 scenes you funded. This system inverts the
@@ -515,6 +568,80 @@ footage cannot offer. So it belongs in the same column as the reconstruction
 pipelines when asking what the open web can feed: **nothing here consumes found
 footage**; the strategies differ only in how they arrange the capture they
 control.
+
+### EgoAVFlow — "no robot demonstrations" still means a board in every scene
+
+**[arXiv 2602.22461](https://arxiv.org/html/2602.22461v1)** (CC BY 4.0) — the
+cleanest single refutation in this document of the idea that a method
+advertising freedom from robot data is therefore compatible with found footage.
+
+**Mechanism.** A shared **3D flow** representation carries manipulation and
+*active vision* together: diffusion models predict robot actions, future 3D
+flow, and camera trajectories, then refine the viewpoint at test time by
+reward-maximising denoising under a visibility-aware reward computed from
+predicted motion and scene geometry. It "transfers without robot
+demonstrations." Its three reported findings are worth having: fixed viewpoints
+cannot reliably maintain visibility during manipulation; directly imitating
+human viewpoints is insufficient for visibility-aware adjustment; conditioning
+on 3D flow is strongest under actively varying viewpoints.
+
+**What it demands of the video, which is the whole point here.** Not RGB —
+**RGBD**, from a **head-mounted RealSense D435**. 2D pixels are tracked with
+CoTracker3, unprojected using the depth channel, and camera poses recovered with
+DROID-SLAM. And then, verbatim:
+
+> "Egocentric human videos exhibit diverse initial states, which leads SLAM to
+> produce a different world coordinate frame for each demonstration. To express
+> trajectories in a consistent reference frame, we convert all 3D quantities
+> into a marker coordinate system defined by a **ChArUco board**."
+
+**Scale and release.** **150 egocentric human videos per task, across 4
+manipulation tasks.** No dataset release stated; a project page is referenced
+without a code or data availability statement.
+
+**Why it matters here.** Every prior entry in this section needed something at
+capture time — meshes and calibration, an approximately static camera, the
+demonstrator wearing your glasses. EgoAVFlow needs a **depth sensor on the head
+and a printed calibration target physically present in the scene**. A YouTube
+video has neither and can never be made to have them retroactively. The
+strategy list in this section is now four deep and the conclusion has not
+moved: for footage you found rather than shot, the viable operations remain
+filter, clip, annotate.
+
+### EgoWAM — and what "in-the-wild" turns out to mean
+
+**[arXiv 2607.08436](https://arxiv.org/abs/2607.08436)** (CC BY 4.0, Georgia
+Tech RL²) — a **naming trap of the same family as
+[Ego-1K](#ego-1k)**, and worth recording for exactly that reason.
+
+The title promises "World Action Models Beyond Pixels with **In-the-Wild**
+Egocentric Human Data," and the headline result is that "WAM co-training scales
+more effectively with in-the-wild egocentric human data than behavior cloning."
+A reader scanning §13 would flag it immediately: has someone finally trained on
+found footage?
+
+No. **The in-the-wild human data is [EgoVerse](#egoverse)** — the "full
+EgoVerse-A flagship split per task," at roughly **10:1 against robot data**,
+with an in-domain human regime at 1:1 (matched to 300–360 robot demos per task)
+as the comparison. EgoVerse is captured on **Project Aria glasses**. And the
+dependency runs deeper than provenance: EgoWAM's 3D flow is obtained by feeding
+a pretrained point tracker **"with Aria VIO camera poses, so the returned point
+positions share a consistent world frame."** The method's world-frame
+consistency is supplied by the capture device's own visual-inertial odometry.
+
+**So "in-the-wild" here means *outside the robot's lab*, not *off the open
+web*.** That is a legitimate and useful axis — unmatched viewpoints, unmatched
+behaviour, scenes the robot never saw — and the paper is not overclaiming
+within its own field's usage. But the phrase does not survive translation into
+this document's vocabulary, and a survey that took it at face value would
+report the opposite of what §13 finds.
+
+**The methodological result is still worth stealing.** Holding backbone, action
+head and data mixture constant and varying *only* the world-prediction target,
+DINO-based prediction gave up to **4× out-of-distribution generalisation** and
+3D flow gave **20–30% in-domain**. Predicting scene evolution, not just actions,
+is where the human-video gain lives — which is an argument for annotating what
+happens next in a clip, not only what is in it.
 
 ### Open-AoE
 
@@ -1253,6 +1380,18 @@ must clear before it earns its complexity.
 The finding with the sharpest practical edge, and the reason a "just use the open
 pipeline" plan can quietly become unshippable.
 
+**The field fails at rights in three distinct ways, and they need different
+responses.** *Too restrictive to use* — EgoDex is CC-BY-NC-ND; HOI4D and
+EPIC-KITCHENS-100 are CC BY-NC 4.0; AgiBotWorld-Beta is non-commercial *and*
+share-alike. *Too unstated to know* — Open X-Embodiment pools 60 datasets from
+34 labs and states no overall licence; InternVid states none on either surface;
+DreamDojo's crowdsourced hours have no published terms; Ego4D and Ego-Exo4D sit
+behind agreements whose text is not public. *Not released at all* — EgoScale,
+the largest action-labelled ego corpus here at 20,854 h, is "code coming soon"
+with no licence. The first is a decision, the second is a question you must ask
+before building, and the third is a plan you cannot make. A fourth shape appears
+below.
+
 **EgoInfinity's own code is MIT. Its dependencies are not.** The repository says
 so directly: *commercial use of the repo as a whole is restricted by the WiLoR
 (CC-BY-NC-ND) and MANO (non-commercial) terms.*
@@ -1302,6 +1441,7 @@ Reading the licences across this document produces the wider pattern:
 | **EPIC-KITCHENS-100** | **CC BY-NC 4.0** | ❌ (commercial terms by email to Bristol) |
 | **HOI4D** | **CC BY-NC 4.0** | ❌ non-commercial |
 | ENIGMA-360 | CC BY 4.0 | ✅ with attribution |
+| **SABER** | **CC BY-NC 4.0 — on a 10 K-sample subset only; the full corpus is vendor-gated** | ❌ non-commercial, and partial |
 | **LAION-BVD** | **research only** | ❌ |
 | **EgoInfinity (as a whole)** | MIT code, encumbered deps | ❌ until deps are swapped |
 | **Ego4D / Ego-Exo4D** | **signed agreement, terms not public** | ⚠️ unknowable until you sign — do not assume |
@@ -1321,6 +1461,17 @@ Note what the bottom half of that table has in common: the field's **most-cited*
 reference datasets are the ones you cannot use commercially, or cannot even read
 the terms of without signing first. The permissive corner is occupied almost
 entirely by 2026 releases and by tooling.
+
+**And there is a fourth shape, distinct from the three this section opened
+with.** Too restrictive, terms unstated, not released — and now *partially*
+released, with the restrictive terms attached to the part you can have.
+[SABER](#saber--commissioned-egoexo-capture-in-a-domain-the-internet-is-full-of)
+publishes a **10 K-sample subset under CC BY-NC 4.0** out of 44.8 K, and routes
+the rest through the vendor's own page. The failure mode this creates is subtler
+than a flat "no": a reader who checks the licence sees a real, quotable licence
+on a real, downloadable artefact, and has to notice separately that it covers
+under a quarter of what the paper reports. **Record the licence, the access
+route, *and* the fraction — three fields, not one.**
 
 ⚠️ **Licence and access are separate axes, and collapsing them misleads.** A
 third-party [release tracker](https://egxodata.com/resources/robotics-data-release-tracker-2026)
@@ -1386,11 +1537,15 @@ frames**, 2,010,759 clips, 24.79 TB, 30 fps H.265, monocular head-mounted
 **fisheye** Build AI Gen 1, per-worker calibrated camera intrinsics, mean 7.06
 hours per worker, Apache 2.0, access gated behind sharing contact information.
 
-🔴 **Egocentric-1M could not be found at the publisher, across three separate
+🔴 **Egocentric-1M could not be found at the publisher, across four separate
 attempts.** In order: its Hugging Face card returns 401 to an unauthenticated
 fetch; it does not surface in dataset search, where the 100K and 10K-Evaluation
-cards do; and — the decisive one — **Build AI's own Hugging Face organisation
-page lists exactly four datasets, and Egocentric-1M is not among them**:
+cards do; **Build AI's own Hugging Face organisation page lists exactly four
+datasets, and Egocentric-1M is not among them**; and a fourth attempt, run
+months later against Hugging Face's `egocentric` dataset search, returned
+**Egocentric-10K, Egocentric-10K-Evaluation, Egocentric-100K and
+Egocentric-100K-Evaluation — all four under `builddotai`, and no
+Egocentric-1M**. Four routes, one publisher, nothing:
 
 | Dataset | Last updated | Downloads |
 |---|---|---|
@@ -1402,8 +1557,8 @@ page lists exactly four datasets, and Egocentric-1M is not among them**:
 This document does not claim the release does not exist — it may be private,
 gated below the listing, or planned. What it claims is narrower and checkable:
 **the ~1 M hours, the April 2026 date and the Apache 2.0 terms rest entirely on
-secondary coverage, and three attempts at the publisher's own surfaces found
-nothing.** Anyone sizing a plan against it should get it confirmed first.
+secondary coverage — which still repeats them — and four attempts at the
+publisher's own surfaces, spread over months, found nothing.** Anyone sizing a plan against it should get it confirmed first.
 
 **The argument in this section does not depend on that row.** The verified step —
 10,000 h at 1080p to 100,405 h at 456×256 — is the whole of the point, and it is
@@ -1606,6 +1761,19 @@ rather than mine the web. That is the strongest available evidence that the
 acquisition layer is genuinely absent rather than merely unfashionable: the
 best-resourced actor in the field paid for capture instead.
 
+**And the newest work keeps confirming it, in two different ways.** *By
+staging what the web already holds*: [SABER](#saber--commissioned-egoexo-capture-in-a-domain-the-internet-is-full-of)
+needed about a hundred hours of grocery stocking and shelf retrieval — one of the
+more abundantly filmed activity classes on the open internet — and sent actors
+into real stores with head-mounted GoPros. *By calling something in-the-wild that
+isn't*: [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean) reports that
+world-action-model co-training "scales more effectively with in-the-wild
+egocentric human data," and its in-the-wild data is EgoVerse, captured on Project
+Aria glasses, with its 3D flow derived from the glasses' own VIO poses. The
+phrase, in this literature, means *outside the robot's lab* — never *off the
+open web*. **A survey that read those titles at face value would conclude the
+opposite of what this section finds.**
+
 **Acquisition from the web is the hole between them.** The tools that touch the
 internet — [video2dataset](#video2dataset), [LAION-BVD](#laion-bvd) — are
 viewpoint-blind by design: they fetch and package whatever URLs you hand them,
@@ -1728,12 +1896,15 @@ are the parts that are worth owning.**
 - Huang et al. *EgoExoLearn.* CVPR 2024. https://github.com/OpenGVLab/EgoExoLearn
 - *HOI4D.* (CC BY-NC 4.0) https://arxiv.org/pdf/2404.09933 · https://hoi4d.github.io/
 - *ENIGMA-360: An Ego-Exo Dataset for Human Behavior Understanding in Industrial Scenarios.* (CC BY 4.0) https://arxiv.org/html/2603.09741v1 · https://iplab.dmi.unict.it/ENIGMA-360
+- *SABER: A Scalable Action-Based Embodied Dataset for Real-World VLA Adaptation.* DreamVu. (10 K-sample subset CC BY-NC 4.0; full corpus vendor-gated) https://arxiv.org/html/2605.09613v1 · https://huggingface.co/datasets/DreamVu/SABER-10K
 - *EgoDex: Learning Dexterous Manipulation from Large-Scale Egocentric Video.* (CC-BY-NC-ND) https://arxiv.org/html/2505.11709v1
 - *EgoScale: Scaling Dexterous Manipulation with Diverse Egocentric Human Data.* GEAR @ NVIDIA Research. (code "coming soon"; no licence stated) https://arxiv.org/abs/2602.16710 · https://research.nvidia.com/labs/gear/egoscale/
 - Deng, Zhou et al. *HumanNet: Scaling Human-centric Video Learning to One Million Hours.* https://arxiv.org/abs/2605.06747
 - *Ego2Robot: Scalable Robot Data Synthesis from Egocentric Human Data.* https://arxiv.org/html/2608.02580
 - *EgoEngine: From Egocentric Human Videos to High-Fidelity Dexterous Robot Demonstrations.* https://arxiv.org/html/2606.12604v1 · https://egoengine.github.io
 - *EgoMimic: Scaling Imitation Learning via Egocentric Video.* https://arxiv.org/abs/2410.24221
+- *EgoAVFlow: Robot Policy Learning with Active Vision from Human Egocentric Videos via 3D Flow.* (CC BY 4.0; head-mounted RealSense D435 RGBD plus a ChArUco board per scene; 150 videos × 4 tasks; no dataset release stated) https://arxiv.org/html/2602.22461v1
+- *EgoWAM: World Action Models Beyond Pixels with In-the-Wild Egocentric Human Data.* (CC BY 4.0; "in-the-wild" = EgoVerse on Project Aria, flow from Aria VIO poses) https://arxiv.org/abs/2607.08436
 - *ACE-Ego-0: Unifying Egocentric Human and Robotic Data for VLA Pretraining.* https://arxiv.org/html/2606.17200v1 (the project URL printed in the paper 404s)
 - *Open-AoE: An Open Egocentric Manipulation Dataset and Toolchain for Embodied Learning.* (CC BY 4.0) https://arxiv.org/abs/2607.14183
 - *EgoVerse: An Egocentric Human Dataset for Robot Learning from Around the World.* https://arxiv.org/abs/2604.07607

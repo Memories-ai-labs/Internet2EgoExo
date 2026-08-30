@@ -205,8 +205,12 @@ them:
   **161,000 downloads for the 256p corpus against 343 for the 1080p one**,
   roughly 470:1. That is the field revealing its preference, and it makes the
   opposite bet — that legibility is what a manipulation corpus is *for* — a much
-  less crowded place to stand. (A widely-reported ~1 M-hour follow-up could not
-  be found at the publisher across three attempts; the survey records why.)
+  less crowded place to stand. And it is not one publisher's quirk:
+  [SABER](https://arxiv.org/html/2605.09613v1) records its egocentric stream —
+  in a corpus whose declared payload is dexterous hand-pose trajectories — from
+  head-mounted GoPros at **480p**. (A widely-reported ~1 M-hour follow-up to
+  Egocentric-100K could not be found at the publisher across four attempts; the
+  survey records each one.)
   Consent posture is a design choice, not a casualty of scale: the 10K card warns
   against surveillance uses while carrying no consent documentation, where
   [Open-AoE](https://arxiv.org/abs/2607.14183) collects under explicit informed
@@ -231,6 +235,17 @@ When NVIDIA needed the largest egocentric corpus ever assembled for a world mode
 hour is described as found footage. The company that also ships the world-model
 platform, the curation substrate and the largest ego VLA still paid for capture
 rather than mining the web.
+
+**The newest work keeps confirming it, in two ways.** By staging what the web
+already holds: [SABER](https://arxiv.org/html/2605.09613v1) needed ~100 hours of
+grocery stocking and shelf retrieval — among the most abundantly filmed activity
+on the open internet — and sent actors into real stores with head-mounted
+GoPros. And by calling something in-the-wild that isn't:
+[EgoWAM](https://arxiv.org/abs/2607.08436) reports that world-action-model
+co-training "scales more effectively with in-the-wild egocentric human data,"
+where the in-the-wild data is EgoVerse, captured on Project Aria glasses, with
+its 3D flow derived from the glasses' own VIO poses. In this literature
+*in-the-wild* means outside the robot's lab — never off the open web.
 
 It stays a hole because the citable unit is a corpus rather than a machine;
 because where it pays, the sourcing pipeline is the product and gets kept;
@@ -1568,7 +1583,9 @@ video-searching-agent/
 │   ├── tools/          # Gemini function calling tools
 │   └── web/            # FastAPI app, SSE streaming, middleware
 │       └── static/     # Zero-build web UI (index.html / styles.css / app.js)
-├── docs/               # RELATED_WORK.md — how this sits next to the literature
+├── docs/               # DATASET.md, autoresearch/, and RELATED_WORK.md —
+│                       #   the schema, the loop's own notes, and how this
+│                       #   sits next to the literature
 ├── eval/               # Frozen eval set + runner (see eval/README.md)
 ├── qa/                 # Deployment sweep and whole-pipeline run
 ├── examples/           # Usage examples
