@@ -1629,12 +1629,17 @@ months later against Hugging Face's `egocentric` dataset search, returned
 Egocentric-100K-Evaluation — all four under `builddotai`, and no
 Egocentric-1M**. Four routes, one publisher, nothing:
 
-| Dataset | Last updated | Downloads |
-|---|---|---|
-| Egocentric-10K | Feb 16 | 343 |
-| **Egocentric-100K** | Feb 16 | **161,000** |
-| Egocentric-100K-Evaluation | Dec 9, 2025 | 198 |
-| Egocentric-10K-Evaluation | Nov 10, 2025 | 158 |
+| Dataset | Last updated | Downloads, first reading | Downloads, this sweep |
+|---|---|---|---|
+| Egocentric-10K | Feb 16 | 343 | **34.5 k** |
+| **Egocentric-100K** | Feb 16 | **161,000** | **1.95 M** *(the cards say 164,868 — see below)* |
+| Egocentric-100K-Evaluation | Dec 9, 2025 | 198 | 30 k |
+| Egocentric-10K-Evaluation | Nov 10, 2025 | 158 | 30 k |
+
+Both columns are the organisation listing's own figures at two readings months
+apart. The counter is a **rolling monthly rate**, not a lifetime total, and the
+two surfaces do not agree for Egocentric-100K — both problems are worked through
+where the ratio is used, [below](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost).
 
 This document does not claim the release does not exist — it may be private,
 gated below the listing, or planned. What it claims is narrower and checkable:
@@ -1646,13 +1651,45 @@ publisher's own surfaces, spread over months, found nothing.** Anyone sizing a p
 10,000 h at 1080p to 100,405 h at 456×256 — is the whole of the point, and it is
 read straight off the cards.
 
-> **And the download counts are their own finding.** Egocentric-100K has been
-> pulled **161,000 times against Egocentric-10K's 343** — roughly 470:1 for the
-> 256p corpus over the 1080p one. That is the field revealing its preference
-> rather than an author asserting one: offered the same footage at ten times the
-> hours and a seventeenth of the pixels, it took the hours, overwhelmingly. Which
-> makes the counter-position — that legibility is what a manipulation dataset is
-> for — less crowded than the raw hour counts suggest.
+> 🔴 **The download counts are their own finding — and this document got them
+> wrong twice, so both errors are recorded here rather than quietly fixed.**
+>
+> An earlier revision of this section said Egocentric-100K "has been pulled
+> **161,000 times** against Egocentric-10K's **343** — roughly 470:1." Two things
+> were wrong with that. **First, the metric.** Hugging Face's counter is labelled
+> *"Downloads last month"* — a rolling 30-day window, not a lifetime total. "Has
+> been pulled 161,000 times" describes a figure that does not exist on the page.
+> **Second, the ratio has since collapsed.** Re-read at the dataset cards this
+> sweep, like for like:
+>
+> | Card | Downloads last month | Resolution |
+> |---|---|---|
+> | Egocentric-100K | **164,868** | 456×256 |
+> | Egocentric-10K | **34,519** | 1080p |
+>
+> That is **roughly 4.8:1**, not 470:1. The 1080p corpus went from a few hundred
+> monthly pulls to thirty-four thousand while the 256p corpus barely moved.
+>
+> ⚠️ **And the publisher's two surfaces disagree.** The organisation listing
+> shows **1.95 M** for Egocentric-100K against the card's 164,868, while
+> reporting 34.5 k for Egocentric-10K — matching *its* card. One number is
+> measuring something different from the other three and neither page says what.
+> The like-for-like comparison is card-to-card, so 4.8:1 is what this document
+> asserts; the 1.95 M is recorded as unexplained rather than used.
+>
+> **What survives.** The 256p corpus is still pulled several times more often
+> than the 1080p one, so the direction of the field's preference is unchanged —
+> but "overwhelmingly" was an artefact of one quiet month early in the 1080p
+> set's life, and is not supportable now. The honest read is narrower and more
+> interesting: **the gap is closing.** Which makes the counter-position — that
+> legibility is what a manipulation dataset is *for* — less lonely than it looked,
+> not more.
+>
+> **The general lesson, for a document that scores rights and scale per clip.**
+> A download counter is a *rate*, not a *stock*, and a rate read once is a
+> snapshot with a date on it. Any figure this document quotes from a live
+> dashboard needs the date attached and a re-read on a schedule — which is why
+> the sweep now treats every dashboard number as expiring by default.
 
 **The part nobody leads with: hours scaled 10×, and pixels per hour collapsed.**
 Egocentric-10K ships 1080p. Egocentric-100K ships **456×256**. That is roughly a
@@ -2039,7 +2076,7 @@ are the parts that are worth owning.**
 - Damen et al. *Scaling Egocentric Vision: The EPIC-KITCHENS Dataset.* https://arxiv.org/pdf/1804.02748
 - Huang et al. *EgoExoLearn.* CVPR 2024. https://github.com/OpenGVLab/EgoExoLearn
 - *HOI4D.* (CC BY-NC 4.0) https://arxiv.org/pdf/2404.09933 · https://hoi4d.github.io/
-- *ENIGMA-360: An Ego-Exo Dataset for Human Behavior Understanding in Industrial Scenarios.* (CC BY 4.0) https://arxiv.org/html/2603.09741v1 · https://iplab.dmi.unict.it/ENIGMA-360
+- *ENIGMA-360: An Ego-Exo Dataset for Human Behavior Understanding in Industrial Scenarios.* (CC BY 4.0) https://arxiv.org/html/2603.09741v1 · project page https://iplab.dmi.unict.it/ENIGMA-360 **returns HTTP 500 as of this sweep — cite the arXiv HTML**
 - *SABER: A Scalable Action-Based Embodied Dataset for Real-World VLA Adaptation.* DreamVu. (10 K-sample subset CC BY-NC 4.0; full corpus vendor-gated) https://arxiv.org/html/2605.09613v1 · https://huggingface.co/datasets/DreamVu/SABER-10K
 - *EgoDex: Learning Dexterous Manipulation from Large-Scale Egocentric Video.* (CC-BY-NC-ND) https://arxiv.org/html/2505.11709v1
 - *EgoScale: Scaling Dexterous Manipulation with Diverse Egocentric Human Data.* GEAR @ NVIDIA Research. (code "coming soon"; no licence stated) https://arxiv.org/abs/2602.16710 · https://research.nvidia.com/labs/gear/egoscale/

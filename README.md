@@ -202,10 +202,14 @@ them:
   (100,405 h, 10.8 B frames, **456×256**), both Apache 2.0. Note what scaling
   cost: a 17× drop in pixels per frame, in a domain where finger articulation is
   the payload. And note how it landed — the publisher's own listing shows
-  **161,000 downloads for the 256p corpus against 343 for the 1080p one**,
-  roughly 470:1. That is the field revealing its preference, and it makes the
-  opposite bet — that legibility is what a manipulation corpus is *for* — a much
-  less crowded place to stand. And it is not one publisher's quirk:
+  the 256p corpus pulled **164,868** times last month against the 1080p corpus's
+  **34,519** — roughly **4.8:1**. An earlier revision of this README quoted
+  470:1 off an older reading; the survey records why that was wrong on two
+  counts (the counter is a rolling monthly *rate*, not a lifetime total, and the
+  gap has since closed by two orders of magnitude). The direction still holds —
+  the field does reach for hours first — but the opposite bet, that legibility
+  is what a manipulation corpus is *for*, is a less lonely place to stand than
+  it looked. And it is not one publisher's quirk:
   [SABER](https://arxiv.org/html/2605.09613v1) records its egocentric stream —
   in a corpus whose declared payload is dexterous hand-pose trajectories — from
   head-mounted GoPros at **480p**. (A widely-reported ~1 M-hour follow-up to
