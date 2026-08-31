@@ -219,8 +219,23 @@ them:
 ### Why no open-source project does exactly this
 
 Every individual stage is open. The assembly is not — and the reason is
-structural, not technical. Open source went hard at the two adjacent problems and
-skipped this one: **capture** ([EgoKit](https://arxiv.org/pdf/2605.16797),
+structural, not technical.
+
+**One project comes close, and saying exactly how keeps the rest honest.**
+[EgoCS-400K](https://arxiv.org/html/2606.18180v1) really does source ego data
+from the open internet at scale: 10,000+ hours, 400 K+ first-person videos,
+CC BY 4.0, built from public professional Counter-Strike match demos on HLTV.
+It works because the domain ships a deterministic replay format — the video is
+*rendered* from the demo rather than downloaded, and the actions are *read out
+of the file* as ground truth rather than recovered from pixels. Viewpoint is a
+render parameter; there is no camera to classify. Its authors position it as
+"an intermediate testbed rather than a direct model of real-world embodiment."
+So the accurate claim is narrower than "nobody does this", and it holds:
+**nobody sources real-world ego footage from the internet at scale, because only
+a synthetic domain hands you the ground truth that makes it cheap.**
+
+For the domains that don't, open source went hard at the two adjacent problems
+and skipped this one: **capture** ([EgoKit](https://arxiv.org/pdf/2605.16797),
 [MobileEgo Anywhere](https://arxiv.org/pdf/2605.05945) — how to record more
 footage cheaply) and **annotation** ([EgoLive](https://arxiv.org/html/2604.23570v1),
 Action100M — how to label footage you already hold). Acquisition from the open

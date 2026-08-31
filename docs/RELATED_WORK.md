@@ -34,6 +34,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [EgoMimic](#egomimic)
   - [EgoAVFlow](#egoavflow--no-robot-demonstrations-still-means-a-board-in-every-scene)
   - [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean)
+  - [World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild)
   - [Open-AoE](#open-aoe)
   - [EgoVerse](#egoverse)
   - [MobileEgo Anywhere](#mobileego-anywhere)
@@ -80,6 +81,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [Consent is a design choice, not a casualty of scale](#consent-is-a-design-choice-not-a-casualty-of-scale)
   - [annotated-egocentric-10k-dataset](#annotated-egocentric-10k-dataset)
   - [EgoVid-5M](#egovid-5m)
+  - [EgoCS-400K](#egocs-400k--10000-free-hours-sourced-from-the-internet-and-why-13-survives-it)
   - [The structural read](#the-structural-read)
 - [13. Why no open-source project does exactly this](#13-why-no-open-source-project-does-exactly-this)
   - [Where the effort actually went](#where-the-effort-actually-went)
@@ -642,6 +644,58 @@ DINO-based prediction gave up to **4× out-of-distribution generalisation** and
 3D flow gave **20–30% in-domain**. Predicting scene evolution, not just actions,
 is where the human-video gain lives — which is an argument for annotating what
 happens next in a clip, not only what is in it.
+
+### World In Your Hands — the instrumentation ceiling, and a third "in the wild"
+
+**[arXiv 2512.24310v3](https://arxiv.org/html/2512.24310v3)** — the most heavily
+instrumented human-manipulation capture effort in this document, and useful here
+as the upper bound on what *recording* can buy that *finding* cannot.
+
+**Scale.** **1,045 hours**, **125,400 clips**, **over 100 human skills**, **over
+40 tasks** across **10 scenarios** — banquet, laundry, logistics, hotel,
+department, office, supermarket, industry, cleaning, candlelight.
+
+**The instrument, which is the contribution.** The **Oracle Suite**, a wearable
+rig in three parts: **H-FPVHive**, chest-mounted, with two fisheye cameras, two
+pinhole cameras and four infrared lenses; **H-Gloves**, carrying six IMUs per
+glove, five fingertip pressure sensors (5 mN resolution, 0.2–50 N range) and
+three fisheye cameras per glove; and **H-Backpack** for storage, compute
+(NVIDIA Orin) and power. What comes off it: multi-view RGB, IMU localisation,
+**tactile** readings, and 6-DoF wrist trajectories at **under 5 mm**
+translational accuracy.
+
+**Results.** Pre-training a VLA on WIYH moved two real-world tasks — rose
+insertion, gift packing — from **15% to 70%**; separately, co-training a
+robot-only policy with human data took cluttered-scene success from **8% to
+60%**.
+
+**Licence — and a correction to how this is being summarised.** Secondary
+coverage describes the dataset as research-only with commercial use restricted.
+**The paper states no licence.** What it says is *"All data and hardware design
+will be open-source"* — a promise, not a grant, and the arXiv listing carries
+only the standard arXiv perpetual non-exclusive licence, which governs the
+*paper*. This document therefore records WIYH under [§11](#11-the-licence-trap)'s
+second failure mode — **terms unstated** — and not under the first. Anyone
+planning against it should get the actual dataset licence in writing.
+
+**And "in the wild" means what it always means here.** Third instance, after
+[EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean) and the phrase's usage
+throughout this section: the paper's *in-the-wild* is *"collected in diverse
+real-world scenarios"* rather than a lab — homes, workplaces, commercial spaces —
+all of it **self-collected by operators wearing the suit**, none of it sourced
+from existing video. The term is now reliable enough to read as a signal in the
+opposite direction: in this literature, a title advertising in-the-wild data is
+advertising *where the capture happened*, and is weak evidence that no found
+footage was involved.
+
+**Bearing here.** Tactile at 5 mN and wrist pose under 5 mm are things found
+footage will never have, at any scale, and it would be dishonest to pretend
+otherwise: for contact-rich dexterity there is a fidelity ceiling on internet
+video that no amount of verification lifts. What 1,045 instrumented hours cost —
+a custom glove, a backpack computer, an operator per hour — is the other half of
+the trade, and it is why the two supplies are complements rather than rivals.
+The manifest discipline this repo applies exists precisely so a trainer can tell
+which kind of hour it is holding.
 
 ### Open-AoE
 
@@ -1442,6 +1496,8 @@ Reading the licences across this document produces the wider pattern:
 | **HOI4D** | **CC BY-NC 4.0** | ❌ non-commercial |
 | ENIGMA-360 | CC BY 4.0 | ✅ with attribution |
 | **SABER** | **CC BY-NC 4.0 — on a 10 K-sample subset only; the full corpus is vendor-gated** | ❌ non-commercial, and partial |
+| EgoCS-400K | CC BY 4.0 | ✅ with attribution (rendered gameplay, not real-world footage) |
+| **World In Your Hands** | **none stated in the paper; "will be open-source"** | ⚠️ unresolved — get the dataset licence in writing |
 | **LAION-BVD** | **research only** | ❌ |
 | **EgoInfinity (as a whole)** | MIT code, encumbered deps | ❌ until deps are swapped |
 | **Ego4D / Ego-Exo4D** | **signed agreement, terms not public** | ⚠️ unknowable until you sign — do not assume |
@@ -1707,6 +1763,54 @@ egocentric video **generation**, not collection. Known issue: the raw IMU data h
 problems, so the released pose annotations are preferred over it. Licence follows
 Ego4D's terms.
 
+### EgoCS-400K — 10,000 free hours, sourced from the internet, and why §13 survives it
+
+**[arXiv 2606.18180](https://arxiv.org/html/2606.18180v1)** — the nearest thing
+in this literature to the machine this repo is, and the entry most likely to be
+read as refuting [§13](#13-why-no-open-source-project-does-exactly-this). It
+does not, but the reason is precise and worth stating rather than waved at.
+
+**Scale, all verified at source.** **Over 400,000 first-person videos, over
+10,000 hours**, from **over 1,000 matches** and **over 40,000 rounds**, across
+**13 maps**, at **10 player viewpoints per round**, averaging ~90 seconds per
+round-player video. **Licence CC BY 4.0.**
+
+**Mechanism, and this is the whole point.** The source is the open internet:
+*"We collect public professional CS:GO and CS2 match demos from HLTV."* But what
+is collected is not video. It is **replay files** — and the video is then
+manufactured: *"We generate first-person videos from demos through a
+metadata-guided rendering process"* using CS Demo Manager and the Counter-Strike
+client. The action labels are not inferred from pixels either; they are read out
+of the demo file as ground truth, with rule-based detectors mapping synchronised
+raw signals — button states, weapon state changes, game events — to action spans
+covering weapon switches, reloads, inspections, grenade usage, scope
+transitions, firing and posture changes.
+
+**So the pipeline is: find on the internet → render → label from ground truth.**
+Every hard problem this document is about — proving a clip is egocentric,
+proving hands are in frame, recovering what the actor did, establishing rights —
+is *dissolved* rather than solved, because the domain hands you a deterministic,
+machine-readable record of exactly what happened. Viewpoint is a render
+parameter. Actions are a field in a file. There is no camera to classify.
+
+**Which is exactly why it does not generalise, and the authors say so.** The
+stated domain gaps: *"continuous physical interaction, tactile feedback,
+deformable or manipulable objects, and non-combat everyday behavior"* — and the
+positioning is explicit, *"an intermediate testbed rather than a direct model of
+real-world embodiment."* There is no HLTV for kitchens. Real-world footage ships
+pixels and nothing else, which is the entire reason the acquisition layer has to
+assert viewpoint, hands and rights *with evidence* instead of reading them off.
+
+**What it does change.** Two things, and this document should own both.
+[§13](#13-why-no-open-source-project-does-exactly-this) can no longer be stated
+as "nobody sources ego data from the internet at scale" — somebody does, at
+10,000 hours, under CC BY 4.0. The accurate claim is narrower and still holds:
+**nobody sources *real-world* ego footage from the internet at scale, because
+only a synthetic domain supplies the ground truth that makes it cheap.** And
+[§12](#12-free-hours-and-what-they-do-to-the-moat)'s argument is untouched for a
+different reason: 10,000 hours of rendered Counter-Strike does not commoditise
+an hour of real hands manipulating real objects, whatever the licence says.
+
 ### The structural read
 
 This is the second time in short order that a large egocentric corpus has been
@@ -1731,6 +1835,20 @@ project that does the whole thing?
 
 The answer is not that people tried and failed. **Open source went hard at the
 two adjacent problems and skipped this one.**
+
+**One project comes close, and stating it precisely is what makes the rest of
+this section load-bearing.**
+[EgoCS-400K](#egocs-400k--10000-free-hours-sourced-from-the-internet-and-why-13-survives-it)
+does source ego data from the open internet at scale — 10,000+ hours, CC BY 4.0,
+from public match demos on HLTV — and it is the reason this section's claim is
+stated as it is below rather than as the flat "nobody does this" it would be
+tempting to write. It works because Counter-Strike ships a deterministic replay
+format: the video is *rendered* rather than downloaded, and the action labels
+are *read out of the file* rather than recovered from pixels. Viewpoint is a
+render parameter; there is no camera to classify. **The accurate claim is
+therefore narrower and holds: nobody sources real-world ego footage from the
+internet at scale, because only a synthetic domain hands you the ground truth
+that makes it cheap.** Everything below is about the domains that do not.
 
 ### Where the effort actually went
 
@@ -1905,6 +2023,8 @@ are the parts that are worth owning.**
 - *EgoMimic: Scaling Imitation Learning via Egocentric Video.* https://arxiv.org/abs/2410.24221
 - *EgoAVFlow: Robot Policy Learning with Active Vision from Human Egocentric Videos via 3D Flow.* (CC BY 4.0; head-mounted RealSense D435 RGBD plus a ChArUco board per scene; 150 videos × 4 tasks; no dataset release stated) https://arxiv.org/html/2602.22461v1
 - *EgoWAM: World Action Models Beyond Pixels with In-the-Wild Egocentric Human Data.* (CC BY 4.0; "in-the-wild" = EgoVerse on Project Aria, flow from Aria VIO poses) https://arxiv.org/abs/2607.08436
+- *World In Your Hands: A Large-Scale and Open-Source Ecosystem for Learning Human-Centric Manipulation in the Wild.* (1,045 h; Oracle Suite wearable; **no dataset licence stated — "will be open-source"**) https://arxiv.org/html/2512.24310v3
+- *EgoCS-400K: An Egocentric Gameplay Dataset for World Models.* (CC BY 4.0; 400 K+ videos / 10,000+ h rendered from public HLTV match demos) https://arxiv.org/html/2606.18180v1 · https://EgoCS-400K.github.io
 - *ACE-Ego-0: Unifying Egocentric Human and Robotic Data for VLA Pretraining.* https://arxiv.org/html/2606.17200v1 (the project URL printed in the paper 404s)
 - *Open-AoE: An Open Egocentric Manipulation Dataset and Toolchain for Embodied Learning.* (CC BY 4.0) https://arxiv.org/abs/2607.14183
 - *EgoVerse: An Egocentric Human Dataset for Robot Learning from Around the World.* https://arxiv.org/abs/2604.07607
