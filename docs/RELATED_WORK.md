@@ -20,6 +20,11 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
 **[Part I — The literature](#part-i--the-literature)**
 
 - [1. Commissioned egocentric and ego–exo capture](#1-commissioned-egocentric-and-egoexo-capture)
+  - [EPIC-KITCHENS-100](#epic-kitchens-100)
+  - [Ego4D](#ego4d)
+  - [Ego-Exo4D](#ego-exo4d)
+  - [EgoExoLearn](#egoexolearn)
+  - [HOI4D](#hoi4d)
   - [HoloAssist](#holoassist)
   - [Ego-1K](#ego-1k)
   - [ENIGMA-360](#enigma-360)
@@ -111,19 +116,25 @@ and are not.
 Staged captures: recruited participants, consented sites, a fixed activity
 taxonomy, and an annotation budget spent up front.
 
-**[EPIC-KITCHENS-100](https://arxiv.org/pdf/1804.02748)** — 100 hours, 45 kitchen
+### EPIC-KITCHENS-100
+
+**[arXiv 1804.02748](https://arxiv.org/pdf/1804.02748)** — 100 hours, 45 kitchen
 environments, 89,977 action clips, head-mounted, dense verb/noun action labels.
 The original proof that a single domain captured deeply beats a broad shallow
 sweep for action recognition. **Licence: CC BY-NC 4.0 — commercial use
 prohibited**, with commercial terms available only by writing to the Bristol
 team.
 
-**[Ego4D](https://ego4d-data.org/)** — 3,670+ hours of daily-life egocentric
+### Ego4D
+
+**[ego4d-data.org](https://ego4d-data.org/)** — 3,670+ hours of daily-life egocentric
 video with a benchmark suite (episodic memory, forecasting, hand–object
 interaction). Still the default pretraining corpus, and the base that
 [EgoVid-5M](#egovid-5m) and much else is derived from.
 
-**[Ego-Exo4D](https://arxiv.org/abs/2311.18259)** (CVPR 2024) — the reference
+### Ego-Exo4D
+
+**[arXiv 2311.18259](https://arxiv.org/abs/2311.18259)** (CVPR 2024) — the reference
 work for this project's problem statement. 1,286 hours, **740 participants across
 13 cities and 123 natural scene contexts**, and over **200,000 hours of annotator
 effort**. Its distinguishing property is *simultaneous* capture: a head-mounted
@@ -150,7 +161,9 @@ itself the finding: it cannot be assumed permissive.
 > exists at all (§8) — and the reason that research does not transfer to web
 > video, since Ego-Exo4D's rig is its input assumption.
 
-**[EgoExoLearn](https://github.com/OpenGVLab/EgoExoLearn)** (CVPR 2024) — 120
+### EgoExoLearn
+
+**[OpenGVLab/EgoExoLearn](https://github.com/OpenGVLab/EgoExoLearn)** (CVPR 2024) — 120
 hours plus gaze, modelling demonstration-following: a person watches an
 exocentric demo, then performs the task while recording egocentrically.
 Benchmarks for cross-view association, cross-view action segmentation /
@@ -158,7 +171,19 @@ anticipation / planning, cross-view referenced skill assessment, and cross-view
 referenced captioning. The closest existing formalisation of "the exo video
 teaches, the ego video executes."
 
-**[HOI4D](https://arxiv.org/pdf/2404.09933)** — 2.4 M RGB-D egocentric frames
+**Licence — checked at the repository this sweep, and the usual split applies.**
+The repo carries an **MIT** `LICENSE` file (*"MIT License / Copyright (c) 2024
+OpenGVLab"*). That governs the **code**. No separate dataset terms are stated
+anywhere on the repository page, and the video is offered as direct downloads —
+Google Drive, BaiduYun and Hugging Face — with no access form. So the honest
+record is: **code MIT, dataset terms unstated but access unrestricted** — the
+mirror image of [Egocentric-10K](#egocentric-10k), which gates access while
+granting permissive terms. Two more reasons to keep licence and access in
+separate fields.
+
+### HOI4D
+
+**[arXiv 2404.09933](https://arxiv.org/pdf/2404.09933)** — 2.4 M RGB-D egocentric frames
 across 4,000 sequences, **9 participants**, **800 object instances** in 16
 categories, 610 indoor rooms. Frame-wise it ships panoptic segmentation, motion
 segmentation, action segmentation, 3D hand pose, category-level object pose,
@@ -1510,7 +1535,8 @@ Reading the licences across this document produces the wider pattern:
 | [Ego-1K](#ego-1k) | CC BY 4.0 | ✅ with attribution (17.5 TB research / 88 TB raw on request) |
 | [EgoScale](#egoscale) | none stated; code "coming soon" | ⚠️ not obtainable at time of writing |
 | **AgiBotWorld-Beta** | **CC BY-NC-SA 4.0**, contact-gated | ❌ non-commercial **and** share-alike — the most restrictive terms here |
-| DROID | open dataset; terms not stated on the project page | ⚠️ unresolved |
+| DROID | open dataset; terms not stated on the project page (**re-checked; still silent** — the page says only that the dataset, training code and hardware guide are open-sourced) | ⚠️ unresolved |
+| EgoExoLearn | **MIT on the code**; dataset terms not separately stated, access unrestricted | ⚠️ code clear, data unresolved |
 | **Open X-Embodiment** | **none stated; 60 pooled components, position unstated** | ⚠️ unknowable without tracing 60 upstream datasets |
 
 Note what the bottom half of that table has in common: the field's **most-cited**
