@@ -280,7 +280,10 @@ and it is why it reuses the stages the field has already solved rather than
 reimplementing them.
 
 Full survey — both halves, the positioning table and references:
-**[docs/RELATED_WORK.md](docs/RELATED_WORK.md)**.
+**[docs/RELATED_WORK.md](docs/RELATED_WORK.md)**. It also carries a
+[corrections table](docs/RELATED_WORK.md#corrections-in-one-table) indexing every
+widely-repeated claim that did not survive being checked at its source —
+including three of the survey's own, kept visible rather than quietly amended.
 
 ## Installation
 

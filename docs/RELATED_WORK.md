@@ -39,6 +39,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [EgoMimic](#egomimic)
   - [EgoAVFlow](#egoavflow--no-robot-demonstrations-still-means-a-board-in-every-scene)
   - [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean)
+  - [EgoHumanoid](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator)
   - [World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild)
   - [Open-AoE](#open-aoe)
   - [EgoVerse](#egoverse)
@@ -93,6 +94,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [Six reasons the hole persists](#six-reasons-the-hole-persists)
   - [What this does and does not license us to claim](#what-this-does-and-does-not-license-us-to-claim)
 - [14. Build vs. reuse, per stage](#14-build-vs-reuse-per-stage)
+- [Corrections, in one table](#corrections-in-one-table)
 - [Positioning, in one table](#positioning-in-one-table)
 - [References](#references)
   - [Part I](#part-i--datasets-and-models)
@@ -669,6 +671,40 @@ DINO-based prediction gave up to **4× out-of-distribution generalisation** and
 3D flow gave **20–30% in-domain**. Predicting scene evolution, not just actions,
 is where the human-video gain lives — which is an argument for annotating what
 happens next in a clip, not only what is in it.
+
+### EgoHumanoid — whole-body transfer, and a VR rig on the demonstrator
+
+**[OpenDriveLab/EgoHumanoid](https://github.com/OpenDriveLab/EgoHumanoid)**
+(RSS 2026) — *"the first framework enabling humanoid loco-manipulation with
+egocentric human demonstrations."* It extends this section's question from hands
+to the whole body: not just what the demonstrator grasped, but where they walked
+to do it.
+
+**Mechanism.** A vision-language-action policy co-trained on abundant egocentric
+human data plus limited robot teleoperation, bridged by two explicit steps —
+**view alignment**, via depth-based warping and inpainting, and **action
+alignment**, with navigation velocities derived from body pose and discretised
+into commands. Reported gain: **51% over robot-only baselines**.
+
+**What it demands of the demonstrator.** A **PICO VR headset carrying five body
+trackers** for full-body pose, a **ZED Mini depth camera** mounted on that
+headset recording `.svo2`, and a Linux workstation to receive it. The view
+alignment is *depth-based*, so the depth stream is not optional decoration —
+it is what makes the human view transformable into the robot's.
+
+**Licence.** **Code Apache 2.0**, stated plainly. **Dataset terms are not
+stated**; a sample dataset sits on Hugging Face under the same name, split into
+robot and human subsets, with no scale figure given anywhere in the
+documentation. The same shape as [EgoExoLearn](#egoexolearn): a clear code
+licence doing double duty as an implied data licence it does not actually grant.
+
+**Bearing here.** This is the fifth published route in this section, and it
+moves the input requirement in the *opposite* direction from what found footage
+could ever satisfy — from a head-mounted camera to a head-mounted camera **plus
+five tracked body segments plus depth**. Whole-body transfer needs whole-body
+ground truth. Internet video gives you a viewport and nothing else, which is
+why the operations available to it stay filter, clip, annotate — and why the
+manifest has to record what a clip *cannot* support as carefully as what it can.
 
 ### World In Your Hands — the instrumentation ceiling, and a third "in the wild"
 
@@ -2053,6 +2089,43 @@ are the parts that are worth owning.**
 
 ---
 
+## Corrections, in one table
+
+Every correction below is argued in place in the entry it belongs to; this is an
+index, not a summary, and each row links to the working. **Three of them are
+this document's own errors**, kept visible rather than quietly amended — a
+survey that silently fixes itself gives a reader no way to calibrate how much to
+trust the rest of it.
+
+| Claim in circulation | What the source says | Where |
+|---|---|---|
+| The 256p corpus outdownloads the 1080p one **470:1** *(this document, earlier)* | Wrong twice: the counter reads **"Downloads last month"**, a rate not a total, and re-read at both cards it is **164,868 vs 34,519 — roughly 4.8:1**. The gap is closing | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
+| **Nobody** sources ego data from the internet at scale *(this document, earlier)* | **EgoCS-400K does** — 10,000+ h, CC BY 4.0, from public HLTV match demos. Narrowed to *real-world* footage, since EgoCS-400K renders video from replay files and reads actions out of them | [§12](#egocs-400k--10000-free-hours-sourced-from-the-internet-and-why-13-survives-it), [§13](#13-why-no-open-source-project-does-exactly-this) |
+| EgoScale is a UT Austin RPL project *(this document, earlier)* | **GEAR @ NVIDIA Research**, sixteen authors across several institutions | [§2](#egoscale) |
+| Ego-Exo4D is ~1,286 h of egocentric video | Official docs: **1286.30 video hours, 221.26 ego-hours, 5035 takes** — about **17%** egocentric | [§1](#ego-exo4d) |
+| Build AI released ~1 M hours (Egocentric-1M) | **Not findable at the publisher across four attempts** spread over months | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
+| EgoWAM trains on in-the-wild internet video | Its in-the-wild data is **EgoVerse on Project Aria**, flow from Aria VIO poses | [§2](#egowam--and-what-in-the-wild-turns-out-to-mean) |
+| EgoAVFlow needs no special capture, since it needs no robot demos | **Head-mounted RealSense D435 RGBD, plus a ChArUco board in every scene** | [§2](#egoavflow--no-robot-demonstrations-still-means-a-board-in-every-scene) |
+| World In Your Hands is research-only, commercial restricted | **No dataset licence is stated.** "Will be open-source" is a promise, not a grant | [§2](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild) |
+| EgoExoLearn / EgoHumanoid are openly licensed datasets | Their **MIT and Apache 2.0 licences cover the code**; neither states dataset terms | [§1](#egoexolearn), [§2](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator) |
+| Ego-1K is ~1,000 hours of egocentric video | **956 videos of ~8–10 seconds** from a 16-camera rig, for novel-view synthesis | [§1](#ego-1k) |
+| Open X-Embodiment is an openly licensed pooled corpus | **No overall licence stated**, and no position on whether its 60 components keep their own | [§2](#the-robot-native-denominator) |
+| The high-fidelity corpora are free too | Xperience-10M **gated, non-commercial**; AgiBotWorld-Beta **CC BY-NC-SA**; EgoScale **unreleased**; SABER **a quarter released, CC BY-NC** | [§11](#11-the-licence-trap) |
+| EgoInfinity processed 142 M clips / 14.6 years | Its abstract makes **no** scale claim; those are Action100M's figures, and EgoInfinity's curated set is **106 videos** | [§8](#egoinfinity--lift-to-4d-then-reproject) |
+| HumanNet: 1,000 h ego video *beat* 100 h robot data | "**matched or modestly surpassed**" — and that 100 h is ~a third of all of DROID | [§2](#humannet) |
+| LAION-BVD is a ready 1.3 B-URL pool | **Research use only**, downloads still marked *coming soon* | [§7](#laion-bvd) |
+| Action100M has 100 M instances | **147 M** temporally localised segments from 1.2 M instructional videos | [§10](#action100m) |
+| cosmos-curate and NeMo Curator are rival tools | Cosmos-Xenna is **NeMo Curator's production executor** | [§9](#cosmos-curate) |
+| A tracker lists Egocentric-10K as gated, so it isn't Apache 2.0 | Both are true — **licence and access are separate axes** | [§11](#11-the-licence-trap) |
+
+> **The pattern in the left column is worth naming.** Almost every row is a
+> *scale* or a *licence* claim, and almost every one fails in the same
+> direction: the circulating number is larger, freer or more available than the
+> source supports. Nobody is lying; headline figures travel and caveats do not.
+> Which is the argument for recording provenance per clip rather than per
+> corpus — a manifest that carries the source, the terms and the date is the
+> only thing that survives this kind of drift.
+
 ## Positioning, in one table
 
 | | Commissioned capture (Ego-Exo4D, EgoDex) | Web-scale corpora (Panda-70M, InternVid, HumanNet) | World-model stacks (Cosmos) | **Internet2EgoExo** |
@@ -2086,6 +2159,7 @@ are the parts that are worth owning.**
 - *EgoMimic: Scaling Imitation Learning via Egocentric Video.* https://arxiv.org/abs/2410.24221
 - *EgoAVFlow: Robot Policy Learning with Active Vision from Human Egocentric Videos via 3D Flow.* (CC BY 4.0; head-mounted RealSense D435 RGBD plus a ChArUco board per scene; 150 videos × 4 tasks; no dataset release stated) https://arxiv.org/html/2602.22461v1
 - *EgoWAM: World Action Models Beyond Pixels with In-the-Wild Egocentric Human Data.* (CC BY 4.0; "in-the-wild" = EgoVerse on Project Aria, flow from Aria VIO poses) https://arxiv.org/abs/2607.08436
+- *EgoHumanoid: humanoid loco-manipulation from egocentric human demonstrations.* RSS 2026. (code **Apache 2.0**; dataset terms not stated; PICO VR headset + 5 body trackers + ZED Mini depth) https://github.com/OpenDriveLab/EgoHumanoid
 - *World In Your Hands: A Large-Scale and Open-Source Ecosystem for Learning Human-Centric Manipulation in the Wild.* (1,045 h; Oracle Suite wearable; **no dataset licence stated — "will be open-source"**) https://arxiv.org/html/2512.24310v3
 - *EgoCS-400K: An Egocentric Gameplay Dataset for World Models.* (CC BY 4.0; 400 K+ videos / 10,000+ h rendered from public HLTV match demos) https://arxiv.org/html/2606.18180v1 · https://EgoCS-400K.github.io
 - *ACE-Ego-0: Unifying Egocentric Human and Robotic Data for VLA Pretraining.* https://arxiv.org/html/2606.17200v1 (the project URL printed in the paper 404s)
