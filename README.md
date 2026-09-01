@@ -194,7 +194,14 @@ them:
   hand-annotated reference set, is CC-BY-NC-ND outright. A dataset inherits the
   restrictions of every model and corpus used to build it, which is the same
   per-clip rights discipline this project applies to footage, pointed at the
-  toolchain.
+  toolchain. The survey maps the whole chain —
+  [who feeds whom](docs/RELATED_WORK.md#who-feeds-whom--the-derivation-map) — and
+  two chokepoints carry most of the risk, both CC-BY-NC-ND: **EgoDex** sits
+  inside at least four downstream corpora and models, **WiLoR** inside at least
+  three annotation pipelines. A no-derivatives clause at a junction that many
+  things route through is the single most consequential licensing fact in the
+  field. (Nothing there alleges non-compliance by anyone; the point is what a
+  reader can determine from the public artefacts, which is not much.)
 - **Hours are being commoditised — but pixels are not.** Build AI went from
   [Egocentric-10K](https://www.humanoidsdaily.com/news/build-ai-open-sources-10-000-hours-of-factory-worker-video-to-scale-robot-learning)
   (10,000 h, 1080p) to

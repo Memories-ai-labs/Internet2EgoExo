@@ -80,6 +80,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [Action100M](#action100m)
   - [VLM-Video-Action-Localization](#vlm-video-action-localization)
 - [11. The licence trap](#11-the-licence-trap)
+  - [Who feeds whom — the derivation map](#who-feeds-whom--the-derivation-map)
 - [12. Free hours, and what they do to the moat](#12-free-hours-and-what-they-do-to-the-moat)
   - [Egocentric-10K](#egocentric-10k)
   - [Egocentric-100K and Egocentric-1M](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost)
@@ -1659,6 +1660,51 @@ inherits the restrictions of every model and corpus used to build it.** Clean
 clips processed by a non-commercial pipeline do not produce a shippable dataset.
 Rights are a property of the whole provenance chain, and the chain is only as
 free as its most restrictive link.
+
+### Who feeds whom — the derivation map
+
+§11 argues the chain matters. This is the chain, assembled from what the entries
+above already establish. Every edge is stated by the downstream project itself,
+except the one marked as an inference.
+
+| Downstream artefact | Built from | Restriction inherited |
+|---|---|---|
+| [EgoScale](#egoscale) (20,854 h VLA) | crowdsourced pool + **EgoDex 829 h** | **CC-BY-NC-ND** rides along |
+| [DreamDojo](#dreamdojo--and-the-strongest-evidence-in-this-document-for-13) (44,711 h world model) | crowdsourced pool + **EgoDex 829 h** + 55 h in-lab | **CC-BY-NC-ND** rides along |
+| *…and those two pools* | ⚠️ **inferred to be the same pool** — identical scenes/tasks/objects, neither paper cites the other | one acquisition, counted twice by a careless reader |
+| [ACE-Ego-0](#ace-ego-0) (VLA) | Ego4D + EPIC-KITCHENS + Ego-Exo4D + **EgoDex** + EgoScale | five sets of terms, none visible in the checkpoint |
+| [Ego2Robot](#ego2robot) (18,561 h synthetic) | **EgoDex 732 h** + EgoVerse 954 h + ViTRA 249 h + 7 h in-house | ~38% of input hours are **CC-BY-NC-ND** |
+| [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean) | **EgoVerse** (Aria) | EgoVerse's terms — which are not stated |
+| [EgoVid-5M](#egovid-5m) (5 M clips) | **Ego4D** annotations; video fetched from Ego4D | Ego4D's unpublished agreement |
+| [Panda-70M](#panda-70m) (70 M clips) | **HD-VILA-100M** | inherits upstream, stated |
+| [annotated-egocentric-10k](#annotated-egocentric-10k-dataset) | **Egocentric-10K** | Apache 2.0 — the one clean chain here |
+| [Open X-Embodiment](#the-robot-native-denominator) | **60 datasets, 34 labs** | unknowable without tracing sixty |
+| [EgoInfinity](#egoinfinity--lift-to-4d-then-reproject), Ego2Robot, [MobileEgo](#mobileego-anywhere) | **WiLoR** (+ MANO, YOLO) | **CC-BY-NC-ND** *model* in the annotation path |
+
+**Two chokepoints carry most of the risk, and both are CC-BY-NC-ND.**
+**EgoDex** is inside at least four downstream artefacts on this list;
+**WiLoR** is inside at least three annotation pipelines. Neither is obscure and
+neither is optional in the way a swappable dependency is — they are the
+field's default hand-annotated corpus and default hand reconstructor. A
+no-derivatives clause sitting at a chokepoint that many things route through is
+the single most consequential licensing fact in this document. *Nothing here
+alleges non-compliance by anyone*; research use and commercial deployment are
+different questions, and several of these projects may well have separate
+arrangements. The point is what a reader can determine from the public
+artefacts, which is: not much.
+
+⚠️ **And the hour counts for the same corpus disagree.** EgoScale and DreamDojo
+each take **829 h** of EgoDex; Ego2Robot takes **732 h**. Different subsets,
+different versions, or different accounting — no source says which. When the
+same named corpus enters three pipelines at two different sizes, "we used
+EgoDex" is not a provenance record.
+
+> **What this map is for.** Read top to bottom, it is an argument for the shape
+> of this repo's manifest. Every row is a place where terms, scale or identity
+> got lost in one hop — and every one of them would have been a non-issue if the
+> upstream unit had carried its source, its licence and its date *per clip*
+> rather than per corpus. A dataset that cannot tell you which of its hours came
+> from where has already lost the information its users need most.
 
 ## 12. Free hours, and what they do to the moat
 
