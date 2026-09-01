@@ -255,6 +255,15 @@ hour is described as found footage. The company that also ships the world-model
 platform, the curation substrate and the largest ego VLA still paid for capture
 rather than mining the web.
 
+And the four positions rest on fewer than four acquisitions. DreamDojo and
+[EgoScale](https://arxiv.org/abs/2602.16710) report **identical scene, task and
+object counts** — 9,869 / 6,015 / 43,237 — and the same 829-hour EgoDex
+component, in two papers from the same lab that never cite each other. So the
+corpus behind the world model and the corpus behind the VLA are, on the face of
+it, one corpus. Which sharpens the point rather than softening it: the
+best-resourced actor in the field bought its hours **once** and built everything
+downstream on that single purchase, because there was no second way to get them.
+
 **The newest work keeps confirming it, in two ways.** By staging what the web
 already holds: [SABER](https://arxiv.org/html/2605.09613v1) needed ~100 hours of
 grocery stocking and shelf retrieval — among the most abundantly filmed activity

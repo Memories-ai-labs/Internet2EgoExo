@@ -449,9 +449,43 @@ average success rate over a no-pretraining baseline.**
 > because getting provenance right is the thing this document keeps asking of
 > everyone else.
 >
-> **Code is marked "Coming Soon"**; no licence is stated. So the largest
-> action-labelled ego corpus in this section is, at time of writing, not
-> obtainable.
+> **Code is marked "Coming Soon"**, and **no dataset licence is stated
+> anywhere**. The arXiv listing carries CC BY 4.0, which governs the *paper* —
+> the same trap as [World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild)
+> and [EgoHumanoid](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator),
+> where a real licence on an adjacent artefact reads as terms for the data. So
+> the largest action-labelled ego corpus in this section is, at time of writing,
+> not obtainable and carries no stated terms.
+
+🔴 **EgoScale and DreamDojo appear to be reporting the same corpus, and neither
+paper says so.** Read side by side, at source, this sweep:
+
+| | EgoScale | [DreamDojo](#dreamdojo--and-the-strongest-evidence-in-this-document-for-13) |
+|---|---|---|
+| Ego hours claimed | 20,854 | 43,827 crowdsourced (of 44,711 total) |
+| Scenes / tasks / objects | **9,869 / 6,015 / 43,237** | **9,869 / 6,015 / 43,237** |
+| EgoDex included | **829 h** | **829 h** |
+| Environments named | household, industrial, retail, educational | household, industrial, retail, educational, administrative |
+| Cites the other | **no** | **no** |
+
+Identical scene, task and object counts, the same 829-hour EgoDex component, and
+overlapping environment vocabulary, in two papers from the same lab that do not
+reference each other. **The inference — stated as an inference — is that these
+are one crowdsourced corpus feeding two products, not two independent
+acquisitions.** The hour counts differ, so EgoScale's 20,854 h is most likely a
+labelled subset of the pool DreamDojo reports at 43,827 h; nothing in either
+paper confirms or denies it.
+
+**Why this matters beyond bookkeeping.** It changes the arithmetic of
+[the one-vendor read](#4-world-model-and-physical-ai-stacks): NVIDIA's position
+is *not* four independently sourced assets. It is one act of paid acquisition,
+amortised across a world model and a VLA. That makes the §13 evidence
+*stronger*, not weaker — the field's best-resourced actor did not merely buy its
+hours once, it built its entire ego stack on a single purchase, because there
+was no second way to get them. And it is a live example of the provenance
+problem this document argues for solving per clip: two public artefacts, one
+undisclosed shared source, and no way to tell from either paper that using both
+does not double your evidence.
 
 Its most useful result for a collection system is methodological: a **log-linear
 scaling law between human-data scale and validation loss**, with validation loss
@@ -1087,6 +1121,16 @@ and reasoning into one family.
 > [§13](#13-why-no-open-source-project-does-exactly-this)'s point that the
 > **acquisition** layer stayed closed even so. The company with the most complete
 > stack in the field still bought its hours rather than mining them.
+>
+> 🔴 **And the four positions rest on fewer than four acquisitions.** DreamDojo
+> and EgoScale report **identical scene, task and object counts** and the same
+> 829-hour EgoDex component, without citing each other — evidence set out
+> [in EgoScale's entry](#egoscale) — so the corpus behind the world model and
+> the corpus behind the VLA are, on the face of it, one corpus. Read that way
+> the position is *more* concentrated than it first looks and the §13 reading
+> gets sharper still: the best-resourced actor in the field did not buy its
+> hours repeatedly. It bought them **once**, and built everything downstream on
+> that single purchase, because there was no second way to get them.
 
 ### DreamDojo — and the strongest evidence in this document for §13
 
@@ -1110,6 +1154,13 @@ The composition is the part that matters here:
 > 44,711 hours is described as found footage. If the acquisition layer
 > ([§13](#13-why-no-open-source-project-does-exactly-this)) were easy, or even
 > merely tractable, this is the project that would have used it.
+
+🔴 **And a third thing it does not say: that [EgoScale](#egoscale) is reporting
+the same corpus.** Both papers give **9,869 scenes, 6,015 tasks and 43,237
+objects**, both include the same **829 hours of EgoDex**, both name the same
+environment vocabulary — and neither cites the other. The full comparison is
+[in EgoScale's entry](#egoscale). Taking the two at face value would double-count
+one act of acquisition; nothing on either paper's surface warns you.
 
 Two further observations, both about what the paper does *not* say:
 
@@ -2102,6 +2153,8 @@ trust the rest of it.
 | The 256p corpus outdownloads the 1080p one **470:1** *(this document, earlier)* | Wrong twice: the counter reads **"Downloads last month"**, a rate not a total, and re-read at both cards it is **164,868 vs 34,519 — roughly 4.8:1**. The gap is closing | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 | **Nobody** sources ego data from the internet at scale *(this document, earlier)* | **EgoCS-400K does** — 10,000+ h, CC BY 4.0, from public HLTV match demos. Narrowed to *real-world* footage, since EgoCS-400K renders video from replay files and reads actions out of them | [§12](#egocs-400k--10000-free-hours-sourced-from-the-internet-and-why-13-survives-it), [§13](#13-why-no-open-source-project-does-exactly-this) |
 | EgoScale is a UT Austin RPL project *(this document, earlier)* | **GEAR @ NVIDIA Research**, sixteen authors across several institutions | [§2](#egoscale) |
+| EgoScale's 20,854 h and DreamDojo's 43,827 h are two independent corpora | Both papers report **9,869 scenes / 6,015 tasks / 43,237 objects** and the same **829 h of EgoDex**, and neither cites the other. Almost certainly one corpus feeding two products; taking both at face value double-counts one acquisition | [§2](#egoscale), [§4](#dreamdojo--and-the-strongest-evidence-in-this-document-for-13) |
+| EgoScale is CC BY 4.0 | That is the **arXiv listing's licence, covering the paper**. No dataset licence is stated anywhere, and the code is "coming soon" | [§2](#egoscale) |
 | Ego-Exo4D is ~1,286 h of egocentric video | Official docs: **1286.30 video hours, 221.26 ego-hours, 5035 takes** — about **17%** egocentric | [§1](#ego-exo4d) |
 | Build AI released ~1 M hours (Egocentric-1M) | **Not findable at the publisher across four attempts** spread over months | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 | EgoWAM trains on in-the-wild internet video | Its in-the-wild data is **EgoVerse on Project Aria**, flow from Aria VIO poses | [§2](#egowam--and-what-in-the-wild-turns-out-to-mean) |
