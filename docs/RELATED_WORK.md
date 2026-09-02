@@ -1110,9 +1110,25 @@ separate checkpoints per subset, so the subsets double as an ablation over data
 quality.
 
 Stated caveats: 15% of clips are only 360P–720P and "may not perform as well"
-for generation, and 85% run under 10 seconds. ⚠️ **No licence is stated on either surface** — not the Hugging Face dataset
-page and not the `Data/InternVid` README in the source repository — for a corpus
-built from YouTube video. Unresolved, and worth resolving before redistribution.
+for generation, and 85% run under 10 seconds.
+
+🔴 **Licence — resolved on re-check, and it moved category.** An earlier revision
+of this entry recorded *no licence stated on either surface*. Re-read at the
+Hugging Face dataset page this sweep, the card carries **`cc-by-nc-sa-4.0`**,
+and access is **gated**: *"agree to share your contact information to access this
+dataset"*, with a further condition that users *"not use the data to conduct
+experiments that cause harm to human subjects."* Whether the card changed or the
+earlier check missed it, the current state is unambiguous — and it is the
+**most restrictive combination in this document**, non-commercial *and*
+share-alike, the same terms as [AgiBotWorld-Beta](#the-robot-native-denominator).
+A derivative built on InternVid inherits both clauses.
+
+> **Two lessons, and the second is the one that costs.** An "unresolved" field is
+> a *snapshot*, not a property — the same discipline the [470:1
+> correction](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) forced
+> on live numbers now applies to licences, which change quietly and without
+> announcement. And the direction of this one is worth noticing: the field's
+> unstated terms are not defaulting to permissive when they finally get stated.
 
 ### NeMo Curator
 
@@ -1590,7 +1606,7 @@ pipeline" plan can quietly become unshippable.
 responses.** *Too restrictive to use* — EgoDex is CC-BY-NC-ND; HOI4D and
 EPIC-KITCHENS-100 are CC BY-NC 4.0; AgiBotWorld-Beta is non-commercial *and*
 share-alike. *Too unstated to know* — Open X-Embodiment pools 60 datasets from
-34 labs and states no overall licence; InternVid states none on either surface;
+34 labs and states no overall licence;
 DreamDojo's crowdsourced hours have no published terms; Ego4D and Ego-Exo4D sit
 behind agreements whose text is not public. *Not released at all* — EgoScale,
 the largest action-labelled ego corpus here at 20,854 h, is "code coming soon"
@@ -1639,7 +1655,7 @@ Reading the licences across this document produces the wider pattern:
 | **Ropedia Xperience-10M** | **"other" — gated, DocuSign, research only** | ❌ non-commercial |
 | EgoKit | toolkit only, no dataset | n/a — paper carries the arXiv licence |
 | VLM-Video-Action-Localization | MIT | ✅ |
-| InternVid | **not stated on the dataset page** | ⚠️ unresolved — ask |
+| **InternVid** | **CC BY-NC-SA 4.0**, gated *(resolved on re-check; previously recorded as unstated)* | ❌ non-commercial **and** share-alike |
 | cosmos-curate (code) | Apache 2.0 | ✅ (models separate) |
 | video2dataset | MIT | ✅ |
 | Exo2Ego-V | Apache 2.0 | ✅ |
@@ -1653,7 +1669,7 @@ Reading the licences across this document produces the wider pattern:
 | **LAION-BVD** | **research only** | ❌ |
 | **EgoInfinity (as a whole)** | MIT code, encumbered deps | ❌ until deps are swapped |
 | **Ego4D / Ego-Exo4D** | **signed agreement, terms not public** | ⚠️ unknowable until you sign — do not assume |
-| EgoVerse | dataset licence not clearly stated | ⚠️ ask before use |
+| EgoVerse | no dataset licence stated (**re-checked at the paper this sweep; still none** — only the arXiv listing's, and access runs through the authors' EgoDB/S3 sync) | ⚠️ ask before use |
 | Panda-70M (data) | inherits HD-VILA-100M | ⚠️ check upstream |
 | EgoVid-5M | inherits Ego4D | ⚠️ check upstream |
 
@@ -2311,6 +2327,7 @@ trust the rest of it.
 | EgoScale is a UT Austin RPL project *(this document, earlier)* | **GEAR @ NVIDIA Research**, sixteen authors across several institutions | [§2](#egoscale) |
 | EgoScale's 20,854 h and DreamDojo's 43,827 h are two independent corpora | Both papers report **9,869 scenes / 6,015 tasks / 43,237 objects** and the same **829 h of EgoDex**, and neither cites the other. Almost certainly one corpus feeding two products; taking both at face value double-counts one acquisition | [§2](#egoscale), [§4](#dreamdojo--and-the-strongest-evidence-in-this-document-for-13) |
 | EgoScale is CC BY 4.0 | That is the **arXiv listing's licence, covering the paper**. No dataset licence is stated anywhere, and the code is "coming soon" | [§2](#egoscale) |
+| InternVid states no licence *(this document, earlier)* | The dataset card carries **`cc-by-nc-sa-4.0`** and is gated. Non-commercial **and** share-alike — the most restrictive combination here. An "unresolved" field is a snapshot, not a property | [§3](#internvid) |
 | Ego-Exo4D is ~1,286 h of egocentric video | Official docs: **1286.30 video hours, 221.26 ego-hours, 5035 takes** — about **17%** egocentric | [§1](#ego-exo4d) |
 | Build AI released ~1 M hours (Egocentric-1M) | **Not findable at the publisher across four attempts** spread over months | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 | EgoWAM trains on in-the-wild internet video | Its in-the-wild data is **EgoVerse on Project Aria**, flow from Aria VIO poses | [§2](#egowam--and-what-in-the-wild-turns-out-to-mean) |
@@ -2345,7 +2362,7 @@ trust the rest of it.
 | No hands in frame | Rare by design | Kept | Kept | **Dropped, no override** |
 | Rights | Consented at capture | Deferred to the user | Owned | Filtered and recorded per clip |
 | Unit of output | A dataset release | A corpus | Synthetic hours | A manifest + a cost per hour |
-| Auditability | Annotation guidelines | Pipeline code — for Panda-70M and InternVid. **HumanNet released none**, nor a source breakdown or ego/exo split | Evaluator scores | Per-clip Thought → Action → Observation trace |
+| Auditability | Annotation guidelines | Pipeline code — for Panda-70M and InternVid, though InternVid's terms are CC BY-NC-SA. **HumanNet released none**, nor a source breakdown or ego/exo split | Evaluator scores | Per-clip Thought → Action → Observation trace |
 
 > **The middle column is where the real comparison sits now**, and
 > [HumanNet](#humannet) is the entry to read it against rather than Panda-70M.

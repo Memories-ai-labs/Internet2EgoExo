@@ -201,7 +201,12 @@ them:
   three annotation pipelines. A no-derivatives clause at a junction that many
   things route through is the single most consequential licensing fact in the
   field. (Nothing there alleges non-compliance by anyone; the point is what a
-  reader can determine from the public artefacts, which is not much.)
+  reader can determine from the public artefacts, which is not much.) And an
+  unresolved licence is a snapshot, not a property: re-checking this sweep,
+  InternVid — long recorded in the survey as stating none — now carries
+  **CC BY-NC-SA 4.0** and is gated, the most restrictive combination in the
+  document. Terms change quietly, so the survey re-reads them rather than
+  inheriting them.
 - **Hours are being commoditised — but pixels are not.** Build AI went from
   [Egocentric-10K](https://www.humanoidsdaily.com/news/build-ai-open-sources-10-000-hours-of-factory-worker-video-to-scale-robot-learning)
   (10,000 h, 1080p) to
