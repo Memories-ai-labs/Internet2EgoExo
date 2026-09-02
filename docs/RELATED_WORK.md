@@ -520,6 +520,45 @@ and substantially closed the gap to a 20,000 h real-robot (LingBot) upper bound.
 > 20,000 h upper bound it does not reach. The economic argument survives; the
 > triumphalism does not.
 
+🔴 **And this is the strongest counterexample in the document to
+[§13](#13-why-no-open-source-project-does-exactly-this) — one that was sitting
+inside this entry the whole time.** Re-read at source this sweep, the collection
+stage is not "crawling" as a footnote. The paper *"coupled keyword discovery with
+content search and retrieval"* and drew candidates from **"video-platform
+search, general web search engines, directly crawled videos, open-source
+datasets, and self-collection"** — with self-collection described as what
+*"complements web-scale acquisition"*, i.e. the web is the primary channel and
+the capture is the supplement. **That is requirement-driven mining of the open
+internet for real-world human video, at a million hours.** It is a far larger
+challenge to §13 than [EgoCS-400K](#egocs-400k--10000-free-hours-sourced-from-the-internet-and-why-13-survives-it),
+because the footage is real, not rendered, and §13 is narrowed again to account
+for it — see [that section](#13-why-no-open-source-project-does-exactly-this)
+for what survives and what does not.
+
+**What HumanNet does *not* do is the part that matters here.** It publishes **no
+breakdown of the million hours by source**, and **no split between egocentric and
+exocentric**. So a reader cannot tell how many of those hours were crawled versus
+licensed versus recorded, nor how many are first-person at all. On rights, the
+paper says only that *"privacy-sensitive content, unsafe material, and license
+constraints are reviewed within the same release pipeline"* — the review is
+asserted, the outcomes are not published, and **no dataset licence or public
+release strategy appears anywhere in the preprint**. A corpus assembled from
+platform search and direct crawling, with per-clip provenance unpublished, is
+precisely the artefact this repo's manifest exists to be the opposite of.
+
+**A stronger follow-up result, from the same group.**
+[HumanScale](https://arxiv.org/html/2606.20521) (arXiv 2606.20521) curates
+**5,000 hours** from HumanNet's egocentric portion and pits it against **5,000
+hours of real-robot teleoperation at matched scale**, post-training on 15 AgiBot
+manipulation tasks with 100 demonstrations each, against a no-pretraining
+baseline and a 20 K-hour robot-pretrained one. Egocentric pretraining reaches
+*"a 24% lower validation loss on real-robot action prediction, as well as 52.5%
+and 90% higher success rates on in-distribution and out-of-distribution
+real-robot task execution."* **At matched hours, that is outperforming, not
+matching** — a materially stronger claim than the 1,000 h result above, and it
+does not retract the correction beside it, because the two are different
+experiments. Code is promised (*"will be released"*); no data licence is stated.
+
 Its four stated limitations are worth reading in full because three of them apply
 to any web-collection system, this one included: embodiment gap; irreducible
 label noise at scale; uneven geographic / socioeconomic / occupational / body-type
@@ -2000,9 +2039,13 @@ assert viewpoint, hands and rights *with evidence* instead of reading them off.
 **What it does change.** Two things, and this document should own both.
 [§13](#13-why-no-open-source-project-does-exactly-this) can no longer be stated
 as "nobody sources ego data from the internet at scale" — somebody does, at
-10,000 hours, under CC BY 4.0. The accurate claim is narrower and still holds:
-**nobody sources *real-world* ego footage from the internet at scale, because
-only a synthetic domain supplies the ground truth that makes it cheap.** And
+10,000 hours, under CC BY 4.0. That narrowed the claim to *real-world* footage —
+and a later sweep found [HumanNet](#humannet) mining real human video from the
+web at a million hours, which narrowed it again, to **open, auditable, reusable
+infrastructure**. §13 sets out both narrowings and what survives them. What
+EgoCS-400K contributes specifically is the *price* comparison: web sourcing is
+nearly free when the domain hands you ground truth, and everything this document
+is about is what it costs when it does not. And
 [§12](#12-free-hours-and-what-they-do-to-the-moat)'s argument is untouched for a
 different reason: 10,000 hours of rendered Counter-Strike does not commoditise
 an hour of real hands manipulating real objects, whatever the licence says.
@@ -2032,19 +2075,63 @@ project that does the whole thing?
 The answer is not that people tried and failed. **Open source went hard at the
 two adjacent problems and skipped this one.**
 
-**One project comes close, and stating it precisely is what makes the rest of
-this section load-bearing.**
+🔴 **This section has now narrowed three times, and the third one is the
+serious one. Read the narrowings before the argument.**
+
+**Round one** claimed nobody sources ego data from the internet at scale.
+[EgoCS-400K](#egocs-400k--10000-free-hours-sourced-from-the-internet-and-why-13-survives-it)
+broke that — 10,000+ hours from HLTV — so the claim narrowed to *real-world*
+footage, since EgoCS-400K renders video from replay files.
+
+**Round two is [HumanNet](#humannet), and it was inside this document the whole
+time.** Its collection stage draws on *"video-platform search, general web search
+engines, directly crawled videos, open-source datasets, and self-collection"*,
+with self-collection described as complementing *"web-scale acquisition"*. That
+is real-world human video, mined from the open internet, at **one million
+hours** — by a university group, published, with a follow-up
+([HumanScale](#humannet)) showing 5,000 curated egocentric hours beating 5,000
+hours of real-robot teleoperation at matched scale. **The flat claim that the
+acquisition layer does not exist is false, and this document asserted it for
+twenty-five sweeps while carrying the refutation in §2.** That is recorded here
+rather than quietly repaired, because how a survey handles its own strongest
+counterexample is the only real test of it.
+
+**So what actually survives, stated as narrowly as the evidence allows.** Not
+*nobody built one* — somebody did. What is missing is the layer as **open,
+auditable, reusable infrastructure**:
+
+- **HumanNet is not released.** No dataset licence, no public release strategy,
+  no code beyond a promise. You cannot obtain it, extend it, or run it.
+- **It is not auditable.** No breakdown of the million hours by source, no
+  ego/exo split, no per-clip provenance. Rights review is asserted — *"license
+  constraints are reviewed within the same release pipeline"* — and its outcomes
+  are unpublished.
+- **It is a corpus, not a machine.** It answers "here are a million hours," not
+  "here are the hours matching this requirement, with evidence."
+
+**That is a much weaker claim than the one this section opened with, and it
+should be.** The interesting question was never whether web mining is possible —
+HumanNet settles that, and in this repo's favour, since it is the largest
+demonstration anywhere that the supply is real. It is whether the *result* can be
+checked: which hours, from where, under what terms, meeting whose requirement.
+On that, the field's answer is still nothing you can download.
+
+**And the older evidence still stands for the tooling gap.**
 [EgoCS-400K](#egocs-400k--10000-free-hours-sourced-from-the-internet-and-why-13-survives-it)
 does source ego data from the open internet at scale — 10,000+ hours, CC BY 4.0,
-from public match demos on HLTV — and it is the reason this section's claim is
-stated as it is below rather than as the flat "nobody does this" it would be
-tempting to write. It works because Counter-Strike ships a deterministic replay
-format: the video is *rendered* rather than downloaded, and the action labels
-are *read out of the file* rather than recovered from pixels. Viewpoint is a
-render parameter; there is no camera to classify. **The accurate claim is
-therefore narrower and holds: nobody sources real-world ego footage from the
-internet at scale, because only a synthetic domain hands you the ground truth
-that makes it cheap.** Everything below is about the domains that do not.
+from public match demos on HLTV — and it remains instructive for a different
+reason than it first appeared. It works because Counter-Strike ships a
+deterministic replay format: the video is *rendered* rather than downloaded, and
+the action labels are *read out of the file* rather than recovered from pixels.
+Viewpoint is a render parameter; there is no camera to classify, no hands to
+verify, no rights to trace. **So it shows what web sourcing costs when the
+domain hands you ground truth — nearly nothing — and by contrast what it costs
+when the domain does not**, which is every real-world domain, and which is why
+HumanNet needed a million hours and a filtering stack to get where it got.
+
+**The rest of this section is about the tooling, and that gap is unchanged.**
+Whatever HumanNet built internally, none of it is downloadable, and the public
+tools that touch the internet remain viewpoint-blind by construction.
 
 ### Where the effort actually went
 
@@ -2198,6 +2285,8 @@ trust the rest of it.
 |---|---|---|
 | The 256p corpus outdownloads the 1080p one **470:1** *(this document, earlier)* | Wrong twice: the counter reads **"Downloads last month"**, a rate not a total, and re-read at both cards it is **164,868 vs 34,519 — roughly 4.8:1**. The gap is closing | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 | **Nobody** sources ego data from the internet at scale *(this document, earlier)* | **EgoCS-400K does** — 10,000+ h, CC BY 4.0, from public HLTV match demos. Narrowed to *real-world* footage, since EgoCS-400K renders video from replay files and reads actions out of them | [§12](#egocs-400k--10000-free-hours-sourced-from-the-internet-and-why-13-survives-it), [§13](#13-why-no-open-source-project-does-exactly-this) |
+| **Nobody** mines the web for *real-world* human video at scale *(this document, for twenty-five sweeps, while carrying the refutation in §2)* | **HumanNet does**, at one million hours, from *"video-platform search, general web search engines, directly crawled videos, open-source datasets, and self-collection."* What is missing is not the act but the artefact: no release, no licence, no source breakdown, no ego/exo split, no per-clip provenance. §13 narrows to **open, auditable, reusable infrastructure** | [§2](#humannet), [§13](#13-why-no-open-source-project-does-exactly-this) |
+| HumanNet's headline is the 1,000 h vs 100 h result | Its follow-up **HumanScale** is stronger and newer: **5,000 h egocentric vs 5,000 h real-robot at matched scale** → 24% lower validation loss, **52.5% / 90%** higher in- and out-of-distribution success. At matched hours that is outperforming, not matching | [§2](#humannet) |
 | EgoScale is a UT Austin RPL project *(this document, earlier)* | **GEAR @ NVIDIA Research**, sixteen authors across several institutions | [§2](#egoscale) |
 | EgoScale's 20,854 h and DreamDojo's 43,827 h are two independent corpora | Both papers report **9,869 scenes / 6,015 tasks / 43,237 objects** and the same **829 h of EgoDex**, and neither cites the other. Almost certainly one corpus feeding two products; taking both at face value double-counts one acquisition | [§2](#egoscale), [§4](#dreamdojo--and-the-strongest-evidence-in-this-document-for-13) |
 | EgoScale is CC BY 4.0 | That is the **arXiv listing's licence, covering the paper**. No dataset licence is stated anywhere, and the code is "coming soon" | [§2](#egoscale) |
