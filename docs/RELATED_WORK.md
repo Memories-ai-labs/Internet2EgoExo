@@ -2199,6 +2199,16 @@ vendors sell hours and keep the sourcing machinery. The asymmetry — corpus
 given away, acquisition layer retained — is what you would expect if the
 acquisition layer is where the margin sits.
 
+**And the pattern is not only commercial, which is the stronger form of this
+reason.** [HumanNet](#humannet) is a university project that built exactly this
+machine — keyword discovery, platform and web-engine search, direct crawling,
+filtering, annotation — at a million hours, and released **neither the corpus
+nor the stack**: no dataset licence, no release strategy, no code beyond a
+promise. Whatever the incentive is, it is not confined to firms protecting a
+margin. A pipeline that touches platform terms of service and third-party
+footage is awkward to hand out even when nobody is selling anything, which
+folds back into reason 3.
+
 **3. Legal exposure lands on the maintainer, and it is asymmetric.** A dataset
 release can be framed as research; LAION-BVD does exactly that ("research
 purposes only"). A general-purpose tool that automates *search → download →
@@ -2232,12 +2242,23 @@ and *buildable* has been open for roughly a year.
 
 ### What this does and does not license us to claim
 
-Not "nobody has solved this." The honest statement is narrower and more useful:
+Not "nobody has solved this" — [HumanNet](#humannet) did, at a million hours,
+and this section spent twenty-five sweeps asserting otherwise before catching
+it. The honest statement is narrower and more useful:
 
-> Every individual stage of the chain is open. What is missing from open source
-> is the **acquisition layer** — requirement → search → viewpoint proof → rights
-> proof → manifest — and it is missing for structural reasons, not because it is
-> technically hard.
+> Every individual stage of the chain is open, and at least one group has
+> assembled the whole thing privately. What is missing from **open source** is
+> the **acquisition layer** as something you can obtain, inspect and re-run —
+> requirement → search → viewpoint proof → rights proof → manifest — and it is
+> missing for structural reasons, not because it is technically hard.
+
+**What would falsify that**, stated so a reader can check rather than take it on
+trust: a public release, under terms permitting reuse, of a system that takes a
+stated requirement and returns clips with per-clip viewpoint evidence, rights
+provenance and acceptance status. Not a corpus — corpora exist, several are
+enormous, and HumanNet's is the largest. A **machine**, with its outputs
+auditable back to their sources. If that appears, this section is finished, and
+it should be edited to say so rather than defended.
 
 Which also sets the bar. If the assembly is the contribution, then the assembly
 has to be good at the parts nobody else is doing — the requirement front-end and
@@ -2324,7 +2345,16 @@ trust the rest of it.
 | No hands in frame | Rare by design | Kept | Kept | **Dropped, no override** |
 | Rights | Consented at capture | Deferred to the user | Owned | Filtered and recorded per clip |
 | Unit of output | A dataset release | A corpus | Synthetic hours | A manifest + a cost per hour |
-| Auditability | Annotation guidelines | Pipeline code | Evaluator scores | Per-clip Thought → Action → Observation trace |
+| Auditability | Annotation guidelines | Pipeline code — for Panda-70M and InternVid. **HumanNet released none**, nor a source breakdown or ego/exo split | Evaluator scores | Per-clip Thought → Action → Observation trace |
+
+> **The middle column is where the real comparison sits now**, and
+> [HumanNet](#humannet) is the entry to read it against rather than Panda-70M.
+> It is the one project that has done what this repo does — mine the open web
+> for human video against a requirement, at a million hours — and the row that
+> separates them is not scale, ambition or method. It is the last one. A
+> manifest that traces each clip to its source, its terms and the evidence for
+> its viewpoint is the whole difference between a corpus someone assembled and a
+> corpus someone else can check.
 
 ---
 

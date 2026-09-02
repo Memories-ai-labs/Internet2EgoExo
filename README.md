@@ -306,9 +306,17 @@ parts are contested judgement rather than deterministic transforms; and because
 the scaling results that make it worth paying for are about a year old.
 
 So the missing piece is specifically the **acquisition layer** — requirement →
-search → viewpoint proof → rights proof → manifest. That is what this repo is,
-and it is why it reuses the stages the field has already solved rather than
-reimplementing them.
+search → viewpoint proof → rights proof → manifest — as something you can
+obtain, inspect and re-run. That is what this repo is, and it is why it reuses
+the stages the field has already solved rather than reimplementing them.
+
+**What would falsify that**, stated so you can check rather than take it on
+trust: a public release, under terms permitting reuse, of a system that takes a
+stated requirement and returns clips with per-clip viewpoint evidence, rights
+provenance and acceptance status. Not a corpus — corpora exist, several are
+enormous, and HumanNet's is the largest. A *machine*, whose outputs audit back
+to their sources. If one appears, the survey says it should be edited to say so
+rather than defended.
 
 Full survey — both halves, the positioning table and references:
 **[docs/RELATED_WORK.md](docs/RELATED_WORK.md)**. It also carries a
