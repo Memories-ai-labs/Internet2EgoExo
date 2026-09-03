@@ -210,7 +210,13 @@ them:
   occupied, and the awkward one is EgoDex: CC-BY-NC-ND, the most restrictive
   terms in the survey, served straight off Apple's CDN at HTTP 200 with no
   authentication. Ease of download tells you nothing about permission, which is
-  why the manifest carries both fields separately.
+  why the manifest carries both fields separately. And the honest verdict on the
+  field is not that nobody handles provenance —
+  [OpenEgo](https://arxiv.org/html/2509.05513v1) unifies six corpora into 1,107 h
+  and does it properly: **annotations only, no video redistributed**, each
+  source's licence text shipped with attribution, and explicit author permission
+  for the CC-BY-NC-ND component. It is that this is clearly possible and almost
+  nobody does it.
 - **Hours are being commoditised — but pixels are not.** Build AI went from
   [Egocentric-10K](https://www.humanoidsdaily.com/news/build-ai-open-sources-10-000-hours-of-factory-worker-video-to-scale-robot-learning)
   (10,000 h, 1080p) to

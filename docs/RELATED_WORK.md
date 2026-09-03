@@ -80,6 +80,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [Action100M](#action100m)
   - [VLM-Video-Action-Localization](#vlm-video-action-localization)
 - [11. The licence trap](#11-the-licence-trap)
+  - [OpenEgo — somebody does this properly](#openego--somebody-does-this-properly-and-it-should-be-said-plainly)
   - [Who feeds whom — the derivation map](#who-feeds-whom--the-derivation-map)
 - [12. Free hours, and what they do to the moat](#12-free-hours-and-what-they-do-to-the-moat)
   - [Egocentric-10K](#egocentric-10k)
@@ -1743,6 +1744,57 @@ clips processed by a non-commercial pipeline do not produce a shippable dataset.
 Rights are a property of the whole provenance chain, and the chain is only as
 free as its most restrictive link.
 
+### OpenEgo — somebody does this properly, and it should be said plainly
+
+**[arXiv 2509.05513](https://arxiv.org/html/2509.05513v1)** — this section has
+spent a lot of words on how the field mishandles provenance. Here is the
+counterexample, and it is worth more than the criticism.
+
+OpenEgo unifies **six public egocentric datasets into 1,107 hours** with
+standardised hand-pose layouts and intention-aligned, timestamped action
+primitives, across **290 manipulation tasks in 600+ environments**. The
+composition is published per source rather than as a total:
+
+| Source | Hours |
+|---|---|
+| [EgoDex](#egodex) | **829** |
+| [HoloAssist](#holoassist) | 166 |
+| CaptainCook4D | 54 |
+| [HOI4D](#hoi4d) | 44 |
+| HOT3D | 13.3 |
+| HO-Cap | 0.67 |
+
+**And then it does the thing nobody else in this document does.** Appendix A
+states the rights posture explicitly: *"OpenEgo combines six publicly available
+egocentric datasets. We respect the license terms of each source."* Processed
+annotations are released *"under the original license with attribution"* for
+sources permitting redistribution. For EgoDex specifically — CC-BY-NC-ND, the
+no-derivatives chokepoint — *"our annotation files will be made available with
+permission from the authors."* And *"all releases include license texts and
+attribution statements."*
+
+**The mechanism that makes it work is the one worth copying: it redistributes
+annotations, not video.** Users *"must first retrieve the underlying EgoDex data
+from the official source under its license terms."* That single design choice
+dissolves most of [the derivation map](#who-feeds-whom--the-derivation-map)'s
+problem — the restrictive licence never has to be re-granted, because the
+restricted bytes are never re-shipped, and the terms travel with an attached
+licence text rather than being reconstructed by a reader later.
+
+> **Two things this changes.** First, the honest verdict on the field is not
+> "nobody handles provenance" but **"it is clearly possible, and almost nobody
+> does"** — a sharper and more useful claim, because it removes the excuse that
+> the problem is intractable. Second, note the concentration it exposes:
+> **829 of OpenEgo's 1,107 hours — 75% — are EgoDex**, which makes it the fifth
+> artefact on the derivation map depending on that one corpus, and the only one
+> that says out loud what depending on it entails.
+>
+> ⚠️ Two things not asserted here. The arXiv listing's CC-BY-4.0 governs the
+> *paper*; the annotation releases are described as carrying each source's terms,
+> which is a different and more careful arrangement than a single blanket
+> licence. And the resources are stated as *"will be released"* at
+> `openegocentric.com` — this document has not verified that the release landed.
+
 ### Who feeds whom — the derivation map
 
 §11 argues the chain matters. This is the chain, assembled from what the entries
@@ -1759,12 +1811,14 @@ except the one marked as an inference.
 | [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean) | **EgoVerse** (Aria) | EgoVerse's terms — which are not stated |
 | [EgoVid-5M](#egovid-5m) (5 M clips) | **Ego4D** annotations; video fetched from Ego4D | Ego4D's unpublished agreement |
 | [Panda-70M](#panda-70m) (70 M clips) | **HD-VILA-100M** | inherits upstream, stated |
-| [annotated-egocentric-10k](#annotated-egocentric-10k-dataset) | **Egocentric-10K** | Apache 2.0 — the one clean chain here |
+| [annotated-egocentric-10k](#annotated-egocentric-10k-dataset) | **Egocentric-10K** | Apache 2.0 — a clean chain |
+| ✅ [OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly) (1,107 h) | **EgoDex 829 h** + HoloAssist 166 + CaptainCook4D 54 + HOI4D 44 + HOT3D 13.3 + HO-Cap 0.67 | **The only row that solves it**: annotations only, no video redistributed, each source's licence text shipped with attribution, and explicit author permission for the CC-BY-NC-ND component |
 | [Open X-Embodiment](#the-robot-native-denominator) | **60 datasets, 34 labs** | unknowable without tracing sixty |
 | [EgoInfinity](#egoinfinity--lift-to-4d-then-reproject), Ego2Robot, [MobileEgo](#mobileego-anywhere) | **WiLoR** (+ MANO, YOLO) | **CC-BY-NC-ND** *model* in the annotation path |
 
 **Two chokepoints carry most of the risk, and both are CC-BY-NC-ND.**
-**EgoDex** is inside at least four downstream artefacts on this list;
+**EgoDex** is inside at least **five** downstream artefacts on this list —
+supplying 75% of OpenEgo's hours alone;
 **WiLoR** is inside at least three annotation pipelines. Neither is obscure and
 neither is optional in the way a swappable dependency is — they are the
 field's default hand-annotated corpus and default hand reconstructor. A
@@ -2423,6 +2477,7 @@ trust the rest of it.
 - *EgoWAM: World Action Models Beyond Pixels with In-the-Wild Egocentric Human Data.* (CC BY 4.0; "in-the-wild" = EgoVerse on Project Aria, flow from Aria VIO poses) https://arxiv.org/abs/2607.08436
 - *EgoHumanoid: humanoid loco-manipulation from egocentric human demonstrations.* RSS 2026. (code **Apache 2.0**; dataset terms not stated; PICO VR headset + 5 body trackers + ZED Mini depth) https://github.com/OpenDriveLab/EgoHumanoid
 - *World In Your Hands: A Large-Scale and Open-Source Ecosystem for Learning Human-Centric Manipulation in the Wild.* (1,045 h; Oracle Suite wearable; **no dataset licence stated — "will be open-source"**) https://arxiv.org/html/2512.24310v3
+- *OpenEgo: A Large-Scale Multimodal Egocentric Dataset for Dexterous Manipulation.* (1,107 h unifying six public datasets; **annotations only, each source's licence text shipped with attribution**) https://arxiv.org/html/2509.05513v1 · https://www.openegocentric.com
 - *EgoCS-400K: An Egocentric Gameplay Dataset for World Models.* (CC BY 4.0; 400 K+ videos / 10,000+ h rendered from public HLTV match demos) https://arxiv.org/html/2606.18180v1 · https://EgoCS-400K.github.io
 - *ACE-Ego-0: Unifying Egocentric Human and Robotic Data for VLA Pretraining.* https://arxiv.org/html/2606.17200v1 (the project URL printed in the paper 404s)
 - *Open-AoE: An Open Egocentric Manipulation Dataset and Toolchain for Embodied Learning.* (CC BY 4.0) https://arxiv.org/abs/2607.14183
