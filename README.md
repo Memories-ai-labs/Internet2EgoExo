@@ -206,7 +206,11 @@ them:
   InternVid — long recorded in the survey as stating none — now carries
   **CC BY-NC-SA 4.0** and is gated, the most restrictive combination in the
   document. Terms change quietly, so the survey re-reads them rather than
-  inheriting them.
+  inheriting them. All four corners of the **licence × access** grid are now
+  occupied, and the awkward one is EgoDex: CC-BY-NC-ND, the most restrictive
+  terms in the survey, served straight off Apple's CDN at HTTP 200 with no
+  authentication. Ease of download tells you nothing about permission, which is
+  why the manifest carries both fields separately.
 - **Hours are being commoditised — but pixels are not.** Build AI went from
   [Egocentric-10K](https://www.humanoidsdaily.com/news/build-ai-open-sources-10-000-hours-of-factory-worker-video-to-scale-robot-learning)
   (10,000 h, 1080p) to

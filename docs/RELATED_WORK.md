@@ -421,9 +421,19 @@ demonstrators work bare-handed with no instrumentation. 2.0 TB compressed
   decoder-only transformers; behaviour cloning, denoising diffusion, flow
   matching). Best 2-second-horizon result 0.038 m mean distance (flow matching,
   K=10); visual goal-conditioning cut final-position error by 53%.
-- 🔴 **Licence: CC-BY-NC-ND.** Non-commercial **and no derivatives**. This is the
-  single most-cited "hands are the payload" dataset in the field and it cannot be
-  used commercially, nor can derivative datasets be redistributed.
+- 🔴 **Licence: CC-BY-NC-ND** — the paper states the data is *"licensed under
+  CC-by-NC-ND terms"*. Non-commercial **and no derivatives**. This is the single
+  most-cited "hands are the payload" dataset in the field and it cannot be used
+  commercially, nor can derivative datasets be redistributed. Re-verified at the
+  paper this sweep; unchanged.
+- ⚠️ **The access side runs the other way, which is worth knowing.** The Hugging
+  Face mirror is gated — an unauthenticated fetch returns **401**. But the zips
+  are served straight from **Apple's own CDN**
+  (`ml-site.cdn-apple.com/datasets/egodex/…`), and a request there this sweep
+  returned **HTTP 200, a 17.3 GB body, no authentication**. So the most
+  restrictively *licensed* corpus in this document is also among the most openly
+  *accessible*. Splits: ~725 h train, 7 h test, 97 h added after the split was
+  frozen.
 - **Limits**: tabletop only; annotation degrades under heavy occlusion and fast
   motion; embodiment gap.
 
@@ -1697,6 +1707,23 @@ than a flat "no": a reader who checks the licence sees a real, quotable licence
 on a real, downloadable artefact, and has to notice separately that it covers
 under a quarter of what the paper reports. **Record the licence, the access
 route, *and* the fraction — three fields, not one.**
+
+**All four corners of the licence × access grid are now occupied**, which is the
+cleanest way to see why one field cannot carry both. Every cell below was
+verified at source:
+
+| | **Access open** | **Access gated** |
+|---|---|---|
+| **Licence permissive** | [EgoCS-400K](#egocs-400k--10000-free-hours-sourced-from-the-internet-and-why-13-survives-it) — CC BY 4.0, ungated | [Egocentric-10K / -100K](#egocentric-10k) — Apache 2.0, but *"agree to share your contact information"* |
+| **Licence restrictive** | **[EgoDex](#egodex)** — CC-BY-NC-ND, yet the zips come straight off Apple's CDN, **HTTP 200, no auth** | [InternVid](#internvid) CC BY-NC-SA + gate; [AgiBotWorld-Beta](#the-robot-native-denominator) CC BY-NC-SA + contact gate; [Xperience-10M](#ropedia-xperience-10m--the-fidelity-wings-extreme-and-a-caution-about-reading-press-releases-as-availability) non-commercial + DocuSign |
+
+The bottom-left cell is the one that catches people. **EgoDex is the most
+restrictively licensed corpus in this document and among the easiest to
+download** — 17.3 GB over plain HTTPS with nothing to sign. Ease of acquisition
+carries no information at all about what you may then do, and a pipeline that
+infers permission from a 200 response will be wrong exactly where it matters
+most, since EgoDex is also the field's most-reused hand corpus
+([derivation map](#who-feeds-whom--the-derivation-map)).
 
 ⚠️ **Licence and access are separate axes, and collapsing them misleads.** A
 third-party [release tracker](https://egxodata.com/resources/robotics-data-release-tracker-2026)
