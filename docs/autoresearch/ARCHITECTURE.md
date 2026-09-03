@@ -145,3 +145,11 @@ four chunks, because a GitHub job is capped at 6 hours) and
 systemd units, platform-neutral). A test asserts none of them calls
 `run_eval.py` directly again. Run only one host at a time: two would buy the
 same daily datapoint twice.
+
+`deploy/runner/remote.sh` is how the VM is driven once it exists — status,
+logs, a deploy (which is just `bootstrap.sh` again, since it is idempotent),
+and `eval-now`, which starts the systemd unit rather than the eval, so an
+out-of-band measurement lands in the same dated file the timer uses and the day
+stays one comparable datapoint. The host comes from `EGOEXO_RUNNER_HOST` and is
+not committed; this repo is public, and `deploy.sh` already resolves its VM
+address at call time rather than hardcoding one.

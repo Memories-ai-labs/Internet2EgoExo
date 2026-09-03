@@ -278,3 +278,22 @@ None means "not built yet" and the property exists to fix that. And **any pass
 that spends money must record what it produced or why it produced nothing**: the
 silent zero survived precisely because nothing about it resembled an error, and
 it became a one-line fix the moment it had to explain itself.
+
+## L17 · A success code from an intermediary is not evidence the path works
+
+**Evidence.** `2026-08-23` experiment 2. The egress proxy answered
+`CONNECT <vm>:22` with `HTTP/1.1 200 Connection Established` and then relayed
+nothing. Read alone, that is indistinguishable from a host that is up but not
+listening — and the first three diagnoses all pointed at the VM. The control
+settled it in one command: `CONNECT github.com:22` was equally silent, and
+github's sshd is certainly running, so the silence belonged to the transport.
+
+**Implies.** When a hop in the middle reports success and the end still fails,
+the hop's status code is about the hop, not the destination. Before spending
+any time on the target, run the same request against a destination *known* to
+be healthy; if that fails too, the target was never the subject. Cheap enough
+to be unconditional — one command against a known-good host separates "the
+thing I am debugging is broken" from "I cannot reach anything of this kind",
+and those two have no diagnoses in common. Same shape as L15 from the other
+side: there, a read path that worked hid a missing write; here, a proxy that
+succeeded hid a channel that does not exist.

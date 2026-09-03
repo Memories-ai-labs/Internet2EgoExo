@@ -147,6 +147,25 @@ def test_every_host_invokes_the_eval_through_the_same_script():
         )
 
 
+def test_the_remote_helper_reaches_the_eval_only_through_the_unit():
+    """`remote.sh eval-now` is a fourth way to start a measurement.
+
+    It is allowed to exist because it starts `egoexo-eval.service` — the same
+    unit the timer starts, with the same `--resume` and the same dated record
+    file — rather than invoking the eval itself. Spelling the invocation out
+    here instead would be the third derivation the test above exists to
+    prevent, and the one most likely to drift: it runs from a laptop, where
+    nobody sees the unit's flags.
+    """
+    text = (ROOT / "deploy" / "runner" / "remote.sh").read_text(encoding="utf-8")
+    assert "systemctl start egoexo-eval.service" in text
+    for direct in ("run_eval.py", "eval/run.sh"):
+        assert direct not in text, (
+            f"remote.sh invokes {direct} directly — start the unit instead, so "
+            "one day stays one comparable datapoint"
+        )
+
+
 def test_the_shared_script_still_does_what_the_callers_stopped_doing():
     """run.sh has to own the four things the YAML used to spell out itself."""
     text = (ROOT / "eval" / "run.sh").read_text(encoding="utf-8")
