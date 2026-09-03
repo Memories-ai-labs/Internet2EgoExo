@@ -215,8 +215,11 @@ them:
   [OpenEgo](https://arxiv.org/html/2509.05513v1) unifies six corpora into 1,107 h
   and does it properly: **annotations only, no video redistributed**, each
   source's licence text shipped with attribution, and explicit author permission
-  for the CC-BY-NC-ND component. It is that this is clearly possible and almost
-  nobody does it.
+  for the CC-BY-NC-ND component — and it ships that as a file, not a promise:
+  `ATTRIBUTION.md` in [its repo](https://github.com/ahadjawaid/openego) gives
+  each source's authors, paper, licence URL and a ready-to-paste attribution
+  line. (Code is MIT and public; the annotation data is still being released.)
+  The verdict is that this is clearly possible and almost nobody does it.
 - **Hours are being commoditised — but pixels are not.** Build AI went from
   [Egocentric-10K](https://www.humanoidsdaily.com/news/build-ai-open-sources-10-000-hours-of-factory-worker-video-to-scale-robot-learning)
   (10,000 h, 1080p) to

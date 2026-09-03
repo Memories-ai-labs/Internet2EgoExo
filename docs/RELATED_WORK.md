@@ -218,6 +218,17 @@ CDLA v2**, permissive.
 > training signal for judging whether a found clip shows a task done competently.
 > Our quality gates currently judge legibility and rights, not competence; this
 > is where a competence gate would come from if one is ever wanted.
+>
+> **And it is no longer alone, which makes the case stronger rather than
+> weaker.** **CaptainCook4D** — *"A Dataset for Understanding Errors in
+> Procedural Activities"* (NeurIPS 2024 D&B), **54 hours, Apache 2.0**, surfaced
+> here as one of [OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly)'s
+> six sources — annotates error in procedural cooking under **permissive terms**,
+> where HoloAssist's CDLA v2 is permissive but its domain is instructor-guided
+> repair. Two independent corpora, two domains, the same label. A competence gate
+> trained on both would have something HoloAssist alone could not give it:
+> evidence that "wrong" transfers across task families rather than encoding one
+> annotation protocol.
 
 ### Ego-1K
 
@@ -1789,11 +1800,32 @@ licence text rather than being reconstructed by a reader later.
 > artefact on the derivation map depending on that one corpus, and the only one
 > that says out loud what depending on it entails.
 >
-> ⚠️ Two things not asserted here. The arXiv listing's CC-BY-4.0 governs the
-> *paper*; the annotation releases are described as carrying each source's terms,
-> which is a different and more careful arrangement than a single blanket
-> licence. And the resources are stated as *"will be released"* at
-> `openegocentric.com` — this document has not verified that the release landed.
+**Release status, checked at source.** The project site resolves (HTTP 200) and
+leads to **[ahadjawaid/openego](https://github.com/ahadjawaid/openego)**, a
+Python package — `OpenEgoDataProvider`, annotation classes, projection utilities,
+tests — under the **MIT** licence. The annotation files themselves are **not in
+the repository yet**: *"We will be releasing all the data throughout the coming
+weeks. A download script will be added soon,"* with an interim Box link in the
+meantime. So: **tooling shipped, data pending.**
+
+🟢 **And the rights posture is not just an appendix promise — it is a file.**
+`ATTRIBUTION.md` is live in the repo (fetched this sweep, last updated
+2025-09-10). It gives, per source, the authors, the paper, the project URL, the
+licence *with its canonical URL*, and a **ready-to-paste attribution string**:
+
+> "CaptainCook4D © Peddi et al. Licensed under Apache-2.0."
+>
+> "HOI4D © Liu et al. Licensed under CC BY-NC 4.0 (non-commercial)."
+
+The README adds that *"the datasets included in OpenEgo retain their original
+licenses"* and points at a `licenses/` directory alongside it. **That is the
+artefact this document has been describing in the abstract for thirty sweeps**,
+implemented: not a claim that rights were considered, but a machine-readable,
+per-source record a downstream user can act on without re-deriving anything.
+
+> ⚠️ One thing still not asserted. The arXiv listing's CC-BY-4.0 governs the
+> *paper*; the annotation releases carry each source's own terms instead, which
+> is the more careful arrangement and not the same as a blanket licence.
 
 ### Who feeds whom — the derivation map
 
@@ -2477,7 +2509,7 @@ trust the rest of it.
 - *EgoWAM: World Action Models Beyond Pixels with In-the-Wild Egocentric Human Data.* (CC BY 4.0; "in-the-wild" = EgoVerse on Project Aria, flow from Aria VIO poses) https://arxiv.org/abs/2607.08436
 - *EgoHumanoid: humanoid loco-manipulation from egocentric human demonstrations.* RSS 2026. (code **Apache 2.0**; dataset terms not stated; PICO VR headset + 5 body trackers + ZED Mini depth) https://github.com/OpenDriveLab/EgoHumanoid
 - *World In Your Hands: A Large-Scale and Open-Source Ecosystem for Learning Human-Centric Manipulation in the Wild.* (1,045 h; Oracle Suite wearable; **no dataset licence stated — "will be open-source"**) https://arxiv.org/html/2512.24310v3
-- *OpenEgo: A Large-Scale Multimodal Egocentric Dataset for Dexterous Manipulation.* (1,107 h unifying six public datasets; **annotations only, each source's licence text shipped with attribution**) https://arxiv.org/html/2509.05513v1 · https://www.openegocentric.com
+- *OpenEgo: A Large-Scale Multimodal Egocentric Dataset for Dexterous Manipulation.* (1,107 h unifying six public datasets; **annotations only, per-source licence and attribution shipped as `ATTRIBUTION.md`**; code MIT, data release in progress) https://arxiv.org/html/2509.05513v1 · https://www.openegocentric.com · https://github.com/ahadjawaid/openego
 - *EgoCS-400K: An Egocentric Gameplay Dataset for World Models.* (CC BY 4.0; 400 K+ videos / 10,000+ h rendered from public HLTV match demos) https://arxiv.org/html/2606.18180v1 · https://EgoCS-400K.github.io
 - *ACE-Ego-0: Unifying Egocentric Human and Robotic Data for VLA Pretraining.* https://arxiv.org/html/2606.17200v1 (the project URL printed in the paper 404s)
 - *Open-AoE: An Open Egocentric Manipulation Dataset and Toolchain for Embodied Learning.* (CC BY 4.0) https://arxiv.org/abs/2607.14183
