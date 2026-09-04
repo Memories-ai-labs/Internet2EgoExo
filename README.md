@@ -219,7 +219,12 @@ them:
   `ATTRIBUTION.md` in [its repo](https://github.com/ahadjawaid/openego) gives
   each source's authors, paper, licence URL and a ready-to-paste attribution
   line. (Code is MIT and public; the annotation data is still being released.)
-  The verdict is that this is clearly possible and almost nobody does it.
+  The verdict is that this is clearly possible and almost nobody does it — and
+  the survey's build-vs-reuse table now says so about *us*: deciding whether a
+  found clip's licence holds is per-clip judgement we have to build, but the
+  record format and the annotations-only redistribution rule are solved
+  publicly, and reinventing either would be the exact mistake that table exists
+  to prevent.
 - **Hours are being commoditised — but pixels are not.** Build AI went from
   [Egocentric-10K](https://www.humanoidsdaily.com/news/build-ai-open-sources-10-000-hours-of-factory-worker-video-to-scale-robot-learning)
   (10,000 h, 1080p) to

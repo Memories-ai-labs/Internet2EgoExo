@@ -80,6 +80,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [Action100M](#action100m)
   - [VLM-Video-Action-Localization](#vlm-video-action-localization)
 - [11. The licence trap](#11-the-licence-trap)
+  - [WiLoR — the chokepoint, read at source](#wilor--the-chokepoint-read-at-source)
   - [OpenEgo — somebody does this properly](#openego--somebody-does-this-properly-and-it-should-be-said-plainly)
   - [Who feeds whom — the derivation map](#who-feeds-whom--the-derivation-map)
 - [12. Free hours, and what they do to the moat](#12-free-hours-and-what-they-do-to-the-moat)
@@ -1640,6 +1641,41 @@ below.
 so directly: *commercial use of the repo as a whole is restricted by the WiLoR
 (CC-BY-NC-ND) and MANO (non-commercial) terms.*
 
+### WiLoR — the chokepoint, read at source
+
+This document has invoked WiLoR nine times as one of the two chokepoints on the
+[derivation map](#who-feeds-whom--the-derivation-map) without ever giving it an
+entry of its own. Fixing that, at
+**[rolpotamias/WiLoR](https://github.com/rolpotamias/WiLoR)**:
+
+**Mechanism.** End-to-end 3D hand *localisation and reconstruction* from
+unconstrained images — a detector stage plus a reconstruction module estimating
+pose and shape through the **MANO** parametric hand model. Recent releases add
+half-precision inference and depth pruning for *"up to 1.6× faster inference
+with minimal performance degradation"*, costing roughly **0.05 mm MPJPE**. It
+reports state-of-the-art results on **FreiHAND** and **HO-3D**, and introduces
+its own **WHIM** training set. **661 stars.**
+
+🔴 **Licence, quoted: *"WiLoR models fall under the CC-BY-NC--ND License."*** And
+the repo notes its dependence on Ultralytics and MANO, each with terms of their
+own — so the stack under it is **AGPL-3.0** and **non-commercial research only**
+respectively.
+
+> **Why this is the load-bearing one.** WiLoR is not a component someone chose
+> casually; it is state-of-the-art at the exact task — *hands, in the wild* —
+> that every pipeline in this document needs and that this repo's hands gate is
+> built around. That is precisely what makes it dangerous as a dependency: the
+> best available tool for the field's central annotation step is **non-commercial
+> and no-derivatives**, and it sits inside [EgoInfinity](#egoinfinity--lift-to-4d-then-reproject),
+> [Ego2Robot](#ego2robot) and [MobileEgo Anywhere](#mobileego-anywhere)'s STERA.
+> A team that adopts the obvious best option inherits the whole stack's terms
+> without ever making a licensing decision. Replacing it is tractable engineering
+> — but it is engineering, and it belongs on a schedule rather than in the
+> assumptions.
+
+**EgoInfinity's dependency stack, in full**, as the clearest worked example of
+what inheriting that decision costs:
+
 | Component | Licence | Consequence |
 |---|---|---|
 | WiLoR (hand reconstruction) | CC-BY-NC-ND | Research only, **no derivatives** |
@@ -2411,7 +2447,9 @@ records.
 | Annotation | Panda-70M select-not-generate; Action100M hierarchy | **Reuse both patterns** | task → action → event tree, L0–L3 gates, refuse-to-label floor |
 | Localisation baseline | VLM-Video-Action-Localization | **Use as floor** | Any trained localiser must beat learning-free |
 | Curation / scoring | cosmos-curate filters | **Build** | Quality gates as code, four hour measures, cost per hour |
-| Rights | *(mostly ignored)* | **Build** | Licence per clip; unmeasured ⇒ excluded, not assumed |
+| Rights — deciding | *(mostly ignored)* | **Build** | Licence per clip; unmeasured ⇒ excluded, not assumed |
+| Rights — recording | **[OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly)'s `ATTRIBUTION.md`** | **Reuse the format** | Per-source authors, paper, licence *with canonical URL*, and a ready-to-paste attribution line — shipped as a file, not asserted in prose |
+| Rights — redistributing | **OpenEgo's annotations-only rule** | **Reuse the rule** | Never re-ship restricted bytes; point at the official source and carry the terms alongside |
 
 **The short version:** skeleton from `cosmos-curate`; clipping design from
 Panda-70M; viewpoint rule from RynnVLA-001, independently corroborated;
@@ -2420,6 +2458,17 @@ a later upgrade only after the non-commercial dependencies are replaced *and*
 the static-camera assumption is dealt with. **The front and the back of the chain
 — requirement in, provenance out — are the parts that have to be built, and they
 are the parts that are worth owning.**
+
+**One correction to that, earned by the last two sweeps.** The provenance *back*
+end is no longer wholly a build. The *judgement* is — deciding whether a found
+clip's licence holds is per-clip adjudication nobody ships. But the *record
+format* and the *redistribution rule* are solved, publicly, by
+[OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly),
+and reinventing either would be exactly the mistake this table exists to prevent.
+Ship the terms as a file with a canonical licence URL and a paste-ready
+attribution line per source; never re-ship bytes you did not receive permission
+to re-ship. Those are two afternoons of work borrowed from someone who already
+did them, not a research problem.
 
 ---
 
