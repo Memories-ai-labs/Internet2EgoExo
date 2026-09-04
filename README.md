@@ -203,7 +203,11 @@ them:
   alternative, **HaMeR (MIT)**, still requires MANO's registration-gated,
   non-commercial hand model, and the one method that tries to drop it still uses
   MANO's joint regressor. Swapping WiLoR is an afternoon and buys a cleaner code
-  licence; escaping MANO is a research problem nobody has solved. Non-commercial
+  licence; MANO is the layer that decides whether any of it is shippable. The
+  best lead out is **NIMBLE** — a bones-and-muscles hand model, MIT on the repo —
+  but it is built in *"MANO topology"* and reuses manopth, so whether it clears
+  those terms is unresolved and worth resolving before anything ships.
+  Non-commercial
   terms at junctions this much routes through are the single most consequential
   licensing fact in the field. (Nothing there alleges non-compliance by anyone;
   the point is what a reader can determine from the public artefacts, which is
