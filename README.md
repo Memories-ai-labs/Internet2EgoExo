@@ -196,12 +196,18 @@ them:
   per-clip rights discipline this project applies to footage, pointed at the
   toolchain. The survey maps the whole chain —
   [who feeds whom](docs/RELATED_WORK.md#who-feeds-whom--the-derivation-map) — and
-  two chokepoints carry most of the risk, both CC-BY-NC-ND: **EgoDex** sits
-  inside at least four downstream corpora and models, **WiLoR** inside at least
-  three annotation pipelines. A no-derivatives clause at a junction that many
-  things route through is the single most consequential licensing fact in the
-  field. (Nothing there alleges non-compliance by anyone; the point is what a
-  reader can determine from the public artefacts, which is not much.) And an
+  two chokepoints carry most of the risk. **EgoDex** (CC-BY-NC-ND) sits inside at
+  least five downstream corpora and models, supplying 75% of OpenEgo's hours
+  alone. The second is **MANO**, not WiLoR — a correction the survey records
+  against itself. WiLoR is where MANO is most visible, but the permissive
+  alternative, **HaMeR (MIT)**, still requires MANO's registration-gated,
+  non-commercial hand model, and the one method that tries to drop it still uses
+  MANO's joint regressor. Swapping WiLoR is an afternoon and buys a cleaner code
+  licence; escaping MANO is a research problem nobody has solved. Non-commercial
+  terms at junctions this much routes through are the single most consequential
+  licensing fact in the field. (Nothing there alleges non-compliance by anyone;
+  the point is what a reader can determine from the public artefacts, which is
+  not much.) And an
   unresolved licence is a snapshot, not a property: re-checking this sweep,
   InternVid — long recorded in the survey as stating none — now carries
   **CC BY-NC-SA 4.0** and is gated, the most restrictive combination in the

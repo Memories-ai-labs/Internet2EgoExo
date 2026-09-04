@@ -1669,9 +1669,34 @@ respectively.
 > and no-derivatives**, and it sits inside [EgoInfinity](#egoinfinity--lift-to-4d-then-reproject),
 > [Ego2Robot](#ego2robot) and [MobileEgo Anywhere](#mobileego-anywhere)'s STERA.
 > A team that adopts the obvious best option inherits the whole stack's terms
-> without ever making a licensing decision. Replacing it is tractable engineering
-> — but it is engineering, and it belongs on a schedule rather than in the
-> assumptions.
+> without ever making a licensing decision.
+
+🔴 **And this document has been calling the wrong thing the chokepoint.** Earlier
+sweeps said "replacing WiLoR is tractable engineering" without checking what
+replacing it would buy. Checked this sweep, the answer is: **less than it
+sounds, because the binding constraint is one layer down.**
+
+| Candidate | Code licence | Still needs MANO? | Status |
+|---|---|---|---|
+| [WiLoR](https://github.com/rolpotamias/WiLoR) | **CC-BY-NC-ND** (models) | yes | current default |
+| [HaMeR](https://github.com/geopavlakos/hamer) | **MIT**, 1.1 k stars | **yes** — *"you also need to download the MANO model… register to get access"* | drop-in-ish |
+| [HandOS](https://arxiv.org/html/2412.01537v1) | none stated | **partly** — avoids MANO *parameters* for its representation, but 3D joints still come from *"the joint regressor defined by MANO"* | no code released |
+
+**So swapping WiLoR for HaMeR removes a CC-BY-NC-ND *model* licence and leaves
+the non-commercial, registration-gated *hand model* exactly where it was.**
+HandOS is the only entry that even tries to leave MANO behind — a unified
+keypoint representation, *"instead of MANO parameters"*, reaching 5.0 PA-MPJPE on
+FreiHAND and 8.4 on HO3Dv3 — and it still reaches for MANO's joint regressor to
+get 3D joints from vertices, and has published neither code nor terms.
+
+> **The correction, stated plainly.** The two chokepoints are not "WiLoR and
+> EgoDex". They are **MANO and EgoDex** — a hand *model* and a hand *corpus*,
+> both non-commercial, sitting under essentially every hand-annotation and
+> hand-learning path in this document. WiLoR is the most visible place MANO
+> surfaces, not the constraint itself. That matters for planning: a swap at the
+> WiLoR layer is an afternoon and buys a cleaner code licence; escaping MANO is a
+> research-grade problem nobody in this document has solved, and it belongs on
+> the schedule as such rather than as a dependency bump.
 
 **EgoInfinity's dependency stack, in full**, as the clearest worked example of
 what inheriting that decision costs:
@@ -1884,14 +1909,21 @@ except the one marked as an inference.
 | [Open X-Embodiment](#the-robot-native-denominator) | **60 datasets, 34 labs** | unknowable without tracing sixty |
 | [EgoInfinity](#egoinfinity--lift-to-4d-then-reproject), Ego2Robot, [MobileEgo](#mobileego-anywhere) | **WiLoR** (+ MANO, YOLO) | **CC-BY-NC-ND** *model* in the annotation path |
 
-**Two chokepoints carry most of the risk, and both are CC-BY-NC-ND.**
-**EgoDex** is inside at least **five** downstream artefacts on this list —
-supplying 75% of OpenEgo's hours alone;
-**WiLoR** is inside at least three annotation pipelines. Neither is obscure and
-neither is optional in the way a swappable dependency is — they are the
-field's default hand-annotated corpus and default hand reconstructor. A
-no-derivatives clause sitting at a chokepoint that many things route through is
-the single most consequential licensing fact in this document. *Nothing here
+**Two chokepoints carry most of the risk, and one of them is not the one this
+document used to name.** **EgoDex** is inside at least **five** downstream
+artefacts on this list — supplying 75% of OpenEgo's hours alone; and the second
+is **[MANO](#wilor--the-chokepoint-read-at-source)**, not WiLoR. WiLoR is where
+MANO is most visible, but the permissive alternative (HaMeR, MIT) still requires
+MANO, and the one method that tries to drop it still uses MANO's joint
+regressor. A CC-BY-NC-ND model can be swapped; a non-commercial,
+registration-gated *hand model* under the whole field cannot. Meanwhile,
+**WiLoR** — the most-used route *into* MANO — is inside at least three
+annotation pipelines. None of the three is obscure, and none is optional in the
+way a swappable dependency is: they are the field's default hand-annotated
+corpus, default hand model, and default hand reconstructor. **Non-commercial
+terms sitting at junctions that this much routes through are the single most
+consequential licensing fact in this document** — and the deepest of them,
+MANO's, is the one with no published escape route. *Nothing here
 alleges non-compliance by anyone*; research use and commercial deployment are
 different questions, and several of these projects may well have separate
 arrangements. The point is what a reader can determine from the public
@@ -2489,6 +2521,7 @@ trust the rest of it.
 | EgoScale is a UT Austin RPL project *(this document, earlier)* | **GEAR @ NVIDIA Research**, sixteen authors across several institutions | [§2](#egoscale) |
 | EgoScale's 20,854 h and DreamDojo's 43,827 h are two independent corpora | Both papers report **9,869 scenes / 6,015 tasks / 43,237 objects** and the same **829 h of EgoDex**, and neither cites the other. Almost certainly one corpus feeding two products; taking both at face value double-counts one acquisition | [§2](#egoscale), [§4](#dreamdojo--and-the-strongest-evidence-in-this-document-for-13) |
 | EgoScale is CC BY 4.0 | That is the **arXiv listing's licence, covering the paper**. No dataset licence is stated anywhere, and the code is "coming soon" | [§2](#egoscale) |
+| The hand-annotation chokepoint is **WiLoR**, and swapping it is tractable engineering *(this document, earlier)* | The chokepoint is **MANO**. The permissive alternative, **HaMeR (MIT)**, still requires MANO — *"register to get access"*; **HandOS**, which avoids MANO parameters, still uses *"the joint regressor defined by MANO"* and has released neither code nor terms. Swapping WiLoR buys a cleaner code licence and nothing more | [§11](#wilor--the-chokepoint-read-at-source) |
 | InternVid states no licence *(this document, earlier)* | The dataset card carries **`cc-by-nc-sa-4.0`** and is gated. Non-commercial **and** share-alike — the most restrictive combination here. An "unresolved" field is a snapshot, not a property | [§3](#internvid) |
 | Ego-Exo4D is ~1,286 h of egocentric video | Official docs: **1286.30 video hours, 221.26 ego-hours, 5035 takes** — about **17%** egocentric | [§1](#ego-exo4d) |
 | Build AI released ~1 M hours (Egocentric-1M) | **Not findable at the publisher across four attempts** spread over months | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
