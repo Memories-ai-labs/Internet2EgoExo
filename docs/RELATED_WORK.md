@@ -1464,32 +1464,50 @@ Image-to-Video model trained *"on 12M ego-centric manipulation videos to predict
 future frames conditioned on an initial frame and a language instruction"* —
 a pretraining corpus of a size that puts it alongside the largest entries here.
 
-**What is verifiable, and what is not, is the point.** Verifiable: the repo is
-**Apache 2.0**, and **two 7B checkpoints are released** (Base and Trajectory) on
-Hugging Face and ModelScope. Not verifiable from any surface checked: **where
-those 12 M videos came from** — neither the abstract, nor the repository, names
-a source, an existing corpus, or a collection method — and **the pretraining
-data is not released**, the repo being set up for finetuning on a user's own
-LeRobot data instead.
+**Where those 12 M videos came from — resolved, and it is a fourth naming
+trap.** A previous sweep could not confirm the source and recorded it as
+unverified rather than repeat secondary coverage calling it "web-sourced". Read
+in the paper's HTML this sweep, the phrase is real: *"we design a dedicated data
+curation pipeline to filter out 12M ego-centric manipulation videos from
+**existing web sources**."* But §4 says what those sources are, by citation:
+**EgoVid-5M, Ego4D, HowTo100M, EPIC-KITCHENS (2018, 2021, 2022) and
+Something-Something (2017, 2018)**.
 
-> **This is the sharpest instance in the document of [§11](#11-the-licence-trap)'s
-> structural point, and it is sharper than the ACE-Ego-0 version.** There, five
-> named restrictive corpora are baked into a public checkpoint and invisible from
-> the artefact. Here, **the upstream is not even nameable**: permissively
-> licensed weights anyone may use commercially, trained on twelve million videos
-> of unstated origin under unstated terms. Nothing alleges anything improper —
-> the terms may be perfectly in order, and unpublished is not the same as absent.
-> But *"Apache 2.0"* on a checkpoint answers a question about the weights and
-> tells you nothing whatsoever about what went into them, which is exactly why
-> rights have to be recorded where the footage enters rather than reconstructed
-> from what comes out.
+**So "web sources" here means *existing public research datasets*, not footage
+crawled off the internet.** Same shape as *in-the-wild* meaning "outside the
+lab": a phrase that reads, to anyone asking [§13](#13-why-no-open-source-project-does-exactly-this)'s
+question, as the opposite of what it denotes. Had this document taken the
+secondary summary at face value it would have added a false counterexample to
+that section — the third time the same trap has been avoided only by going to
+the source.
+
+🔴 **And now that the upstream is nameable, the licensing reads worse, not
+better.** Those citations include **[Ego4D](#ego4d)** (signed agreement, terms
+not published), **[EPIC-KITCHENS](#epic-kitchens-100)** (CC BY-NC 4.0,
+explicitly non-commercial) and **[EgoVid-5M](#egovid-5m)** (inherits Ego4D's
+terms). The paper states **no licence for the assembled 12 M-video dataset**,
+and the dataset is not released. Meanwhile the code and **two 7B checkpoints are
+Apache 2.0** and publicly downloadable.
+
+> **That makes this a sharper exhibit for [§11](#11-the-licence-trap) than
+> [ACE-Ego-0](#ace-ego-0), not a weaker one.** Both train on restrictive
+> corpora. But ACE-Ego-0's five sources are stated where a reader will find
+> them, whereas here the composition is recoverable only by resolving a
+> parenthetical citation list in §4 — and nothing on the model card, the
+> repository, or the abstract carries it. **Permissive weights, an unpublished
+> assembled-dataset licence, and an upstream that includes a non-commercial
+> corpus and one behind an unpublished agreement.** Nothing improper is alleged;
+> research pretraining and commercial deployment are different questions. The
+> structural point is that *"Apache 2.0"* on a checkpoint answers a question
+> about the weights and nothing at all about what went into them — which is why
+> rights belong where the footage *enters*, not reconstructed later from what
+> comes out.
 >
-> ⚠️ Secondary coverage describes those 12 M videos as web-sourced. **That is not
-> asserted here**: it could not be confirmed at the abstract or the repository,
-> and the full PDF exceeded the fetch limit. Recorded as unverified, since
-> whether the largest ego pretraining corpus in this section came off the open
-> web is precisely the kind of claim [§13](#13-why-no-open-source-project-does-exactly-this)
-> has twice been embarrassed by taking on trust.
+> **The corrected pipeline, for the record.** Three stages: **keypoint
+> detection** (pose estimation for human keypoints), **ego-centric filtering**
+> (*"No facial keypoints"*, *"Presence of hand keypoints"*), and **text
+> description annotation** (Qwen2-VL-7B). That is the rule quoted above, in its
+> own paper's words.
 
 ### EgoInfinity — lift to 4D, then reproject
 
@@ -2581,7 +2599,8 @@ trust the rest of it.
 | EgoScale is CC BY 4.0 | That is the **arXiv listing's licence, covering the paper**. No dataset licence is stated anywhere, and the code is "coming soon" | [§2](#egoscale) |
 | The hand-annotation chokepoint is **WiLoR**, and swapping it is tractable engineering *(this document, earlier)* | The chokepoint is **MANO**. The permissive alternative, **HaMeR (MIT)**, still requires MANO — *"register to get access"*; **HandOS**, which avoids MANO parameters, still uses *"the joint regressor defined by MANO"* and has released neither code nor terms. Swapping WiLoR buys a cleaner code licence and nothing more. The best lead out of MANO is **NIMBLE (MIT)**, but it is built in *"MANO topology"* and reuses manopth, so whether it clears those terms is unresolved | [§11](#wilor--the-chokepoint-read-at-source) |
 | NIMBLE is CC BY 4.0 | That is the **paper's** licence. The repository says **MIT** — the third case in this document of an adjacent artefact's terms being reported as the thing's own | [§11](#wilor--the-chokepoint-read-at-source) |
-| RynnVLA-001 is a source of a viewpoint filtering rule *(this document, earlier — true but incomplete)* | It is also an I2V model pretrained on **12 M egocentric manipulation videos**. Code and two 7B checkpoints are **Apache 2.0**; the corpus is **not released and its origin is stated nowhere** on the abstract or repo. Permissive weights over an unnameable upstream | [§8](#rynnvla-001--filter-dont-convert) |
+| RynnVLA-001 is a source of a viewpoint filtering rule *(this document, earlier — true but incomplete)* | It is also an I2V model pretrained on **12 M egocentric manipulation videos**, with **Apache 2.0** code and two 7B checkpoints released and the corpus not | [§8](#rynnvla-001--filter-dont-convert) |
+| RynnVLA-001's 12 M videos are **web-sourced** *(secondary coverage; this document recorded it as unverified rather than repeat it)* | The paper does say *"from existing web sources"* — but §4's citations name **EgoVid-5M, Ego4D, HowTo100M, EPIC-KITCHENS and Something-Something**. "Web sources" means *existing public datasets*, not crawled footage — a fourth naming trap, and one that would have put a false counterexample into §13 | [§8](#rynnvla-001--filter-dont-convert) |
 | InternVid states no licence *(this document, earlier)* | The dataset card carries **`cc-by-nc-sa-4.0`** and is gated. Non-commercial **and** share-alike — the most restrictive combination here. An "unresolved" field is a snapshot, not a property | [§3](#internvid) |
 | Ego-Exo4D is ~1,286 h of egocentric video | Official docs: **1286.30 video hours, 221.26 ego-hours, 5035 takes** — about **17%** egocentric | [§1](#ego-exo4d) |
 | Build AI released ~1 M hours (Egocentric-1M) | **Not findable at the publisher across four attempts** spread over months | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |

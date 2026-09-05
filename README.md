@@ -195,12 +195,15 @@ them:
   restrictions of every model and corpus used to build it, which is the same
   per-clip rights discipline this project applies to footage, pointed at the
   toolchain. The sharpest version: **RynnVLA-001** ships Apache 2.0 code and two
-  7B checkpoints trained on **12 M egocentric manipulation videos** whose origin
-  is stated nowhere on the paper or the repo, and whose corpus is not released.
-  A permissive licence on a checkpoint answers a question about the weights and
-  tells you nothing about what went into them — which is why rights have to be
-  recorded where the footage enters rather than reconstructed from what comes
-  out. The survey maps the whole chain —
+  7B checkpoints trained on **12 M egocentric manipulation videos**. Read at the
+  paper, those come *"from existing web sources"* — which, per its citation list,
+  means **Ego4D, EPIC-KITCHENS, HowTo100M, Something-Something and EgoVid-5M**,
+  i.e. existing public datasets rather than crawled footage, and a mixture that
+  includes a non-commercial corpus and one behind an unpublished agreement. The
+  assembled dataset carries no stated licence and is not released. A permissive
+  licence on a checkpoint answers a question about the weights and tells you
+  nothing about what went into them — which is why rights have to be recorded
+  where the footage enters rather than reconstructed from what comes out. The survey maps the whole chain —
   [who feeds whom](docs/RELATED_WORK.md#who-feeds-whom--the-derivation-map) — and
   two chokepoints carry most of the risk. **EgoDex** (CC-BY-NC-ND) sits inside at
   least five downstream corpora and models, supplying 75% of OpenEgo's hours
