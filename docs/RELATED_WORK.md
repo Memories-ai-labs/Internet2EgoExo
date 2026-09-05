@@ -1458,6 +1458,39 @@ curation stage states the rule plainly:
 > preprocessing, while here every verdict carries its cues into the manifest. A
 > delivered dataset has to defend its **inclusions**, not merely make them.
 
+🔴 **And this document has been under-reading it.** RynnVLA-001 is cited above as
+a source of a filtering *rule*. It is also, per its abstract, an
+Image-to-Video model trained *"on 12M ego-centric manipulation videos to predict
+future frames conditioned on an initial frame and a language instruction"* —
+a pretraining corpus of a size that puts it alongside the largest entries here.
+
+**What is verifiable, and what is not, is the point.** Verifiable: the repo is
+**Apache 2.0**, and **two 7B checkpoints are released** (Base and Trajectory) on
+Hugging Face and ModelScope. Not verifiable from any surface checked: **where
+those 12 M videos came from** — neither the abstract, nor the repository, names
+a source, an existing corpus, or a collection method — and **the pretraining
+data is not released**, the repo being set up for finetuning on a user's own
+LeRobot data instead.
+
+> **This is the sharpest instance in the document of [§11](#11-the-licence-trap)'s
+> structural point, and it is sharper than the ACE-Ego-0 version.** There, five
+> named restrictive corpora are baked into a public checkpoint and invisible from
+> the artefact. Here, **the upstream is not even nameable**: permissively
+> licensed weights anyone may use commercially, trained on twelve million videos
+> of unstated origin under unstated terms. Nothing alleges anything improper —
+> the terms may be perfectly in order, and unpublished is not the same as absent.
+> But *"Apache 2.0"* on a checkpoint answers a question about the weights and
+> tells you nothing whatsoever about what went into them, which is exactly why
+> rights have to be recorded where the footage enters rather than reconstructed
+> from what comes out.
+>
+> ⚠️ Secondary coverage describes those 12 M videos as web-sourced. **That is not
+> asserted here**: it could not be confirmed at the abstract or the repository,
+> and the full PDF exceeded the fetch limit. Recorded as unverified, since
+> whether the largest ego pretraining corpus in this section came off the open
+> web is precisely the kind of claim [§13](#13-why-no-open-source-project-does-exactly-this)
+> has twice been embarrassed by taking on trust.
+
 ### EgoInfinity — lift to 4D, then reproject
 
 **[Rice-RobotPI-Lab/EgoInfinity](https://github.com/Rice-RobotPI-Lab/EgoInfinity)**,
@@ -2548,6 +2581,7 @@ trust the rest of it.
 | EgoScale is CC BY 4.0 | That is the **arXiv listing's licence, covering the paper**. No dataset licence is stated anywhere, and the code is "coming soon" | [§2](#egoscale) |
 | The hand-annotation chokepoint is **WiLoR**, and swapping it is tractable engineering *(this document, earlier)* | The chokepoint is **MANO**. The permissive alternative, **HaMeR (MIT)**, still requires MANO — *"register to get access"*; **HandOS**, which avoids MANO parameters, still uses *"the joint regressor defined by MANO"* and has released neither code nor terms. Swapping WiLoR buys a cleaner code licence and nothing more. The best lead out of MANO is **NIMBLE (MIT)**, but it is built in *"MANO topology"* and reuses manopth, so whether it clears those terms is unresolved | [§11](#wilor--the-chokepoint-read-at-source) |
 | NIMBLE is CC BY 4.0 | That is the **paper's** licence. The repository says **MIT** — the third case in this document of an adjacent artefact's terms being reported as the thing's own | [§11](#wilor--the-chokepoint-read-at-source) |
+| RynnVLA-001 is a source of a viewpoint filtering rule *(this document, earlier — true but incomplete)* | It is also an I2V model pretrained on **12 M egocentric manipulation videos**. Code and two 7B checkpoints are **Apache 2.0**; the corpus is **not released and its origin is stated nowhere** on the abstract or repo. Permissive weights over an unnameable upstream | [§8](#rynnvla-001--filter-dont-convert) |
 | InternVid states no licence *(this document, earlier)* | The dataset card carries **`cc-by-nc-sa-4.0`** and is gated. Non-commercial **and** share-alike — the most restrictive combination here. An "unresolved" field is a snapshot, not a property | [§3](#internvid) |
 | Ego-Exo4D is ~1,286 h of egocentric video | Official docs: **1286.30 video hours, 221.26 ego-hours, 5035 takes** — about **17%** egocentric | [§1](#ego-exo4d) |
 | Build AI released ~1 M hours (Egocentric-1M) | **Not findable at the publisher across four attempts** spread over months | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
