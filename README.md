@@ -364,7 +364,13 @@ Full survey — both halves, the positioning table and references:
 **[docs/RELATED_WORK.md](docs/RELATED_WORK.md)**. It also carries a
 [corrections table](docs/RELATED_WORK.md#corrections-in-one-table) indexing every
 widely-repeated claim that did not survive being checked at its source —
-including three of the survey's own, kept visible rather than quietly amended.
+including several of the survey's own, kept visible rather than quietly amended
+— and a
+[vocabulary table](docs/RELATED_WORK.md#the-vocabulary-problem--four-phrases-that-do-not-mean-what-they-say)
+for four phrases that reliably mislead: *"in the wild"* means outside the lab,
+not off the internet; *"from existing web sources"* means from public datasets,
+not crawled; a licence on the paper or the code is not the terms of the data;
+and a dataset named for its size often counts something else.
 
 ## Installation
 

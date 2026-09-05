@@ -97,6 +97,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [Six reasons the hole persists](#six-reasons-the-hole-persists)
   - [What this does and does not license us to claim](#what-this-does-and-does-not-license-us-to-claim)
 - [14. Build vs. reuse, per stage](#14-build-vs-reuse-per-stage)
+- [The vocabulary problem](#the-vocabulary-problem--four-phrases-that-do-not-mean-what-they-say)
 - [Corrections, in one table](#corrections-in-one-table)
 - [Positioning, in one table](#positioning-in-one-table)
 - [References](#references)
@@ -2107,13 +2108,22 @@ read straight off the cards.
 > **Second, the ratio has since collapsed.** Re-read at the dataset cards this
 > sweep, like for like:
 >
-> | Card | Downloads last month | Resolution |
-> |---|---|---|
-> | Egocentric-100K | **164,868** | 456×256 |
-> | Egocentric-10K | **34,519** | 1080p |
+> | Card | Downloads last month | Re-read a fortnight later | Resolution |
+> |---|---|---|---|
+> | Egocentric-100K | **164,868** | **158,934** | 456×256 |
+> | Egocentric-10K | **34,519** | **30,087** | 1080p |
+> | *ratio* | *4.8:1* | *5.3:1* | |
 >
-> That is **roughly 4.8:1**, not 470:1. The 1080p corpus went from a few hundred
-> monthly pulls to thirty-four thousand while the 256p corpus barely moved.
+> That is **roughly 5:1**, not 470:1. The 1080p corpus went from a few hundred
+> monthly pulls to thirty-odd thousand while the 256p corpus barely moved.
+>
+> **The second column is the point of having the rule.** Both figures were
+> re-read a fortnight after the first, per this document's own policy that a
+> dashboard number expires by default. Both drifted down a few per cent; the
+> ratio held in a **~5:1 band**. So the corrected claim is not another snapshot —
+> it is now a claim with two readings behind it, which is the difference between
+> a number and a measurement. The 470:1 figure never got that treatment, which
+> is precisely how it survived as long as it did.
 >
 > ⚠️ **And the publisher's two surfaces disagree.** The organisation listing
 > shows **1.95 M** for Egocentric-100K against the card's 164,868, while
@@ -2579,6 +2589,32 @@ to re-ship. Those are two afternoons of work borrowed from someone who already
 did them, not a research problem.
 
 ---
+
+## The vocabulary problem — four phrases that do not mean what they say
+
+Five sweeps found the same class of error independently, which makes it worth
+naming as a class. **None of these is a project misrepresenting itself.** Each
+phrase is standard usage inside its own subfield. They mislead only when read by
+someone asking this document's question — *did this footage come off the open
+internet, and may I use it?* — and every one of them, taken at face value, would
+have put a false claim into this survey.
+
+| The phrase | What a reader assumes | What it denotes | Where |
+|---|---|---|---|
+| **"in the wild"** | found on the internet | *outside the robot's lab* — captured by the authors, on their own hardware, in real environments | [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean) (EgoVerse on Aria), [World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild) (own wearable suit), and the term's general use across [§2](#2-scaling-human-video-for-robot-learning) |
+| **"from existing web sources"** | crawled from the internet | *from existing public research datasets* — Ego4D, EPIC-KITCHENS, HowTo100M, Something-Something | [RynnVLA-001](#rynnvla-001--filter-dont-convert) |
+| **a licence on the paper / the code / the repo** | the terms of the **data** | the terms of that adjacent artefact only — the dataset's terms are separate, and often absent | [EgoScale](#egoscale) (arXiv CC BY 4.0), [NIMBLE](#wilor--the-chokepoint-read-at-source) (repo MIT, paper CC BY), [EgoExoLearn](#egoexolearn) and [EgoHumanoid](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator) (code MIT / Apache 2.0) |
+| **a dataset named for its size** | that many hours of the thing you want | often a different unit, a different viewpoint, or a different corpus entirely | [Ego-1K](#ego-1k) — 956 clips of 8–10 s, not 1,000 hours; [Ego-Exo4D](#ego-exo4d) — 1,286 h of which **221 are egocentric** |
+
+> **The operational lesson, and it is the same one every time.** Every entry in
+> the right-hand column was recovered by opening the source and reading a
+> sentence. Every entry in the second column is what a competent reader gets
+> from a title, an abstract, or a summary written by someone else. **The gap
+> between those two columns is the entire justification for this document's
+> read-at-source rule** — and, one level up, for recording provenance per clip
+> rather than trusting a corpus-level description. A phrase that means one thing
+> to its authors and another to its users is not a lie; it is exactly the kind
+> of ambiguity a metadata field resolves and prose does not.
 
 ## Corrections, in one table
 
