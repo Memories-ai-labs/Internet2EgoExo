@@ -43,6 +43,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [EgoVLA](#egovla--mano-as-the-action-space-not-just-the-annotation)
   - [World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild)
   - [EgoTac](#egotac--tactile-predicted-from-ordinary-video-and-a-ceiling-that-moved)
+  - [H-Tac](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual)
   - [Open-AoE](#open-aoe)
   - [EgoVerse](#egoverse)
   - [MobileEgo Anywhere](#mobileego-anywhere)
@@ -955,6 +956,63 @@ of the trap, so worth saying plainly: nothing here is obtainable yet.
 > instances catalogued in §15, its inference set genuinely *does* include found
 > corpora. The phrase misleads less here than elsewhere, which is worth
 > recording precisely because the pattern is not universal.
+
+### H-Tac — tactile *derived* rather than predicted, and the OpenEgo counterfactual
+
+**[arXiv 2607.01067](https://arxiv.org/html/2607.01067)** — read immediately after
+[EgoTac](#egotac--tactile-predicted-from-ordinary-video-and-a-ceiling-that-moved),
+because the pair draws the line this repo actually has to work with.
+
+**Scale.** ~**160 hours**, **300+ tasks**, **135 k+ episodes**, in three parts:
+
+| Component | Scale | What it is |
+|---|---|---|
+| **HOI-Tac** | 11.5 M frames, ~**106 h** | **11 public hand–object datasets** — ARCTIC, DexYCB, H2O, H2O3D, HO3D, HOCap, HOI4D, HOT3D, InterHand2.6M, OakInk-v1/v2 |
+| **DeskTask-Tac** | 37.2 h, 947 episodes | Bimanual desktop manipulation, **real sensors** — *"a tactile glove to record the tactility on the human hands"* |
+| **InternData-Tac** | 17.8 h, 9,563 episodes | Three robot configurations |
+
+**The mechanism, and the whole reason it sits here.** For its largest component,
+tactile is **not measured** — it is computed from geometry: *"For each frame, we
+generate per-vertex binary contact labels on the 778-vertex MANO hand mesh by
+thresholding the distance between the hand surface and object meshes."*
+
+> **So the two tactile routes are not interchangeable, and only one reaches found
+> footage.**
+>
+> | | H-Tac's HOI-Tac | [EgoTac](#egotac--tactile-predicted-from-ordinary-video-and-a-ceiling-that-moved) |
+> |---|---|---|
+> | Tactile from | **object meshes + hand mesh distance** | **RGB pixels** |
+> | Needs | per-frame object geometry | nothing but video |
+> | Runs on found footage | **no** | **yes** — zero-shot on Ego4D, EPIC, EgoDex |
+>
+> Internet video does not come with object meshes, so the *derived* route is
+> closed to it by construction — the same shape as every other entry in
+> [§2](#2-scaling-human-video-for-robot-learning). The *predicted* route is open.
+> That distinction is what a pipeline needs in order to know which tactile-ish
+> field it may honestly record, and this document would have blurred the two had
+> it read only one of the papers.
+
+**Its results are the strongest argument in the document for bothering at all.**
+Task progress on real robots: fine-grained **57.3% → 96.7%**, **contact-rich
+9.2% → 79.2%**, vision-defect 15.6% → 37.8%. Contact-rich manipulation going
+from near-useless to four-fifths is the reason a contact field is worth having
+even when it is estimated rather than measured.
+
+🔴 **And MANO appears a third time.** Not as annotator ([WiLoR](#wilor--the-chokepoint-read-at-source)),
+not as action space ([EgoVLA](#egovla--mano-as-the-action-space-not-just-the-annotation)),
+but as **the mesh on which contact itself is defined** — the 778-vertex hand.
+Three independent layers of the stack, one non-commercial, registration-gated
+model.
+
+⚠️ **Read against [OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly), this is the counterfactual.** Both
+aggregate many public corpora — OpenEgo six, H-Tac **eleven**, the largest
+aggregation in this document. OpenEgo ships per-source licences, attribution
+strings and an annotations-only redistribution rule. H-Tac's paper **states no
+licence for H-Tac**, describes its inputs only as *"public datasets"*, and gives
+no release timeline or repository. Same move, opposite hygiene, and the
+difference is not scale or sophistication — it is a file somebody chose to write.
+*Nothing improper is alleged*; the paper may simply predate its own release
+process.
 
 ### Open-AoE
 
@@ -2080,6 +2138,7 @@ except the one marked as an inference.
 | [EgoVid-5M](#egovid-5m) (5 M clips) | **Ego4D** annotations; video fetched from Ego4D | Ego4D's unpublished agreement |
 | [Panda-70M](#panda-70m) (70 M clips) | **HD-VILA-100M** | inherits upstream, stated |
 | [annotated-egocentric-10k](#annotated-egocentric-10k-dataset) | **Egocentric-10K** | Apache 2.0 — a clean chain |
+| 🔴 [H-Tac](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) (HOI-Tac, ~106 h) | **11 public datasets** — ARCTIC, DexYCB, H2O, H2O3D, HO3D, HOCap, HOI4D, HOT3D, InterHand2.6M, OakInk-v1/v2 | **The largest aggregation here and the least documented**: no licence stated for H-Tac, inputs described only as "public datasets", no release. HOI4D alone is CC BY-NC |
 | ✅ [OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly) (1,107 h) | **EgoDex 829 h** + HoloAssist 166 + CaptainCook4D 54 + HOI4D 44 + HOT3D 13.3 + HO-Cap 0.67 | **The only row that solves it**: annotations only, no video redistributed, each source's licence text shipped with attribution, and explicit author permission for the CC-BY-NC-ND component |
 | [Open X-Embodiment](#the-robot-native-denominator) | **60 datasets, 34 labs** | unknowable without tracing sixty |
 | [EgoInfinity](#egoinfinity--lift-to-4d-then-reproject), Ego2Robot, [MobileEgo](#mobileego-anywhere) | **WiLoR** (+ MANO, YOLO) | **CC-BY-NC-ND** *model* in the annotation path |

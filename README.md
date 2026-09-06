@@ -177,6 +177,13 @@ out of domain. That does not give found footage tactile *measurements*, and the
 survey is careful about the difference. It does mean **whether the hand is
 actually touching the object, or hovering** is now a verdict a pipeline can
 record with evidence, which is the next field the annotation tree should grow.
+The distinction matters, though, and the survey draws it: the other route to
+tactile — [H-Tac](https://arxiv.org/html/2607.01067), whose largest component
+computes contact by *"thresholding the distance between the hand surface and
+object meshes"* — needs per-frame object geometry, which internet video does not
+come with. **Derived tactile is closed to found footage; predicted tactile is
+open.** H-Tac is worth the read anyway for what contact buys: contact-rich task
+progress went from **9.2% to 79.2%**.
 
 ### What already exists in open source
 
