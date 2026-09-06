@@ -211,8 +211,14 @@ them:
   against itself. WiLoR is where MANO is most visible, but the permissive
   alternative, **HaMeR (MIT)**, still requires MANO's registration-gated,
   non-commercial hand model, and the one method that tries to drop it still uses
-  MANO's joint regressor. Swapping WiLoR is an afternoon and buys a cleaner code
-  licence; MANO is the layer that decides whether any of it is shippable. The
+  MANO's joint regressor. And it runs deeper than annotation:
+  [EgoVLA](https://rchalyang.github.io/EgoVLA/) uses *"MANO hand parameters as a
+  shared action space for humans and robots"*, with its repo instructing you to
+  *"register at the MANO website"* — so MANO is the **interlingua** in which a
+  human hand and a robot hand are made commensurable, not a preprocessing step a
+  better reconstructor would remove. Swapping WiLoR is an afternoon and buys a
+  cleaner code licence; MANO is the layer that decides whether any of it is
+  shippable. The
   best lead out is **NIMBLE** — a bones-and-muscles hand model, MIT on the repo —
   but it is built in *"MANO topology"* and reuses manopth, so whether it clears
   those terms is unresolved and worth resolving before anything ships.

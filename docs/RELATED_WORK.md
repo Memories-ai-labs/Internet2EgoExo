@@ -40,6 +40,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [EgoAVFlow](#egoavflow--no-robot-demonstrations-still-means-a-board-in-every-scene)
   - [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean)
   - [EgoHumanoid](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator)
+  - [EgoVLA](#egovla--mano-as-the-action-space-not-just-the-annotation)
   - [World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild)
   - [Open-AoE](#open-aoe)
   - [EgoVerse](#egoverse)
@@ -474,8 +475,9 @@ average success rate over a no-pretraining baseline.**
 > because getting provenance right is the thing this document keeps asking of
 > everyone else.
 >
-> **Code is marked "Coming Soon"**, and **no dataset licence is stated
-> anywhere**. The arXiv listing carries CC BY 4.0, which governs the *paper* —
+> **Code is marked "Coming Soon"** — re-verified at the GEAR project page itself
+> this sweep, which shows *"[GitHub (Coming Soon!)]"* with no active link, no
+> data download, and no terms — and **no dataset licence is stated anywhere**. The arXiv listing carries CC BY 4.0, which governs the *paper* —
 > the same trap as [World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild)
 > and [EgoHumanoid](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator),
 > where a real licence on an adjacent artefact reads as terms for the data. So
@@ -803,6 +805,45 @@ five tracked body segments plus depth**. Whole-body transfer needs whole-body
 ground truth. Internet video gives you a viewport and nothing else, which is
 why the operations available to it stay filter, clip, annotate — and why the
 manifest has to record what a clip *cannot* support as carefully as what it can.
+
+### EgoVLA — MANO as the action space, not just the annotation
+
+**[arXiv 2507.12440](https://arxiv.org/pdf/2507.12440)** ·
+[project](https://rchalyang.github.io/EgoVLA/) ·
+[code](https://github.com/RchalYang/EgoVLA_Release) (181 stars) — the sixth
+published route in this section, and the one that shows how deep the
+[MANO dependency](#wilor--the-chokepoint-read-at-source) actually goes.
+
+**Mechanism, quoted.** *"MANO hand parameters are used as a shared action space
+for humans and robots"*, with human and robot aligned *"through a unified
+representation based on wrist pose and MANO hand parameters"*, then inverse
+kinematics and retargeting onto the robot. Trained on **TACO, HOT3D, HOI4D and
+HoloAssist** — existing commissioned corpora, not found footage. Evaluated on
+the **Ego Humanoid Manipulation Benchmark** built in NVIDIA Isaac Lab: 12 tasks,
+a Unitree H1 with Inspire dexterous hands, outperforming a no-pretraining
+baseline across all of them, *"with especially strong gains on long-horizon and
+fine-grained manipulation tasks."*
+
+🔴 **And the install instructions say the quiet part.** The repository requires
+you to *"Register at the MANO website and download the models"* and place them
+in the repo directory. Not a citation — a registration wall in the setup steps.
+
+> **This changes the shape of the chokepoint finding.** Sweeps 33–34 established
+> that MANO sits under the *annotation* path — WiLoR, HaMeR, HandOS all route
+> through it. EgoVLA shows it also sits under the *transfer* path: it is the
+> representation in which a human hand and a robot hand are made commensurable
+> at all. So MANO is not a preprocessing dependency that a better reconstructor
+> would remove. **It is the interlingua**, and a non-commercial,
+> registration-gated one. Anything that wants to translate between human and
+> robot hands currently borrows someone else's vocabulary for doing so — which
+> is a far more structural fact than "one popular model has an awkward licence",
+> and it is why [NIMBLE's unresolved status](#wilor--the-chokepoint-read-at-source)
+> matters beyond a dependency swap.
+>
+> **For this repo**, the practical read is unchanged but better grounded: found
+> footage supports filter, clip, annotate. The moment a pipeline tries to emit
+> *actions* in a space a robot can consume, it lands on MANO, and the rights
+> question arrives with it.
 
 ### World In Your Hands — the instrumentation ceiling, and a third "in the wild"
 
