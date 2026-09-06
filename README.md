@@ -169,6 +169,15 @@ metadata. That is what the viewpoint classifier, the hands gate, the annotation
 tree and the four hour measures are for. Retrieval finds candidates; it does not
 certify them.
 
+And the set of things worth asserting per clip is growing.
+[EgoTac](https://arxiv.org/html/2608.15060) predicts dense contact and force
+fields **from ordinary egocentric RGB**, zero-shot on Ego4D, EPIC-KITCHENS and
+EgoDex — footage recorded with no tactile hardware — at contact F1 above 0.70
+out of domain. That does not give found footage tactile *measurements*, and the
+survey is careful about the difference. It does mean **whether the hand is
+actually touching the object, or hovering** is now a verdict a pipeline can
+record with evidence, which is the next field the annotation tree should grow.
+
 ### What already exists in open source
 
 The chain here — crawl → decide viewpoint → clip → annotate — exists stage by

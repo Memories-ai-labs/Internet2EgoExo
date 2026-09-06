@@ -42,6 +42,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [EgoHumanoid](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator)
   - [EgoVLA](#egovla--mano-as-the-action-space-not-just-the-annotation)
   - [World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild)
+  - [EgoTac](#egotac--tactile-predicted-from-ordinary-video-and-a-ceiling-that-moved)
   - [Open-AoE](#open-aoe)
   - [EgoVerse](#egoverse)
   - [MobileEgo Anywhere](#mobileego-anywhere)
@@ -889,13 +890,71 @@ advertising *where the capture happened*, and is weak evidence that no found
 footage was involved.
 
 **Bearing here.** Tactile at 5 mN and wrist pose under 5 mm are things found
-footage will never have, at any scale, and it would be dishonest to pretend
-otherwise: for contact-rich dexterity there is a fidelity ceiling on internet
-video that no amount of verification lifts. What 1,045 instrumented hours cost —
+footage will never *carry*, and it would be dishonest to pretend otherwise: for
+contact-rich dexterity there is a measurement ceiling on internet video that no
+amount of verification lifts.
+
+🟡 **But "never have" was too strong, and the next entry is why.** Measured
+tactile and *estimated* tactile are different things, and
+[EgoTac](#egotac--tactile-predicted-from-ordinary-video-and-a-ceiling-that-moved)
+now predicts the second from ordinary egocentric RGB — zero-shot on Ego4D,
+EPIC-KITCHENS and EgoDex, none of which was recorded with a sensor. The ceiling
+on what found footage can be *annotated with* is lower than the ceiling on what
+it can be *measured to*, and it is moving. What 1,045 instrumented hours cost —
 a custom glove, a backpack computer, an operator per hour — is the other half of
 the trade, and it is why the two supplies are complements rather than rivals.
 The manifest discipline this repo applies exists precisely so a trainer can tell
 which kind of hour it is holding.
+
+### EgoTac — tactile predicted from ordinary video, and a ceiling that moved
+
+**[arXiv 2608.15060](https://arxiv.org/html/2608.15060)** — the entry that forced
+the qualification above, and the most directly useful result in this section for
+a pipeline that only ever has pixels.
+
+**Mechanism.** It predicts *"dense continuous tactile values"* and *"contact
+classification labels from temporal vision input"* — continuous **force fields**
+and discrete contact states, anchored to hand-mesh vertices, **from egocentric
+RGB clips**. Ground truth comes from the authors' own **EgoTac-SC**, captured on
+custom wearable gloves carrying **264 force sensors** across fingers and palm
+measuring pressure in newtons, supplemented by eight existing datasets — some
+contributing mesh-based analytical contact labels derived from geometry rather
+than sensor readings.
+
+**The number that matters here.** It performs *"zero-shot tactile predictions on
+unconstrained real-world videos"* including **EgoDex, EPIC-KITCHENS and Ego4D** —
+corpora recorded with no tactile hardware whatsoever. In-domain force prediction
+reaches **MAE below 0.06 N**; out-of-domain contact estimation reaches **F1 above
+0.70**, beating prior contact estimators on OAKINK2 and FPHA.
+
+**Licence.** The listing carries only the arXiv perpetual non-exclusive licence
+— the *paper's* — with **no code, data or release statement** in the document.
+The [fifth instance](#the-vocabulary-problem--four-phrases-that-do-not-mean-what-they-say)
+of the trap, so worth saying plainly: nothing here is obtainable yet.
+
+> **What this does to the argument, honestly stated.** It does **not** mean
+> found footage has tactile. It means the *instrumented* corpora — [World In
+> Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild),
+> EgoTac-SC — are turning into something other than a rival supply: **they are
+> the calibration set for estimators that then run on the cheap supply.** That
+> is the same shape as the hands gate one level up, where a model trained on
+> annotated data is applied to unannotated found clips, and it argues that the
+> two supplies are complements in a stronger sense than this document had it —
+> not "both useful for different jobs" but "one exists to make the other
+> legible."
+>
+> **And it lowers a bar for this repo specifically.** A clip's *contact* state —
+> is the hand actually touching the object, or hovering — is exactly the kind of
+> per-clip verdict the quality gates exist to record, and an F1 above 0.70
+> zero-shot on Ego4D-class footage is well past useless. It is not a licence to
+> claim a clip carries force measurements. It is a reason to expect the
+> annotation tree to grow a contact field before it grows anything else.
+>
+> ⚠️ **One usage note, since this document keeps track.** EgoTac's *"in the
+> wild"* means uncontrolled real-world environments — but unlike the other
+> instances catalogued in §15, its inference set genuinely *does* include found
+> corpora. The phrase misleads less here than elsewhere, which is worth
+> recording precisely because the pattern is not universal.
 
 ### Open-AoE
 
@@ -2642,7 +2701,7 @@ have put a false claim into this survey.
 
 | The phrase | What a reader assumes | What it denotes | Where |
 |---|---|---|---|
-| **"in the wild"** | found on the internet | *outside the robot's lab* — captured by the authors, on their own hardware, in real environments | [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean) (EgoVerse on Aria), [World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild) (own wearable suit), and the term's general use across [§2](#2-scaling-human-video-for-robot-learning) |
+| **"in the wild"** | found on the internet | *outside the robot's lab* — captured by the authors, on their own hardware, in real environments | [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean) (EgoVerse on Aria), [World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild) (own wearable suit), and the term's general use across [§2](#2-scaling-human-video-for-robot-learning). ✅ **One honest exception**: [EgoTac](#egotac--tactile-predicted-from-ordinary-video-and-a-ceiling-that-moved)'s in-the-wild inference really does run on found corpora |
 | **"from existing web sources"** | crawled from the internet | *from existing public research datasets* — Ego4D, EPIC-KITCHENS, HowTo100M, Something-Something | [RynnVLA-001](#rynnvla-001--filter-dont-convert) |
 | **a licence on the paper / the code / the repo** | the terms of the **data** | the terms of that adjacent artefact only — the dataset's terms are separate, and often absent | [EgoScale](#egoscale) (arXiv CC BY 4.0), [NIMBLE](#wilor--the-chokepoint-read-at-source) (repo MIT, paper CC BY), [EgoExoLearn](#egoexolearn) and [EgoHumanoid](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator) (code MIT / Apache 2.0) |
 | **a dataset named for its size** | that many hours of the thing you want | often a different unit, a different viewpoint, or a different corpus entirely | [Ego-1K](#ego-1k) — 956 clips of 8–10 s, not 1,000 hours; [Ego-Exo4D](#ego-exo4d) — 1,286 h of which **221 are egocentric** |
