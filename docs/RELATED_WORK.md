@@ -29,6 +29,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [Ego-1K](#ego-1k)
   - [ENIGMA-360](#enigma-360)
   - [SABER](#saber--commissioned-egoexo-capture-in-a-domain-the-internet-is-full-of)
+  - [Ego-OSCAR](#ego-oscar--capture-at-200-and-a-fifth-licence-shape)
 - [2. Scaling human video for robot learning](#2-scaling-human-video-for-robot-learning)
   - [The robot-native denominator](#the-robot-native-denominator)
   - [EgoDex](#egodex)
@@ -349,6 +350,56 @@ opposite provenance, same decision: hours over pixels. That is now a pattern
 rather than a Build AI idiosyncrasy — and it makes the counter-position
 legibility is what a manipulation corpus is *for* a lonelier but better-evidenced
 place to stand.
+
+### Ego-OSCAR — capture at $200, and a fifth licence shape
+
+**[arXiv 2608.08285](https://arxiv.org/html/2608.08285v1)** ·
+[hardware + software](https://github.com/fpv-labs/ego-oscar) ·
+[dataset](https://huggingface.co/datasets/fpvlabs/stereo-550) — the entry that
+puts a number on what commissioned capture now costs, and the one this document
+should least like to find, because it narrows the economic gap it argues from.
+
+**The rig.** A hardware-synchronised **global-shutter stereo camera** plus a
+6-axis IMU, an embedded Linux SBC doing on-device encoding, and a realtime
+microcontroller for feedback and watchdog — from **commercially available parts
+and 3D-printed housings**, at a complete bill of materials of about **USD 200**.
+Hardware designs, capture software and the corpus are all open-sourced.
+
+**The corpus (Stereo-550).** **~550 hours per camera** — roughly **1,100 stereo
+camera-hours** — across **1,462 sessions** from **25 contributors** in **40+
+indoor environments**, kitchen-centric plus textile work, laundry, cleaning and
+organising. Shipped with **209,315 labelled action segments** (460 verbs, 32,630
+object phrases, free-form captions with timestamps), **per-session stereo
+calibration**, **IMU synchronised in 1,271 of 1,462 sessions (86.9%)**, and
+corpus-wide 3D hand reconstructions.
+
+🔴 **And the licence is a shape [§11](#11-the-licence-trap) has not seen: a
+bespoke one.** The card shows **`fpvlabs-license`** — *"released by FPV Labs for
+research use under the FPV Labs dataset license"*, with a note that
+**commercial usage allowed**. Those two clauses sit oddly together, and that is
+the point: **a custom licence string tells a reader nothing by name.** Apache,
+CC BY-NC-SA, MIT — each is a known quantity you can reason about without opening
+it. A one-publisher licence has to be read, in full, every time, and cannot be
+compared across a corpus of datasets or checked by a script. Access is also
+**gated**: *"Request controlled access to Stereo-550."*
+
+> **The honest consequence for this document's economics.** §12 and §13 argue
+> from a cost asymmetry: commissioned hours are expensive, found hours are
+> cheap. **Ego-OSCAR narrows that gap and says so out loud** — a rig anyone can
+> build for the price of a phone, an open capture stack, and eleven hundred
+> camera-hours to show it works. It is the strongest instance in this document
+> of §13's finding that *open source went hard at capture*, and it should be
+> read as a genuine reduction in the advantage found footage has on price.
+>
+> **What it does not narrow** is everything downstream of price. Those 550 hours
+> are 25 people in 40-odd indoor rooms doing kitchen and household work — the
+> coverage you get is the coverage you funded, which is the same trade
+> [ENIGMA-360](#enigma-360) and [SABER](#saber--commissioned-egoexo-capture-in-a-domain-the-internet-is-full-of)
+> make. A requirement for *industrial assembly in humid conditions*, or *left-handed
+> tool use*, or *any of the long tail*, is not answered by a cheaper rig; it is
+> answered by finding footage that already exists or by funding a new shoot. And
+> the bespoke licence is a reminder that cheap to *make* is not the same as
+> simple to *use*.
 
 **Where we differ.** Commissioned capture buys control and pays in cost and
 coverage: you get exactly the 123 scenes you funded. This system inverts the
@@ -1991,6 +2042,7 @@ Reading the licences across this document produces the wider pattern:
 | **HOI4D** | **CC BY-NC 4.0** | ❌ non-commercial |
 | ENIGMA-360 | CC BY 4.0 | ✅ with attribution |
 | **SABER** | **CC BY-NC 4.0 — on a 10 K-sample subset only; the full corpus is vendor-gated** | ❌ non-commercial, and partial |
+| **Ego-OSCAR / Stereo-550** | **`fpvlabs-license`** — a bespoke one: "research use", but "commercial usage allowed"; gated | ⚠️ **unclassifiable by name** — must be read in full, every time |
 | EgoCS-400K | CC BY 4.0 | ✅ with attribution (rendered gameplay, not real-world footage) |
 | **World In Your Hands** | **none stated in the paper; "will be open-source"** | ⚠️ unresolved — get the dataset licence in writing |
 | **LAION-BVD** | **research only** | ❌ |

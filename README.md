@@ -333,6 +333,18 @@ web is the hole between them: the tools that touch the internet are
 viewpoint-blind by construction, and published guidance for sourcing ego footage
 still amounts to *manually searching YouTube for "egocentric view"*.
 
+**And the honest counterweight, because capture is getting cheaper.**
+[Ego-OSCAR](https://arxiv.org/html/2608.08285v1) is an open stereo-inertial rig
+at a **~$200 bill of materials** — hardware, capture software and corpus all
+open-sourced — shipping **1,100 stereo camera-hours** with 209,315 labelled
+action segments. That genuinely narrows the price gap this repo argues from, and
+the survey says so. What it does not narrow is coverage: those hours are 25
+people in 40-odd indoor rooms doing household work. A cheaper rig does not answer
+a requirement for the long tail; finding footage that already exists does, or
+funding a new shoot does. (Its licence is also a shape worth knowing about — a
+bespoke `fpvlabs-license` that says "research use" and "commercial usage
+allowed" in the same breath, and so tells you nothing by name.)
+
 **The strongest single piece of evidence is what the best-resourced actor did.**
 When NVIDIA needed the largest egocentric corpus ever assembled for a world model
 — [DreamDojo](https://arxiv.org/html/2602.06949), 44,711 hours — it
