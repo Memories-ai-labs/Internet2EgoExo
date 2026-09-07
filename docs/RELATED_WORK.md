@@ -880,6 +880,17 @@ only the standard arXiv perpetual non-exclusive licence, which governs the
 second failure mode — **terms unstated** — and not under the first. Anyone
 planning against it should get the actual dataset licence in writing.
 
+🔴 **And the promise has now been checked, twice, and has not landed.** A later
+sweep looked for the release: **no repository, no Hugging Face dataset, no
+download location and no licence** surfaced for WIYH or the Oracle Suite, months
+after the paper. The only findable artefact remains the arXiv entry. As with
+[Egocentric-1M](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost), this
+document does not claim the release will not happen — it claims the narrower,
+checkable thing: **"will be open-source" has not yet become anything a reader
+can obtain, and the gap is now measured in months rather than asserted.** That
+is the difference between the second failure mode and the third, and WIYH is
+drifting from one to the other.
+
 **And "in the wild" means what it always means here.** Third instance, after
 [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean) and the phrase's usage
 throughout this section: the paper's *in-the-wild* is *"collected in diverse
@@ -2853,7 +2864,7 @@ trust the rest of it.
 - Damen et al. *Scaling Egocentric Vision: The EPIC-KITCHENS Dataset.* https://arxiv.org/pdf/1804.02748
 - Huang et al. *EgoExoLearn.* CVPR 2024. https://github.com/OpenGVLab/EgoExoLearn
 - *HOI4D.* (CC BY-NC 4.0) https://arxiv.org/pdf/2404.09933 · https://hoi4d.github.io/
-- *ENIGMA-360: An Ego-Exo Dataset for Human Behavior Understanding in Industrial Scenarios.* (CC BY 4.0) https://arxiv.org/html/2603.09741v1 · project page https://iplab.dmi.unict.it/ENIGMA-360 **returns HTTP 500 as of this sweep — cite the arXiv HTML**
+- *ENIGMA-360: An Ego-Exo Dataset for Human Behavior Understanding in Industrial Scenarios.* (CC BY 4.0) https://arxiv.org/html/2603.09741v1 · project page https://iplab.dmi.unict.it/ENIGMA-360 **has been unreachable across three checks, with a different error each time — HTTP 500, then a connection failure, now HTTP 403 — while the lab host itself returns 200. Unstable rather than removed; cite the arXiv HTML**
 - *SABER: A Scalable Action-Based Embodied Dataset for Real-World VLA Adaptation.* DreamVu. (10 K-sample subset CC BY-NC 4.0; full corpus vendor-gated) https://arxiv.org/html/2605.09613v1 · https://huggingface.co/datasets/DreamVu/SABER-10K
 - *EgoDex: Learning Dexterous Manipulation from Large-Scale Egocentric Video.* (CC-BY-NC-ND) https://arxiv.org/html/2505.11709v1
 - *EgoScale: Scaling Dexterous Manipulation with Diverse Egocentric Human Data.* GEAR @ NVIDIA Research. (code "coming soon"; no licence stated) https://arxiv.org/abs/2602.16710 · https://research.nvidia.com/labs/gear/egoscale/
