@@ -373,15 +373,26 @@ object phrases, free-form captions with timestamps), **per-session stereo
 calibration**, **IMU synchronised in 1,271 of 1,462 sessions (86.9%)**, and
 corpus-wide 3D hand reconstructions.
 
-🔴 **And the licence is a shape [§11](#11-the-licence-trap) has not seen: a
-bespoke one.** The card shows **`fpvlabs-license`** — *"released by FPV Labs for
-research use under the FPV Labs dataset license"*, with a note that
-**commercial usage allowed**. Those two clauses sit oddly together, and that is
-the point: **a custom licence string tells a reader nothing by name.** Apache,
-CC BY-NC-SA, MIT — each is a known quantity you can reason about without opening
-it. A one-publisher licence has to be read, in full, every time, and cannot be
-compared across a corpus of datasets or checked by a script. Access is also
-**gated**: *"Request controlled access to Stereo-550."*
+🔴 **And the licensing is a shape [§11](#11-the-licence-trap) has not seen:
+bespoke, and split.** The **hardware and capture software are Apache 2.0** —
+verified at the repository's own `LICENSE` file this sweep. The **dataset is
+not**. Its card shows **`fpvlabs-license`** — *"released by FPV Labs for research
+use under the FPV Labs dataset license"*, with a note that **commercial usage
+allowed**. Those two clauses sit oddly together, and that is the point: **a
+custom licence string tells a reader nothing by name.** Apache, CC BY-NC-SA, MIT
+— each is a known quantity you can reason about without opening it. A
+one-publisher licence has to be read in full, every time, and cannot be compared
+across a corpus of datasets or checked by a script.
+
+⚠️ **Except that here it cannot be read at all before you agree to it.** The
+dataset is gated — *"Request controlled access to Stereo-550"* — and this sweep
+found the licence text nowhere public: the card's files return **401**
+unauthenticated, and the project essay names no terms, pointing only at Hugging
+Face, GitHub and Google Drive. **So the terms you are being asked to accept are
+themselves behind the acceptance.** That is not unusual for gated corpora, and
+nothing improper is alleged. But it defeats the one thing a bespoke licence
+requires — reading it — and it is the reason this document records the field as
+*unclassifiable* rather than guessing from the summary line.
 
 > **The honest consequence for this document's economics.** §12 and §13 argue
 > from a cost asymmetry: commissioned hours are expensive, found hours are
@@ -2042,7 +2053,8 @@ Reading the licences across this document produces the wider pattern:
 | **HOI4D** | **CC BY-NC 4.0** | ❌ non-commercial |
 | ENIGMA-360 | CC BY 4.0 | ✅ with attribution |
 | **SABER** | **CC BY-NC 4.0 — on a 10 K-sample subset only; the full corpus is vendor-gated** | ❌ non-commercial, and partial |
-| **Ego-OSCAR / Stereo-550** | **`fpvlabs-license`** — a bespoke one: "research use", but "commercial usage allowed"; gated | ⚠️ **unclassifiable by name** — must be read in full, every time |
+| **Ego-OSCAR** — hardware + software | **Apache 2.0** (verified at the repo's `LICENSE`) | ✅ |
+| **Ego-OSCAR** — Stereo-550 dataset | **`fpvlabs-license`**, bespoke: "research use", but "commercial usage allowed"; gated, **and the licence text itself is behind the gate** | ⚠️ **unclassifiable** — the one thing a custom licence needs is a reading, and it cannot be read before agreeing |
 | EgoCS-400K | CC BY 4.0 | ✅ with attribution (rendered gameplay, not real-world footage) |
 | **World In Your Hands** | **none stated in the paper; "will be open-source"** | ⚠️ unresolved — get the dataset licence in writing |
 | **LAION-BVD** | **research only** | ❌ |

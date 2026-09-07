@@ -343,7 +343,10 @@ people in 40-odd indoor rooms doing household work. A cheaper rig does not answe
 a requirement for the long tail; finding footage that already exists does, or
 funding a new shoot does. (Its licence is also a shape worth knowing about — a
 bespoke `fpvlabs-license` that says "research use" and "commercial usage
-allowed" in the same breath, and so tells you nothing by name.)
+allowed" in the same breath, and so tells you nothing by name. The hardware and
+capture software are plain Apache 2.0; the dataset is not, and its licence text
+sits behind the same gate you need it to decide whether to pass — so the one
+thing a custom licence requires, reading it, cannot happen before you agree.)
 
 **The strongest single piece of evidence is what the best-resourced actor did.**
 When NVIDIA needed the largest egocentric corpus ever assembled for a world model
