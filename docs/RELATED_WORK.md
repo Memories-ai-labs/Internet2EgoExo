@@ -42,6 +42,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean)
   - [EgoHumanoid](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator)
   - [EgoVLA](#egovla--mano-as-the-action-space-not-just-the-annotation)
+  - [Being-H0.5](#being-h05--the-mano-action-space-at-35000-hours-and-a-preview-subset-with-no-terms)
   - [World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild)
   - [EgoTac](#egotac--tactile-predicted-from-ordinary-video-and-a-ceiling-that-moved)
   - [H-Tac](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual)
@@ -969,6 +970,96 @@ in the repo directory. Not a citation — a registration wall in the setup steps
 > footage supports filter, clip, annotate. The moment a pipeline tries to emit
 > *actions* in a space a robot can consume, it lands on MANO, and the rights
 > question arrives with it.
+
+### Being-H0.5 — the MANO action space at 35,000 hours, and a preview subset with no terms
+
+**[arXiv 2601.12993](https://arxiv.org/html/2601.12993v1)** (v1, 19 Jan 2026,
+BeingBeyond; project page `research.beingbeyond.com/being-h05`) — the largest
+instance in this document of the [shared-action-space route](#egovla--mano-as-the-action-space-not-just-the-annotation),
+and the one that makes the MANO finding hardest to dismiss as a quirk of one
+paper.
+
+**Mechanism.** A cross-embodiment VLA built on the premise that *"human
+interaction traces"* are a universal *"mother tongue"* for physical interaction.
+A **Unified Action Space** maps heterogeneous robot controls into semantically
+aligned slots so *"low-resource robots"* can bootstrap from human data; a
+Mixture-of-Transformers with a **Mixture-of-Flow** design separates shared motor
+primitives from embodiment-specific experts. **LIBERO 98.9%, RoboCasa 53.9%**,
+with real-robot results on **five platforms**.
+
+**Scale, quoted.** **UniHand-2.0**, *"the largest embodied pre-training recipe to
+date"*: **35,000+ hours**, **120 billion tokens**, **400 M+ samples**, across
+**30 distinct robotic embodiments**. The split is the interesting part —
+**16,000 h egocentric human video, 14,000 h robot manipulation, 5,000 h
+visual-language** — and the human half yields *"134 million human data
+samples… a 100× increase over UniHand-1.0"*.
+
+🔴 **It builds directly on Egocentric-10K, which gives the derivation map its
+first downstream consumer of the Build AI corpus.** The human-video half
+integrates *"in-the-wild egocentric videos from large-scale public repositories,
+including Ego4D, EPIC-KITCHENS, Egocentric-10K, etc."* So the free-hours corpus
+of [§12](#egocentric-10k) is no longer only a thing that exists — it is a thing
+something at 35,000 hours was built on.
+
+⚠️ **And their own assessment of it is this document's argument, in someone
+else's words.** *"Egocentric-10K features 10,000 hours of in-the-wild industrial
+footage but provides only raw RGB streams without annotation."* Ego4D and
+Ego-Exo4D *"provide rich semantic descriptions but lack geometric depth"*. That
+is an independent team, having actually used the corpora, reaching §12's
+conclusion: **the hours are free and the annotation is the cost.** Their response
+is [§1](#1-commissioned-egocentric-and-egoexo-capture)'s: **UniCraftor**, a *"portable,
+extensible, and affordable"* rig capturing depth, keyframe events and camera
+extrinsics, yielding **200+ hours across 43 tasks** — a second instance, after
+[Ego-OSCAR](#ego-oscar--capture-at-200-and-a-fifth-licence-shape), of a 2026 team
+deciding that cheap purpose-built capture beats annotating what is already free.
+
+🔴 **MANO again, at the action-space layer, independently.** The paper's own
+lineage puts it beyond doubt: *"EgoVLA constructs a shared action space using
+MANO hand-model parameters"*, and *"Being-H0 scales this paradigm by introducing
+a motion tokenizer that discretizes continuous **MANO** trajectories into tokens
+for large-scale instruction tuning."* Being-H0.5 extends that line. So the
+[MANO chokepoint](#wilor--the-chokepoint-read-at-source) is not one team's
+choice — **two independent groups, asked to make a human hand and a robot hand
+commensurable, both reached for MANO**, and the second then scaled it to 16,000
+hours of human video.
+
+🔴 **Rights: Apache 2.0 code, and a released dataset with no licence at all.**
+Three artefacts, three positions:
+
+| Artefact | Status | Terms |
+|---|---|---|
+| `BeingBeyond/Being-H` code | released | **Apache-2.0**, stated in the repo README and `LICENSE` |
+| **`BeingBeyond/UniHand_Preview`** | **released, ungated, 13,377 monthly downloads** | 🔴 **none** — the card carries `task_categories` and `tags` and **no `license` field**; its entire prose is one line plus two BibTeX blocks |
+| UniHand-2.0, the full 35,000 h | **not released** | not stated |
+
+**The middle row is the one that matters**, and it is the fourth licence shape —
+*partially released* — with a twist [SABER](#saber--commissioned-egoexo-capture-in-a-domain-the-internet-is-full-of)
+did not have. SABER's released quarter at least carries CC BY-NC 4.0. Here the
+released subset carries nothing, and **the card does not say what is in it**:
+*"This data is a subset of the pretraining data for Being-H0.5."* Since the
+mixture it is drawn from includes **Ego4D** (unpublished agreement) and
+**EPIC-KITCHENS** (non-commercial), a reader cannot determine from the artefact
+whether the subset contains material governed by those terms, or only the team's
+own UniCraftor and in-house recordings. *No non-compliance is alleged —* the
+point is precisely that **it cannot be determined from what is published**, by
+anyone, including its 13,000 monthly downloaders.
+
+> **The OpenEgo comparison, made twice now.**
+> [OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly)
+> aggregates six corpora and ships `ATTRIBUTION.md` with per-source licence text
+> and an annotations-only redistribution rule.
+> [H-Tac](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual)
+> aggregates eleven and states nothing — but it also releases nothing, so the
+> question stays theoretical. **UniHand_Preview is the same omission on an
+> artefact people are actually downloading**, which makes it the stronger
+> counterfactual of the two. The distance between best and worst practice here is
+> one file that OpenEgo wrote and nobody else did.
+>
+> **For this repo**: the entry earns its place twice over. It is the strongest
+> outside confirmation of §12's free-hours-cost-annotation argument, and it is
+> the cleanest demonstration of why §14 keeps the *rights record format* on the
+> build side. A 35,000-hour recipe, an Apache-2.0 codebase, state-of-the-art
+> numbers — and the released data still cannot be traced to its sources.
 
 ### World In Your Hands — the instrumentation ceiling, and a third "in the wild"
 
@@ -2100,7 +2191,7 @@ Reading the licences across this document produces the wider pattern:
 | Asset | Licence | Commercial use |
 |---|---|---|
 | Egocentric-10K / -100K | Apache 2.0 | ✅ (see §12 caveats) |
-| Egocentric-1M | Apache 2.0 *(reported only; absent from the publisher's own dataset listing)* | ⚠️ confirm the release exists before relying on it |
+| Egocentric-1M | Apache 2.0 *(reported only; absent from the publisher's complete API index, five attempts)* | ⚠️ confirm the release exists before relying on it — and note that an **empty third-party repo of the same name** now carries an `mit` tag |
 | Action100M | CC BY 4.0 | ✅ with attribution |
 | Open-AoE | CC BY 4.0 | ✅ with attribution |
 | EgoLive | CC BY 4.0 | ✅ with attribution (distributed via JD Cloud) |
@@ -2136,6 +2227,7 @@ Reading the licences across this document produces the wider pattern:
 | **AgiBotWorld-Beta** | **CC BY-NC-SA 4.0**, contact-gated | ❌ non-commercial **and** share-alike — the most restrictive terms here |
 | DROID | open dataset; terms not stated on the project page (**re-checked; still silent** — the page says only that the dataset, training code and hardware guide are open-sourced) | ⚠️ unresolved |
 | EgoExoLearn | **MIT on the code**; dataset terms not separately stated, access unrestricted | ⚠️ code clear, data unresolved |
+| **Being-H0.5 / UniHand_Preview** | **Apache-2.0 on the code**; the released dataset subset states **no licence**, ungated, 13,377 monthly downloads | 🔴 released and actively used, provenance undeterminable |
 | **Open X-Embodiment** | **none stated; 60 pooled components, position unstated** | ⚠️ unknowable without tracing 60 upstream datasets |
 
 Note what the bottom half of that table has in common: the field's **most-cited**
@@ -2296,6 +2388,7 @@ except the one marked as an inference.
 | [EgoVid-5M](#egovid-5m) (5 M clips) | **Ego4D** annotations; video fetched from Ego4D | Ego4D's unpublished agreement |
 | [Panda-70M](#panda-70m) (70 M clips) | **HD-VILA-100M** | inherits upstream, stated |
 | [annotated-egocentric-10k](#annotated-egocentric-10k-dataset) | **Egocentric-10K** | Apache 2.0 — a clean chain |
+| 🔴 [Being-H0.5](#being-h05--the-mano-action-space-at-35000-hours-and-a-preview-subset-with-no-terms) / UniHand-2.0 (35,000 h) | Ego4D + EPIC-KITCHENS + **Egocentric-10K** + in-house UniCraftor 200 h | Ego4D's agreement and EPIC's non-commercial terms enter a mixture whose **released preview subset states no licence and does not say what is in it** |
 | 🔴 [H-Tac](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) (HOI-Tac, ~106 h) | **11 public datasets** — ARCTIC, DexYCB, H2O, H2O3D, HO3D, HOCap, HOI4D, HOT3D, InterHand2.6M, OakInk-v1/v2 | **The largest aggregation here and the least documented**: no licence stated for H-Tac, inputs described only as "public datasets", no release. HOI4D alone is CC BY-NC |
 | ✅ [OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly) (1,107 h) | **EgoDex 829 h** + HoloAssist 166 + CaptainCook4D 54 + HOI4D 44 + HOT3D 13.3 + HO-Cap 0.67 | **The only row that solves it**: annotations only, no video redistributed, each source's licence text shipped with attribution, and explicit author permission for the CC-BY-NC-ND component |
 | [Open X-Embodiment](#the-robot-native-denominator) | **60 datasets, 34 labs** | unknowable without tracing sixty |
@@ -2375,40 +2468,92 @@ progression, in five months:
 |---|---|---|---|---|
 | Egocentric-10K | Nov 2025 | 10,000 | 1920×1080 | Apache 2.0 |
 | [Egocentric-100K](https://huggingface.co/datasets/builddotai/Egocentric-100K) | Dec 2025 | **100,405** | **456×256** | Apache 2.0 |
-| Egocentric-1M | Apr 2026 | ~1,000,000 (reported) | not verified | Apache 2.0 (reported) |
+| Egocentric-1M | Apr 2026 (reported) | ~1,000,000 (reported) | **not verified, five attempts** | Apache 2.0 (reported) |
 
 **Egocentric-100K, verified at the dataset card**: 100,405 hours, **10.8 billion
 frames**, 2,010,759 clips, 24.79 TB, 30 fps H.265, monocular head-mounted
 **fisheye** Build AI Gen 1, per-worker calibrated camera intrinsics, mean 7.06
 hours per worker, Apache 2.0, access gated behind sharing contact information.
 
-🔴 **Egocentric-1M could not be found at the publisher, across four separate
+🔴 **Egocentric-1M could not be found at the publisher, across five separate
 attempts.** In order: its Hugging Face card returns 401 to an unauthenticated
 fetch; it does not surface in dataset search, where the 100K and 10K-Evaluation
 cards do; **Build AI's own Hugging Face organisation page lists exactly four
-datasets, and Egocentric-1M is not among them**; and a fourth attempt, run
+datasets, and Egocentric-1M is not among them**; a fourth attempt, run
 months later against Hugging Face's `egocentric` dataset search, returned
 **Egocentric-10K, Egocentric-10K-Evaluation, Egocentric-100K and
 Egocentric-100K-Evaluation — all four under `builddotai`, and no
-Egocentric-1M**. Four routes, one publisher, nothing:
+Egocentric-1M**; and a fifth, this sweep, replaced searching with the
+publisher's **complete machine-readable index** —
+`GET /api/datasets?author=builddotai&full=true` returns **exactly four records**,
+listed below, and Egocentric-1M is not one of them. That is a stronger negative
+than the four before it: a search can miss a thing, but an exhaustive author
+listing that returns four is a claim about all of them. **Note also the
+last-modified dates: both headline sets were last touched 2026-02-16**, roughly
+two months *before* the release date the secondary coverage gives, so nothing
+moved at the publisher around the date in question either.
 
-| Dataset | Last updated | Downloads, first reading | Downloads, this sweep |
-|---|---|---|---|
-| Egocentric-10K | Feb 16 | 343 | **34.5 k** |
-| **Egocentric-100K** | Feb 16 | **161,000** | **1.95 M** *(the cards say 164,868 — see below)* |
-| Egocentric-100K-Evaluation | Dec 9, 2025 | 198 | 30 k |
-| Egocentric-10K-Evaluation | Nov 10, 2025 | 158 | 30 k |
+⚠️ **And the first of those five attempts was never evidence, which this document
+should have caught earlier.** The 401 was read as "the card exists but is
+gated". Tested this sweep with a control, it means nothing: `builddotai/Egocentric-1M`,
+`builddotai/Egocentric-1000K` and an **invented** `build-ai/Egocentric-1M` all
+return the *identical* 401 — the same response `apple/EgoDex` gives for a real
+gated card. **Hugging Face answers "does not exist" and "exists but you may not
+see it" with the same status code**, so a 401 distinguishes nothing and never
+did. Four real attempts, then, plus one that proved nothing and was counted
+anyway.
 
-Both columns are the organisation listing's own figures at two readings months
-apart. The counter is a **rolling monthly rate**, not a lifetime total, and the
-two surfaces do not agree for Egocentric-100K — both problems are worked through
-where the ratio is used, [below](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost).
+🔴 **Meanwhile the name is now occupied — by an empty repository.** Full-text
+search for `Egocentric-1M` returns exactly one hit, and it is not Build AI's:
+**`easpeeder/Egocentric-1M`**, created 3 Aug 2026, ungated, public, **two files**
+— `.gitattributes` and a `README.md` whose *entire contents* are 21 bytes of
+front matter:
+
+```yaml
+---
+license: mit
+---
+```
+
+No data, no description, no card, seven downloads. **An automated licence or
+availability scraper pointed at that name would record "Egocentric-1M — MIT,
+ungated, public" and be wrong in every way that matters.** It is the
+[size-named-dataset trap](#the-vocabulary-problem--four-phrases-that-do-not-mean-what-they-say)
+in its purest form: the name asserts a million hours, the artefact is a
+licence tag. Nothing here suggests bad faith by its uploader — a placeholder is
+a perfectly ordinary thing to push — but it is a good demonstration that **a
+name plus a licence field is not an artefact**, and that the checks in this
+document have to be run against contents, not identifiers.
+
+Five routes, one publisher, nothing:
+
+| Dataset | Last modified | Org listing, first reading | Org listing, later | **API, this sweep** | Likes |
+|---|---|---|---|---|---|
+| Egocentric-10K | **2026-02-16** | 343 | 34.5 k | **34,587** | 349 |
+| **Egocentric-100K** | **2026-02-16** | **161,000** | **1.95 M** | **156,632** | 138 |
+| Egocentric-100K-Evaluation | 2025-12-09 | 198 | 30 k | **214** | 7 |
+| Egocentric-10K-Evaluation | 2025-11-10 | 158 | 30 k | **382** | 17 |
+
+The counter is a **rolling monthly rate**, not a lifetime total. ⚠️ **And the
+last column settles which surface to trust.** This document has recorded for
+several sweeps that the organisation listing and the dataset cards disagree,
+without being able to say which was anomalous. Queried directly, the API returns
+**156,632 and 34,587 — matching the cards exactly**, and **214 and 382 against
+the listing's "30 k" for both evaluation sets**. Two independent surfaces agree
+against the third, so the **organisation listing is the outlier** and the
+card-to-card comparison used [below](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost)
+is the right one. A discrepancy noted three times finally has an answer, and it
+came from asking a third source rather than re-reading the first two.
 
 This document does not claim the release does not exist — it may be private,
 gated below the listing, or planned. What it claims is narrower and checkable:
 **the ~1 M hours, the April 2026 date and the Apache 2.0 terms rest entirely on
-secondary coverage — which still repeats them — and four attempts at the
-publisher's own surfaces, spread over months, found nothing.** Anyone sizing a plan against it should get it confirmed first.
+secondary coverage — which still repeats them, in fresh articles, with the date
+sharpened to 8 April 2026 — and five attempts at the publisher's own surfaces,
+spread over months and ending in an exhaustive index rather than a search, found
+nothing.** Anyone sizing a plan against it should get it confirmed first. **The
+confidence of the secondary coverage has gone up while the evidence has stayed at
+zero**, which is the specific pattern this document exists to interrupt.
 
 **The argument in this section does not depend on that row.** The verified step —
 10,000 h at 1080p to 100,405 h at 456×256 — is the whole of the point, and it is
@@ -2923,7 +3068,7 @@ have put a false claim into this survey.
 | **"in the wild"** | found on the internet | *outside the robot's lab* — captured by the authors, on their own hardware, in real environments | [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean) (EgoVerse on Aria), [World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild) (own wearable suit), and the term's general use across [§2](#2-scaling-human-video-for-robot-learning). ✅ **One honest exception**: [EgoTac](#egotac--tactile-predicted-from-ordinary-video-and-a-ceiling-that-moved)'s in-the-wild inference really does run on found corpora |
 | **"from existing web sources"** | crawled from the internet | *from existing public research datasets* — Ego4D, EPIC-KITCHENS, HowTo100M, Something-Something | [RynnVLA-001](#rynnvla-001--filter-dont-convert) |
 | **a licence on the paper / the code / the repo** | the terms of the **data** | the terms of that adjacent artefact only — the dataset's terms are separate, and often absent | [EgoScale](#egoscale) (arXiv CC BY 4.0), [NIMBLE](#wilor--the-chokepoint-read-at-source) (repo MIT, paper CC BY), [EgoExoLearn](#egoexolearn) and [EgoHumanoid](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator) (code MIT / Apache 2.0) |
-| **a dataset named for its size** | that many hours of the thing you want | often a different unit, a different viewpoint, or a different corpus entirely | [Ego-1K](#ego-1k) — 956 clips of 8–10 s, not 1,000 hours; [Ego-Exo4D](#ego-exo4d) — 1,286 h of which **221 are egocentric** |
+| **a dataset named for its size** | that many hours of the thing you want | often a different unit, a different viewpoint, a different corpus entirely — or no corpus at all | [Ego-1K](#ego-1k) — 956 clips of 8–10 s, not 1,000 hours; [Ego-Exo4D](#ego-exo4d) — 1,286 h of which **221 are egocentric**; **`easpeeder/Egocentric-1M`** — a public, MIT-tagged repo containing [two files and no data](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 
 > **The operational lesson, and it is the same one every time.** Every entry in
 > the right-hand column was recovered by opening the source and reading a
@@ -2963,7 +3108,7 @@ trust the rest of it.
 | Ego-Exo4D is ~1,286 h of egocentric video | Official docs: **1286.30 video hours, 221.26 ego-hours, 5035 takes** — about **17%** egocentric. The same page also says **1,422 h** in its narrative, so cite the figure *with its sentence* | [§1](#ego-exo4d) |
 | Ego-Exo4D has **740 participants across 123 scene contexts** *(the CVPR paper's figures — this document carried them for forty sweeps)* | The official docs now say **more than 800 participants** across **131** natural settings | [§1](#ego-exo4d) |
 | EgoDex's CC-BY-NC-ND terms are stated in the paper *(this document, re-verified and recorded as "unchanged" for forty-four sweeps)* | Stated in **v1 and v2**; **v3 (9 Mar 2026) states no licence at all** and drops the "Dataset Access" appendix. The terms are still in force but survive only in two unversioned READMEs. The scale figures came through the revision untouched — **it was the rights statement that moved, not the numbers** | [§2](#egodex), [§11](#11-the-licence-trap) |
-| Build AI released ~1 M hours (Egocentric-1M) | **Not findable at the publisher across four attempts** spread over months | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
+| Build AI released ~1 M hours (Egocentric-1M) | **Not findable at the publisher across five attempts** spread over months, the last being the complete API index rather than a search. The only artefact of that name anywhere is an **empty third-party repo** — two files, a 21-byte README, no data | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 | EgoWAM trains on in-the-wild internet video | Its in-the-wild data is **EgoVerse on Project Aria**, flow from Aria VIO poses | [§2](#egowam--and-what-in-the-wild-turns-out-to-mean) |
 | EgoAVFlow needs no special capture, since it needs no robot demos | **Head-mounted RealSense D435 RGBD, plus a ChArUco board in every scene** | [§2](#egoavflow--no-robot-demonstrations-still-means-a-board-in-every-scene) |
 | World In Your Hands is research-only, commercial restricted | **No dataset licence is stated.** "Will be open-source" is a promise, not a grant | [§2](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild) |
@@ -3046,6 +3191,7 @@ trust the rest of it.
 - NVIDIA. *Cosmos World Foundation Model Platform for Physical AI.* https://arxiv.org/abs/2501.03575
 - NVIDIA. *NeMo Curator.* https://github.com/NVIDIA-NeMo/Curator
 - NVIDIA. *DreamDojo: A Generalist Robot World Model from Large-Scale Human Videos.* ICML 2026. (code Apache 2.0; video terms unstated) https://arxiv.org/html/2602.06949 · https://github.com/NVIDIA/DreamDojo
+- Luo et al. (BeingBeyond). *Being-H0.5: Scaling Human-Centric Robot Learning for Cross-Embodiment Generalization.* arXiv:2601.12993, 19 Jan 2026. (code Apache-2.0; UniHand_Preview released with **no stated licence**; full UniHand-2.0 unreleased) https://arxiv.org/html/2601.12993v1 · https://github.com/BeingBeyond/Being-H · https://huggingface.co/datasets/BeingBeyond/UniHand_Preview
 - Meta Reality Labs. *Ego-1K: A Large-Scale Multiview Video Dataset for Egocentric Vision.* (CC BY 4.0) https://arxiv.org/html/2603.13741v1
 - *HoloAssist.* (CDLA v2) https://holoassist.github.io/
 - *DROID: A Large-Scale In-The-Wild Robot Manipulation Dataset.* https://droid-dataset.github.io/

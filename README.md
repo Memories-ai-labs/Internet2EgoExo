@@ -137,6 +137,17 @@ participants, consented sites, a fixed taxonomy. You get exactly the scenes you
 funded. Here the footage already exists, so the budget goes into *verification*
 instead of recording.
 
+**And the free hours are now feeding something.** [Being-H0.5](https://arxiv.org/html/2601.12993v1)
+(BeingBeyond, Jan 2026) pretrains a cross-embodiment VLA on **UniHand-2.0** —
+**35,000+ hours**, 16,000 of them egocentric human video — assembled from Ego4D,
+EPIC-KITCHENS and **Egocentric-10K**, and its own read of that corpus is this
+repo's argument in someone else's words: it *"features 10,000 hours of
+in-the-wild industrial footage but provides only raw RGB streams without
+annotation."* Their answer was to build a rig. Note also where the rights land:
+the code is Apache-2.0, the full mixture is unreleased, and the released
+**UniHand_Preview** subset states **no licence**, is ungated, is downloaded
+13,000 times a month, and does not say which of its sources it contains.
+
 **Consuming a pool somebody else built.** [EgoDex](https://arxiv.org/abs/2505.11709)
 (829 h, SE(3) hand annotations), [EgoScale](https://arxiv.org/abs/2602.16710)
 (20,854 h), [HumanNet](https://arxiv.org/abs/2605.06747) (1 M h — where 1,000 h
@@ -280,11 +291,17 @@ them:
   (100,405 h, 10.8 B frames, **456×256**), both Apache 2.0. Note what scaling
   cost: a 17× drop in pixels per frame, in a domain where finger articulation is
   the payload. And note how it landed — the publisher's own listing shows
-  the 256p corpus pulled **164,868** times last month against the 1080p corpus's
-  **34,519** — roughly **4.8:1**. An earlier revision of this README quoted
+  the 256p corpus pulled **156,632** times last month against the 1080p corpus's
+  **34,587** — roughly **4.5:1**, and holding in a 4.5–5.3:1 band across three
+  readings. An earlier revision of this README quoted
   470:1 off an older reading; the survey records why that was wrong on two
   counts (the counter is a rolling monthly *rate*, not a lifetime total, and the
-  gap has since closed by two orders of magnitude). The direction still holds —
+  gap has since closed by two orders of magnitude). The reported
+  **Egocentric-1M** remains unverifiable: **five attempts** at the publisher's
+  own surfaces, the last being its complete API index, which returns exactly
+  four datasets and does not include it. The only artefact of that name anywhere
+  is an unrelated **empty repo** — two files, a 21-byte README, an `mit` tag, no
+  data — which is what a name plus a licence field is worth without contents. The direction still holds —
   the field does reach for hours first — but the opposite bet, that legibility
   is what a manipulation corpus is *for*, is a less lonely place to stand than
   it looked. And it is not one publisher's quirk:
