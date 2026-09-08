@@ -145,8 +145,11 @@ interaction). Still the default pretraining corpus, and the base that
 ### Ego-Exo4D
 
 **[arXiv 2311.18259](https://arxiv.org/abs/2311.18259)** (CVPR 2024) — the reference
-work for this project's problem statement. 1,286 hours, **740 participants across
-13 cities and 123 natural scene contexts**, and over **200,000 hours of annotator
+work for this project's problem statement. 1,286 hours, **more than 800
+participants across 13 cities and 131 natural scene contexts** — re-read at the
+official docs this sweep; the widely-cited **740 / 123** are the CVPR paper's
+figures and this document carried them for forty-odd sweeps — and over
+**200,000 hours of annotator
 effort**. Its distinguishing property is *simultaneous* capture: a head-mounted
 Aria view plus multiple surrounding exocentric cameras of the same skilled
 activity (sports, music, dance, bike repair). Two years of work by FAIR, Project
@@ -164,6 +167,15 @@ not published on the public pages** — you request access, wait for approval, a
 read the agreement then. Neither site states whether commercial use is permitted.
 For a project that scores rights per clip, "the terms are behind a form" is
 itself the finding: it cannot be assumed permissive.
+
+⚠️ **A third thing, found on re-reading the same page.** The docs give the
+V2 figure as **1,286.30 hours** in the release note and **1,422 hours** of
+combined video in the narrative section. This document uses **1,286.30**,
+because that is the number attached to a stated version and a take count, and
+records the other rather than silently picking. **Even the source of the
+document's most-cited correction disagrees with itself by 136 hours** — which is
+the argument for citing a figure *with the sentence it came from*, not as a bare
+number.
 
 > **Bearing here.** Ego-Exo4D is the clearest argument that the two viewpoints
 > are worth pairing, and its annotation depth is the bar the `L0–L3` gates in this
@@ -2872,7 +2884,8 @@ trust the rest of it.
 | RynnVLA-001 is a source of a viewpoint filtering rule *(this document, earlier — true but incomplete)* | It is also an I2V model pretrained on **12 M egocentric manipulation videos**, with **Apache 2.0** code and two 7B checkpoints released and the corpus not | [§8](#rynnvla-001--filter-dont-convert) |
 | RynnVLA-001's 12 M videos are **web-sourced** *(secondary coverage; this document recorded it as unverified rather than repeat it)* | The paper does say *"from existing web sources"* — but §4's citations name **EgoVid-5M, Ego4D, HowTo100M, EPIC-KITCHENS and Something-Something**. "Web sources" means *existing public datasets*, not crawled footage — a fourth naming trap, and one that would have put a false counterexample into §13 | [§8](#rynnvla-001--filter-dont-convert) |
 | InternVid states no licence *(this document, earlier)* | The dataset card carries **`cc-by-nc-sa-4.0`** and is gated. Non-commercial **and** share-alike — the most restrictive combination here. An "unresolved" field is a snapshot, not a property | [§3](#internvid) |
-| Ego-Exo4D is ~1,286 h of egocentric video | Official docs: **1286.30 video hours, 221.26 ego-hours, 5035 takes** — about **17%** egocentric | [§1](#ego-exo4d) |
+| Ego-Exo4D is ~1,286 h of egocentric video | Official docs: **1286.30 video hours, 221.26 ego-hours, 5035 takes** — about **17%** egocentric. The same page also says **1,422 h** in its narrative, so cite the figure *with its sentence* | [§1](#ego-exo4d) |
+| Ego-Exo4D has **740 participants across 123 scene contexts** *(the CVPR paper's figures — this document carried them for forty sweeps)* | The official docs now say **more than 800 participants** across **131** natural settings | [§1](#ego-exo4d) |
 | Build AI released ~1 M hours (Egocentric-1M) | **Not findable at the publisher across four attempts** spread over months | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 | EgoWAM trains on in-the-wild internet video | Its in-the-wild data is **EgoVerse on Project Aria**, flow from Aria VIO poses | [§2](#egowam--and-what-in-the-wild-turns-out-to-mean) |
 | EgoAVFlow needs no special capture, since it needs no robot demos | **Head-mounted RealSense D435 RGBD, plus a ChArUco board in every scene** | [§2](#egoavflow--no-robot-demonstrations-still-means-a-board-in-every-scene) |

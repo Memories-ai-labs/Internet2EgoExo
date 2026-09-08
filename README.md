@@ -129,7 +129,7 @@ hands-verified, annotated, and priced per delivered hour. The literature it sits
 next to mostly does one of two other things.
 
 **Commissioned capture.** [Ego-Exo4D](https://arxiv.org/abs/2311.18259)
-(1,286 h, 740 participants, simultaneous ego + multi-exo),
+(1,286 h, 800+ participants, simultaneous ego + multi-exo),
 [Ego4D](https://ego4d-data.org/) (3,670+ h),
 [EPIC-KITCHENS-100](https://arxiv.org/pdf/1804.02748),
 [EgoExoLearn](https://github.com/OpenGVLab/EgoExoLearn) — recruited
