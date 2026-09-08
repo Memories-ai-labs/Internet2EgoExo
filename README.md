@@ -137,7 +137,7 @@ participants, consented sites, a fixed taxonomy. You get exactly the scenes you
 funded. Here the footage already exists, so the budget goes into *verification*
 instead of recording.
 
-**Consuming a pool somebody else built.** [EgoDex](https://arxiv.org/html/2505.11709v1)
+**Consuming a pool somebody else built.** [EgoDex](https://arxiv.org/abs/2505.11709)
 (829 h, SE(3) hand annotations), [EgoScale](https://arxiv.org/abs/2602.16710)
 (20,854 h), [HumanNet](https://arxiv.org/abs/2605.06747) (1 M h — where 1,000 h
 of egocentric human video *matched or modestly surpassed* 100 h of real-robot
@@ -247,7 +247,14 @@ them:
   InternVid — long recorded in the survey as stating none — now carries
   **CC BY-NC-SA 4.0** and is gated, the most restrictive combination in the
   document. Terms change quietly, so the survey re-reads them rather than
-  inheriting them. All four corners of the **licence × access** grid are now
+  inheriting them — and re-reading turned up a shape worse than a quiet change.
+  EgoDex's arXiv **v1 and v2** state its CC-BY-NC-ND terms; **v3 (March 2026)
+  states no licence at all** and drops the dataset-access appendix. The terms are
+  still in force, but they now survive only in two unversioned READMEs, so the
+  one *citable* statement of them is gone. A rights field reading "CC-BY-NC-ND,
+  per arXiv 2505.11709" was accurate when written and no longer resolves. Record
+  the artefact and revision the terms were read at, with a date. All four corners
+  of the **licence × access** grid are now
   occupied, and the awkward one is EgoDex: CC-BY-NC-ND, the most restrictive
   terms in the survey, served straight off Apple's CDN at HTTP 200 with no
   authentication. Ease of download tells you nothing about permission, which is

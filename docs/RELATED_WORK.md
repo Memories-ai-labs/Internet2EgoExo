@@ -498,7 +498,8 @@ later.
 
 ### EgoDex
 
-**[arXiv 2505.11709](https://arxiv.org/html/2505.11709v1)** — 829 hours, **90 M
+**[arXiv 2505.11709](https://arxiv.org/abs/2505.11709)** (**v3, 9 Mar 2026** —
+the version matters here, see below) — 829 hours, **90 M
 frames**, **338,000 demonstrations across 194 tabletop manipulation tasks**,
 collected on **Apple Vision Pro (visionOS 2)** with production pose tracking, so
 demonstrators work bare-handed with no instrumentation. 2.0 TB compressed
@@ -512,11 +513,10 @@ demonstrators work bare-handed with no instrumentation. 2.0 TB compressed
   decoder-only transformers; behaviour cloning, denoising diffusion, flow
   matching). Best 2-second-horizon result 0.038 m mean distance (flow matching,
   K=10); visual goal-conditioning cut final-position error by 53%.
-- 🔴 **Licence: CC-BY-NC-ND** — the paper states the data is *"licensed under
-  CC-by-NC-ND terms"*. Non-commercial **and no derivatives**. This is the single
-  most-cited "hands are the payload" dataset in the field and it cannot be used
-  commercially, nor can derivative datasets be redistributed. Re-verified at the
-  paper this sweep; unchanged.
+- 🔴 **Licence: CC-BY-NC-ND** — non-commercial **and no derivatives**. This is the
+  single most-cited "hands are the payload" dataset in the field and it cannot be
+  used commercially, nor can derivative datasets be redistributed. **The terms are
+  unchanged. Where they are stated is not** — see the version note below.
 - ⚠️ **The access side runs the other way, which is worth knowing.** The Hugging
   Face mirror is gated — an unauthenticated fetch returns **401**. But the zips
   are served straight from **Apple's own CDN**
@@ -524,9 +524,58 @@ demonstrators work bare-handed with no instrumentation. 2.0 TB compressed
   returned **HTTP 200, a 17.3 GB body, no authentication**. So the most
   restrictively *licensed* corpus in this document is also among the most openly
   *accessible*. Splits: ~725 h train, 7 h test, 97 h added after the split was
-  frozen.
+  frozen — a figure that now survives only in the repo README and the superseded
+  paper versions.
 - **Limits**: tabletop only; annotation degrades under heavy occlusion and fast
   motion; embodiment gap.
+
+🔴 **The licence statement was removed from the paper. The licence was not.**
+Read across all three arXiv versions this sweep:
+
+| Version | Date | Terms stated in the paper? | Appendix A.4 |
+|---|---|---|---|
+| **v1** | 16 May 2025 | ✅ twice — *"publicly available under a CC-by-NC-ND license"* and *"The dataset is licensed under CC-by-NC-ND terms"* | **Dataset Access** — the 725/7/97 split and the download URL |
+| **v2** | 20 Aug 2025 | ✅ the same two sentences | **Dataset Access** |
+| **v3** | **9 Mar 2026** | ❌ **zero occurrences of "NC-ND", "non-commercial" or any dataset licence sentence in the body** | **Training Details** — the access appendix is gone |
+
+The scale figures survived the revision untouched — 829 h, 90 M frames, 338,000
+episodes, 194 tasks, 2.0 TB on disk, *"over 500 TB"* raw, identical strings in v1
+and v3. The rights statement did not. **The terms remain in force**, and they now
+survive in exactly two places, both mutable and neither versioned:
+
+- **`github.com/apple/ml-egodex`** README: *"The code in this repository is
+  released under the terms detailed in LICENSE. The dataset is available under
+  CC-by-NC-ND terms."*
+- **`ml-site.cdn-apple.com/datasets/egodex/README.md`**, final line: *"The dataset
+  is licensed under CC-by-NC-ND terms."*
+
+> **Why this is worse than it sounds.** arXiv is the archival artefact: immutable,
+> version-pinned, and still fetchable at the exact revision a reader cites. A
+> README on a CDN is none of those — it can be rewritten with no diff and no
+> earlier version to compare against. Between August 2025 and March 2026 the only
+> *citable* statement of EgoDex's terms was deleted, leaving the field's
+> most-reused hand corpus ([derivation map](#who-feeds-whom--the-derivation-map))
+> governed by a sentence at the bottom of a file that carries no history. **Anyone
+> citing `2505.11709` for the licence — as this document did — is citing a
+> version, not a paper.** Cite `v1` or `v2` for the terms, or cite the README with
+> the date you read it.
+
+⚠️ **And the two surviving statements disagree about the size.** The repo README
+says **829 hours** across **194** tasks, matching the paper. The CDN README says
+**"800+ hours"** across **"~200 diverse tasks"**. One vendor, one dataset, two
+files, two renderings of the same two numbers — the second sighting in two sweeps
+of a source disagreeing with itself, after
+[Ego-Exo4D's 1,286 vs 1,422](#ego-exo4d).
+
+⚠️ **The repo's own `LICENSE` is not CC either.** `apple/ml-egodex` ships a
+**bespoke Apple grant** — *"Copyright (C) 2025 Apple Inc… Apple grants you a
+personal, non-exclusive license…"* — not an OSI-standard licence. So this one
+entry touches three different licences at once: a bespoke Apple grant on the
+code, CC-BY-NC-ND on the data, and arXiv's perpetual non-exclusive licence on the
+paper. It is the [adjacent-artefact trap](#11-the-licence-trap) with all three
+artefacts sitting in the same repository, and the only one of the three a reader
+is likely to check by reflex — the file called `LICENSE` — is the one that does
+not govern the data.
 
 > **Bearing here.** EgoDex is why the hands gate has no override — 25 joints per
 > hand is the payload, and a clip without hands carries none of it. It is also
@@ -1929,8 +1978,12 @@ DreamDojo's crowdsourced hours have no published terms; Ego4D and Ego-Exo4D sit
 behind agreements whose text is not public. *Not released at all* — EgoScale,
 the largest action-labelled ego corpus here at 20,854 h, is "code coming soon"
 with no licence. The first is a decision, the second is a question you must ask
-before building, and the third is a plan you cannot make. A fourth shape appears
-below.
+before building, and the third is a plan you cannot make. **Three further shapes
+turned up over the sweeps** — *partially released* and *stated then withdrawn*
+below, and *bespoke* in
+[§1](#ego-oscar--capture-at-200-and-a-fifth-licence-shape). Six shapes is not a
+taxonomy anyone designed; it is what re-reading the same sources every eight
+hours produces.
 
 **EgoInfinity's own code is MIT. Its dependencies are not.** The repository says
 so directly: *commercial use of the repo as a whole is restricted by the WiLoR
@@ -2117,6 +2170,24 @@ carries no information at all about what you may then do, and a pipeline that
 infers permission from a 200 response will be wrong exactly where it matters
 most, since EgoDex is also the field's most-reused hand corpus
 ([derivation map](#who-feeds-whom--the-derivation-map)).
+
+🔴 **A sixth shape, and the one this document did not see coming: stated, then
+withdrawn.** The five shapes so far are all properties of a licence at rest — too
+restrictive, unstated, unreleased, partly released, bespoke. This one is a
+property of the *record*. EgoDex's arXiv **v1** and **v2** state the CC-BY-NC-ND
+terms twice each and carry a "Dataset Access" appendix; **v3 (9 Mar 2026) states
+no licence at all**, and that appendix has been replaced by "Training Details".
+The terms did not change and are still in force — they survive in the GitHub and
+CDN READMEs — but **the only version-pinned, immutable statement of them was
+deleted**, and the two that remain are files that can be edited without leaving a
+diff. Full working in [the EgoDex entry](#egodex).
+
+The practical consequence is narrow and sharp. A rights field that records
+*"CC-BY-NC-ND, per arXiv 2505.11709"* was accurate when written and now resolves
+to a paper that says no such thing. **So a provenance record needs a fourth field
+beside licence, access route and fraction: the artefact and revision the terms
+were read at, with a date.** Not the work — the *document*. This document had
+three of the four and still got it wrong, which is the argument for the fourth.
 
 ⚠️ **Licence and access are separate axes, and collapsing them misleads.** A
 third-party [release tracker](https://egxodata.com/resources/robotics-data-release-tracker-2026)
@@ -2354,22 +2425,24 @@ read straight off the cards.
 > **Second, the ratio has since collapsed.** Re-read at the dataset cards this
 > sweep, like for like:
 >
-> | Card | Downloads last month | Re-read a fortnight later | Resolution |
-> |---|---|---|---|
-> | Egocentric-100K | **164,868** | **158,934** | 456×256 |
-> | Egocentric-10K | **34,519** | **30,087** | 1080p |
-> | *ratio* | *4.8:1* | *5.3:1* | |
+> | Card | Downloads last month | A fortnight later | A third reading | Resolution |
+> |---|---|---|---|---|
+> | Egocentric-100K | **164,868** | **158,934** | **156,632** | 456×256 |
+> | Egocentric-10K | **34,519** | **30,087** | **34,587** | 1080p |
+> | *ratio* | *4.8:1* | *5.3:1* | *4.5:1* | |
 >
 > That is **roughly 5:1**, not 470:1. The 1080p corpus went from a few hundred
 > monthly pulls to thirty-odd thousand while the 256p corpus barely moved.
 >
-> **The second column is the point of having the rule.** Both figures were
-> re-read a fortnight after the first, per this document's own policy that a
-> dashboard number expires by default. Both drifted down a few per cent; the
-> ratio held in a **~5:1 band**. So the corrected claim is not another snapshot —
-> it is now a claim with two readings behind it, which is the difference between
-> a number and a measurement. The 470:1 figure never got that treatment, which
-> is precisely how it survived as long as it did.
+> **The second and third columns are the point of having the rule.** Both figures
+> were re-read a fortnight after the first and again some sweeps later, per this
+> document's own policy that a dashboard number expires by default. They drift a
+> few per cent either way — the 1080p corpus is back above its first reading — and
+> across three readings the ratio holds in a **4.5:1 to 5.3:1 band**. So the
+> corrected claim is not another snapshot: it is a claim with three readings
+> behind it, which is the difference between a number and a measurement. The
+> 470:1 figure never got that treatment, which is precisely how it survived as
+> long as it did.
 >
 > ⚠️ **And the publisher's two surfaces disagree.** The organisation listing
 > shows **1.95 M** for Egocentric-100K against the card's 164,868, while
@@ -2865,8 +2938,11 @@ have put a false claim into this survey.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Three of them are
-this document's own errors**, kept visible rather than quietly amended — a
+index, not a summary, and each row links to the working. **Nine of them are
+this document's own errors** — marked *(this document…)* in the left column and
+counted honestly, because an earlier revision of this preamble said "three" long
+after the count had passed it, which is the same failure the table exists to
+record. They are kept visible rather than quietly amended: a
 survey that silently fixes itself gives a reader no way to calibrate how much to
 trust the rest of it.
 
@@ -2886,6 +2962,7 @@ trust the rest of it.
 | InternVid states no licence *(this document, earlier)* | The dataset card carries **`cc-by-nc-sa-4.0`** and is gated. Non-commercial **and** share-alike — the most restrictive combination here. An "unresolved" field is a snapshot, not a property | [§3](#internvid) |
 | Ego-Exo4D is ~1,286 h of egocentric video | Official docs: **1286.30 video hours, 221.26 ego-hours, 5035 takes** — about **17%** egocentric. The same page also says **1,422 h** in its narrative, so cite the figure *with its sentence* | [§1](#ego-exo4d) |
 | Ego-Exo4D has **740 participants across 123 scene contexts** *(the CVPR paper's figures — this document carried them for forty sweeps)* | The official docs now say **more than 800 participants** across **131** natural settings | [§1](#ego-exo4d) |
+| EgoDex's CC-BY-NC-ND terms are stated in the paper *(this document, re-verified and recorded as "unchanged" for forty-four sweeps)* | Stated in **v1 and v2**; **v3 (9 Mar 2026) states no licence at all** and drops the "Dataset Access" appendix. The terms are still in force but survive only in two unversioned READMEs. The scale figures came through the revision untouched — **it was the rights statement that moved, not the numbers** | [§2](#egodex), [§11](#11-the-licence-trap) |
 | Build AI released ~1 M hours (Egocentric-1M) | **Not findable at the publisher across four attempts** spread over months | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 | EgoWAM trains on in-the-wild internet video | Its in-the-wild data is **EgoVerse on Project Aria**, flow from Aria VIO poses | [§2](#egowam--and-what-in-the-wild-turns-out-to-mean) |
 | EgoAVFlow needs no special capture, since it needs no robot demos | **Head-mounted RealSense D435 RGBD, plus a ChArUco board in every scene** | [§2](#egoavflow--no-robot-demonstrations-still-means-a-board-in-every-scene) |
