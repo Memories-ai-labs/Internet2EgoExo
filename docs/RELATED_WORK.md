@@ -72,6 +72,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [LAION-BVD](#laion-bvd)
   - [yt-fts](#yt-fts)
   - [YT_crawler](#yt_crawler)
+  - [HowTo100M and HD-VILA-100M](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago)
   - [The gap](#the-gap)
 - [8. Viewpoint: the exo → ego question, answered three ways](#8-viewpoint-the-exo--ego-question-answered-three-ways)
   - [Exo2Ego-V](#exo2ego-v--why-generative-conversion-does-not-apply)
@@ -1790,6 +1791,71 @@ commons**. MIT, 6 stars, 85 commits.
 > first-class search facet, while the large curation pipelines treat it as a
 > downstream footnote, is telling.
 
+### HowTo100M and HD-VILA-100M — the crawl already happened, twice, years ago
+
+The four entries above are *tools*. These two are what the crawl produced, and
+this document has been citing both in passing — HowTo100M as a
+[RynnVLA-001 upstream](#rynnvla-001--filter-dont-convert), HD-VILA-100M as
+[Panda-70M's source with a *"⚠️ check upstream"*](#who-feeds-whom--the-derivation-map)
+against it — without ever reading either. Read this sweep, they change two of
+this document's claims.
+
+| | [HowTo100M](https://www.di.ens.fr/willow/research/howto100m/) (ICCV 2019) | [HD-VILA-100M](https://arxiv.org/abs/2111.10337) (CVPR 2022) |
+|---|---|---|
+| Scale | **136 M clips** from **1.2 M YouTube videos**, *"15 years of video"*, 23 k activities | **103 M clips** from **3.3 M videos**, **371.5 K hours** |
+| Quality | mixed; instructional narration | 🟢 **all 720p**, English subtitles required |
+| Selection | narrated instructional video, 23 k wikiHow-style tasks | *"popular YouTube channels"* plus YouTube-8M and YT-Temporal-180M, filtered to 720p + subtitles, across *"15 popular categories"* |
+| Redistribution | features and metadata, **not raw video** | 🟢 *"we plan to only release the **URLs** of the videos and the code for preparing data"* |
+| **Licence** | 🔴 **none stated** on the project page | 🟢 **Open Use of Data Agreement (O-UDA)** |
+| Acquisition code | 🔴 **not released** — see below | partially: *"code for preparing data"* |
+
+🔴 **First: HowTo100M is the cleanest demonstration of §13's shape, and it is
+from 2019.** Its repository states exactly what it provides: *"our training
+procedure on HowTo100M for learning a joint text-video embedding"*, evaluation
+code on MSR-VTT / YouCook2 / LSMDC, *"a pretrain model"*, and *"feature
+extraction from raw videos script we used"*. Four things — and **none of them is
+how the 1.2 million videos were found and chosen.** The model, the features and
+the benchmark are all public; the acquisition layer is not. **So the pattern
+this document identified in 2026 papers is not a 2026 phenomenon. It is the
+field's default, and it is at least seven years old.** That is a stronger
+statement of §13 than the one the section currently makes, and it comes from a
+paper the document was already citing.
+
+🔴 **Second, and this one costs us a claim: OpenEgo is not the only project that
+handles redistribution properly, and it is not the first.** The
+[derivation map](#who-feeds-whom--the-derivation-map) calls OpenEgo *"the only
+row that solves it"*. But **HD-VILA-100M released URLs rather than video, under a
+named, published data licence — the Open Use of Data Agreement — in 2022**, at
+103 M clips and 371.5 K hours, roughly **335×** OpenEgo's hours. Same principle:
+do not redistribute other people's video; ship the pointers and the tooling.
+This document had it in a table for dozens of sweeps with *"⚠️ check upstream"*
+next to it, which was precisely an instruction to go and read the thing, and the
+answer to that ⚠️ has been sitting in the abstract the whole time.
+
+> **What survives, stated carefully.** OpenEgo keeps a narrower distinction that
+> HD-VILA does not: **per-source licence text with attribution strings**, and
+> **explicit author permission** for its CC-BY-NC-ND component. HD-VILA applies
+> one blanket licence of its own to a pool assembled from three million
+> third-party uploads; that is a cleaner *release* posture than most, and a
+> weaker *provenance* posture than OpenEgo's. So the corrected claim is:
+> **URLs-only redistribution under a stated licence is well-established prior
+> art at 100 M-clip scale; per-source provenance is the part almost nobody
+> does.** The praise for OpenEgo stands on the second half only.
+>
+> **And what this does not change is §13.** Neither corpus is egocentric, and
+> neither filters on viewpoint — HD-VILA's axis of selection is *category and
+> resolution*, HowTo100M's is *narrated instruction*. The 15 categories are
+> YouTube's own. So the acquisition layer these two built is real, large,
+> partially published and **viewpoint-blind**, which is the same gap
+> [§13](#13-why-no-open-source-project-does-exactly-this) names — reached now
+> from prior art rather than from current papers.
+>
+> **For this repo**, the practical read is that O-UDA-plus-URLs is a
+> **precedent to cite, not a thing to invent**: a large, well-known corpus
+> established years ago that shipping pointers under a stated licence is a
+> workable posture. §14 already puts the redistribution rule on the reuse side;
+> this is the older and larger evidence for that call.
+
 ### The gap
 
 `video2dataset` consumes a URL list; it does not search. **There is no
@@ -2217,7 +2283,7 @@ Reading the licences across this document produces the wider pattern:
 | **EgoInfinity (as a whole)** | MIT code, encumbered deps | ❌ until deps are swapped |
 | **Ego4D / Ego-Exo4D** | **signed agreement, terms not public** | ⚠️ unknowable until you sign — do not assume |
 | EgoVerse | no dataset licence stated (**re-checked at the paper this sweep; still none** — only the arXiv listing's, and access runs through the authors' EgoDB/S3 sync) | ⚠️ ask before use |
-| Panda-70M (data) | inherits HD-VILA-100M | ⚠️ check upstream |
+| Panda-70M (data) | inherits **[HD-VILA-100M](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago)**, whose stated terms are the **Open Use of Data Agreement (O-UDA)** | ✅ resolved — a ⚠️ this document carried for dozens of sweeps, answered by reading the upstream abstract |
 | EgoVid-5M | inherits Ego4D | ⚠️ check upstream |
 
 | DreamDojo code | Apache 2.0 | ✅ (the 43,827 crowdsourced hours have **no stated terms**) |
@@ -2386,11 +2452,12 @@ except the one marked as an inference.
 | [Ego2Robot](#ego2robot) (18,561 h synthetic) | **EgoDex 732 h** + EgoVerse 954 h + ViTRA 249 h + 7 h in-house | ~38% of input hours are **CC-BY-NC-ND** |
 | [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean) | **EgoVerse** (Aria) | EgoVerse's terms — which are not stated |
 | [EgoVid-5M](#egovid-5m) (5 M clips) | **Ego4D** annotations; video fetched from Ego4D | Ego4D's unpublished agreement |
-| [Panda-70M](#panda-70m) (70 M clips) | **HD-VILA-100M** | inherits upstream, stated |
+| [Panda-70M](#panda-70m) (70 M clips) | **[HD-VILA-100M](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago)** (103 M clips, 371.5 K h) | inherits upstream, stated — and the upstream's own terms are **O-UDA**, read at last |
 | [annotated-egocentric-10k](#annotated-egocentric-10k-dataset) | **Egocentric-10K** | Apache 2.0 — a clean chain |
 | 🔴 [Being-H0.5](#being-h05--the-mano-action-space-at-35000-hours-and-a-preview-subset-with-no-terms) / UniHand-2.0 (35,000 h) | Ego4D + EPIC-KITCHENS + **Egocentric-10K** + in-house UniCraftor 200 h | Ego4D's agreement and EPIC's non-commercial terms enter a mixture whose **released preview subset states no licence and does not say what is in it** |
 | 🔴 [H-Tac](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) (HOI-Tac, ~106 h) | **11 public datasets** — ARCTIC, DexYCB, H2O, H2O3D, HO3D, HOCap, HOI4D, HOT3D, InterHand2.6M, OakInk-v1/v2 | **The largest aggregation here and the least documented**: no licence stated for H-Tac, inputs described only as "public datasets", no release. HOI4D alone is CC BY-NC |
-| ✅ [OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly) (1,107 h) | **EgoDex 829 h** + HoloAssist 166 + CaptainCook4D 54 + HOI4D 44 + HOT3D 13.3 + HO-Cap 0.67 | **The only row that solves it**: annotations only, no video redistributed, each source's licence text shipped with attribution, and explicit author permission for the CC-BY-NC-ND component |
+| ✅ [OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly) (1,107 h) | **EgoDex 829 h** + HoloAssist 166 + CaptainCook4D 54 + HOI4D 44 + HOT3D 13.3 + HO-Cap 0.67 | **The only row with full per-source provenance**: annotations only, no video redistributed, each source's licence text shipped with attribution, and explicit author permission for the CC-BY-NC-ND component. *(Not the only URLs-only release, and not the first — see HD-VILA below)* |
+| ✅ [HD-VILA-100M](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago) (103 M clips, 371.5 K h) | **3.3 M YouTube uploads**, selected by channel popularity + 720p + English subtitles | **URLs only, under a named licence (O-UDA), in 2022** — the release posture OpenEgo is praised for, at ~335× the hours and four years earlier. What it lacks is per-source provenance: one blanket licence over three million third-party uploads |
 | [Open X-Embodiment](#the-robot-native-denominator) | **60 datasets, 34 labs** | unknowable without tracing sixty |
 | [EgoInfinity](#egoinfinity--lift-to-4d-then-reproject), Ego2Robot, [MobileEgo](#mobileego-anywhere) | **WiLoR** (+ MANO, YOLO) | **CC-BY-NC-ND** *model* in the annotation path |
 
@@ -2822,6 +2889,28 @@ project that does the whole thing?
 The answer is not that people tried and failed. **Open source went hard at the
 two adjacent problems and skipped this one.**
 
+⚠️ **And the skipping is much older than this document assumed.** Every example
+below is from 2025–2026, which made the pattern look like a property of the
+current wave. It is not.
+[HowTo100M](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago)
+mined **1.2 M YouTube videos** in 2019 and released the training procedure, the
+evaluation code, a pretrained model and a feature-extraction script — **and
+nothing about how those videos were found or chosen**. HD-VILA-100M repeated the
+exercise at **3.3 M videos and 371.5 K hours** in 2022. **The acquisition layer
+has been the reliably unpublished part of web-scale video work for at least
+seven years**, across two research generations and both sides of the
+industry/academia line. That makes the gap less a coincidence of the current
+moment and more a standing property of how these corpora get built.
+
+It also reweights the six reasons below. **Reason 1** — *the citable unit is a
+corpus, not a machine* — is exactly what HowTo100M did: corpus, model, benchmark,
+features, all published; the machine, not. **Reason 6**, that *the demand is
+barely older than the tooling*, is the one that comes off worse: whatever else
+explains a seven-year-old pattern, novelty does not. It is kept below, weakened
+rather than deleted, because it still holds for the *egocentric* demand
+specifically — which is genuinely recent — and not for web-video acquisition in
+general.
+
 🔴 **This section has now narrowed three times, and the third one is the
 serious one. Read the narrowings before the argument.**
 
@@ -2987,6 +3076,16 @@ web-sourced human video worth paying for are recent:
 affordable are about as old. The window in which this is both *worth building*
 and *buildable* has been open for roughly a year.
 
+⚠️ **This is the weakest of the six, and re-reading the prior art is what
+weakened it.** It explains why nobody built an *egocentric* acquisition layer
+before 2025. It does not explain
+[HowTo100M and HD-VILA-100M](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago),
+which had both the demand and the tooling in 2019 and 2022, mined the web at
+100 M-clip scale, and still did not publish the acquisition layer. **Reasons 1
+and 2 cover those; reason 6 does not**, and a reason that only covers the recent
+half of a seven-year pattern is doing less work than its position in this list
+suggests.
+
 ### What this does and does not license us to claim
 
 Not "nobody has solved this" — [HumanNet](#humannet) did, at a million hours,
@@ -3083,7 +3182,7 @@ have put a false claim into this survey.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Nine of them are
+index, not a summary, and each row links to the working. **Ten of them are
 this document's own errors** — marked *(this document…)* in the left column and
 counted honestly, because an earlier revision of this preamble said "three" long
 after the count had passed it, which is the same failure the table exists to
@@ -3108,6 +3207,8 @@ trust the rest of it.
 | Ego-Exo4D is ~1,286 h of egocentric video | Official docs: **1286.30 video hours, 221.26 ego-hours, 5035 takes** — about **17%** egocentric. The same page also says **1,422 h** in its narrative, so cite the figure *with its sentence* | [§1](#ego-exo4d) |
 | Ego-Exo4D has **740 participants across 123 scene contexts** *(the CVPR paper's figures — this document carried them for forty sweeps)* | The official docs now say **more than 800 participants** across **131** natural settings | [§1](#ego-exo4d) |
 | EgoDex's CC-BY-NC-ND terms are stated in the paper *(this document, re-verified and recorded as "unchanged" for forty-four sweeps)* | Stated in **v1 and v2**; **v3 (9 Mar 2026) states no licence at all** and drops the "Dataset Access" appendix. The terms are still in force but survive only in two unversioned READMEs. The scale figures came through the revision untouched — **it was the rights statement that moved, not the numbers** | [§2](#egodex), [§11](#11-the-licence-trap) |
+| **OpenEgo is the only project that redistributes properly** *(this document, in the derivation map, for dozens of sweeps)* | **HD-VILA-100M did URLs-only release under a named licence — the Open Use of Data Agreement — in 2022**, at 103 M clips and 371.5 K hours, ~335× OpenEgo's. The document cited it the whole time as "Panda-70M's upstream" with a **"⚠️ check upstream"** beside it, which was an instruction to read it. Narrowed: OpenEgo is the only one with **per-source provenance**; URLs-only-under-a-licence is well-established prior art | [§7](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago), [§11](#11-the-licence-trap) |
+| The acquisition layer goes unpublished — a pattern in recent work | **It is at least seven years old.** HowTo100M (ICCV 2019) mined 1.2 M YouTube videos and released the training procedure, the evaluation code, a pretrained model and a feature-extraction script — **and nothing about how the videos were found or chosen** | [§7](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago), [§13](#13-why-no-open-source-project-does-exactly-this) |
 | Build AI released ~1 M hours (Egocentric-1M) | **Not findable at the publisher across five attempts** spread over months, the last being the complete API index rather than a search. The only artefact of that name anywhere is an **empty third-party repo** — two files, a 21-byte README, no data | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 | EgoWAM trains on in-the-wild internet video | Its in-the-wild data is **EgoVerse on Project Aria**, flow from Aria VIO poses | [§2](#egowam--and-what-in-the-wild-turns-out-to-mean) |
 | EgoAVFlow needs no special capture, since it needs no robot demos | **Head-mounted RealSense D435 RGBD, plus a ChArUco board in every scene** | [§2](#egoavflow--no-robot-demonstrations-still-means-a-board-in-every-scene) |
@@ -3208,6 +3309,8 @@ trust the rest of it.
 - LAION. *BVD.* (research only) https://github.com/LAION-AI/BVD
 - *yt-fts.* (Unlicense; abandoned) https://github.com/NotJoeMartinez/yt-fts
 - *YT_crawler.* (MIT) https://github.com/luc-pimentel/YT_crawler
+- Miech et al. *HowTo100M: Learning a Text-Video Embedding by Watching Hundred Million Narrated Video Clips.* ICCV 2019. (136 M clips / 1.2 M YouTube videos; **no dataset licence stated**; repo releases training, evaluation, a pretrained model and feature extraction — **not the acquisition pipeline**) https://www.di.ens.fr/willow/research/howto100m/ · https://github.com/antoine77340/howto100m
+- Xue et al. (Microsoft). *Advancing High-Resolution Video-Language Representation with Large-Scale Video Transcriptions (HD-VILA-100M).* CVPR 2022. (103 M clips / 3.3 M videos / 371.5 K h, all 720p; **URLs only**, under the **Open Use of Data Agreement**) https://arxiv.org/abs/2111.10337
 - Luo et al. *Exocentric-to-Egocentric Video Generation (Exo2Ego-V).* NeurIPS 2024. https://github.com/showlab/Exo2Ego-V · https://proceedings.neurips.cc/paper_files/paper/2024/hash/f5a8b5e5d007e66c929b971c2bc21d76-Abstract-Conference.html
 - Alibaba DAMO Academy. *RynnVLA-001.* ICRA 2026. https://github.com/alibaba-damo-academy/RynnVLA-001 · https://arxiv.org/pdf/2509.15212
 - Wang et al. *EgoInfinity: A Web-Scale 4D Hand-Object Interaction Data Engine.* Rice University. https://arxiv.org/abs/2606.17385 · https://github.com/Rice-RobotPI-Lab/EgoInfinity

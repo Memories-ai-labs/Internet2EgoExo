@@ -283,7 +283,15 @@ them:
   found clip's licence holds is per-clip judgement we have to build, but the
   record format and the annotations-only redistribution rule are solved
   publicly, and reinventing either would be the exact mistake that table exists
-  to prevent.
+  to prevent. One correction the survey makes against itself here: OpenEgo is
+  **not the first** to release pointers instead of video.
+  [HD-VILA-100M](https://arxiv.org/abs/2111.10337) did exactly that in 2022 —
+  URLs only, under a named licence (the **Open Use of Data Agreement**) — at
+  103 M clips and 371.5 K hours, roughly 335× OpenEgo's. The survey had it in a
+  table the whole time as "Panda-70M's upstream, ⚠️ check upstream". What stays
+  distinctive about OpenEgo is the narrower half: **per-source** licence text and
+  attribution, rather than one blanket licence over three million third-party
+  uploads.
 - **Hours are being commoditised — but pixels are not.** Build AI went from
   [Egocentric-10K](https://www.humanoidsdaily.com/news/build-ai-open-sources-10-000-hours-of-factory-worker-video-to-scale-robot-learning)
   (10,000 h, 1080p) to
@@ -347,6 +355,15 @@ real: whatever was built to assemble those hours, none of it is downloadable.
 
 That HumanNet exists is good news for the premise here, not bad — it is the
 largest demonstration anywhere that the supply is real and that mining it works.
+
+And the skipping is old. [HowTo100M](https://www.di.ens.fr/willow/research/howto100m/)
+mined 1.2 M YouTube videos in 2019 and released the training procedure, the
+evaluation code, a pretrained model and a feature-extraction script — and
+nothing about how those videos were found or chosen. HD-VILA-100M repeated it at
+3.3 M videos in 2022. **The acquisition layer has been the reliably unpublished
+part of web-scale video work for at least seven years**, which makes it less a
+gap of the current moment than a standing property of how these corpora get
+built.
 
 On tooling, open source went hard at the two adjacent problems
 and skipped this one: **capture** ([EgoKit](https://arxiv.org/pdf/2605.16797),
