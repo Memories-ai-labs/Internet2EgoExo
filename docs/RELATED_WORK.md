@@ -14,6 +14,20 @@ Two halves: **Part I** is the datasets and systems this work is positioned
 against; **Part II** is the crawl → viewpoint → clip → annotate chain as
 downloadable code, stage by stage, with what is safe to reuse and what is not.
 
+> ⚠️ **On the star counts, which are the weakest numbers here.** Every scale and
+> licence figure below was read at its source and is re-read on a schedule. The
+> **GitHub star counts are the exception**: they were read once, they are the
+> fastest-moving value in the document, and as of **9 Sep 2026** they **cannot be
+> refreshed from the environment these sweeps run in** — third-party repositories
+> are outside its access scope, so both the HTML pages and the API refuse. They
+> are left in place because relative magnitude (6 stars versus 1.8 k) still
+> carries the signal they are cited for, and removed from any load-bearing role:
+> **no claim in this document should rest on a star count**, and any that appears
+> to is a defect. Treat each as *"roughly this, at some earlier point"*. This is
+> recorded rather than quietly tolerated for the same reason as the
+> [⚠️-marker note in §11](#11-the-licence-trap): a figure the survey cannot
+> currently verify is a fact about the survey.
+
 <details>
 <summary><strong>Contents</strong></summary>
 
@@ -275,7 +289,7 @@ version on Hugging Face, 88 TB raw on request.
 
 ### ENIGMA-360
 
-**[arXiv 2603.09741](https://arxiv.org/html/2603.09741v1)** — the industrial
+**[arXiv 2603.09741](https://arxiv.org/html/2603.09741v2)** — the industrial
 ego-exo dataset, and the sharpest available contrast with
 [Egocentric-10K](#egocentric-10k), because the two target the same domain by
 opposite means.
@@ -367,7 +381,7 @@ place to stand.
 
 ### Ego-OSCAR — capture at $200, and a fifth licence shape
 
-**[arXiv 2608.08285](https://arxiv.org/html/2608.08285v1)** ·
+**[arXiv 2608.08285](https://arxiv.org/html/2608.08285v2)** ·
 [hardware + software](https://github.com/fpv-labs/ego-oscar) ·
 [dataset](https://huggingface.co/datasets/fpvlabs/stereo-550) — the entry that
 puts a number on what commissioned capture now costs, and the one this document
@@ -386,6 +400,23 @@ organising. Shipped with **209,315 labelled action segments** (460 verbs, 32,630
 object phrases, free-form captions with timestamps), **per-session stereo
 calibration**, **IMU synchronised in 1,271 of 1,462 sessions (86.9%)**, and
 corpus-wide 3D hand reconstructions.
+
+✅ **Re-read at v2 this sweep, and the rule behind that 86.9% is worth more than
+the number.** Every figure above held unchanged from v1. What v2 states plainly
+is the *policy*: *"Sessions failing calibration or lacking a usable synchronized
+trace are **excluded rather than shipped with caveats**"*, and the sessions
+without inertial data are *"released **without** an inertial stream rather than
+with an unverified one"* — yielding a stated **96% usable-session** rate. **That
+is a per-session acceptance decision, published as a rule and reported as a
+count**, which is exactly the field this repo's manifest calls *acceptance
+status*. Two things follow. First, a dataset can tell you **which** of its
+sessions lack a modality instead of averaging the gap away, and almost none do.
+Second, it is a third distinct kind of good practice, after
+[OpenEgo's per-source attribution](#openego--somebody-does-this-properly-and-it-should-be-said-plainly)
+and [the pointers-only releases](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago):
+**provenance about *rights*, provenance about *distribution*, and now provenance
+about *quality*** — three different things a release can be honest about, from
+three different projects, and no project in this document does all three.
 
 🔴 **And the licensing is a shape [§11](#11-the-licence-trap) has not seen:
 bespoke, and split.** The **hardware and capture software are Apache 2.0** —
@@ -2189,7 +2220,7 @@ sounds, because the binding constraint is one layer down.**
 |---|---|---|---|
 | [WiLoR](https://github.com/rolpotamias/WiLoR) | **CC-BY-NC-ND** (models) | yes | current default |
 | [HaMeR](https://github.com/geopavlakos/hamer) | **MIT**, 1.1 k stars | **yes** — *"you also need to download the MANO model… register to get access"* | drop-in-ish |
-| [HandOS](https://arxiv.org/html/2412.01537v1) | none stated | **partly** — avoids MANO *parameters* for its representation, but 3D joints still come from *"the joint regressor defined by MANO"* | no code released |
+| [HandOS](https://arxiv.org/html/2412.01537v2) | none stated | **partly** — avoids MANO *parameters* for its representation, but 3D joints still come from *"the joint regressor defined by MANO"* | no code released |
 | [NIMBLE](https://github.com/reyuwei/NIMBLE_model) *(a hand **model**, not a reconstructor)* | **MIT** on the repo | ⚠️ **unresolved** — built in *"MANO topology"* and *"reuses part of the great code from manopth"* | model files via Google Drive, no registration stated |
 
 **So swapping WiLoR for HaMeR removes a CC-BY-NC-ND *model* licence and leaves
@@ -3322,9 +3353,9 @@ trust the rest of it.
 - Damen et al. *Scaling Egocentric Vision: The EPIC-KITCHENS Dataset.* https://arxiv.org/pdf/1804.02748
 - Huang et al. *EgoExoLearn.* CVPR 2024. https://github.com/OpenGVLab/EgoExoLearn
 - *HOI4D.* (CC BY-NC 4.0) https://arxiv.org/pdf/2404.09933 · https://hoi4d.github.io/
-- *ENIGMA-360: An Ego-Exo Dataset for Human Behavior Understanding in Industrial Scenarios.* (CC BY 4.0) https://arxiv.org/html/2603.09741v1 · project page https://iplab.dmi.unict.it/ENIGMA-360 **has been unreachable across three checks, with a different error each time — HTTP 500, then a connection failure, now HTTP 403 — while the lab host itself returns 200. Unstable rather than removed; cite the arXiv HTML**
+- *ENIGMA-360: An Ego-Exo Dataset for Human Behavior Understanding in Industrial Scenarios.* (CC BY 4.0) https://arxiv.org/html/2603.09741v2 · project page https://iplab.dmi.unict.it/ENIGMA-360 **has been unreachable across four checks — HTTP 500, then a connection failure, then HTTP 403, and now HTTP 403 again (9 Sep 2026, with and without a trailing slash) — while the lab host root returns 200. The error has stopped varying, which reads less like a flapping server than a settled block on that path. Still recorded as unstable rather than removed, but a fourth failure with the last two identical is worth more weight than three assorted ones; cite the arXiv HTML**
 - *SABER: A Scalable Action-Based Embodied Dataset for Real-World VLA Adaptation.* DreamVu. (10 K-sample subset CC BY-NC 4.0; full corpus vendor-gated) https://arxiv.org/html/2605.09613v1 · https://huggingface.co/datasets/DreamVu/SABER-10K
-- *EgoDex: Learning Dexterous Manipulation from Large-Scale Egocentric Video.* (CC-BY-NC-ND) https://arxiv.org/html/2505.11709v1
+- *EgoDex: Learning Dexterous Manipulation from Large-Scale Egocentric Video.* (CC-BY-NC-ND) https://arxiv.org/abs/2505.11709 — **current version is v3 (9 Mar 2026); the `v1` link is cited deliberately where the licence is quoted**, because v3 no longer states it: https://arxiv.org/html/2505.11709v1
 - *EgoScale: Scaling Dexterous Manipulation with Diverse Egocentric Human Data.* GEAR @ NVIDIA Research. (code "coming soon"; no licence stated) https://arxiv.org/abs/2602.16710 · https://research.nvidia.com/labs/gear/egoscale/
 - Deng, Zhou et al. *HumanNet: Scaling Human-centric Video Learning to One Million Hours.* https://arxiv.org/abs/2605.06747
 - *Ego2Robot: Scalable Robot Data Synthesis from Egocentric Human Data.* https://arxiv.org/html/2608.02580

@@ -383,7 +383,7 @@ viewpoint-blind by construction, and published guidance for sourcing ego footage
 still amounts to *manually searching YouTube for "egocentric view"*.
 
 **And the honest counterweight, because capture is getting cheaper.**
-[Ego-OSCAR](https://arxiv.org/html/2608.08285v1) is an open stereo-inertial rig
+[Ego-OSCAR](https://arxiv.org/html/2608.08285v2) is an open stereo-inertial rig
 at a **~$200 bill of materials** — hardware, capture software and corpus all
 open-sourced — shipping **1,100 stereo camera-hours** with 209,315 labelled
 action segments. That genuinely narrows the price gap this repo argues from, and
