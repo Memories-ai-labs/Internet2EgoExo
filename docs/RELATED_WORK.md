@@ -810,11 +810,30 @@ baseline's 17% / 10%. On a real RB-Y1 humanoid with a 12-DoF XHand, four tasks
 reach 40 / 35 / 70 / 60%, matching or beating real teleoperation on two of them.
 Generation runs at 2.88 demos/hour.
 
-> **The ablation is the transferable finding.** The action branch supplies
-> essentially all the gain — **43% with it against 5% for visual-only**. For a
-> collection pipeline deciding where to spend, that says the *trajectory* is the
-> payload and photorealism is decoration, which is the same conclusion the hands
-> gate encodes from the other direction.
+> **The ablation is the transferable finding — read from the table this sweep,
+> and it does not say quite what this document said it said.** Table 4, averaged
+> over the four Aria tasks:
+>
+> | Setting | Success rate |
+> |---|---|
+> | Human videos | **0.03** |
+> | + visual branch only | **0.05** |
+> | + action branch only | **0.43** |
+> | **Full EgoEngine** | **0.51** |
+>
+> The action branch is clearly the dominant term — 0.05 against 0.43 is the
+> comparison worth carrying, and it is the one an earlier revision here quoted
+> correctly. **What that revision left out is the last row.** Going from the
+> action branch alone to the full system is **0.43 → 0.51**, about a **19%
+> relative gain** from visual generation, and the paper's own sentence is
+> *"Executable action generation provides the primary improvement, **while visual
+> generation provides an additional gain**."* This document glossed that as
+> *"photorealism is decoration"*, which is a stronger claim than the source
+> supports and which happened to flatter the argument being made around it.
+> **Corrected: the trajectory is the payload; appearance is a real but secondary
+> term, worth roughly a fifth on top.** The direction still favours spending on
+> trajectory quality over pixels — it is just not a free choice, and the entry
+> should not have implied it was.
 
 🔴 **Its input requirement is the disqualifier for web footage**: it needs
 **object meshes and camera calibration** (AprilTag-based for the Aria captures,
@@ -936,9 +955,13 @@ happens next in a clip, not only what is in it.
 
 ### EgoHumanoid — whole-body transfer, and a VR rig on the demonstrator
 
+**[arXiv 2602.10106](https://arxiv.org/abs/2602.10106)** (v2, 4 Jun 2026) ·
 **[OpenDriveLab/EgoHumanoid](https://github.com/OpenDriveLab/EgoHumanoid)**
-(RSS 2026) — *"the first framework enabling humanoid loco-manipulation with
-egocentric human demonstrations."* It extends this section's question from hands
+(RSS 2026) — *"the first framework to co-train a vision-language-action policy
+using abundant egocentric human demonstrations together with a limited amount of
+robot data."* ⚠️ **The paper is cited here for the first time this sweep**: the
+entry had stood on the repository alone, so its headline number had never been
+read at a primary source. It extends this section's question from hands
 to the whole body: not just what the demonstrator grasped, but where they walked
 to do it.
 
@@ -946,7 +969,16 @@ to do it.
 human data plus limited robot teleoperation, bridged by two explicit steps —
 **view alignment**, via depth-based warping and inpainting, and **action
 alignment**, with navigation velocities derived from body pose and discretised
-into commands. Reported gain: **51% over robot-only baselines**.
+into commands.
+
+✅ **Reported gain, now quoted rather than paraphrased: *"incorporating
+robot-free egocentric data significantly outperforms robot-only baselines by
+**51%**, particularly **in unseen environments**."*** The figure is confirmed —
+and the entry had been dropping the qualifier, which is the clause that says
+where the gain lives. Worth flagging for one more reason: **51%** is also
+[EgoEngine](#egoengine)'s full-system ablation score (0.51), and the two are
+unrelated. Checked precisely because the coincidence looked like
+cross-contamination; it is not.
 
 **What it demands of the demonstrator.** A **PICO VR headset carrying five body
 trackers** for full-body pose, a **ZED Mini depth camera** mounted on that
@@ -3270,7 +3302,7 @@ have put a false claim into this survey.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Eleven of them are
+index, not a summary, and each row links to the working. **Twelve of them are
 this document's own errors** — marked *(this document…)* in the left column and
 counted honestly, because an earlier revision of this preamble said "three" long
 after the count had passed it, which is the same failure the table exists to
@@ -3298,6 +3330,7 @@ trust the rest of it.
 | **OpenEgo is the only project that redistributes properly** *(this document, in the derivation map, for dozens of sweeps)* | **HD-VILA-100M did URLs-only release under a named licence — the Open Use of Data Agreement — in 2022**, at 103 M clips and 371.5 K hours, ~335× OpenEgo's. The document cited it the whole time as "Panda-70M's upstream" with a **"⚠️ check upstream"** beside it, which was an instruction to read it. Narrowed: OpenEgo is the only one with **per-source provenance**; URLs-only-under-a-licence is well-established prior art | [§7](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago), [§11](#11-the-licence-trap) |
 | The acquisition layer goes unpublished — a pattern in recent work | **It is at least seven years old.** HowTo100M (ICCV 2019) mined 1.2 M YouTube videos and released the training procedure, the evaluation code, a pretrained model and a feature-extraction script — **and nothing about how the videos were found or chosen** | [§7](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago), [§13](#13-why-no-open-source-project-does-exactly-this) |
 | **EgoVid-5M's terms are unresolved — "inherits Ego4D, ⚠️ check upstream"** *(this document, for dozens of sweeps)* | Its release carries **Apache 2.0** and contains **three CSVs and `poses.zip` — no video**. The licence is correctly scoped to the annotations; Ego4D's footage stays under Ego4D's agreement. **The third project found doing annotations-only properly**, after OpenEgo and HD-VILA-100M | [§12](#egovid-5m), [§11](#11-the-licence-trap) |
+| **EgoEngine shows the action branch supplies essentially all the gain, so photorealism is "decoration"** *(this document, editorialising past its source)* | Table 4 is **0.03 / 0.05 / 0.43 / 0.51** — human videos, visual branch, action branch, full system. The 0.05-vs-0.43 comparison was quoted correctly; **the last row was dropped**. Visual generation adds **0.43 → 0.51**, ~19% relative, and the paper says it *"provides an additional gain"*. The trajectory is the payload; appearance is a real but secondary term | [§2](#egoengine) |
 | Build AI released ~1 M hours (Egocentric-1M) | **Not findable at the publisher across five attempts** spread over months, the last being the complete API index rather than a search. The only artefact of that name anywhere is an **empty third-party repo** — two files, a 21-byte README, no data | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 | EgoWAM trains on in-the-wild internet video | Its in-the-wild data is **EgoVerse on Project Aria**, flow from Aria VIO poses | [§2](#egowam--and-what-in-the-wild-turns-out-to-mean) |
 | EgoAVFlow needs no special capture, since it needs no robot demos | **Head-mounted RealSense D435 RGBD, plus a ChArUco board in every scene** | [§2](#egoavflow--no-robot-demonstrations-still-means-a-board-in-every-scene) |
@@ -3353,6 +3386,7 @@ trust the rest of it.
 - Damen et al. *Scaling Egocentric Vision: The EPIC-KITCHENS Dataset.* https://arxiv.org/pdf/1804.02748
 - Huang et al. *EgoExoLearn.* CVPR 2024. https://github.com/OpenGVLab/EgoExoLearn
 - *HOI4D.* (CC BY-NC 4.0) https://arxiv.org/pdf/2404.09933 · https://hoi4d.github.io/
+- Shi et al. (OpenDriveLab). *EgoHumanoid: Unlocking In-the-Wild Loco-Manipulation with Robot-Free Egocentric Demonstration.* RSS 2026, arXiv:2602.10106 (v2, 4 Jun 2026). (Apache 2.0 on the code; **no dataset licence stated**) https://arxiv.org/abs/2602.10106 · https://github.com/OpenDriveLab/EgoHumanoid
 - *ENIGMA-360: An Ego-Exo Dataset for Human Behavior Understanding in Industrial Scenarios.* (CC BY 4.0) https://arxiv.org/html/2603.09741v2 · project page https://iplab.dmi.unict.it/ENIGMA-360 **has been unreachable across four checks — HTTP 500, then a connection failure, then HTTP 403, and now HTTP 403 again (9 Sep 2026, with and without a trailing slash) — while the lab host root returns 200. The error has stopped varying, which reads less like a flapping server than a settled block on that path. Still recorded as unstable rather than removed, but a fourth failure with the last two identical is worth more weight than three assorted ones; cite the arXiv HTML**
 - *SABER: A Scalable Action-Based Embodied Dataset for Real-World VLA Adaptation.* DreamVu. (10 K-sample subset CC BY-NC 4.0; full corpus vendor-gated) https://arxiv.org/html/2605.09613v1 · https://huggingface.co/datasets/DreamVu/SABER-10K
 - *EgoDex: Learning Dexterous Manipulation from Large-Scale Egocentric Video.* (CC-BY-NC-ND) https://arxiv.org/abs/2505.11709 — **current version is v3 (9 Mar 2026); the `v1` link is cited deliberately where the licence is quoted**, because v3 no longer states it: https://arxiv.org/html/2505.11709v1
