@@ -291,7 +291,15 @@ them:
   table the whole time as "Panda-70M's upstream, ⚠️ check upstream". What stays
   distinctive about OpenEgo is the narrower half: **per-source** licence text and
   attribution, rather than one blanket licence over three million third-party
-  uploads.
+  uploads. A third instance turned up on the next sweep: **EgoVid-5M**'s release
+  is three CSVs and a `poses.zip` under Apache 2.0 — **no video** — with the
+  footage left to be fetched from Ego4D under Ego4D's own agreement. The posture
+  is common; the per-source attribution is the rare part. And the limit of the
+  posture is visible right beside it: a third party has re-uploaded **722 shards
+  of extracted EgoVid frames** with no card, no licence and no attribution,
+  ungated, at ~6,000 downloads a month. A rights record has to survive being
+  copied, which is why provenance belongs in the manifest travelling with each
+  clip and not only in the release posture of whoever published first.
 - **Hours are being commoditised — but pixels are not.** Build AI went from
   [Egocentric-10K](https://www.humanoidsdaily.com/news/build-ai-open-sources-10-000-hours-of-factory-worker-video-to-scale-robot-learning)
   (10,000 h, 1080p) to

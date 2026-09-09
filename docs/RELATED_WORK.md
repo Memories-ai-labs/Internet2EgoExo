@@ -602,8 +602,12 @@ average success rate over a no-pretraining baseline.**
 > because getting provenance right is the thing this document keeps asking of
 > everyone else.
 >
-> **Code is marked "Coming Soon"** — re-verified at the GEAR project page itself
-> this sweep, which shows *"[GitHub (Coming Soon!)]"* with no active link, no
+> **Code is marked "Coming Soon"** — re-verified again this sweep at the GEAR
+> project page, which is dated **19 Feb 2026** and still shows
+> *"[GitHub (Coming Soon!)]"* as of **9 Sep 2026**: **roughly seven months**, across
+> repeated checks. Recorded as a dated observation rather than a prediction — the
+> release may still come, but a plan cannot be built on it. The page has shown
+> the same thing at every check: no active link, no
 > data download, and no terms — and **no dataset licence is stated anywhere**. The arXiv listing carries CC BY 4.0, which governs the *paper* —
 > the same trap as [World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild)
 > and [EgoHumanoid](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator),
@@ -2284,7 +2288,7 @@ Reading the licences across this document produces the wider pattern:
 | **Ego4D / Ego-Exo4D** | **signed agreement, terms not public** | ⚠️ unknowable until you sign — do not assume |
 | EgoVerse | no dataset licence stated (**re-checked at the paper this sweep; still none** — only the arXiv listing's, and access runs through the authors' EgoDB/S3 sync) | ⚠️ ask before use |
 | Panda-70M (data) | inherits **[HD-VILA-100M](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago)**, whose stated terms are the **Open Use of Data Agreement (O-UDA)** | ✅ resolved — a ⚠️ this document carried for dozens of sweeps, answered by reading the upstream abstract |
-| EgoVid-5M | inherits Ego4D | ⚠️ check upstream |
+| EgoVid-5M | **Apache 2.0 on the release, which is annotations only** — three CSVs and `poses.zip`, **no video**; the footage is fetched from Ego4D under Ego4D's terms | ✅ resolved, and correctly scoped — the **second** "⚠️ check upstream" answered in two sweeps, both of which resolved *better* than the marker implied |
 
 | DreamDojo code | Apache 2.0 | ✅ (the 43,827 crowdsourced hours have **no stated terms**) |
 | [HoloAssist](#holoassist) | CDLA v2 | ✅ |
@@ -2295,6 +2299,17 @@ Reading the licences across this document produces the wider pattern:
 | EgoExoLearn | **MIT on the code**; dataset terms not separately stated, access unrestricted | ⚠️ code clear, data unresolved |
 | **Being-H0.5 / UniHand_Preview** | **Apache-2.0 on the code**; the released dataset subset states **no licence**, ungated, 13,377 monthly downloads | 🔴 released and actively used, provenance undeterminable |
 | **Open X-Embodiment** | **none stated; 60 pooled components, position unstated** | ⚠️ unknowable without tracing 60 upstream datasets |
+
+⚠️ **A note on this document's own ⚠️ markers, prompted by two of them falling in
+consecutive sweeps.** Panda-70M's *"⚠️ check upstream"* resolved to **O-UDA**;
+EgoVid-5M's resolved to **Apache 2.0 over an annotations-only release**. Both had
+stood for dozens of sweeps, and **both resolved better than the marker implied**.
+That is not luck, it is a bias: *"⚠️ check upstream"* costs one clause to write
+and a real fetch to discharge, so unresolved markers accumulate, and a reader
+scanning the table reads them as findings — as evidence the field is careless —
+when they are only debts this document had not yet paid. **An unresolved field is
+a statement about the survey, not about the source.** Every remaining ⚠️ below
+should be read that way until it has a date and a fetch behind it.
 
 Note what the bottom half of that table has in common: the field's **most-cited**
 reference datasets are the ones you cannot use commercially, or cannot even read
@@ -2451,12 +2466,13 @@ except the one marked as an inference.
 | [ACE-Ego-0](#ace-ego-0) (VLA) | Ego4D + EPIC-KITCHENS + Ego-Exo4D + **EgoDex** + EgoScale | five sets of terms, none visible in the checkpoint |
 | [Ego2Robot](#ego2robot) (18,561 h synthetic) | **EgoDex 732 h** + EgoVerse 954 h + ViTRA 249 h + 7 h in-house | ~38% of input hours are **CC-BY-NC-ND** |
 | [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean) | **EgoVerse** (Aria) | EgoVerse's terms — which are not stated |
-| [EgoVid-5M](#egovid-5m) (5 M clips) | **Ego4D** annotations; video fetched from Ego4D | Ego4D's unpublished agreement |
+| [EgoVid-5M](#egovid-5m) (5 M clips) | **Ego4D** annotations; video fetched from Ego4D | Ego4D's unpublished agreement — but the release itself is **annotations only, Apache 2.0**, so the terms attach where they should |
+| 🔴 `simon055/EgoVid_frames` (722 shards, 10–100 M images) | **third-party extraction** of frames named for EgoVid | **No card, no licence, no attribution**, ungated, ~5,987 downloads/month. The annotations-only arrangement above, undone by a copy |
 | [Panda-70M](#panda-70m) (70 M clips) | **[HD-VILA-100M](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago)** (103 M clips, 371.5 K h) | inherits upstream, stated — and the upstream's own terms are **O-UDA**, read at last |
 | [annotated-egocentric-10k](#annotated-egocentric-10k-dataset) | **Egocentric-10K** | Apache 2.0 — a clean chain |
 | 🔴 [Being-H0.5](#being-h05--the-mano-action-space-at-35000-hours-and-a-preview-subset-with-no-terms) / UniHand-2.0 (35,000 h) | Ego4D + EPIC-KITCHENS + **Egocentric-10K** + in-house UniCraftor 200 h | Ego4D's agreement and EPIC's non-commercial terms enter a mixture whose **released preview subset states no licence and does not say what is in it** |
 | 🔴 [H-Tac](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) (HOI-Tac, ~106 h) | **11 public datasets** — ARCTIC, DexYCB, H2O, H2O3D, HO3D, HOCap, HOI4D, HOT3D, InterHand2.6M, OakInk-v1/v2 | **The largest aggregation here and the least documented**: no licence stated for H-Tac, inputs described only as "public datasets", no release. HOI4D alone is CC BY-NC |
-| ✅ [OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly) (1,107 h) | **EgoDex 829 h** + HoloAssist 166 + CaptainCook4D 54 + HOI4D 44 + HOT3D 13.3 + HO-Cap 0.67 | **The only row with full per-source provenance**: annotations only, no video redistributed, each source's licence text shipped with attribution, and explicit author permission for the CC-BY-NC-ND component. *(Not the only URLs-only release, and not the first — see HD-VILA below)* |
+| ✅ [OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly) (1,107 h) | **EgoDex 829 h** + HoloAssist 166 + CaptainCook4D 54 + HOI4D 44 + HOT3D 13.3 + HO-Cap 0.67 | **The only row with full per-source provenance**: annotations only, no video redistributed, each source's licence text shipped with attribution, and explicit author permission for the CC-BY-NC-ND component. *(Not the only pointers-only release, and not the first: **HD-VILA-100M** below did it in 2022, and **[EgoVid-5M](#egovid-5m)** ships annotations-only under Apache 2.0. Three instances now — the posture is common; the per-source attribution is not)* |
 | ✅ [HD-VILA-100M](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago) (103 M clips, 371.5 K h) | **3.3 M YouTube uploads**, selected by channel popularity + 720p + English subtitles | **URLs only, under a named licence (O-UDA), in 2022** — the release posture OpenEgo is praised for, at ~335× the hours and four years earlier. What it lacks is per-source provenance: one blanket licence over three million third-party uploads |
 | [Open X-Embodiment](#the-robot-native-denominator) | **60 datasets, 34 labs** | unknowable without tracing sixty |
 | [EgoInfinity](#egoinfinity--lift-to-4d-then-reproject), Ego2Robot, [MobileEgo](#mobileego-anywhere) | **WiLoR** (+ MANO, YOLO) | **CC-BY-NC-ND** *model* in the annotation path |
@@ -2809,8 +2825,49 @@ summarisation, and low-level **kinematic camera parameters** from IMU data and
 structure-from-motion pose estimation. Cleaning evaluates frame consistency,
 action coherence, optical-flow magnitude, DOVER and CLIP similarity. Targets
 egocentric video **generation**, not collection. Known issue: the raw IMU data has
-problems, so the released pose annotations are preferred over it. Licence follows
-Ego4D's terms.
+problems, so the released pose annotations are preferred over it.
+
+✅ **Licence, resolved this sweep — and better than this document assumed.** The
+row for EgoVid-5M read *"inherits Ego4D — ⚠️ check upstream"* for dozens of
+sweeps. Checked at the release itself, the Hugging Face repo
+**[Jeff-Wang/EgoVid-5M](https://huggingface.co/datasets/Jeff-Wang/EgoVid-5M)**
+carries **`license: apache-2.0`**, is ungated, and contains **six files**:
+
+```
+egovid-kinematic.csv   egovid-text.csv   egovid-val.csv   poses.zip
+.gitattributes         README.md
+```
+
+**No video.** So Apache 2.0 is not an over-claim over Ego4D's footage — it
+covers what is actually in the repository, which is captions, kinematic metadata
+and poses. The video is left where it belongs, fetched by the user from Ego4D
+under Ego4D's own agreement. **That is the annotations-only discipline, applied
+correctly and without comment**, and it makes EgoVid-5M the **third** instance
+after [OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly)
+and [HD-VILA-100M](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago).
+
+🔴 **And directly beside it, the counterfactual — one upload away.** A
+Hugging Face search for `EgoVid` returns the annotations repo above, and also
+**`simon055/EgoVid_frames`**: **722 WebDataset shards** of extracted image
+frames, tagged `modality:image` and `size_categories:10M<n<100M`, created 29 Apr
+2026, **ungated**, and pulled about **5,987 times a month**. It has **no card at
+all** — `README.md` returns **404** — and therefore no licence, no description,
+no attribution and no statement of what the frames are of.
+
+> **Why this is the sharpest illustration in the document.** The EgoVid authors
+> did the careful thing: ship the annotations, leave the footage upstream, let
+> Ego4D's agreement govern the pixels. **A third party then extracted the pixels
+> and posted them, and that undoes the arrangement for everyone downstream of
+> the copy.** Whether those frames derive from Ego4D video cannot be determined
+> from what is published — there is nothing published to determine it from —
+> which is itself the point, and the reason it belongs here rather than in a
+> complaint. *Nothing improper is alleged against anyone; a frame dump is an
+> ordinary thing to upload while working.* But it shows the limit of the
+> annotations-only rule as a **protection**: it is a discipline observed by
+> publishers, and it binds nobody who was not party to the agreement. **For this
+> repo**, the consequence is concrete — a rights record has to survive being
+> copied, so provenance belongs *in the manifest travelling with each clip*, not
+> only in the release posture of whoever published first.
 
 ### EgoCS-400K — 10,000 free hours, sourced from the internet, and why §13 survives it
 
@@ -3182,7 +3239,7 @@ have put a false claim into this survey.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Ten of them are
+index, not a summary, and each row links to the working. **Eleven of them are
 this document's own errors** — marked *(this document…)* in the left column and
 counted honestly, because an earlier revision of this preamble said "three" long
 after the count had passed it, which is the same failure the table exists to
@@ -3209,6 +3266,7 @@ trust the rest of it.
 | EgoDex's CC-BY-NC-ND terms are stated in the paper *(this document, re-verified and recorded as "unchanged" for forty-four sweeps)* | Stated in **v1 and v2**; **v3 (9 Mar 2026) states no licence at all** and drops the "Dataset Access" appendix. The terms are still in force but survive only in two unversioned READMEs. The scale figures came through the revision untouched — **it was the rights statement that moved, not the numbers** | [§2](#egodex), [§11](#11-the-licence-trap) |
 | **OpenEgo is the only project that redistributes properly** *(this document, in the derivation map, for dozens of sweeps)* | **HD-VILA-100M did URLs-only release under a named licence — the Open Use of Data Agreement — in 2022**, at 103 M clips and 371.5 K hours, ~335× OpenEgo's. The document cited it the whole time as "Panda-70M's upstream" with a **"⚠️ check upstream"** beside it, which was an instruction to read it. Narrowed: OpenEgo is the only one with **per-source provenance**; URLs-only-under-a-licence is well-established prior art | [§7](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago), [§11](#11-the-licence-trap) |
 | The acquisition layer goes unpublished — a pattern in recent work | **It is at least seven years old.** HowTo100M (ICCV 2019) mined 1.2 M YouTube videos and released the training procedure, the evaluation code, a pretrained model and a feature-extraction script — **and nothing about how the videos were found or chosen** | [§7](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago), [§13](#13-why-no-open-source-project-does-exactly-this) |
+| **EgoVid-5M's terms are unresolved — "inherits Ego4D, ⚠️ check upstream"** *(this document, for dozens of sweeps)* | Its release carries **Apache 2.0** and contains **three CSVs and `poses.zip` — no video**. The licence is correctly scoped to the annotations; Ego4D's footage stays under Ego4D's agreement. **The third project found doing annotations-only properly**, after OpenEgo and HD-VILA-100M | [§12](#egovid-5m), [§11](#11-the-licence-trap) |
 | Build AI released ~1 M hours (Egocentric-1M) | **Not findable at the publisher across five attempts** spread over months, the last being the complete API index rather than a search. The only artefact of that name anywhere is an **empty third-party repo** — two files, a 21-byte README, no data | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 | EgoWAM trains on in-the-wild internet video | Its in-the-wild data is **EgoVerse on Project Aria**, flow from Aria VIO poses | [§2](#egowam--and-what-in-the-wild-turns-out-to-mean) |
 | EgoAVFlow needs no special capture, since it needs no robot demos | **Head-mounted RealSense D435 RGBD, plus a ChArUco board in every scene** | [§2](#egoavflow--no-robot-demonstrations-still-means-a-board-in-every-scene) |
