@@ -57,6 +57,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [EgoHumanoid](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator)
   - [EgoVLA](#egovla--mano-as-the-action-space-not-just-the-annotation)
   - [Being-H0.5](#being-h05--the-mano-action-space-at-35000-hours-and-a-preview-subset-with-no-terms)
+  - [Being-H0.7](#being-h07--one-corpus-three-products-and-a-second-vendor-doing-it)
   - [World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild)
   - [EgoTac](#egotac--tactile-predicted-from-ordinary-video-and-a-ceiling-that-moved)
   - [H-Tac](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual)
@@ -1128,6 +1129,48 @@ anyone, including its 13,000 monthly downloaders.
 > the cleanest demonstration of why §14 keeps the *rights record format* on the
 > build side. A 35,000-hour recipe, an Apache-2.0 codebase, state-of-the-art
 > numbers — and the released data still cannot be traced to its sources.
+
+### Being-H0.7 — one corpus, three products, and a second vendor doing it
+
+**[arXiv 2605.00078](https://arxiv.org/html/2605.00078v1)** (v1, 30 Apr 2026,
+BeingBeyond) — a **Latent World-Action Model**, and the reason it belongs here is
+not the architecture but what sits underneath it.
+
+**Mechanism, briefly.** It puts *future-aware reasoning* into a VLA **without
+generating future frames**: a set of learnable latent queries forms a prior
+branch, jointly aligned during training with a **future-informed posterior
+branch**, so at deployment the prior infers a compact predictive state from
+current context alone. A dual-branch implementation with hidden-state alignment
+and anti-collapse regularisers keeps the latent from degenerating. Results
+include **LIBERO-plus 82.1% zero-shot**, rising to **84.8%** after finetuning,
+and **49.2%** average on the GR1 bimanual humanoid suite.
+
+🔴 **It is pretrained on the same corpus as [Being-H0.5](#being-h05--the-mano-action-space-at-35000-hours-and-a-preview-subset-with-no-terms).**
+Quoted: *"we pretrain the model on mixed human and robot manipulation data
+following the unified sequence format of **UniHand 2.0**."* So the 35,000-hour
+mixture — 16,000 h of it egocentric human video drawn from Ego4D,
+EPIC-KITCHENS and [Egocentric-10K](#egocentric-10k) — now backs **Being-H0,
+Being-H0.5 and Being-H0.7**.
+
+> **This is the NVIDIA pattern again, at a second vendor, and that changes it
+> from an anecdote into a shape.** §2 records
+> [EgoScale and DreamDojo](#egoscale) as almost certainly one crowdsourced pool
+> feeding two products, inferred from identical scene/task/object counts. Here
+> there is nothing to infer: **BeingBeyond says outright that its models share
+> UniHand 2.0.** Two organisations, same economics — *acquire the corpus once,
+> amortise it across a model family* — which is the clearest statement yet of why
+> [§13](#13-why-no-open-source-project-does-exactly-this)'s gap persists. **If
+> the corpus is the asset that pays for three products, the acquisition layer is
+> the last thing you publish.** That is §13's reason 2 (*where it is commercially
+> valuable, the pipeline is the product*), now with a named example on each side
+> of the Pacific rather than one inferred one.
+>
+> ⚠️ **Rights position: inherited, and no better.** The paper states **no licence
+> for code or data** — the only licence string in it is arXiv's own — and the
+> word *"release"* does not appear anywhere in the body. What is downloadable is
+> what Being-H0.5 published: **`UniHand_Preview`, ungated, with no `license`
+> field**. A third model on the same undocumented mixture does not add a third
+> rights problem; it multiplies the reach of the one already there.
 
 ### World In Your Hands — the instrumentation ceiling, and a third "in the wild"
 
@@ -2384,6 +2427,7 @@ Reading the licences across this document produces the wider pattern:
 | DROID | open dataset; terms not stated on the project page (**re-checked; still silent** — the page says only that the dataset, training code and hardware guide are open-sourced) | ⚠️ unresolved |
 | EgoExoLearn | **MIT on the code**; dataset terms not separately stated, access unrestricted | ⚠️ code clear, data unresolved |
 | **Being-H0.5 / UniHand_Preview** | **Apache-2.0 on the code**; the released dataset subset states **no licence**, ungated, 13,377 monthly downloads | 🔴 released and actively used, provenance undeterminable |
+| **Being-H0.7** | **none stated at all** — the paper's only licence string is arXiv's, and the word *"release"* does not appear in the body | 🔴 same undocumented UniHand 2.0 mixture, a third time |
 | **Open X-Embodiment** | **none stated; 60 pooled components, position unstated** | ⚠️ unknowable without tracing 60 upstream datasets |
 
 ⚠️ **A note on this document's own ⚠️ markers, prompted by two of them falling in
@@ -2557,6 +2601,7 @@ except the one marked as an inference.
 | [Panda-70M](#panda-70m) (70 M clips) | **[HD-VILA-100M](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago)** (103 M clips, 371.5 K h) | inherits upstream, stated — and the upstream's own terms are **O-UDA**, read at last |
 | [annotated-egocentric-10k](#annotated-egocentric-10k-dataset) | **Egocentric-10K** | Apache 2.0 — a clean chain |
 | 🔴 [Being-H0.5](#being-h05--the-mano-action-space-at-35000-hours-and-a-preview-subset-with-no-terms) / UniHand-2.0 (35,000 h) | Ego4D + EPIC-KITCHENS + **Egocentric-10K** + in-house UniCraftor 200 h | Ego4D's agreement and EPIC's non-commercial terms enter a mixture whose **released preview subset states no licence and does not say what is in it** |
+| 🔴 [Being-H0.7](#being-h07--one-corpus-three-products-and-a-second-vendor-doing-it) (and Being-H0) | **the same UniHand 2.0**, stated outright rather than inferred | **One acquisition, three products.** The same undocumented mixture, three times the reach |
 | 🔴 [H-Tac](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) (HOI-Tac, ~106 h) | **11 public datasets** — ARCTIC, DexYCB, H2O, H2O3D, HO3D, HOCap, HOI4D, HOT3D, InterHand2.6M, OakInk-v1/v2 | **The largest aggregation here and the least documented**: no licence stated for H-Tac, inputs described only as "public datasets", no release. HOI4D alone is CC BY-NC |
 | ✅ [OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly) (1,107 h) | **EgoDex 829 h** + HoloAssist 166 + CaptainCook4D 54 + HOI4D 44 + HOT3D 13.3 + HO-Cap 0.67 | **The only row with full per-source provenance**: annotations only, no video redistributed, each source's licence text shipped with attribution, and explicit author permission for the CC-BY-NC-ND component. *(Not the only pointers-only release, and not the first: **HD-VILA-100M** below did it in 2022, and **[EgoVid-5M](#egovid-5m)** ships annotations-only under Apache 2.0. Three instances now — the posture is common; the per-source attribution is not)* |
 | ✅ [HD-VILA-100M](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago) (103 M clips, 371.5 K h) | **3.3 M YouTube uploads**, selected by channel popularity + 720p + English subtitles | **URLs only, under a named licence (O-UDA), in 2022** — the release posture OpenEgo is praised for, at ~335× the hours and four years earlier. What it lacks is per-source provenance: one blanket licence over three million third-party uploads |
@@ -3439,6 +3484,7 @@ trust the rest of it.
 - NVIDIA. *Cosmos World Foundation Model Platform for Physical AI.* https://arxiv.org/abs/2501.03575
 - NVIDIA. *NeMo Curator.* https://github.com/NVIDIA-NeMo/Curator
 - NVIDIA. *DreamDojo: A Generalist Robot World Model from Large-Scale Human Videos.* ICML 2026. (code Apache 2.0; video terms unstated) https://arxiv.org/html/2602.06949 · https://github.com/NVIDIA/DreamDojo
+- BeingBeyond Team. *Being-H0.7: A Latent World-Action Model from Egocentric Videos.* arXiv:2605.00078 (v1, 30 Apr 2026). (**no code or dataset licence stated in the paper**; pretrained on UniHand 2.0) https://arxiv.org/html/2605.00078v1 · https://research.beingbeyond.com/being-h07
 - Luo et al. (BeingBeyond). *Being-H0.5: Scaling Human-Centric Robot Learning for Cross-Embodiment Generalization.* arXiv:2601.12993, 19 Jan 2026. (code Apache-2.0; UniHand_Preview released with **no stated licence**; full UniHand-2.0 unreleased) https://arxiv.org/html/2601.12993v1 · https://github.com/BeingBeyond/Being-H · https://huggingface.co/datasets/BeingBeyond/UniHand_Preview
 - Meta Reality Labs. *Ego-1K: A Large-Scale Multiview Video Dataset for Egocentric Vision.* (CC BY 4.0) https://arxiv.org/html/2603.13741v1
 - *HoloAssist.* (CDLA v2) https://holoassist.github.io/

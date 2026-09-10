@@ -417,6 +417,16 @@ it, one corpus. Which sharpens the point rather than softening it: the
 best-resourced actor in the field bought its hours **once** and built everything
 downstream on that single purchase, because there was no second way to get them.
 
+**And a second vendor does the same thing, without needing to be inferred.**
+BeingBeyond states outright that **Being-H0, [Being-H0.5](https://arxiv.org/html/2601.12993v1)
+and [Being-H0.7](https://arxiv.org/html/2605.00078v1)** all pretrain on the same
+**UniHand 2.0** mixture — 35,000 hours, 16,000 of them egocentric human video.
+One acquisition, three products, said plainly rather than deduced from matching
+figures. Two organisations on two continents with the same economics is a shape,
+not an anecdote, and it is the cleanest explanation of why the gap persists:
+**if the corpus is the asset that pays for a whole model family, the acquisition
+layer is the last thing you publish.**
+
 **The newest work keeps confirming it, in two ways.** By staging what the web
 already holds: [SABER](https://arxiv.org/html/2605.09613v1) needed ~100 hours of
 grocery stocking and shelf retrieval — among the most abundantly filmed activity
