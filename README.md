@@ -193,8 +193,11 @@ tactile — [H-Tac](https://arxiv.org/html/2607.01067), whose largest component
 computes contact by *"thresholding the distance between the hand surface and
 object meshes"* — needs per-frame object geometry, which internet video does not
 come with. **Derived tactile is closed to found footage; predicted tactile is
-open.** H-Tac is worth the read anyway for what contact buys: contact-rich task
-progress went from **9.2% to 79.2%**.
+open.** H-Tac is worth the read anyway for what contact buys. The headline comparison is
+**9.2% to 79.2%** on contact-rich tasks, but that is their method against a
+baseline; the number that isolates what the *data* buys is their own
+pre-training ablation, **49.7% without it against 79.2% with** — about a 59%
+relative gain from the corpus rather than the architecture.
 
 ### What already exists in open source
 

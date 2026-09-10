@@ -1285,11 +1285,34 @@ thresholding the distance between the hand surface and object meshes."*
 > field it may honestly record, and this document would have blurred the two had
 > it read only one of the papers.
 
-**Its results are the strongest argument in the document for bothering at all.**
-Task progress on real robots: fine-grained **57.3% → 96.7%**, **contact-rich
-9.2% → 79.2%**, vision-defect 15.6% → 37.8%. Contact-rich manipulation going
-from near-useless to four-fifths is the reason a contact field is worth having
-even when it is estimated rather than measured.
+**Its results are the strongest argument in the document for bothering at all —
+read off the table this sweep, with the row labels the arrows had been hiding.**
+
+| Task category | π₀.₅ | π₀.₅ + tactile | **BeingH-0.5** | TTP *w/o pre-train* | **TTP (theirs)** |
+|---|---|---|---|---|---|
+| Fine-grained | 43.2% | 48.3% | 57.3% | 71.0% | **96.7%** |
+| Contact-rich & fragile | 3.3% | 8.0% | 9.2% | **49.7%** | **79.2%** |
+| Vision defect | 17.8% | 17.8% | 15.6% | 26.7% | **37.8%** |
+
+An earlier revision here wrote these as *"57.3% → 96.7%"*, *"9.2% → 79.2%"*,
+*"15.6% → 37.8%"*. The numbers are all real, but the arrow implies a before-and-
+after of one system when it is **their method against a baseline** — and the
+baseline chosen was [BeingH-0.5](#being-h05--the-mano-action-space-at-35000-hours-and-a-preview-subset-with-no-terms),
+which is not uniformly the strongest one: on **vision defect, π₀.₅ scores 17.8%
+against BeingH-0.5's 15.6%**, so that particular arrow started from the weaker
+of the two. Corrected to a table, which is what a five-column comparison needed
+in the first place.
+
+⚠️ **And the column this document should have been quoting is the fourth.**
+*TTP without pre-training* is **49.7%** on contact-rich, against **79.2%** with
+it. That is the ablation isolating what the tactile pre-training actually buys —
+**+29.5 points, a ~59% relative gain, from the data rather than the
+architecture** — which is precisely the question a collection project asks and
+the baseline comparison cannot answer. The 9.2%-to-79.2% span is the more
+dramatic number; **49.7% to 79.2% is the one that argues for building the
+corpus.** Contact-rich manipulation going from half to four-fifths on
+pre-training alone is why a contact field is worth having even when estimated
+rather than measured.
 
 🔴 **And MANO appears a third time.** Not as annotator ([WiLoR](#wilor--the-chokepoint-read-at-source)),
 not as action space ([EgoVLA](#egovla--mano-as-the-action-space-not-just-the-annotation)),
@@ -3302,7 +3325,7 @@ have put a false claim into this survey.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Twelve of them are
+index, not a summary, and each row links to the working. **Thirteen of them are
 this document's own errors** — marked *(this document…)* in the left column and
 counted honestly, because an earlier revision of this preamble said "three" long
 after the count had passed it, which is the same failure the table exists to
@@ -3331,6 +3354,7 @@ trust the rest of it.
 | The acquisition layer goes unpublished — a pattern in recent work | **It is at least seven years old.** HowTo100M (ICCV 2019) mined 1.2 M YouTube videos and released the training procedure, the evaluation code, a pretrained model and a feature-extraction script — **and nothing about how the videos were found or chosen** | [§7](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago), [§13](#13-why-no-open-source-project-does-exactly-this) |
 | **EgoVid-5M's terms are unresolved — "inherits Ego4D, ⚠️ check upstream"** *(this document, for dozens of sweeps)* | Its release carries **Apache 2.0** and contains **three CSVs and `poses.zip` — no video**. The licence is correctly scoped to the annotations; Ego4D's footage stays under Ego4D's agreement. **The third project found doing annotations-only properly**, after OpenEgo and HD-VILA-100M | [§12](#egovid-5m), [§11](#11-the-licence-trap) |
 | **EgoEngine shows the action branch supplies essentially all the gain, so photorealism is "decoration"** *(this document, editorialising past its source)* | Table 4 is **0.03 / 0.05 / 0.43 / 0.51** — human videos, visual branch, action branch, full system. The 0.05-vs-0.43 comparison was quoted correctly; **the last row was dropped**. Visual generation adds **0.43 → 0.51**, ~19% relative, and the paper says it *"provides an additional gain"*. The trajectory is the payload; appearance is a real but secondary term | [§2](#egoengine) |
+| **H-Tac's contact-rich result is "9.2% → 79.2%"** *(this document, compressing a five-column table into an arrow)* | Both figures are real, but they are **BeingH-0.5's score and theirs**, not a before/after of one system — and on vision defect the arrow started from the weaker of two baselines (π₀.₅ scores 17.8% against the 15.6% quoted). **The informative column is the pre-training ablation: 49.7% → 79.2%**, which isolates what the data buys | [§2](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) |
 | Build AI released ~1 M hours (Egocentric-1M) | **Not findable at the publisher across five attempts** spread over months, the last being the complete API index rather than a search. The only artefact of that name anywhere is an **empty third-party repo** — two files, a 21-byte README, no data | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 | EgoWAM trains on in-the-wild internet video | Its in-the-wild data is **EgoVerse on Project Aria**, flow from Aria VIO poses | [§2](#egowam--and-what-in-the-wild-turns-out-to-mean) |
 | EgoAVFlow needs no special capture, since it needs no robot demos | **Head-mounted RealSense D435 RGBD, plus a ChArUco board in every scene** | [§2](#egoavflow--no-robot-demonstrations-still-means-a-board-in-every-scene) |
