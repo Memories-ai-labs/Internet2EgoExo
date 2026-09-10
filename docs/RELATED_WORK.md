@@ -256,14 +256,33 @@ CDLA v2**, permissive.
 >
 > **And it is no longer alone, which makes the case stronger rather than
 > weaker.** **CaptainCook4D** — *"A Dataset for Understanding Errors in
-> Procedural Activities"* (NeurIPS 2024 D&B), **54 hours, Apache 2.0**, surfaced
-> here as one of [OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly)'s
-> six sources — annotates error in procedural cooking under **permissive terms**,
+> Procedural Activities"* (NeurIPS 2024 D&B, UT Dallas + Florida) — annotates
+> error in procedural cooking under **permissive terms**,
 > where HoloAssist's CDLA v2 is permissive but its domain is instructor-guided
 > repair. Two independent corpora, two domains, the same label. A competence gate
 > trained on both would have something HoloAssist alone could not give it:
 > evidence that "wrong" transfers across task families rather than encoding one
 > annotation protocol.
+>
+> ✅ **Read at its own project page this sweep, and two things came of it.**
+> First a correction of ours: the dataset is **384 recordings, 94.5 hours** —
+> *"we collected a new egocentric 4D dataset CaptainCook4D comprising 384
+> recordings (94.5 hrs) of people performing recipes in real kitchen
+> environments"* — in two activity types, one following the recipe and one
+> departing from it. **This document had it as a "54-hour" dataset, which is not
+> its size but [OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly)'s
+> slice of it.** The OpenEgo composition table is right to say 54; the sentence
+> that turned that into the dataset's own scale was not. Same species as the
+> [Ego-Exo4D](#ego-exo4d) trap — 1,286 total hours against 221 egocentric ones —
+> where a number is true of a subset and false of the thing it gets attached to.
+>
+> Second, a check that came out well. The **Apache 2.0** licence had been taken
+> second-hand from OpenEgo's `ATTRIBUTION.md` rather than from the source.
+> Verified now at the project page — *"We provide the data under the Apache
+> license 2.0"* — it is exactly right. **A small but real audit of the one
+> project this document praises for provenance: its attribution file is
+> accurate.** Praise for record-keeping is worth little unless somebody checks
+> the records, so this is that check.
 
 ### Ego-1K
 
@@ -3370,7 +3389,7 @@ have put a false claim into this survey.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Thirteen of them are
+index, not a summary, and each row links to the working. **Fourteen of them are
 this document's own errors** — marked *(this document…)* in the left column and
 counted honestly, because an earlier revision of this preamble said "three" long
 after the count had passed it, which is the same failure the table exists to
@@ -3400,6 +3419,7 @@ trust the rest of it.
 | **EgoVid-5M's terms are unresolved — "inherits Ego4D, ⚠️ check upstream"** *(this document, for dozens of sweeps)* | Its release carries **Apache 2.0** and contains **three CSVs and `poses.zip` — no video**. The licence is correctly scoped to the annotations; Ego4D's footage stays under Ego4D's agreement. **The third project found doing annotations-only properly**, after OpenEgo and HD-VILA-100M | [§12](#egovid-5m), [§11](#11-the-licence-trap) |
 | **EgoEngine shows the action branch supplies essentially all the gain, so photorealism is "decoration"** *(this document, editorialising past its source)* | Table 4 is **0.03 / 0.05 / 0.43 / 0.51** — human videos, visual branch, action branch, full system. The 0.05-vs-0.43 comparison was quoted correctly; **the last row was dropped**. Visual generation adds **0.43 → 0.51**, ~19% relative, and the paper says it *"provides an additional gain"*. The trajectory is the payload; appearance is a real but secondary term | [§2](#egoengine) |
 | **H-Tac's contact-rich result is "9.2% → 79.2%"** *(this document, compressing a five-column table into an arrow)* | Both figures are real, but they are **BeingH-0.5's score and theirs**, not a before/after of one system — and on vision defect the arrow started from the weaker of two baselines (π₀.₅ scores 17.8% against the 15.6% quoted). **The informative column is the pre-training ablation: 49.7% → 79.2%**, which isolates what the data buys | [§2](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) |
+| **CaptainCook4D is a 54-hour dataset** *(this document, attaching OpenEgo's slice to the source)* | Its own page says **384 recordings, 94.5 hours**. 54 h is what **OpenEgo ingests**, not what the dataset is — the same subset-versus-total trap as Ego-Exo4D's 1,286 h against 221 ego-hours. Its **Apache 2.0**, previously taken second-hand from OpenEgo's `ATTRIBUTION.md`, verifies at the project page | [§1](#holoassist), [§11](#openego--somebody-does-this-properly-and-it-should-be-said-plainly) |
 | Build AI released ~1 M hours (Egocentric-1M) | **Not findable at the publisher across five attempts** spread over months, the last being the complete API index rather than a search. The only artefact of that name anywhere is an **empty third-party repo** — two files, a 21-byte README, no data | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 | EgoWAM trains on in-the-wild internet video | Its in-the-wild data is **EgoVerse on Project Aria**, flow from Aria VIO poses | [§2](#egowam--and-what-in-the-wild-turns-out-to-mean) |
 | EgoAVFlow needs no special capture, since it needs no robot demos | **Head-mounted RealSense D435 RGBD, plus a ChArUco board in every scene** | [§2](#egoavflow--no-robot-demonstrations-still-means-a-board-in-every-scene) |
