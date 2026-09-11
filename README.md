@@ -432,6 +432,16 @@ not an anecdote, and it is the cleanest explanation of why the gap persists:
 **if the corpus is the asset that pays for a whole model family, the acquisition
 layer is the last thing you publish.**
 
+The survey now has **five artefacts from that one lab** — the three models above,
+the tactile work **H-Tac/TTP**, and **[OpenMMEgo](https://github.com/BeingBeyond/OpenMMEgo)**,
+whose NeurIPS 2025 title promises *"Open Weights and Data"*. A year on, the
+weights are genuinely public (13 model repos) and the repository's entire data
+section reads *"We will release our code and data soon."* Its **OME10M** is 8.2 M
+QA pairs synthesised from Ego4D — annotations over someone else's video, the one
+shape that could have shipped without redistributing a frame. **The half of a
+promise that gets kept is the half that costs least**, and a claim of openness in
+a title travels into every citation while nothing verifies it.
+
 **The newest work keeps confirming it, in two ways.** By staging what the web
 already holds: [SABER](https://arxiv.org/html/2605.09613v1) needed ~100 hours of
 grocery stocking and shelf retrieval — among the most abundantly filmed activity

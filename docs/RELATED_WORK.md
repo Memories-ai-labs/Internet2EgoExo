@@ -57,6 +57,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [EgoHumanoid](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator)
   - [EgoVLA](#egovla--mano-as-the-action-space-not-just-the-annotation)
   - [Being-H0.5](#being-h05--the-mano-action-space-at-35000-hours-and-a-preview-subset-with-no-terms)
+  - [OpenMMEgo](#openmmego--open-weights-and-data-half-kept)
   - [Being-H0.7](#being-h07--one-corpus-three-products-and-a-second-vendor-doing-it)
   - [World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild)
   - [EgoTac](#egotac--tactile-predicted-from-ordinary-video-and-a-ceiling-that-moved)
@@ -1163,6 +1164,59 @@ anyone, including its 13,000 monthly downloaders.
 > the cleanest demonstration of why §14 keeps the *rights record format* on the
 > build side. A 35,000-hour recipe, an Apache-2.0 codebase, state-of-the-art
 > numbers — and the released data still cannot be traced to its sources.
+
+### OpenMMEgo — "Open Weights and Data", half kept
+
+**[BeingBeyond/OpenMMEgo](https://github.com/BeingBeyond/OpenMMEgo)** (NeurIPS
+2025) — the **fifth BeingBeyond artefact** in this survey, and the sharpest
+instance anywhere in it of the gap between a promise and a grant, because **the
+promise is in the paper's title**.
+
+**What it claims.** *"OpenMMEgo: Enhancing Egocentric Understanding for LMMs with
+**Open Weights and Data**."* The contribution is three-part: **OME10M**, *"a
+large-scale, high-quality dataset… comprising **over 8.2 M egocentric video QA
+pairs synthesised from Ego4D series**"*; **OMEBench**, a benchmark for egocentric
+understanding; and semantic-aware visual token compression with curriculum
+learning. Qwen2.5-VL tuned with it *"substantially outperforms other models of
+the same size in egocentric video understanding."*
+
+🔴 **What the repository says, a year on.** The entire `## Code` section, quoted
+in full:
+
+> *"We will release our code and data soon."*
+
+That is the whole section. The repo carries an **MIT `LICENSE`** — governing a
+repository whose substantive content is a README — and **neither OME10M nor
+OMEBench is findable on Hugging Face**, searched by both names this sweep.
+
+⚖️ **The fair version, because half of the title is kept.** BeingBeyond publishes
+**13 public model repositories** — the Being-H0 family at 1B/8B/14B, the BeingVL
+tokenisers, the Being-H05 variants including LIBERO and RoboCasa fine-tunes. **The
+"Open Weights" half is real and shipped.** It is the **"and Data"** half that is
+a year-old *soon*. So this is not a project that promised nothing and delivered
+nothing; it is one that delivered exactly the half that costs least to give away.
+
+> **Why this outranks [World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild)
+> as the document's example of a promise.** WIYH says *"all data and hardware
+> design will be open-source"* in its body — a sentence a reader has to go and
+> find. **OpenMMEgo says it in the title**, which is the one string that
+> propagates into every citation, every listing and every search result that
+> mentions the work. A claim in a title is the most-copied claim a paper makes and
+> the least-checked. Added to
+> [the vocabulary table](#the-vocabulary-problem--four-phrases-that-do-not-mean-what-they-say)
+> as a sixth trap: **a name or title that asserts openness is a claim about
+> intent, not a licence** — and `Open` in a project name is not evidence of
+> anything.
+>
+> ⚠️ **And note what was available to release cheaply and was not.** OME10M is
+> **8.2 M QA pairs synthesised from Ego4D** — that is *annotations over someone
+> else's video*, the exact shape [EgoVid-5M](#egovid-5m) and
+> [OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly)
+> ship without redistributing a single frame, and which carries no obligation to
+> re-host Ego4D's footage. The annotations-only route was open and was not taken.
+> **For this repo** the lesson is the one §14 already encodes: a release posture
+> is a decision made once and then either honoured or not, and **the only
+> evidence that distinguishes the two is a file you can fetch.**
 
 ### Being-H0.7 — one corpus, three products, and a second vendor doing it
 
@@ -2568,6 +2622,7 @@ Reading the licences across this document produces the wider pattern:
 | EgoExoLearn | **MIT throughout** — the repo `LICENSE` for the code, and `license: mit` on the author's own Hugging Face dataset card (ungated, 3,932 monthly downloads) | ✅ resolved — the third long-standing ⚠️ to come back permissive |
 | **Being-H0.5 / UniHand_Preview** | **Apache-2.0 on the code**; the released dataset subset states **no licence**, ungated, 13,377 monthly downloads | 🔴 released and actively used, provenance undeterminable |
 | **Being-H0.7** | **none stated at all** — the paper's only licence string is arXiv's, and the word *"release"* does not appear in the body | 🔴 same undocumented UniHand 2.0 mixture, a third time |
+| **OpenMMEgo** (OME10M, OMEBench) | **MIT on a repository containing a README**; the data section reads *"We will release our code and data soon"* and neither dataset is findable | 🔴 **the title says "Open Weights and Data"** — weights shipped (13 public model repos), data not |
 | **Open X-Embodiment** | **none stated; 60 pooled components, position unstated** | ⚠️ unknowable without tracing 60 upstream datasets |
 
 ⚠️ **A note on this document's own ⚠️ markers, prompted by two of them falling in
@@ -2743,6 +2798,7 @@ except the one marked as an inference.
 | 🔴 [Being-H0.5](#being-h05--the-mano-action-space-at-35000-hours-and-a-preview-subset-with-no-terms) / UniHand-2.0 (35,000 h) | Ego4D + EPIC-KITCHENS + **Egocentric-10K** + in-house UniCraftor 200 h | Ego4D's agreement and EPIC's non-commercial terms enter a mixture whose **released preview subset states no licence and does not say what is in it** |
 | 🔴 [Being-H0.7](#being-h07--one-corpus-three-products-and-a-second-vendor-doing-it) (and Being-H0) | **the same UniHand 2.0**, stated outright rather than inferred | **One acquisition, three products.** The same undocumented mixture, three times the reach |
 | 🔴 [H-Tac / TTP](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) (BeingBeyond) | **11 public datasets**, and benchmarked against **BeingH-0.5 — the same group's own model** | **A fourth BeingBeyond artefact.** Not a separate lab, as this survey had assumed: one group across a VLA family, a world-action model and the tactile work |
+| 🔴 [OpenMMEgo](#openmmego--open-weights-and-data-half-kept) / OME10M (8.2 M QA pairs) | **Ego4D**, synthesised into QA pairs | **A fifth.** Annotations over someone else's video — the one shape that could have been released without redistributing a frame, and was not |
 | 🔴 [H-Tac](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) (HOI-Tac, ~106 h) | **11 public datasets** — ARCTIC, DexYCB, H2O, H2O3D, HO3D, HOCap, HOI4D, HOT3D, InterHand2.6M, OakInk-v1/v2 | **The largest aggregation here and the least documented**: no licence stated for H-Tac, inputs described only as "public datasets", no release. HOI4D alone is CC BY-NC |
 | ✅ [OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly) (1,107 h) | **EgoDex 829 h** + HoloAssist 166 + CaptainCook4D 54 + HOI4D 44 + HOT3D 13.3 + HO-Cap 0.67 | **The only row with full per-source provenance**: annotations only, no video redistributed, each source's licence text shipped with attribution, and explicit author permission for the CC-BY-NC-ND component. *(Not the only pointers-only release, and not the first: **HD-VILA-100M** below did it in 2022, and **[EgoVid-5M](#egovid-5m)** ships annotations-only under Apache 2.0. Three instances now — the posture is common; the per-source attribution is not)* |
 | ✅ [HD-VILA-100M](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago) (103 M clips, 371.5 K h) | **3.3 M YouTube uploads**, selected by channel popularity + 720p + English subtitles | **URLs only, under a named licence (O-UDA), in 2022** — the release posture OpenEgo is praised for, at ~335× the hours and four years earlier. What it lacks is per-source provenance: one blanket licence over three million third-party uploads |
@@ -3491,9 +3547,11 @@ someone asking this document's question — *did this footage come off the open
 internet, and may I use it?* — and every one of them, taken at face value, would
 have put a false claim into this survey.
 
-The heading says *phrases*, and four of the rows are. **The fifth is not a phrase
-at all** — it is two projects whose names differ by one suffix, where the failure
-happens in the search box rather than in the reading. It is kept here because the
+The heading says *phrases*, and four of the rows are. **The last two are not
+phrases at all** — one is two projects whose names differ by one suffix, where
+the failure happens in the search box rather than in the reading; the other is a
+claim of openness carried in a project's own name or title, where the failure is
+that the claim travels further than anything that could verify it. It is kept here because the
 consequence is identical: a fact about one artefact recorded against another. The
 defence is also identical, and it is the only one that works for all five —
 **resolve to an identifier, not a name.** An arXiv ID, a repo path, a dataset
@@ -3507,6 +3565,7 @@ that failed.
 | **a licence on the paper / the code / the repo** | the terms of the **data** | the terms of that adjacent artefact only — the dataset's terms are separate, and often absent | [EgoScale](#egoscale) (arXiv CC BY 4.0), [NIMBLE](#wilor--the-chokepoint-read-at-source) (repo MIT, paper CC BY), [EgoExoLearn](#egoexolearn) and [EgoHumanoid](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator) (code MIT / Apache 2.0) |
 | **a dataset named for its size** | that many hours of the thing you want | often a different unit, a different viewpoint, a different corpus entirely — or no corpus at all | [Ego-1K](#ego-1k) — 956 clips of 8–10 s, not 1,000 hours; [Ego-Exo4D](#ego-exo4d) — 1,286 h of which **221 are egocentric**; **`easpeeder/Egocentric-1M`** — a public, MIT-tagged repo containing [two files and no data](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 | **two projects one suffix apart** | distinct work, distinctly findable | the search engine silently picks one — **EgoTac** (arXiv 2608.15060) and **EgoTactile** (arXiv 2606.09243) are different 2026 papers on tactile from egocentric video, and a search for the first returns the second's dataset card, licence and all | [EgoTactile](#egotactile--tactile-measured-and-a-rig-that-keeps-the-glove-out-of-frame) |
+| **a name or title that asserts openness** | released, and released under terms | a statement of intent that propagates into every citation — **OpenMMEgo**'s title promises *"Open Weights and Data"*; a year on the weights are public and the repository's data section reads *"We will release our code and data soon"* | [OpenMMEgo](#openmmego--open-weights-and-data-half-kept) |
 
 > **The operational lesson, and it is the same one every time.** Every entry in
 > the right-hand column was recovered by opening the source and reading a
@@ -3638,6 +3697,7 @@ trust the rest of it.
 - NVIDIA. *Cosmos World Foundation Model Platform for Physical AI.* https://arxiv.org/abs/2501.03575
 - NVIDIA. *NeMo Curator.* https://github.com/NVIDIA-NeMo/Curator
 - NVIDIA. *DreamDojo: A Generalist Robot World Model from Large-Scale Human Videos.* ICML 2026. (code Apache 2.0; video terms unstated) https://arxiv.org/html/2602.06949 · https://github.com/NVIDIA/DreamDojo
+- Luo, Yue, Zhang, Feng, Zheng, Ye, Lu (BeingBeyond). *OpenMMEgo: Enhancing Egocentric Understanding for LMMs with Open Weights and Data.* NeurIPS 2025. (repo **MIT**; **OME10M and OMEBench not released** — *"We will release our code and data soon"*) https://github.com/BeingBeyond/OpenMMEgo
 - BeingBeyond Team. *Being-H0.7: A Latent World-Action Model from Egocentric Videos.* arXiv:2605.00078 (v1, 30 Apr 2026). (**no code or dataset licence stated in the paper**; pretrained on UniHand 2.0) https://arxiv.org/html/2605.00078v1 · https://research.beingbeyond.com/being-h07
 - Luo et al. (BeingBeyond). *Being-H0.5: Scaling Human-Centric Robot Learning for Cross-Embodiment Generalization.* arXiv:2601.12993, 19 Jan 2026. (code Apache-2.0; UniHand_Preview released with **no stated licence**; full UniHand-2.0 unreleased) https://arxiv.org/html/2601.12993v1 · https://github.com/BeingBeyond/Being-H · https://huggingface.co/datasets/BeingBeyond/UniHand_Preview
 - Meta Reality Labs. *Ego-1K: A Large-Scale Multiview Video Dataset for Egocentric Vision.* (CC BY 4.0) https://arxiv.org/html/2603.13741v1
