@@ -184,7 +184,12 @@ And the set of things worth asserting per clip is growing.
 [EgoTac](https://arxiv.org/html/2608.15060) predicts dense contact and force
 fields **from ordinary egocentric RGB**, zero-shot on Ego4D, EPIC-KITCHENS and
 EgoDex — footage recorded with no tactile hardware — at contact F1 above 0.70
-out of domain. That does not give found footage tactile *measurements*, and the
+out of domain. (Not to be confused with **EgoTactile**, arXiv 2606.09243 — a
+different 2026 paper one suffix away, which *measures* grasp pressure from 162
+sensing locations and releases it under CC BY-NC 4.0. Its trick is worth
+knowing: the hand the camera sees is **bare**, while a synchronised off-camera
+gloved hand supplies the pressure reference, so the instrument never enters the
+training pixels.) That does not give found footage tactile *measurements*, and the
 survey is careful about the difference. It does mean **whether the hand is
 actually touching the object, or hovering** is now a verdict a pipeline can
 record with evidence, which is the next field the annotation tree should grow.

@@ -60,6 +60,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [Being-H0.7](#being-h07--one-corpus-three-products-and-a-second-vendor-doing-it)
   - [World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild)
   - [EgoTac](#egotac--tactile-predicted-from-ordinary-video-and-a-ceiling-that-moved)
+  - [EgoTactile](#egotactile--tactile-measured-and-a-rig-that-keeps-the-glove-out-of-frame)
   - [H-Tac](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual)
   - [Open-AoE](#open-aoe)
   - [EgoVerse](#egoverse)
@@ -214,11 +215,25 @@ teaches, the ego video executes."
 The repo carries an **MIT** `LICENSE` file (*"MIT License / Copyright (c) 2024
 OpenGVLab"*). That governs the **code**. No separate dataset terms are stated
 anywhere on the repository page, and the video is offered as direct downloads —
-Google Drive, BaiduYun and Hugging Face — with no access form. So the honest
-record is: **code MIT, dataset terms unstated but access unrestricted** — the
-mirror image of [Egocentric-10K](#egocentric-10k), which gates access while
-granting permissive terms. Two more reasons to keep licence and access in
-separate fields.
+Google Drive, BaiduYun and Hugging Face — with no access form.
+
+✅ **Resolved this sweep, by looking at the Hugging Face mirror instead of the
+repository.** **[hyf015/EgoExoLearn](https://huggingface.co/datasets/hyf015/EgoExoLearn)**
+— published under the first author's own handle — carries **`license: mit`** in
+its card metadata, is ungated, and serves **3,932 downloads a month**. So the
+dataset is MIT too, not merely the code. The record moves from *"code MIT, data
+unresolved"* to **MIT throughout**. (The card also notes the HF copies are
+*"unprocessed, full-size videos"*; the processed 25 fps versions used for the
+benchmarks live on the GitHub page — an access distinction, not a licence one.)
+
+> **That is three for three.** Panda-70M's *"⚠️ check upstream"* resolved to
+> O-UDA, EgoVid-5M's to a correctly scoped Apache 2.0, and now EgoExoLearn's to
+> MIT on the data. Every long-standing unresolved marker that has actually been
+> chased has come back **more permissive than the marker implied**, and in this
+> case the answer was one surface away the whole time. The
+> [note in §11](#11-the-licence-trap) about unresolved fields being facts about
+> the survey rather than the source is now carried by three data points instead
+> of two.
 
 ### HOI4D
 
@@ -1311,6 +1326,63 @@ of the trap, so worth saying plainly: nothing here is obtainable yet.
 > instances catalogued in §15, its inference set genuinely *does* include found
 > corpora. The phrase misleads less here than elsewhere, which is worth
 > recording precisely because the pattern is not universal.
+
+### EgoTactile — tactile *measured*, and a rig that keeps the glove out of frame
+
+**[arXiv 2606.09243](https://arxiv.org/abs/2606.09243)** (ICML 2026 Spotlight) ·
+**[HustleHard/EgoTactile](https://huggingface.co/datasets/HustleHard/EgoTactile)**
+— *"Learning Grasp Pressure for Everyday Objects from Egocentric Video."*
+
+⚠️ **First, the trap, because it nearly cost this document a false entry.**
+**EgoTactile is not [EgoTac](#egotac--tactile-predicted-from-ordinary-video-and-a-ceiling-that-moved).**
+Two different 2026 papers, both on tactile from egocentric video, with names one
+suffix apart: **EgoTac is arXiv 2608.15060; EgoTactile is arXiv 2606.09243.** A
+Hugging Face search for `EgoTac` returns *EgoTactile's* dataset card first, and
+that card carries a licence — so a sweep checking EgoTac's unresolved licence
+field, which is exactly what this one was doing, is one careless step from
+recording **CC BY-NC 4.0** against the wrong project. Caught by comparing arXiv
+IDs rather than names. Added to
+[the vocabulary table](#the-vocabulary-problem--four-phrases-that-do-not-mean-what-they-say)
+as a fifth trap: **near-identical names in the same subfield, where the search
+engine resolves the ambiguity for you and does not tell you it did.**
+
+**Mechanism and scale, read at the card.** Egocentric RGB at **1280×720, 15 FPS**,
+paired with **full-hand pressure from 162 sensing locations** over a **0–350 N**
+range, synchronised at 15 Hz. **12 participants, 63 everyday objects, 7
+categories.** Two methods ship with it: **EgoPressureFormer** (discriminative)
+and **EgoPressureDiff**, a conditional diffusion model adapting a pretrained
+video-diffusion backbone *"for pressure estimation under partial visual
+observations and physical ambiguity."*
+
+🟢 **The Bare-Hand Set is the idea worth stealing, and it answers a problem this
+document raises against
+[World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild).**
+Instrumented tactile capture has an inherent flaw as training data for found
+footage: **the glove is in frame**, so a model learns to read pressure off a
+sensor that internet video will never show. EgoTactile's answer is a two-hand
+protocol — **the hand the camera sees is bare, while a synchronised *off-camera*
+gloved hand performs the same grasp and supplies the pressure reference**, the
+two coordinated by **metronome**. The measurement comes from the instrumented
+hand; the pixels come from an uninstrumented one.
+
+> **Where it sits in the tactile picture, which now has three positions rather
+> than two.** [H-Tac](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual)
+> *derives* contact geometrically, needing per-frame object meshes, and is closed
+> to found footage by construction. [EgoTac](#egotac--tactile-predicted-from-ordinary-video-and-a-ceiling-that-moved)
+> *predicts* it from pixels alone, and is open. **EgoTactile *measures* it** —
+> which is neither, and is the thing the other two are respectively approximating
+> and needing. It is the supervision that makes prediction from pixels trainable
+> at all, and the bare-hand protocol is what stops that supervision carrying the
+> instrument into the training distribution.
+>
+> ✅ **And it is released with terms, which the other two are not.**
+> **CC BY-NC 4.0**, ungated, **1,614 downloads a month**, with a companion
+> `EgoTactile-OXT` set on the same licence. Non-commercial, so not shippable —
+> but it is the only one of the three tactile corpora here whose rights position
+> is a fact rather than a blank. **For this repo** the read is unchanged in
+> direction and sharper in detail: found footage will never *carry* pressure,
+> estimators that annotate it need measured pairs to learn from, and the useful
+> measured pairs are the ones captured without the instrument in shot.
 
 ### H-Tac — tactile *derived* rather than predicted, and the OpenEgo counterfactual
 
@@ -2431,6 +2503,8 @@ Reading the licences across this document produces the wider pattern:
 | **Ego-OSCAR** — Stereo-550 dataset | **`fpvlabs-license`**, bespoke: "research use", but "commercial usage allowed"; gated, **and the licence text itself is behind the gate** | ⚠️ **unclassifiable** — the one thing a custom licence needs is a reading, and it cannot be read before agreeing |
 | EgoCS-400K | CC BY 4.0 | ✅ with attribution (rendered gameplay, not real-world footage) |
 | **World In Your Hands** | **none stated in the paper; "will be open-source"** | ⚠️ unresolved — get the dataset licence in writing |
+| **EgoTactile** | **CC BY-NC 4.0**, ungated (plus `EgoTactile-OXT` on the same terms) | ❌ non-commercial — but stated, which neither EgoTac nor H-Tac manages |
+| ⚠️ **Open X-Embodiment, third-party mirror** | `jxu124/OpenX-Embodiment` self-describes as *"an unofficial Dataset Repo"* and carries **`license: cc-by-4.0`** over a 55-in-1 aggregation whose official position states **no overall licence** | 🔴 **do not rely on it** — an uploader's licence field is an assertion, not a finding |
 | **LAION-BVD** | **research only** | ❌ |
 | **EgoInfinity (as a whole)** | MIT code, encumbered deps | ❌ until deps are swapped |
 | **Ego4D / Ego-Exo4D** | **signed agreement, terms not public** | ⚠️ unknowable until you sign — do not assume |
@@ -2444,7 +2518,7 @@ Reading the licences across this document produces the wider pattern:
 | [EgoScale](#egoscale) | none stated; code "coming soon" | ⚠️ not obtainable at time of writing |
 | **AgiBotWorld-Beta** | **CC BY-NC-SA 4.0**, contact-gated | ❌ non-commercial **and** share-alike — the most restrictive terms here |
 | DROID | open dataset; terms not stated on the project page (**re-checked; still silent** — the page says only that the dataset, training code and hardware guide are open-sourced) | ⚠️ unresolved |
-| EgoExoLearn | **MIT on the code**; dataset terms not separately stated, access unrestricted | ⚠️ code clear, data unresolved |
+| EgoExoLearn | **MIT throughout** — the repo `LICENSE` for the code, and `license: mit` on the author's own Hugging Face dataset card (ungated, 3,932 monthly downloads) | ✅ resolved — the third long-standing ⚠️ to come back permissive |
 | **Being-H0.5 / UniHand_Preview** | **Apache-2.0 on the code**; the released dataset subset states **no licence**, ungated, 13,377 monthly downloads | 🔴 released and actively used, provenance undeterminable |
 | **Being-H0.7** | **none stated at all** — the paper's only licence string is arXiv's, and the word *"release"* does not appear in the body | 🔴 same undocumented UniHand 2.0 mixture, a third time |
 | **Open X-Embodiment** | **none stated; 60 pooled components, position unstated** | ⚠️ unknowable without tracing 60 upstream datasets |
@@ -3369,12 +3443,22 @@ someone asking this document's question — *did this footage come off the open
 internet, and may I use it?* — and every one of them, taken at face value, would
 have put a false claim into this survey.
 
+The heading says *phrases*, and four of the rows are. **The fifth is not a phrase
+at all** — it is two projects whose names differ by one suffix, where the failure
+happens in the search box rather than in the reading. It is kept here because the
+consequence is identical: a fact about one artefact recorded against another. The
+defence is also identical, and it is the only one that works for all five —
+**resolve to an identifier, not a name.** An arXiv ID, a repo path, a dataset
+card URL. Every row below is a case where the human-readable label was the thing
+that failed.
+
 | The phrase | What a reader assumes | What it denotes | Where |
 |---|---|---|---|
 | **"in the wild"** | found on the internet | *outside the robot's lab* — captured by the authors, on their own hardware, in real environments | [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean) (EgoVerse on Aria), [World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild) (own wearable suit), and the term's general use across [§2](#2-scaling-human-video-for-robot-learning). ✅ **One honest exception**: [EgoTac](#egotac--tactile-predicted-from-ordinary-video-and-a-ceiling-that-moved)'s in-the-wild inference really does run on found corpora |
 | **"from existing web sources"** | crawled from the internet | *from existing public research datasets* — Ego4D, EPIC-KITCHENS, HowTo100M, Something-Something | [RynnVLA-001](#rynnvla-001--filter-dont-convert) |
 | **a licence on the paper / the code / the repo** | the terms of the **data** | the terms of that adjacent artefact only — the dataset's terms are separate, and often absent | [EgoScale](#egoscale) (arXiv CC BY 4.0), [NIMBLE](#wilor--the-chokepoint-read-at-source) (repo MIT, paper CC BY), [EgoExoLearn](#egoexolearn) and [EgoHumanoid](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator) (code MIT / Apache 2.0) |
 | **a dataset named for its size** | that many hours of the thing you want | often a different unit, a different viewpoint, a different corpus entirely — or no corpus at all | [Ego-1K](#ego-1k) — 956 clips of 8–10 s, not 1,000 hours; [Ego-Exo4D](#ego-exo4d) — 1,286 h of which **221 are egocentric**; **`easpeeder/Egocentric-1M`** — a public, MIT-tagged repo containing [two files and no data](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
+| **two projects one suffix apart** | distinct work, distinctly findable | the search engine silently picks one — **EgoTac** (arXiv 2608.15060) and **EgoTactile** (arXiv 2606.09243) are different 2026 papers on tactile from egocentric video, and a search for the first returns the second's dataset card, licence and all | [EgoTactile](#egotactile--tactile-measured-and-a-rig-that-keeps-the-glove-out-of-frame) |
 
 > **The operational lesson, and it is the same one every time.** Every entry in
 > the right-hand column was recovered by opening the source and reading a
@@ -3476,6 +3560,7 @@ trust the rest of it.
 - Huang et al. *EgoExoLearn.* CVPR 2024. https://github.com/OpenGVLab/EgoExoLearn
 - *HOI4D.* (CC BY-NC 4.0) https://arxiv.org/pdf/2404.09933 · https://hoi4d.github.io/
 - Shi et al. (OpenDriveLab). *EgoHumanoid: Unlocking In-the-Wild Loco-Manipulation with Robot-Free Egocentric Demonstration.* RSS 2026, arXiv:2602.10106 (v2, 4 Jun 2026). (Apache 2.0 on the code; **no dataset licence stated**) https://arxiv.org/abs/2602.10106 · https://github.com/OpenDriveLab/EgoHumanoid
+- *EgoTactile: Learning Grasp Pressure for Everyday Objects from Egocentric Video.* ICML 2026 Spotlight, arXiv:2606.09243. (dataset **CC BY-NC 4.0**, ungated) https://arxiv.org/abs/2606.09243 · https://egotactile.github.io/ · https://huggingface.co/datasets/HustleHard/EgoTactile
 - *ENIGMA-360: An Ego-Exo Dataset for Human Behavior Understanding in Industrial Scenarios.* (CC BY 4.0) https://arxiv.org/html/2603.09741v2 · project page https://iplab.dmi.unict.it/ENIGMA-360 **has been unreachable across four checks — HTTP 500, then a connection failure, then HTTP 403, and now HTTP 403 again (9 Sep 2026, with and without a trailing slash) — while the lab host root returns 200. The error has stopped varying, which reads less like a flapping server than a settled block on that path. Still recorded as unstable rather than removed, but a fourth failure with the last two identical is worth more weight than three assorted ones; cite the arXiv HTML**
 - *SABER: A Scalable Action-Based Embodied Dataset for Real-World VLA Adaptation.* DreamVu. (10 K-sample subset CC BY-NC 4.0; full corpus vendor-gated) https://arxiv.org/html/2605.09613v1 · https://huggingface.co/datasets/DreamVu/SABER-10K
 - *EgoDex: Learning Dexterous Manipulation from Large-Scale Egocentric Video.* (CC-BY-NC-ND) https://arxiv.org/abs/2505.11709 — **current version is v3 (9 Mar 2026); the `v1` link is cited deliberately where the licence is quoted**, because v3 no longer states it: https://arxiv.org/html/2505.11709v1
