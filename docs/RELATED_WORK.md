@@ -1298,6 +1298,28 @@ corpora recorded with no tactile hardware whatsoever. In-domain force prediction
 reaches **MAE below 0.06 N**; out-of-domain contact estimation reaches **F1 above
 0.70**, beating prior contact estimators on OAKINK2 and FPHA.
 
+🔴 **Licence re-checked at the paper this sweep, and "unstated" was too generous.**
+The body contains **no occurrence of *"we release"*, *"will be released"*,
+*"publicly available"* or *"available at"***; there is no repository, no dataset
+card and no project page; and the only licence string anywhere is arXiv's own.
+So the field should not read *terms unstated* — **there is nothing released to
+attach terms to.** Reclassified from the second licence failure mode to the
+third. ⚠️ And note the search hazard recorded at
+[EgoTactile](#egotactile--tactile-measured-and-a-rig-that-keeps-the-glove-out-of-frame):
+looking for "EgoTac" on Hugging Face returns *EgoTactile's* card, licence
+included, which is how a blank field gets filled with the wrong project's terms.
+
+🟢 **And EgoTac names, in its own limitations, the problem EgoTactile's rig
+solves.** Its appendix carries a section titled **"Visual-domain gap introduced
+by tactile gloves"** — the observation that a model trained on instrumented
+capture learns to read pressure off a glove that found footage never shows.
+EgoTac raises it as a limitation of the training data available to it;
+[EgoTactile](#egotactile--tactile-measured-and-a-rig-that-keeps-the-glove-out-of-frame)
+answers it at capture time by filming a bare hand while an off-camera gloved one
+supplies the reference. **Neither paper cites the other, and read together they
+are a problem statement and its solution** — which is the argument for reading a
+subfield as a set rather than a list.
+
 **Licence.** The listing carries only the arXiv perpetual non-exclusive licence
 — the *paper's* — with **no code, data or release statement** in the document.
 The [fifth instance](#the-vocabulary-problem--four-phrases-that-do-not-mean-what-they-say)
@@ -1389,6 +1411,29 @@ hand; the pixels come from an uninstrumented one.
 **[arXiv 2607.01067](https://arxiv.org/html/2607.01067)** — read immediately after
 [EgoTac](#egotac--tactile-predicted-from-ordinary-video-and-a-ceiling-that-moved),
 because the pair draws the line this repo actually has to work with.
+
+🔴 **Two things this document had not noticed, found on a licence re-check.**
+First, **H-Tac is BeingBeyond's** — the same lab as
+[Being-H0.5](#being-h05--the-mano-action-space-at-35000-hours-and-a-preview-subset-with-no-terms)
+and [Being-H0.7](#being-h07--one-corpus-three-products-and-a-second-vendor-doing-it),
+which the survey had been treating as unrelated projects. The paper's own name
+for the method is **TTP** (*Transferable Tactile Pre-training*), which is the
+`TTP (ours)` column in [its results table](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) —
+and the baseline it is measured against, **BeingH-0.5, is the same group's
+previous model.** Nothing improper in that; it is ordinary practice. But a
+reader comparing *"their method against the strongest baseline"* should know the
+baseline is in-house, and the document should have said so. **That makes four
+BeingBeyond artefacts here**, which is a concentration worth seeing on the
+[derivation map](#who-feeds-whom--the-derivation-map) rather than scattered.
+
+Second, **its printed project page does not exist.** The paper prints
+`https://beingbeyond.github.io/TTP/`; fetched this sweep it returns **HTTP 404 —
+*"There isn't a GitHub Pages site here."*** That is the **third** broken printed
+project URL in this survey, after ACE-Ego-0's 404 and ENIGMA-360's four failures.
+Combined with a body containing **no occurrence of *"we release"*, *"publicly
+available"* or *"available at"***, the honest classification moves: H-Tac is not
+*"terms unstated"*, it is **not released**, with an advertised page that was
+never published.
 
 **Scale.** ~**160 hours**, **300+ tasks**, **135 k+ episodes**, in three parts:
 
@@ -2504,6 +2549,8 @@ Reading the licences across this document produces the wider pattern:
 | EgoCS-400K | CC BY 4.0 | ✅ with attribution (rendered gameplay, not real-world footage) |
 | **World In Your Hands** | **none stated in the paper; "will be open-source"** | ⚠️ unresolved — get the dataset licence in writing |
 | **EgoTactile** | **CC BY-NC 4.0**, ungated (plus `EgoTactile-OXT` on the same terms) | ❌ non-commercial — but stated, which neither EgoTac nor H-Tac manages |
+| **EgoTac** | **nothing released** — no repo, no card, no project page, and no *"we release"* anywhere in the body | 🔴 reclassified from *terms unstated* to **not released**: there is nothing to attach terms to |
+| **H-Tac / TTP** (BeingBeyond) | **nothing released**, and the printed project page `beingbeyond.github.io/TTP/` returns **404** | 🔴 same reclassification — an advertised page that was never published |
 | ⚠️ **Open X-Embodiment, third-party mirror** | `jxu124/OpenX-Embodiment` self-describes as *"an unofficial Dataset Repo"* and carries **`license: cc-by-4.0`** over a 55-in-1 aggregation whose official position states **no overall licence** | 🔴 **do not rely on it** — an uploader's licence field is an assertion, not a finding |
 | **LAION-BVD** | **research only** | ❌ |
 | **EgoInfinity (as a whole)** | MIT code, encumbered deps | ❌ until deps are swapped |
@@ -2695,6 +2742,7 @@ except the one marked as an inference.
 | [annotated-egocentric-10k](#annotated-egocentric-10k-dataset) | **Egocentric-10K** | Apache 2.0 — a clean chain |
 | 🔴 [Being-H0.5](#being-h05--the-mano-action-space-at-35000-hours-and-a-preview-subset-with-no-terms) / UniHand-2.0 (35,000 h) | Ego4D + EPIC-KITCHENS + **Egocentric-10K** + in-house UniCraftor 200 h | Ego4D's agreement and EPIC's non-commercial terms enter a mixture whose **released preview subset states no licence and does not say what is in it** |
 | 🔴 [Being-H0.7](#being-h07--one-corpus-three-products-and-a-second-vendor-doing-it) (and Being-H0) | **the same UniHand 2.0**, stated outright rather than inferred | **One acquisition, three products.** The same undocumented mixture, three times the reach |
+| 🔴 [H-Tac / TTP](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) (BeingBeyond) | **11 public datasets**, and benchmarked against **BeingH-0.5 — the same group's own model** | **A fourth BeingBeyond artefact.** Not a separate lab, as this survey had assumed: one group across a VLA family, a world-action model and the tactile work |
 | 🔴 [H-Tac](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) (HOI-Tac, ~106 h) | **11 public datasets** — ARCTIC, DexYCB, H2O, H2O3D, HO3D, HOCap, HOI4D, HOT3D, InterHand2.6M, OakInk-v1/v2 | **The largest aggregation here and the least documented**: no licence stated for H-Tac, inputs described only as "public datasets", no release. HOI4D alone is CC BY-NC |
 | ✅ [OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly) (1,107 h) | **EgoDex 829 h** + HoloAssist 166 + CaptainCook4D 54 + HOI4D 44 + HOT3D 13.3 + HO-Cap 0.67 | **The only row with full per-source provenance**: annotations only, no video redistributed, each source's licence text shipped with attribution, and explicit author permission for the CC-BY-NC-ND component. *(Not the only pointers-only release, and not the first: **HD-VILA-100M** below did it in 2022, and **[EgoVid-5M](#egovid-5m)** ships annotations-only under Apache 2.0. Three instances now — the posture is common; the per-source attribution is not)* |
 | ✅ [HD-VILA-100M](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago) (103 M clips, 371.5 K h) | **3.3 M YouTube uploads**, selected by channel popularity + 720p + English subtitles | **URLs only, under a named licence (O-UDA), in 2022** — the release posture OpenEgo is praised for, at ~335× the hours and four years earlier. What it lacks is per-source provenance: one blanket licence over three million third-party uploads |
@@ -3473,7 +3521,7 @@ that failed.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Fourteen of them are
+index, not a summary, and each row links to the working. **Fifteen of them are
 this document's own errors** — marked *(this document…)* in the left column and
 counted honestly, because an earlier revision of this preamble said "three" long
 after the count had passed it, which is the same failure the table exists to
@@ -3504,6 +3552,7 @@ trust the rest of it.
 | **EgoEngine shows the action branch supplies essentially all the gain, so photorealism is "decoration"** *(this document, editorialising past its source)* | Table 4 is **0.03 / 0.05 / 0.43 / 0.51** — human videos, visual branch, action branch, full system. The 0.05-vs-0.43 comparison was quoted correctly; **the last row was dropped**. Visual generation adds **0.43 → 0.51**, ~19% relative, and the paper says it *"provides an additional gain"*. The trajectory is the payload; appearance is a real but secondary term | [§2](#egoengine) |
 | **H-Tac's contact-rich result is "9.2% → 79.2%"** *(this document, compressing a five-column table into an arrow)* | Both figures are real, but they are **BeingH-0.5's score and theirs**, not a before/after of one system — and on vision defect the arrow started from the weaker of two baselines (π₀.₅ scores 17.8% against the 15.6% quoted). **The informative column is the pre-training ablation: 49.7% → 79.2%**, which isolates what the data buys | [§2](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) |
 | **CaptainCook4D is a 54-hour dataset** *(this document, attaching OpenEgo's slice to the source)* | Its own page says **384 recordings, 94.5 hours**. 54 h is what **OpenEgo ingests**, not what the dataset is — the same subset-versus-total trap as Ego-Exo4D's 1,286 h against 221 ego-hours. Its **Apache 2.0**, previously taken second-hand from OpenEgo's `ATTRIBUTION.md`, verifies at the project page | [§1](#holoassist), [§11](#openego--somebody-does-this-properly-and-it-should-be-said-plainly) |
+| **H-Tac and the Being-H models are unrelated projects** *(this document, treating them separately for dozens of sweeps)* | **H-Tac is BeingBeyond's**, its method is named **TTP**, and the baseline in its headline table — **BeingH-0.5** — is the same group's own prior model. Four BeingBeyond artefacts in this survey, not three | [§2](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) |
 | Build AI released ~1 M hours (Egocentric-1M) | **Not findable at the publisher across five attempts** spread over months, the last being the complete API index rather than a search. The only artefact of that name anywhere is an **empty third-party repo** — two files, a 21-byte README, no data | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 | EgoWAM trains on in-the-wild internet video | Its in-the-wild data is **EgoVerse on Project Aria**, flow from Aria VIO poses | [§2](#egowam--and-what-in-the-wild-turns-out-to-mean) |
 | EgoAVFlow needs no special capture, since it needs no robot demos | **Head-mounted RealSense D435 RGBD, plus a ChArUco board in every scene** | [§2](#egoavflow--no-robot-demonstrations-still-means-a-board-in-every-scene) |
