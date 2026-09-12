@@ -2981,23 +2981,36 @@ read straight off the cards.
 > **Second, the ratio has since collapsed.** Re-read at the dataset cards this
 > sweep, like for like:
 >
-> | Card | Downloads last month | A fortnight later | A third reading | Resolution |
-> |---|---|---|---|---|
-> | Egocentric-100K | **164,868** | **158,934** | **156,632** | 456×256 |
-> | Egocentric-10K | **34,519** | **30,087** | **34,587** | 1080p |
-> | *ratio* | *4.8:1* | *5.3:1* | *4.5:1* | |
+> | Card | Downloads last month | A fortnight later | Third reading | **Fourth reading** | Resolution |
+> |---|---|---|---|---|---|
+> | Egocentric-100K | **164,868** | **158,934** | **156,632** | **145,830** | 456×256 |
+> | Egocentric-10K | **34,519** | **30,087** | **34,587** | **40,875** | 1080p |
+> | *ratio* | *4.8:1* | *5.3:1* | *4.5:1* | ***3.6:1*** | |
 >
-> That is **roughly 5:1**, not 470:1. The 1080p corpus went from a few hundred
-> monthly pulls to thirty-odd thousand while the 256p corpus barely moved.
+> That is **single digits**, not 470:1.
 >
-> **The second and third columns are the point of having the rule.** Both figures
-> were re-read a fortnight after the first and again some sweeps later, per this
-> document's own policy that a dashboard number expires by default. They drift a
-> few per cent either way — the 1080p corpus is back above its first reading — and
-> across three readings the ratio holds in a **4.5:1 to 5.3:1 band**. So the
-> corrected claim is not another snapshot: it is a claim with three readings
-> behind it, which is the difference between a number and a measurement. The
-> 470:1 figure never got that treatment, which is precisely how it survived as
+> 🔴 **And the fourth reading breaks a claim this document made three readings
+> ago.** The previous revision said the ratio *"holds in a 4.5:1 to 5.3:1 band"*.
+> It does not: **3.6:1 is outside it**, and the movement is not noise in either
+> direction. Between the third reading and the fourth the **1080p corpus rose
+> ~18%** (34,587 → 40,875) while the **256p corpus fell ~7%** (156,632 →
+> 145,830). Both moved the same way the earlier readings hinted at and this
+> document declined to commit to. **So the band was the wrong shape of claim: the
+> right one is a trend.** Across four readings the ratio runs **4.8 → 5.3 → 4.5 →
+> 3.6**, and the 1080p corpus has gone from *"a few hundred monthly pulls"* at
+> first sighting to **forty thousand**.
+>
+> **This is the rule working, and it is worth being precise about how.** A single
+> snapshot gave 470:1 and was wrong. Three readings gave a band and were
+> *stable-looking* rather than right — a band is what you get when you have
+> enough points to see variance but not enough to see direction. **The fourth
+> point is what turned a band into a trend**, and the trend says something the
+> band actively concealed: **demand for the high-resolution corpus is growing and
+> demand for the downsampled one is not.** For a document whose §12 argument is
+> *hours are commoditised, pixels are not*, that is the most load-bearing live
+> number here, and it has now moved in the argument's favour twice running —
+> which is exactly when to state it carefully rather than gratefully. The
+> 470:1 figure never got any of this treatment, which is precisely how it survived as
 > long as it did.
 >
 > ⚠️ **And the publisher's two surfaces disagree.** The organisation listing
@@ -3590,7 +3603,7 @@ trust the rest of it.
 
 | Claim in circulation | What the source says | Where |
 |---|---|---|
-| The 256p corpus outdownloads the 1080p one **470:1** *(this document, earlier)* | Wrong twice: the counter reads **"Downloads last month"**, a rate not a total, and re-read at both cards it is **164,868 vs 34,519 — roughly 4.8:1**. The gap is closing | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
+| The 256p corpus outdownloads the 1080p one **470:1**, and later that the ratio **holds in a 4.5–5.3:1 band** *(this document — two successive errors, one snapshot and one premature generalisation)* | The counter reads **"Downloads last month"**, a rate not a total. And the band broke: a **fourth reading gives 3.6:1** (145,830 vs 40,875), outside it, with the 1080p corpus **up ~18%** and the 256p corpus **down ~7%**. Four readings run **4.8 → 5.3 → 4.5 → 3.6** — **a trend, not a band.** Three points show variance; it takes a fourth to show direction | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 | **Nobody** sources ego data from the internet at scale *(this document, earlier)* | **EgoCS-400K does** — 10,000+ h, CC BY 4.0, from public HLTV match demos. Narrowed to *real-world* footage, since EgoCS-400K renders video from replay files and reads actions out of them | [§12](#egocs-400k--10000-free-hours-sourced-from-the-internet-and-why-13-survives-it), [§13](#13-why-no-open-source-project-does-exactly-this) |
 | **Nobody** mines the web for *real-world* human video at scale *(this document, for twenty-five sweeps, while carrying the refutation in §2)* | **HumanNet does**, at one million hours, from *"video-platform search, general web search engines, directly crawled videos, open-source datasets, and self-collection."* What is missing is not the act but the artefact: no release, no licence, no source breakdown, no ego/exo split, no per-clip provenance. §13 narrows to **open, auditable, reusable infrastructure** | [§2](#humannet), [§13](#13-why-no-open-source-project-does-exactly-this) |
 | HumanNet's headline is the 1,000 h vs 100 h result | Its follow-up **HumanScale** is stronger and newer: **5,000 h egocentric vs 5,000 h real-robot at matched scale** → 24% lower validation loss, **52.5% / 90%** higher in- and out-of-distribution success. At matched hours that is outperforming, not matching | [§2](#humannet) |

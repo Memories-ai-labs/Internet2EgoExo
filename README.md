@@ -315,12 +315,15 @@ them:
   (100,405 h, 10.8 B frames, **456×256**), both Apache 2.0. Note what scaling
   cost: a 17× drop in pixels per frame, in a domain where finger articulation is
   the payload. And note how it landed — the publisher's own listing shows
-  the 256p corpus pulled **156,632** times last month against the 1080p corpus's
-  **34,587** — roughly **4.5:1**, and holding in a 4.5–5.3:1 band across three
-  readings. An earlier revision of this README quoted
-  470:1 off an older reading; the survey records why that was wrong on two
-  counts (the counter is a rolling monthly *rate*, not a lifetime total, and the
-  gap has since closed by two orders of magnitude). The reported
+  the 256p corpus pulled **145,830** times last month against the 1080p corpus's
+  **40,875** — **3.6:1**, and *closing*. Four readings now run **4.8 → 5.3 → 4.5
+  → 3.6**: between the last two the 1080p corpus rose ~18% while the 256p corpus
+  fell ~7%. An earlier revision of this README quoted 470:1 off a single reading,
+  and a later one called the ratio stable inside a 4.5–5.3:1 band — both are
+  recorded in the survey's corrections. The counter is a rolling monthly *rate*,
+  not a lifetime total; and three points showed variance where four show
+  direction. **The direction runs with this repo's bet**: demand for the
+  high-resolution corpus is growing and demand for the downsampled one is not. The reported
   **Egocentric-1M** remains unverifiable: **five attempts** at the publisher's
   own surfaces, the last being its complete API index, which returns exactly
   four datasets and does not include it. The only artefact of that name anywhere
