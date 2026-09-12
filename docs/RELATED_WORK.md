@@ -2747,7 +2747,49 @@ counterexample, and it is worth more than the criticism.
 
 OpenEgo unifies **six public egocentric datasets into 1,107 hours** with
 standardised hand-pose layouts and intention-aligned, timestamped action
-primitives, across **290 manipulation tasks in 600+ environments**. The
+primitives, across **290 manipulation tasks in 600+ environments**.
+
+✅ **The composition was audited at Table 1 this sweep, and it adds up.**
+
+| Source | Hours | Frames | Tasks | Recordings |
+|---|---|---|---|---|
+| EgoDex | 829 | 90 M | 194 | 338 k |
+| HoloAssist | 166 | 17.9 M | 20 | 2.2 k |
+| CaptainCook4D | 54 | 5.6 M | 24 | 200 |
+| HOI4D | 44 | 2.4 M | 16 | 4 k |
+| HOT3D | 13.3 | 3.7 M | 33 | 19 |
+| HO-Cap | 0.67 | 73 k | 3 | 64 |
+| **OpenEgo** | **1107** | **119.6 M** | **290** | **344.5 k** |
+
+The six components sum to **1,106.97** — the stated total is not rounded up from
+a looser figure, it is the arithmetic. These are the numbers the
+[derivation map](#who-feeds-whom--the-derivation-map) uses to argue licence
+inheritance, so they were overdue a check.
+
+⚠️ **And the table explains an error this document made, which is worth saying
+because the error was ours and the cause is structural.** Last sweep recorded
+that the survey had called CaptainCook4D *"a 54-hour dataset"* when its own page
+says **384 recordings, 94.5 hours**. **This is where the 54 comes from.** The row
+above is headed *"Egocentric datasets combined to form OpenEgo"* — every figure
+in it is *what OpenEgo ingested*, not what the source contains. Read against
+CaptainCook4D's own page, OpenEgo takes **200 of 384 recordings** and **54 of
+94.5 hours**, about 55% either way: internally consistent, and nowhere stated as
+partial.
+
+> **Compare the EgoDex row, which is the tell.** 829 h / 90 M frames / 194 tasks
+> / 338 k recordings are *exactly* EgoDex's own published figures — **OpenEgo
+> takes all of it.** So the table mixes full ingestion and partial ingestion in
+> adjacent rows with no column distinguishing them, and **the mix is itself
+> information a reader needs**: it is the difference between "this corpus is
+> inside OpenEgo" and "some of this corpus is". Nothing is misstated; a
+> composition table is a fair thing to publish. But it is a good reminder that
+> **the fix for the subset-versus-total trap is not distrust, it is a second
+> fetch** — the source's own page, which is the only place the denominator
+> lives. **For this repo**, that is an argument for the manifest carrying the
+> fraction ingested alongside the hours, which §11 already asks for on licences
+> and this extends to scale.
+
+The
 composition is published per source rather than as a total:
 
 | Source | Hours |
@@ -2834,7 +2876,7 @@ except the one marked as an inference.
 | 🔴 [H-Tac / TTP](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) (BeingBeyond) | **11 public datasets**, and benchmarked against **BeingH-0.5 — the same group's own model** | **A fourth BeingBeyond artefact.** Not a separate lab, as this survey had assumed: one group across a VLA family, a world-action model and the tactile work |
 | 🔴 [OpenMMEgo](#openmmego--open-weights-and-data-half-kept) / OME10M (8.2 M QA pairs) | **Ego4D**, synthesised into QA pairs | **A fifth.** Annotations over someone else's video — the one shape that could have been released without redistributing a frame, and was not |
 | 🔴 [H-Tac](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) (HOI-Tac, ~106 h) | **11 public datasets** — ARCTIC, DexYCB, H2O, H2O3D, HO3D, HOCap, HOI4D, HOT3D, InterHand2.6M, OakInk-v1/v2 | **The largest aggregation here and the least documented**: no licence stated for H-Tac, inputs described only as "public datasets", no release. HOI4D alone is CC BY-NC |
-| ✅ [OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly) (1,107 h) | **EgoDex 829 h** + HoloAssist 166 + CaptainCook4D 54 + HOI4D 44 + HOT3D 13.3 + HO-Cap 0.67 | **The only row with full per-source provenance**: annotations only, no video redistributed, each source's licence text shipped with attribution, and explicit author permission for the CC-BY-NC-ND component. *(Not the only pointers-only release, and not the first: **HD-VILA-100M** below did it in 2022, and **[EgoVid-5M](#egovid-5m)** ships annotations-only under Apache 2.0. Three instances now — the posture is common; the per-source attribution is not)* |
+| ✅ [OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly) (1,107 h) | **EgoDex 829 h** *(all of it)* + HoloAssist 166 + CaptainCook4D 54 *(of 94.5)* + HOI4D 44 + HOT3D 13.3 + HO-Cap 0.67 — **audited at its Table 1; the six sum to 1,106.97** | **The only row with full per-source provenance**: annotations only, no video redistributed, each source's licence text shipped with attribution, and explicit author permission for the CC-BY-NC-ND component. *(Not the only pointers-only release, and not the first: **HD-VILA-100M** below did it in 2022, and **[EgoVid-5M](#egovid-5m)** ships annotations-only under Apache 2.0. Three instances now — the posture is common; the per-source attribution is not)* |
 | ✅ [HD-VILA-100M](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago) (103 M clips, 371.5 K h) | **3.3 M YouTube uploads**, selected by channel popularity + 720p + English subtitles | **URLs only, under a named licence (O-UDA), in 2022** — the release posture OpenEgo is praised for, at ~335× the hours and four years earlier. What it lacks is per-source provenance: one blanket licence over three million third-party uploads |
 | [Open X-Embodiment](#the-robot-native-denominator) | **60 datasets, 34 labs** | unknowable without tracing sixty |
 | [EgoInfinity](#egoinfinity--lift-to-4d-then-reproject), Ego2Robot, [MobileEgo](#mobileego-anywhere) | **WiLoR** (+ MANO, YOLO) | **CC-BY-NC-ND** *model* in the annotation path |
@@ -3657,7 +3699,7 @@ trust the rest of it.
 | **EgoVid-5M's terms are unresolved — "inherits Ego4D, ⚠️ check upstream"** *(this document, for dozens of sweeps)* | Its release carries **Apache 2.0** and contains **three CSVs and `poses.zip` — no video**. The licence is correctly scoped to the annotations; Ego4D's footage stays under Ego4D's agreement. **The third project found doing annotations-only properly**, after OpenEgo and HD-VILA-100M | [§12](#egovid-5m), [§11](#11-the-licence-trap) |
 | **EgoEngine shows the action branch supplies essentially all the gain, so photorealism is "decoration"** *(this document, editorialising past its source)* | Table 4 is **0.03 / 0.05 / 0.43 / 0.51** — human videos, visual branch, action branch, full system. The 0.05-vs-0.43 comparison was quoted correctly; **the last row was dropped**. Visual generation adds **0.43 → 0.51**, ~19% relative, and the paper says it *"provides an additional gain"*. The trajectory is the payload; appearance is a real but secondary term | [§2](#egoengine) |
 | **H-Tac's contact-rich result is "9.2% → 79.2%"** *(this document, compressing a five-column table into an arrow)* | Both figures are real, but they are **BeingH-0.5's score and theirs**, not a before/after of one system — and on vision defect the arrow started from the weaker of two baselines (π₀.₅ scores 17.8% against the 15.6% quoted). **The informative column is the pre-training ablation: 49.7% → 79.2%**, which isolates what the data buys | [§2](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) |
-| **CaptainCook4D is a 54-hour dataset** *(this document, attaching OpenEgo's slice to the source)* | Its own page says **384 recordings, 94.5 hours**. 54 h is what **OpenEgo ingests**, not what the dataset is — the same subset-versus-total trap as Ego-Exo4D's 1,286 h against 221 ego-hours. Its **Apache 2.0**, previously taken second-hand from OpenEgo's `ATTRIBUTION.md`, verifies at the project page | [§1](#holoassist), [§11](#openego--somebody-does-this-properly-and-it-should-be-said-plainly) |
+| **CaptainCook4D is a 54-hour dataset** *(this document, attaching OpenEgo's slice to the source)* | Its own page says **384 recordings, 94.5 hours**. 54 h is what **OpenEgo ingests** (**200 of 384 recordings**, ~55% either way) — the same subset-versus-total trap as Ego-Exo4D's 1,286 h against 221 ego-hours. Traced this sweep to OpenEgo's Table 1, which lists ingested figures beside fully-ingested ones (**EgoDex's 829 h is all of it**) with no column distinguishing the two. Its **Apache 2.0**, previously taken second-hand from OpenEgo's `ATTRIBUTION.md`, verifies at the project page | [§1](#holoassist), [§11](#openego--somebody-does-this-properly-and-it-should-be-said-plainly) |
 | **H-Tac and the Being-H models are unrelated projects** *(this document, treating them separately for dozens of sweeps)* | **H-Tac is BeingBeyond's**, its method is named **TTP**, and the baseline in its headline table — **BeingH-0.5** — is the same group's own prior model. Four BeingBeyond artefacts in this survey, not three | [§2](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) |
 | Build AI released ~1 M hours (Egocentric-1M) | **Not findable at the publisher across five attempts** spread over months, the last being the complete API index rather than a search. The only artefact of that name anywhere is an **empty third-party repo** — two files, a 21-byte README, no data | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 | EgoWAM trains on in-the-wild internet video | Its in-the-wild data is **EgoVerse on Project Aria**, flow from Aria VIO poses | [§2](#egowam--and-what-in-the-wild-turns-out-to-mean) |
