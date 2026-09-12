@@ -792,8 +792,9 @@ consented.**
 
 ### Ego2Robot
 
-**[arXiv 2608.02580](https://arxiv.org/html/2608.02580)** — converts egocentric
-human video into robot training data in three stages:
+**[arXiv 2608.02580](https://arxiv.org/html/2608.02580)** ·
+[project page](https://www-ye.github.io/ego2robot_blog/) (HTTP 200, checked) —
+converts egocentric human video into robot training data in three stages:
 
 1. **Action alignment** — hand pose → end-effector trajectory. A *virtual
    fingertip* is computed as a weighted blend of index and middle fingertips;
@@ -811,7 +812,40 @@ EgoVerse 954 h — though the authors state the pipeline accepts in-the-wild vid
 as well as curated datasets, making it the one entry in this document that even
 gestures at web-sourced input. The reported corpus is built from curated sets. **Output 18,561 h** of synthetic robot data across 15
 morphologies (Panda, UR5e, ARX-L5, xArm7, Sawyer, Kinova Gen3, IIWA, Jaco, FR3,
-UR10e, ViperX, WidowX, Piper, YAM, Aloha-Agilex). On an extended RoboTwin 2.0
+UR10e, ViperX, WidowX, Piper, YAM, Aloha-Agilex).
+
+✅ **Every figure above re-verified at the paper this sweep**, quoted: *"ANT (7h,
+our in-house pick-and-place dataset with hand pose annotations), EgoDex (732h),
+ViTRA (249h), and EgoVerse (954h), totaling ∼1,940 hours of annotated ego
+data"*, *"producing 18,561 hours of robot training data spanning 15 robot
+morphologies"*, and *"supports both curated datasets and in-the-wild videos."*
+These feed the [derivation map](#who-feeds-whom--the-derivation-map)'s
+licence-inheritance arithmetic, so they were overdue a check; all hold.
+
+🟢 **And re-reading produced a finding the entry did not have — a per-source
+*speed* correction.** Quoted: *"Egocentric hand manipulation exhibits
+significantly higher action speeds than robot teleoperation data. To align the
+speed distributions, we apply per-source frame subsampling during training: **ANT
+and EgoDex are downsampled to 60%** of their original frame rate (~1.7× slower),
+**EgoVerse to 45%** (~2.2× slower), and **ViTRA to 25%** (~4× slower)."*
+
+> **Two things follow, and the second is the useful one.** First, **human hands
+> move faster than teleoperated robots**, consistently enough to need correcting
+> in every source. Second, **the correction factor is not a constant — it ranges
+> from 1.7× to 4× depending on which corpus the footage came from.** That is a
+> four-fold spread in how much robot-equivalent time an hour of human video is
+> worth, decided by capture conditions rather than content.
+>
+> **For this repo that is a per-clip property, not a per-corpus one.** It is the
+> same lesson as
+> [OpenX's missing hour count](#the-robot-native-denominator) — *a unit count
+> means nothing until you say what a unit contains* — arriving from the time axis
+> instead of the content axis. An hour delivered is not an hour trained on, the
+> conversion rate varies by source, and **a manifest that records delivered hours
+> without recording action speed is quoting a number its buyer has to discount by
+> an unknown factor.** The [four hour measures](#12-free-hours-and-what-they-do-to-the-moat)
+> this document already keeps are about *what fraction survives filtering*; this
+> is a fifth axis about *how fast what survives actually moves*.
 with disentangled visual / scene / embodiment / task perturbations, 1:1 mixing
 reaches 53.5% (+2.6 pts), with the largest gains in visual robustness (+8%
 lighting, +6% colour) and task semantics (+11% unseen objects).

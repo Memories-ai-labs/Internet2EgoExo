@@ -51,7 +51,13 @@ footage. This is the one rule with no override.
 
 **Never mix hour counts.** `worn`, `delivered`, `accepted` and
 `accepted_labeled` are four different numbers. Only `accepted_labeled` is safe
-to quote outward.
+to quote outward. And an hour is not even a constant once accepted:
+[Ego2Robot](https://arxiv.org/html/2608.02580) has to subsample every source to
+match robot action speed — *"ANT and EgoDex… to 60% of their original frame rate
+(~1.7× slower), EgoVerse to 45% (~2.2× slower), and ViTRA to 25% (~4× slower)"* —
+so **how much robot-equivalent time an hour of human video is worth varies about
+four-fold by where it came from.** Action speed is a per-clip property, not a
+corpus constant.
 
 **Unmeasured is not passed.** A quality check that could not be measured is
 dropped from the score rather than assumed to have passed.
