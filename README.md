@@ -232,10 +232,13 @@ them:
 - **The licence trap — including five instances of it in this survey's own
   table.** Auditing every entry recorded as permissive found **five** whose
   "CC BY 4.0" was the **arXiv listing's**, governing the paper rather than the
-  data: Action100M, Open-AoE, EgoLive, ENIGMA-360 and EgoCS-400K. Three of the
-  five state **no dataset terms anywhere**; the two that do are **less**
-  permissive — Action100M is Meta FAIR's **non-commercial** research licence and
-  Open-AoE is a **bespoke** one. Every error ran the same direction, toward
+  data: Action100M, Open-AoE, EgoLive, ENIGMA-360, EgoCS-400K and **Ego-1K** —
+  **six wrong out of seven checked**. Three state **no dataset terms anywhere**;
+  the three that do are **less** permissive — **Action100M and Ego-1K both carry
+  Meta FAIR's non-commercial research licence** (one publisher's house terms,
+  missed twice) and Open-AoE a **bespoke** one. The seventh, **HoloAssist**, was
+  recorded correctly — because its project page states the dataset's terms in a
+  sentence, which is the whole difference. Every error ran the same direction, toward
   freer-than-the-source-supports, which is exactly the direction this survey
   accuses everyone else's numbers of running. The rule now: **a permissive
   licence recorded against a dataset needs a dataset artefact** — a card, a repo

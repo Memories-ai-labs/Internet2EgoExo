@@ -314,6 +314,16 @@ motion, clothing. Benchmarks are stereo consistency, per-frame 3D Gaussian
 splatting and **4D dynamic novel-view synthesis**. **CC BY 4.0**; 17.5 TB research
 version on Hugging Face, 88 TB raw on request.
 
+🔴 **Licence — corrected this sweep, and it is the second Meta FAIR dataset here
+to be wrong the same way.** The entry recorded **CC BY 4.0**; that is the arXiv
+listing's, governing the paper. The dataset is named in the paper itself —
+*"available at `https://huggingface.co/datasets/facebook/ego-1k`"* — and that
+card carries **`fair-noncommercial-research-license`**, ungated, **46,489
+downloads a month**. **Non-commercial**, like
+[Action100M](#action100m), the other Meta FAIR release in this survey. Both were
+recorded here as CC BY 4.0; both are their publisher's house licence. See
+[the permissive-claims audit](#11-the-licence-trap).
+
 > **Why it sits in this document.** It is a *view-synthesis* dataset, not a
 > manipulation corpus — but it is exactly the rig-captured multiview input that
 > [Exo2Ego-V](#exo2ego-v--why-generative-conversion-does-not-apply)-style methods
@@ -2711,12 +2721,12 @@ Reading the licences across this document produces the wider pattern:
 | **OpenMMEgo** (OME10M, OMEBench) | **MIT on a repository containing a README**; the data section reads *"We will release our code and data soon"* and neither dataset is findable | 🔴 **the title says "Open Weights and Data"** — weights shipped (13 public model repos), data not |
 | **Open X-Embodiment** | **none stated; 60 pooled components, position unstated** | ⚠️ unknowable without tracing 60 upstream datasets |
 
-🔴 **A systematic audit of this document's own permissive claims, and it did not
-go well.** Having caught itself recording
+🔴 **A systematic audit of this document's own permissive claims — seven checked,
+six wrong.** Having caught itself recording
 [MobileEgo Anywhere](#mobileego-anywhere)'s *paper* licence as its *dataset*
 licence, the obvious question was whether the same error was repeated. It was —
-**five times**, in every case in the direction of *more permissive than the
-source supports*:
+**six times out of seven entries checked**, every one in the direction of *more
+permissive than the source supports*:
 
 | Entry | This document said | What the dataset artefact says |
 |---|---|---|
@@ -2726,10 +2736,24 @@ source supports*:
 | **ENIGMA-360** | CC BY 4.0 | 🔴 **nothing** — and its project page has failed five checks |
 | **EgoCS-400K** | CC BY 4.0 | 🔴 **nothing** — no repository, card or download location named |
 
-**In all five the only licence string in the paper is the arXiv listing's own
-`License: CC BY 4.0`**, which governs the *manuscript*. Three of the five have no
-dataset artefact stating terms at all; the two that do state something state
-something **less** permissive — one of them non-commercial.
+**In all six the only licence string in the paper is the arXiv listing's own
+`License: CC BY 4.0`**, which governs the *manuscript*. Three have no dataset
+artefact stating terms at all; the three that do state something **less**
+permissive — two of them non-commercial.
+
+⚠️ **Two of the six are the same publisher's house licence, missed twice.**
+**Action100M** and **Ego-1K** are both Meta FAIR, and both carry
+**`fair-noncommercial-research-license`** on their cards. A publisher applying
+one non-standard licence across its releases will be got wrong the same way every
+time until someone reads a card — and the string `fair-…` appears in neither
+paper.
+
+✅ **The control row matters as much as the failures.** **HoloAssist** was
+recorded as CDLA v2 and **is** CDLA v2, because its project page says so in a
+sentence: *"We release the dataset under the CDLAv2 license, a permissive
+license."* That is the whole difference. **Where a publisher states dataset terms
+on a dataset surface, this document got it right; where it did not, it filled the
+gap with the arXiv listing — six times out of six.**
 
 > **The uncomfortable part is the direction.** This document's standing
 > observation about the field is that circulating claims run *freer and larger*
@@ -3803,7 +3827,7 @@ trust the rest of it.
 | **H-Tac and the Being-H models are unrelated projects** *(this document, treating them separately for dozens of sweeps)* | **H-Tac is BeingBeyond's**, its method is named **TTP**, and the baseline in its headline table — **BeingH-0.5** — is the same group's own prior model. Four BeingBeyond artefacts in this survey, not three | [§2](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) |
 | **MobileEgo Anywhere is CC BY 4.0** *(this document, for dozens of sweeps — the adjacent-artefact trap it catalogues, committed by itself)* | That is the **arXiv listing's** licence, covering the paper. The dataset `fpvlabs/stera-10m` carries **`license: other`**, is gated, and **401s unauthenticated** — the same bespoke, unreadable posture as its sibling Stereo-550 | [§2](#mobileego-anywhere), [§11](#11-the-licence-trap) |
 | **MobileEgo Anywhere and Ego-OSCAR are unrelated projects** *(this document, writing them up in two sections)* | Both are **`fpvlabs`**. The org's Hugging Face account holds exactly two datasets — `stera-10m` and `stereo-550` — both `license: other`, both gated. **Third time the survey has found two entries that were one group**, after NVIDIA's and BeingBeyond's | [§2](#mobileego-anywhere) |
-| **Five entries recorded as dataset CC BY 4.0** — Action100M, Open-AoE, EgoLive, ENIGMA-360, EgoCS-400K *(this document, systematically)* | In all five the only licence string is the **arXiv listing's**, which governs the manuscript. Three have **no dataset artefact stating terms at all**; the two that do state something **less** permissive — **Action100M is `fair-noncommercial-research-license`** (Meta FAIR, non-commercial) and **Open-AoE is a bespoke `open-aoe-dataset-license`**. **All five errors run the same direction: freer than the source supports** | [§11](#11-the-licence-trap) |
+| **Six entries recorded as dataset CC BY 4.0** — Action100M, Open-AoE, EgoLive, ENIGMA-360, EgoCS-400K, Ego-1K *(this document, systematically)* | In all six the only licence string is the **arXiv listing's**, which governs the manuscript. Three have **no dataset artefact stating terms at all**; the three that do state something **less** permissive — **Action100M and Ego-1K both carry Meta FAIR's `fair-noncommercial-research-license`** and **Open-AoE a bespoke `open-aoe-dataset-license`**. **Six of seven entries checked, all wrong the same direction.** The seventh, **HoloAssist**, was right — because its project page states the dataset's terms in a sentence | [§11](#11-the-licence-trap) |
 | Build AI released ~1 M hours (Egocentric-1M) | **Not findable at the publisher across five attempts** spread over months, the last being the complete API index rather than a search. The only artefact of that name anywhere is an **empty third-party repo** — two files, a 21-byte README, no data | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 | EgoWAM trains on in-the-wild internet video | Its in-the-wild data is **EgoVerse on Project Aria**, flow from Aria VIO poses | [§2](#egowam--and-what-in-the-wild-turns-out-to-mean) |
 | EgoAVFlow needs no special capture, since it needs no robot demos | **Head-mounted RealSense D435 RGBD, plus a ChArUco board in every scene** | [§2](#egoavflow--no-robot-demonstrations-still-means-a-board-in-every-scene) |
