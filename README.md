@@ -229,6 +229,17 @@ them:
   reprojecting*, as [EgoInfinity](https://arxiv.org/abs/2606.17385) does, though
   it assumes a roughly static camera and explicitly excludes head-mounted
   footage.
+- **The licence trap — including five instances of it in this survey's own
+  table.** Auditing every entry recorded as permissive found **five** whose
+  "CC BY 4.0" was the **arXiv listing's**, governing the paper rather than the
+  data: Action100M, Open-AoE, EgoLive, ENIGMA-360 and EgoCS-400K. Three of the
+  five state **no dataset terms anywhere**; the two that do are **less**
+  permissive — Action100M is Meta FAIR's **non-commercial** research licence and
+  Open-AoE is a **bespoke** one. Every error ran the same direction, toward
+  freer-than-the-source-supports, which is exactly the direction this survey
+  accuses everyone else's numbers of running. The rule now: **a permissive
+  licence recorded against a dataset needs a dataset artefact** — a card, a repo
+  `LICENSE`, a terms page — and an arXiv listing is not evidence.
 - **The licence trap.** EgoInfinity's own code is MIT, but WiLoR is CC-BY-NC-ND,
   Ultralytics YOLO is AGPL-3.0 and MANO is non-commercial — the repo states that
   commercial use *as a whole* is restricted. EgoDex, the field's favourite
@@ -355,7 +366,7 @@ structural, not technical.
 
 **Two projects come close, and saying exactly how keeps the rest honest.**
 [EgoCS-400K](https://arxiv.org/html/2606.18180v1) sources ego data from the open
-internet at scale — 10,000+ hours, CC BY 4.0, from public Counter-Strike match
+internet at scale — 10,000+ hours from public Counter-Strike match
 demos on HLTV — but it works because the domain ships a deterministic replay
 format: the video is *rendered* rather than downloaded, and the actions are
 *read out of the file* as ground truth. Viewpoint is a render parameter; there

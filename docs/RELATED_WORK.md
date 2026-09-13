@@ -2667,9 +2667,9 @@ Reading the licences across this document produces the wider pattern:
 |---|---|---|
 | Egocentric-10K / -100K | Apache 2.0 | ✅ (see §12 caveats) |
 | Egocentric-1M | Apache 2.0 *(reported only; absent from the publisher's complete API index, five attempts)* | ⚠️ confirm the release exists before relying on it — and note that an **empty third-party repo of the same name** now carries an `mit` tag |
-| Action100M | CC BY 4.0 | ✅ with attribution |
-| Open-AoE | CC BY 4.0 | ✅ with attribution |
-| EgoLive | CC BY 4.0 | ✅ with attribution (distributed via JD Cloud) |
+| **Action100M** | 🔴 **`fair-noncommercial-research-license`** on `facebook/action100m-preview` — Meta FAIR's own terms. *(This document recorded **CC BY 4.0**, which is the **arXiv listing's** licence.)* Note also it is a **preview** subset | ❌ **non-commercial** — the document previously told readers the opposite |
+| **Open-AoE** | 🔴 **`license: other`, `license_name: open-aoe-dataset-license`** on `inclusionAI/OpenAoE-2000h` — **bespoke**, with a staged *"Release Roadmap"*. *(Recorded here as **CC BY 4.0**, which is the **arXiv listing's**.)* **562,935 downloads a month** | ⚠️ **unclassifiable** — a one-publisher licence, read it in full |
+| **EgoLive** | 🔴 **no dataset licence stated anywhere** — the only licence string in the paper is the **arXiv listing's CC BY 4.0**, and distribution runs through a commercial data marketplace (`robotdata-market.jdcloud.com`) whose terms are not the paper's | ⚠️ **unresolved** — previously recorded here as CC BY 4.0 |
 | **MobileEgo Anywhere** — `fpvlabs/stera-10m` | **`license: other`**, gated, **401 unauthenticated** — the same bespoke posture as its sibling Stereo-550 *(this document previously recorded **CC BY 4.0**, which is the **arXiv paper's** licence)* | ⚠️ **unclassifiable** — unreadable before agreeing |
 | NeMo Curator | Apache 2.0 | ✅ |
 | **Ropedia Xperience-10M** | **"other" — gated, DocuSign, research only** | ❌ non-commercial |
@@ -2682,11 +2682,11 @@ Reading the licences across this document produces the wider pattern:
 | **EgoDex** | **CC-BY-NC-ND** | ❌ non-commercial, no derivatives |
 | **EPIC-KITCHENS-100** | **CC BY-NC 4.0** | ❌ (commercial terms by email to Bristol) |
 | **HOI4D** | **CC BY-NC 4.0** | ❌ non-commercial |
-| ENIGMA-360 | CC BY 4.0 | ✅ with attribution |
+| **ENIGMA-360** | 🔴 **no dataset licence stated** — only the **arXiv listing's CC BY 4.0**, and its project page has failed five checks | ⚠️ **unresolved** — previously recorded here as CC BY 4.0 |
 | **SABER** | **CC BY-NC 4.0 — on a 10 K-sample subset only; the full corpus is vendor-gated** | ❌ non-commercial, and partial |
 | **Ego-OSCAR** — hardware + software | **Apache 2.0** (verified at the repo's `LICENSE`) | ✅ |
 | **Ego-OSCAR** — Stereo-550 dataset | **`fpvlabs-license`**, bespoke: "research use", but "commercial usage allowed"; gated, **and the licence text itself is behind the gate** | ⚠️ **unclassifiable** — the one thing a custom licence needs is a reading, and it cannot be read before agreeing |
-| EgoCS-400K | CC BY 4.0 | ✅ with attribution (rendered gameplay, not real-world footage) |
+| **EgoCS-400K** | 🔴 **no dataset licence stated** — only the **arXiv listing's CC BY 4.0**; no repository, no card, no download location named in the paper | ⚠️ **unresolved** — previously recorded here as CC BY 4.0 (rendered gameplay, not real-world footage) |
 | **World In Your Hands** | **none stated in the paper; "will be open-source"** | ⚠️ unresolved — get the dataset licence in writing |
 | **EgoTactile** | **CC BY-NC 4.0**, ungated (plus `EgoTactile-OXT` on the same terms) | ❌ non-commercial — but stated, which neither EgoTac nor H-Tac manages |
 | **EgoTac** | **nothing released** — no repo, no card, no project page, and no *"we release"* anywhere in the body | 🔴 reclassified from *terms unstated* to **not released**: there is nothing to attach terms to |
@@ -2710,6 +2710,44 @@ Reading the licences across this document produces the wider pattern:
 | **Being-H0.7** | **none stated at all** — the paper's only licence string is arXiv's, and the word *"release"* does not appear in the body | 🔴 same undocumented UniHand 2.0 mixture, a third time |
 | **OpenMMEgo** (OME10M, OMEBench) | **MIT on a repository containing a README**; the data section reads *"We will release our code and data soon"* and neither dataset is findable | 🔴 **the title says "Open Weights and Data"** — weights shipped (13 public model repos), data not |
 | **Open X-Embodiment** | **none stated; 60 pooled components, position unstated** | ⚠️ unknowable without tracing 60 upstream datasets |
+
+🔴 **A systematic audit of this document's own permissive claims, and it did not
+go well.** Having caught itself recording
+[MobileEgo Anywhere](#mobileego-anywhere)'s *paper* licence as its *dataset*
+licence, the obvious question was whether the same error was repeated. It was —
+**five times**, in every case in the direction of *more permissive than the
+source supports*:
+
+| Entry | This document said | What the dataset artefact says |
+|---|---|---|
+| **Action100M** | CC BY 4.0, ✅ with attribution | 🔴 **`fair-noncommercial-research-license`** (Meta FAIR) on `facebook/action100m-preview` — **non-commercial**, and a *preview* subset |
+| **Open-AoE** | CC BY 4.0, ✅ with attribution | 🔴 **`open-aoe-dataset-license`** (bespoke) on `inclusionAI/OpenAoE-2000h`, with a staged *"Release Roadmap"* |
+| **EgoLive** | CC BY 4.0 | 🔴 **nothing** — distribution runs through a commercial marketplace |
+| **ENIGMA-360** | CC BY 4.0 | 🔴 **nothing** — and its project page has failed five checks |
+| **EgoCS-400K** | CC BY 4.0 | 🔴 **nothing** — no repository, card or download location named |
+
+**In all five the only licence string in the paper is the arXiv listing's own
+`License: CC BY 4.0`**, which governs the *manuscript*. Three of the five have no
+dataset artefact stating terms at all; the two that do state something state
+something **less** permissive — one of them non-commercial.
+
+> **The uncomfortable part is the direction.** This document's standing
+> observation about the field is that circulating claims run *freer and larger*
+> than sources support. **Its own licence errors run exactly the same way** — five
+> entries, five overstatements of permissiveness, none in the other direction.
+> That is not a coincidence of sampling: **`License: CC BY 4.0` is the most
+> visible string on an arXiv HTML page**, it sits where a reader skimming for
+> terms will find it, and it is *true* — of the paper. The failure is not
+> credulity about a dubious source; it is **reading the right string off the
+> wrong artefact, repeatedly, because that artefact is the one that loads
+> first.**
+>
+> **Two things follow for the rest of this survey.** A permissive licence
+> recorded against a dataset now requires a **dataset artefact** — a card, a
+> repository `LICENSE`, a terms page — and an arXiv listing is explicitly *not*
+> sufficient evidence. And the ✅ marks in the table below mean less than they
+> did an hour ago, which is worth saying plainly rather than quietly reissuing
+> them.
 
 ⚠️ **A note on this document's own ⚠️ markers, prompted by two of them falling in
 consecutive sweeps.** Panda-70M's *"⚠️ check upstream"* resolved to **O-UDA**;
@@ -2738,13 +2776,18 @@ on a real, downloadable artefact, and has to notice separately that it covers
 under a quarter of what the paper reports. **Record the licence, the access
 route, *and* the fraction — three fields, not one.**
 
-**All four corners of the licence × access grid are now occupied**, which is the
+**All four corners of the licence × access grid are occupied** — though the
+permissive/open corner was **re-tenanted this sweep**: it used to be held by
+EgoCS-400K on a CC BY 4.0 that turned out to be the paper's, and is now held by
+two entries whose terms were read at their **dataset cards** (EgoVid-5M's Apache
+2.0 and EgoExoLearn's MIT, both ungated). The grid survives on better evidence
+than it had. That is the
 cleanest way to see why one field cannot carry both. Every cell below was
 verified at source:
 
 | | **Access open** | **Access gated** |
 |---|---|---|
-| **Licence permissive** | [EgoCS-400K](#egocs-400k--10000-free-hours-sourced-from-the-internet-and-why-13-survives-it) — CC BY 4.0, ungated | [Egocentric-10K / -100K](#egocentric-10k) — Apache 2.0, but *"agree to share your contact information"* |
+| **Licence permissive** | [EgoVid-5M](#egovid-5m) — **Apache 2.0, ungated**, verified at its card; [EgoExoLearn](#egoexolearn) — **MIT, ungated**, verified at the author's card | [Egocentric-10K / -100K](#egocentric-10k) — Apache 2.0, but *"agree to share your contact information"* |
 | **Licence restrictive** | **[EgoDex](#egodex)** — CC-BY-NC-ND, yet the zips come straight off Apple's CDN, **HTTP 200, no auth** | [InternVid](#internvid) CC BY-NC-SA + gate; [AgiBotWorld-Beta](#the-robot-native-denominator) CC BY-NC-SA + contact gate; [Xperience-10M](#ropedia-xperience-10m--the-fidelity-wings-extreme-and-a-caution-about-reading-press-releases-as-availability) non-commercial + DocuSign |
 
 The bottom-left cell is the one that catches people. **EgoDex is the most
@@ -3348,7 +3391,12 @@ does not, but the reason is precise and worth stating rather than waved at.
 **Scale, all verified at source.** **Over 400,000 first-person videos, over
 10,000 hours**, from **over 1,000 matches** and **over 40,000 rounds**, across
 **13 maps**, at **10 player viewpoints per round**, averaging ~90 seconds per
-round-player video. **Licence CC BY 4.0.**
+round-player video. 🔴 **Licence — corrected this sweep: unresolved, not CC BY
+4.0.** The paper's only licence string is the **arXiv listing's**, which governs
+the manuscript; no repository, dataset card or download location is named
+anywhere in it. This entry asserted CC BY 4.0 for dozens of sweeps on that
+evidence — see [the permissive-claims audit](#11-the-licence-trap), where it is
+one of five.
 
 **Mechanism, and this is the whole point.** The source is the open internet:
 *"We collect public professional CS:GO and CS2 match demos from HLTV."* But what
@@ -3379,7 +3427,7 @@ assert viewpoint, hands and rights *with evidence* instead of reading them off.
 **What it does change.** Two things, and this document should own both.
 [§13](#13-why-no-open-source-project-does-exactly-this) can no longer be stated
 as "nobody sources ego data from the internet at scale" — somebody does, at
-10,000 hours, under CC BY 4.0. That narrowed the claim to *real-world* footage —
+10,000 hours. That narrowed the claim to *real-world* footage —
 and a later sweep found [HumanNet](#humannet) mining real human video from the
 web at a million hours, which narrowed it again, to **open, auditable, reusable
 infrastructure**. §13 sets out both narrowings and what survives them. What
@@ -3721,7 +3769,7 @@ that failed.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Seventeen of them are
+index, not a summary, and each row links to the working. **Eighteen of them are
 this document's own errors** — marked *(this document…)* in the left column and
 counted honestly, because an earlier revision of this preamble said "three" long
 after the count had passed it, which is the same failure the table exists to
@@ -3732,7 +3780,7 @@ trust the rest of it.
 | Claim in circulation | What the source says | Where |
 |---|---|---|
 | The 256p corpus outdownloads the 1080p one **470:1**, and later that the ratio **holds in a 4.5–5.3:1 band** *(this document — two successive errors, one snapshot and one premature generalisation)* | The counter reads **"Downloads last month"**, a rate not a total. And the band broke: a **fourth reading gives 3.6:1** (145,830 vs 40,875), outside it, with the 1080p corpus **up ~18%** and the 256p corpus **down ~7%**. Four readings run **4.8 → 5.3 → 4.5 → 3.6** — **a trend, not a band.** Three points show variance; it takes a fourth to show direction | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
-| **Nobody** sources ego data from the internet at scale *(this document, earlier)* | **EgoCS-400K does** — 10,000+ h, CC BY 4.0, from public HLTV match demos. Narrowed to *real-world* footage, since EgoCS-400K renders video from replay files and reads actions out of them | [§12](#egocs-400k--10000-free-hours-sourced-from-the-internet-and-why-13-survives-it), [§13](#13-why-no-open-source-project-does-exactly-this) |
+| **Nobody** sources ego data from the internet at scale *(this document, earlier)* | **EgoCS-400K does** — 10,000+ h from public HLTV match demos (⚠️ **its terms are unresolved**, not CC BY 4.0 as this document long recorded — see the permissive-claims audit in §11). Narrowed to *real-world* footage, since EgoCS-400K renders video from replay files and reads actions out of them | [§12](#egocs-400k--10000-free-hours-sourced-from-the-internet-and-why-13-survives-it), [§13](#13-why-no-open-source-project-does-exactly-this) |
 | **Nobody** mines the web for *real-world* human video at scale *(this document, for twenty-five sweeps, while carrying the refutation in §2)* | **HumanNet does**, at one million hours, from *"video-platform search, general web search engines, directly crawled videos, open-source datasets, and self-collection."* What is missing is not the act but the artefact: no release, no licence, no source breakdown, no ego/exo split, no per-clip provenance. §13 narrows to **open, auditable, reusable infrastructure** | [§2](#humannet), [§13](#13-why-no-open-source-project-does-exactly-this) |
 | HumanNet's headline is the 1,000 h vs 100 h result | Its follow-up **HumanScale** is stronger and newer: **5,000 h egocentric vs 5,000 h real-robot at matched scale** → 24% lower validation loss, **52.5% / 90%** higher in- and out-of-distribution success. At matched hours that is outperforming, not matching | [§2](#humannet) |
 | EgoScale is a UT Austin RPL project *(this document, earlier)* | **GEAR @ NVIDIA Research**, sixteen authors across several institutions | [§2](#egoscale) |
@@ -3755,6 +3803,7 @@ trust the rest of it.
 | **H-Tac and the Being-H models are unrelated projects** *(this document, treating them separately for dozens of sweeps)* | **H-Tac is BeingBeyond's**, its method is named **TTP**, and the baseline in its headline table — **BeingH-0.5** — is the same group's own prior model. Four BeingBeyond artefacts in this survey, not three | [§2](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) |
 | **MobileEgo Anywhere is CC BY 4.0** *(this document, for dozens of sweeps — the adjacent-artefact trap it catalogues, committed by itself)* | That is the **arXiv listing's** licence, covering the paper. The dataset `fpvlabs/stera-10m` carries **`license: other`**, is gated, and **401s unauthenticated** — the same bespoke, unreadable posture as its sibling Stereo-550 | [§2](#mobileego-anywhere), [§11](#11-the-licence-trap) |
 | **MobileEgo Anywhere and Ego-OSCAR are unrelated projects** *(this document, writing them up in two sections)* | Both are **`fpvlabs`**. The org's Hugging Face account holds exactly two datasets — `stera-10m` and `stereo-550` — both `license: other`, both gated. **Third time the survey has found two entries that were one group**, after NVIDIA's and BeingBeyond's | [§2](#mobileego-anywhere) |
+| **Five entries recorded as dataset CC BY 4.0** — Action100M, Open-AoE, EgoLive, ENIGMA-360, EgoCS-400K *(this document, systematically)* | In all five the only licence string is the **arXiv listing's**, which governs the manuscript. Three have **no dataset artefact stating terms at all**; the two that do state something **less** permissive — **Action100M is `fair-noncommercial-research-license`** (Meta FAIR, non-commercial) and **Open-AoE is a bespoke `open-aoe-dataset-license`**. **All five errors run the same direction: freer than the source supports** | [§11](#11-the-licence-trap) |
 | Build AI released ~1 M hours (Egocentric-1M) | **Not findable at the publisher across five attempts** spread over months, the last being the complete API index rather than a search. The only artefact of that name anywhere is an **empty third-party repo** — two files, a 21-byte README, no data | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 | EgoWAM trains on in-the-wild internet video | Its in-the-wild data is **EgoVerse on Project Aria**, flow from Aria VIO poses | [§2](#egowam--and-what-in-the-wild-turns-out-to-mean) |
 | EgoAVFlow needs no special capture, since it needs no robot demos | **Head-mounted RealSense D435 RGBD, plus a ChArUco board in every scene** | [§2](#egoavflow--no-robot-demonstrations-still-means-a-board-in-every-scene) |
