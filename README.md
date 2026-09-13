@@ -51,7 +51,13 @@ footage. This is the one rule with no override.
 
 **Never mix hour counts.** `worn`, `delivered`, `accepted` and
 `accepted_labeled` are four different numbers. Only `accepted_labeled` is safe
-to quote outward.
+to quote outward. And an hour is not even a constant once accepted:
+[Ego2Robot](https://arxiv.org/html/2608.02580) has to subsample every source to
+match robot action speed — *"ANT and EgoDex… to 60% of their original frame rate
+(~1.7× slower), EgoVerse to 45% (~2.2× slower), and ViTRA to 25% (~4× slower)"* —
+so **how much robot-equivalent time an hour of human video is worth varies about
+four-fold by where it came from.** Action speed is a per-clip property, not a
+corpus constant.
 
 **Unmeasured is not passed.** A quality check that could not be measured is
 dropped from the score rather than assumed to have passed.
@@ -120,6 +126,385 @@ for tokens and cost, and the `parsed_query` it actually worked from.
 
 For what happens to a candidate after it is found, read
 [the pipeline](#the-pipeline-end-to-end).
+
+## Related Work
+
+This is not a model and not a dataset — it is the step in between: turning the
+open internet into ego/exo footage that is viewpoint-labelled, licence-checked,
+hands-verified, annotated, and priced per delivered hour. The literature it sits
+next to mostly does one of two other things.
+
+**Commissioned capture.** [Ego-Exo4D](https://arxiv.org/abs/2311.18259)
+(1,286 h, 800+ participants, simultaneous ego + multi-exo),
+[Ego4D](https://ego4d-data.org/) (3,670+ h),
+[EPIC-KITCHENS-100](https://arxiv.org/pdf/1804.02748),
+[EgoExoLearn](https://github.com/OpenGVLab/EgoExoLearn) — recruited
+participants, consented sites, a fixed taxonomy. You get exactly the scenes you
+funded. Here the footage already exists, so the budget goes into *verification*
+instead of recording.
+
+**And the free hours are now feeding something.** [Being-H0.5](https://arxiv.org/html/2601.12993v1)
+(BeingBeyond, Jan 2026) pretrains a cross-embodiment VLA on **UniHand-2.0** —
+**35,000+ hours**, 16,000 of them egocentric human video — assembled from Ego4D,
+EPIC-KITCHENS and **Egocentric-10K**, and its own read of that corpus is this
+repo's argument in someone else's words: it *"features 10,000 hours of
+in-the-wild industrial footage but provides only raw RGB streams without
+annotation."* Their answer was to build a rig. Note also where the rights land:
+the code is Apache-2.0, the full mixture is unreleased, and the released
+**UniHand_Preview** subset states **no licence**, is ungated, is downloaded
+13,000 times a month, and does not say which of its sources it contains.
+
+**Consuming a pool somebody else built.** [EgoDex](https://arxiv.org/abs/2505.11709)
+(829 h, SE(3) hand annotations), [EgoScale](https://arxiv.org/abs/2602.16710)
+(20,854 h), [HumanNet](https://arxiv.org/abs/2605.06747) (1 M h — where 1,000 h
+of egocentric human video *matched or modestly surpassed* 100 h of real-robot
+data under fixed validation, against a 20,000 h upper bound it does not reach).
+Those results are the economic case for collection; this repo is the collection.
+
+Worth keeping the denominator in view: **[DROID](https://droid-dataset.github.io/),
+the flagship open teleoperated robot dataset, is 350 hours** — thirteen
+institutions, fifty collectors, twelve months. HumanNet's "100 h of robot data"
+baseline is close to a third of it. Robot data is not merely expensive per hour;
+there is almost none of it by comparison.
+
+Two neighbours are worth calling out directly:
+
+- **[SiMDex](https://arxiv.org/abs/2608.04196)** reaches our thesis from the
+  other side of the pipe — mining <5 % of a 32 M-sample pool beats an equal-size
+  random draw. Selection, not volume, is the bottleneck.
+- **[NVIDIA Cosmos](https://arxiv.org/abs/2501.03575)** generates and evaluates
+  data; we source it. Cosmos Curator presupposes a 20 M-hour archive — this is
+  how a team without one gets to its first defensible thousand hours.
+
+And one gap that shapes the design. Retrieval over the indexed corpus is
+any-to-any across *modalities* — [OmniRetriever](https://arxiv.org/abs/2605.26641)
+does text/video/audio in one space — but the axes that decide whether a clip is
+usable training data are not modalities. Viewpoint, hands in frame, licence,
+usable length after trimming: none of them fall out of a similarity search. They
+have to be asserted by an agent, justified with evidence, and written back as
+metadata. That is what the viewpoint classifier, the hands gate, the annotation
+tree and the four hour measures are for. Retrieval finds candidates; it does not
+certify them.
+
+And the set of things worth asserting per clip is growing.
+[EgoTac](https://arxiv.org/html/2608.15060) predicts dense contact and force
+fields **from ordinary egocentric RGB**, zero-shot on Ego4D, EPIC-KITCHENS and
+EgoDex — footage recorded with no tactile hardware — at contact F1 above 0.70
+out of domain. (Not to be confused with **EgoTactile**, arXiv 2606.09243 — a
+different 2026 paper one suffix away, which *measures* grasp pressure from 162
+sensing locations and releases it under CC BY-NC 4.0. Its trick is worth
+knowing: the hand the camera sees is **bare**, while a synchronised off-camera
+gloved hand supplies the pressure reference, so the instrument never enters the
+training pixels.) That does not give found footage tactile *measurements*, and the
+survey is careful about the difference. It does mean **whether the hand is
+actually touching the object, or hovering** is now a verdict a pipeline can
+record with evidence, which is the next field the annotation tree should grow.
+The distinction matters, though, and the survey draws it: the other route to
+tactile — [H-Tac](https://arxiv.org/html/2607.01067), whose largest component
+computes contact by *"thresholding the distance between the hand surface and
+object meshes"* — needs per-frame object geometry, which internet video does not
+come with. **Derived tactile is closed to found footage; predicted tactile is
+open.** H-Tac is worth the read anyway for what contact buys. The headline comparison is
+**9.2% to 79.2%** on contact-rich tasks, but that is their method against a
+baseline; the number that isolates what the *data* buys is their own
+pre-training ablation, **49.7% without it against 79.2% with** — about a 59%
+relative gain from the corpus rather than the architecture.
+
+### What already exists in open source
+
+The chain here — crawl → decide viewpoint → clip → annotate — exists stage by
+stage as downloadable code, and the survey maps each one:
+[`video2dataset`](https://github.com/iejMac/video2dataset) and
+[LAION BVD](https://github.com/LAION-AI/BVD) for bulk fetch,
+[Panda-70M](https://github.com/snap-research/Panda-70M)'s `splitting/` for
+semantic cuts, [`cosmos-curate`](https://github.com/nvidia-cosmos/cosmos-curate)
+as an industrial skeleton. Three things are worth knowing before planning around
+them:
+
+- **Generative exo → ego does not scale.** [Exo2Ego-V](https://github.com/showlab/Exo2Ego-V)
+  needs four synchronised 360°-surround views with known poses; the web has none.
+  What works is *filtering* — [RynnVLA-001](https://arxiv.org/pdf/2509.15212)'s
+  rule (face keypoints → discard, hand keypoints → keep) is independent
+  corroboration of the viewpoint and hands gates here — or *lifting to 4D and
+  reprojecting*, as [EgoInfinity](https://arxiv.org/abs/2606.17385) does, though
+  it assumes a roughly static camera and explicitly excludes head-mounted
+  footage.
+- **The licence trap — including five instances of it in this survey's own
+  table.** Auditing every entry recorded as permissive found **five** whose
+  "CC BY 4.0" was the **arXiv listing's**, governing the paper rather than the
+  data: Action100M, Open-AoE, EgoLive, ENIGMA-360 and EgoCS-400K. Three of the
+  five state **no dataset terms anywhere**; the two that do are **less**
+  permissive — Action100M is Meta FAIR's **non-commercial** research licence and
+  Open-AoE is a **bespoke** one. Every error ran the same direction, toward
+  freer-than-the-source-supports, which is exactly the direction this survey
+  accuses everyone else's numbers of running. The rule now: **a permissive
+  licence recorded against a dataset needs a dataset artefact** — a card, a repo
+  `LICENSE`, a terms page — and an arXiv listing is not evidence.
+- **The licence trap.** EgoInfinity's own code is MIT, but WiLoR is CC-BY-NC-ND,
+  Ultralytics YOLO is AGPL-3.0 and MANO is non-commercial — the repo states that
+  commercial use *as a whole* is restricted. EgoDex, the field's favourite
+  hand-annotated reference set, is CC-BY-NC-ND outright. A dataset inherits the
+  restrictions of every model and corpus used to build it, which is the same
+  per-clip rights discipline this project applies to footage, pointed at the
+  toolchain. The sharpest version: **RynnVLA-001** ships Apache 2.0 code and two
+  7B checkpoints trained on **12 M egocentric manipulation videos**. Read at the
+  paper, those come *"from existing web sources"* — which, per its citation list,
+  means **Ego4D, EPIC-KITCHENS, HowTo100M, Something-Something and EgoVid-5M**,
+  i.e. existing public datasets rather than crawled footage, and a mixture that
+  includes a non-commercial corpus and one behind an unpublished agreement. The
+  assembled dataset carries no stated licence and is not released. A permissive
+  licence on a checkpoint answers a question about the weights and tells you
+  nothing about what went into them — which is why rights have to be recorded
+  where the footage enters rather than reconstructed from what comes out. The survey maps the whole chain —
+  [who feeds whom](docs/RELATED_WORK.md#who-feeds-whom--the-derivation-map) — and
+  two chokepoints carry most of the risk. **EgoDex** (CC-BY-NC-ND) sits inside at
+  least five downstream corpora and models, supplying 75% of OpenEgo's hours
+  alone. The second is **MANO**, not WiLoR — a correction the survey records
+  against itself. WiLoR is where MANO is most visible, but the permissive
+  alternative, **HaMeR (MIT)**, still requires MANO's registration-gated,
+  non-commercial hand model, and the one method that tries to drop it still uses
+  MANO's joint regressor. And it runs deeper than annotation:
+  [EgoVLA](https://rchalyang.github.io/EgoVLA/) uses *"MANO hand parameters as a
+  shared action space for humans and robots"*, with its repo instructing you to
+  *"register at the MANO website"* — so MANO is the **interlingua** in which a
+  human hand and a robot hand are made commensurable, not a preprocessing step a
+  better reconstructor would remove. Swapping WiLoR is an afternoon and buys a
+  cleaner code licence; MANO is the layer that decides whether any of it is
+  shippable. The
+  best lead out is **NIMBLE** — a bones-and-muscles hand model, MIT on the repo —
+  but it is built in *"MANO topology"* and reuses manopth, so whether it clears
+  those terms is unresolved and worth resolving before anything ships.
+  Non-commercial
+  terms at junctions this much routes through are the single most consequential
+  licensing fact in the field. (Nothing there alleges non-compliance by anyone;
+  the point is what a reader can determine from the public artefacts, which is
+  not much.) And an
+  unresolved licence is a snapshot, not a property: re-checking this sweep,
+  InternVid — long recorded in the survey as stating none — now carries
+  **CC BY-NC-SA 4.0** and is gated, the most restrictive combination in the
+  document. Terms change quietly, so the survey re-reads them rather than
+  inheriting them — and re-reading turned up a shape worse than a quiet change.
+  EgoDex's arXiv **v1 and v2** state its CC-BY-NC-ND terms; **v3 (March 2026)
+  states no licence at all** and drops the dataset-access appendix. The terms are
+  still in force, but they now survive only in two unversioned READMEs, so the
+  one *citable* statement of them is gone. A rights field reading "CC-BY-NC-ND,
+  per arXiv 2505.11709" was accurate when written and no longer resolves. Record
+  the artefact and revision the terms were read at, with a date. All four corners
+  of the **licence × access** grid are now
+  occupied, and the awkward one is EgoDex: CC-BY-NC-ND, the most restrictive
+  terms in the survey, served straight off Apple's CDN at HTTP 200 with no
+  authentication. Ease of download tells you nothing about permission, which is
+  why the manifest carries both fields separately. And the honest verdict on the
+  field is not that nobody handles provenance —
+  [OpenEgo](https://arxiv.org/html/2509.05513v1) unifies six corpora into 1,107 h
+  and does it properly: **annotations only, no video redistributed**, each
+  source's licence text shipped with attribution, and explicit author permission
+  for the CC-BY-NC-ND component — and it ships that as a file, not a promise:
+  `ATTRIBUTION.md` in [its repo](https://github.com/ahadjawaid/openego) gives
+  each source's authors, paper, licence URL and a ready-to-paste attribution
+  line. (Code is MIT and public; the annotation data is still being released.)
+  The verdict is that this is clearly possible and almost nobody does it — and
+  the survey's build-vs-reuse table now says so about *us*: deciding whether a
+  found clip's licence holds is per-clip judgement we have to build, but the
+  record format and the annotations-only redistribution rule are solved
+  publicly, and reinventing either would be the exact mistake that table exists
+  to prevent. One correction the survey makes against itself here: OpenEgo is
+  **not the first** to release pointers instead of video.
+  [HD-VILA-100M](https://arxiv.org/abs/2111.10337) did exactly that in 2022 —
+  URLs only, under a named licence (the **Open Use of Data Agreement**) — at
+  103 M clips and 371.5 K hours, roughly 335× OpenEgo's. The survey had it in a
+  table the whole time as "Panda-70M's upstream, ⚠️ check upstream". What stays
+  distinctive about OpenEgo is the narrower half: **per-source** licence text and
+  attribution, rather than one blanket licence over three million third-party
+  uploads. A third instance turned up on the next sweep: **EgoVid-5M**'s release
+  is three CSVs and a `poses.zip` under Apache 2.0 — **no video** — with the
+  footage left to be fetched from Ego4D under Ego4D's own agreement. The posture
+  is common; the per-source attribution is the rare part. And the limit of the
+  posture is visible right beside it: a third party has re-uploaded **722 shards
+  of extracted EgoVid frames** with no card, no licence and no attribution,
+  ungated, at ~6,000 downloads a month. A rights record has to survive being
+  copied, which is why provenance belongs in the manifest travelling with each
+  clip and not only in the release posture of whoever published first.
+- **Hours are being commoditised — but pixels are not.** Build AI went from
+  [Egocentric-10K](https://www.humanoidsdaily.com/news/build-ai-open-sources-10-000-hours-of-factory-worker-video-to-scale-robot-learning)
+  (10,000 h, 1080p) to
+  [Egocentric-100K](https://huggingface.co/datasets/builddotai/Egocentric-100K)
+  (100,405 h, 10.8 B frames, **456×256**), both Apache 2.0. Note what scaling
+  cost: a 17× drop in pixels per frame, in a domain where finger articulation is
+  the payload. And note how it landed — the publisher's own listing shows
+  the 256p corpus pulled **145,830** times last month against the 1080p corpus's
+  **40,875** — **3.6:1**, and *closing*. Four readings now run **4.8 → 5.3 → 4.5
+  → 3.6**: between the last two the 1080p corpus rose ~18% while the 256p corpus
+  fell ~7%. An earlier revision of this README quoted 470:1 off a single reading,
+  and a later one called the ratio stable inside a 4.5–5.3:1 band — both are
+  recorded in the survey's corrections. The counter is a rolling monthly *rate*,
+  not a lifetime total; and three points showed variance where four show
+  direction. **The direction runs with this repo's bet**: demand for the
+  high-resolution corpus is growing and demand for the downsampled one is not. The reported
+  **Egocentric-1M** remains unverifiable: **five attempts** at the publisher's
+  own surfaces, the last being its complete API index, which returns exactly
+  four datasets and does not include it. The only artefact of that name anywhere
+  is an unrelated **empty repo** — two files, a 21-byte README, an `mit` tag, no
+  data — which is what a name plus a licence field is worth without contents. The direction still holds —
+  the field does reach for hours first — but the opposite bet, that legibility
+  is what a manipulation corpus is *for*, is a less lonely place to stand than
+  it looked. And it is not one publisher's quirk:
+  [SABER](https://arxiv.org/html/2605.09613v1) records its egocentric stream —
+  in a corpus whose declared payload is dexterous hand-pose trajectories — from
+  head-mounted GoPros at **480p**. (A widely-reported ~1 M-hour follow-up to
+  Egocentric-100K could not be found at the publisher across four attempts; the
+  survey records each one.)
+  Consent posture is a design choice, not a casualty of scale: the 10K card warns
+  against surveillance uses while carrying no consent documentation, where
+  [Open-AoE](https://arxiv.org/abs/2607.14183) collects under explicit informed
+  consent with face masking in-pipeline.
+
+### Why no open-source project does exactly this
+
+Every individual stage is open. The assembly is not — and the reason is
+structural, not technical.
+
+**Two projects come close, and saying exactly how keeps the rest honest.**
+[EgoCS-400K](https://arxiv.org/html/2606.18180v1) sources ego data from the open
+internet at scale — 10,000+ hours from public Counter-Strike match
+demos on HLTV — but it works because the domain ships a deterministic replay
+format: the video is *rendered* rather than downloaded, and the actions are
+*read out of the file* as ground truth. Viewpoint is a render parameter; there
+is no camera to classify. And [HumanNet](https://arxiv.org/abs/2605.06747) is
+the bigger one: **one million hours of real human video**, assembled from
+"video-platform search, general web search engines, directly crawled videos,
+open-source datasets, and self-collection", with self-collection described as
+complementing *web-scale acquisition*. Its follow-up
+[HumanScale](https://arxiv.org/html/2606.20521) then beat 5,000 hours of
+real-robot teleoperation with 5,000 curated egocentric hours at matched scale.
+
+**So "nobody does this" is simply false, and the survey says so** — it asserted
+the flat version for twenty-five sweeps while carrying the refutation in its own
+§2. What is missing is not the act but the artefact. HumanNet is not released:
+no dataset licence, no public release strategy, no code beyond a promise. It is
+not auditable: no breakdown of the million hours by source, no ego/exo split, no
+per-clip provenance, and a rights review that is asserted rather than published.
+And it is a corpus, not a machine — it answers "here are a million hours", not
+"here are the hours matching this requirement, with evidence". **The gap is the
+acquisition layer as open, auditable, reusable infrastructure**, and that gap is
+real: whatever was built to assemble those hours, none of it is downloadable.
+
+That HumanNet exists is good news for the premise here, not bad — it is the
+largest demonstration anywhere that the supply is real and that mining it works.
+
+And the skipping is old. [HowTo100M](https://www.di.ens.fr/willow/research/howto100m/)
+mined 1.2 M YouTube videos in 2019 and released the training procedure, the
+evaluation code, a pretrained model and a feature-extraction script — and
+nothing about how those videos were found or chosen. HD-VILA-100M repeated it at
+3.3 M videos in 2022. **The acquisition layer has been the reliably unpublished
+part of web-scale video work for at least seven years**, which makes it less a
+gap of the current moment than a standing property of how these corpora get
+built.
+
+On tooling, open source went hard at the two adjacent problems
+and skipped this one: **capture** ([EgoKit](https://arxiv.org/pdf/2605.16797),
+[MobileEgo Anywhere](https://arxiv.org/pdf/2605.05945) — how to record more
+footage cheaply) and **annotation** ([EgoLive](https://arxiv.org/html/2604.23570v1),
+Action100M — how to label footage you already hold). Acquisition from the open
+web is the hole between them: the tools that touch the internet are
+viewpoint-blind by construction, and published guidance for sourcing ego footage
+still amounts to *manually searching YouTube for "egocentric view"*.
+
+**And the honest counterweight, because capture is getting cheaper.**
+[Ego-OSCAR](https://arxiv.org/html/2608.08285v2) is an open stereo-inertial rig
+at a **~$200 bill of materials** — hardware, capture software and corpus all
+open-sourced — shipping **1,100 stereo camera-hours** with 209,315 labelled
+action segments. That genuinely narrows the price gap this repo argues from, and
+the survey says so. What it does not narrow is coverage: those hours are 25
+people in 40-odd indoor rooms doing household work. A cheaper rig does not answer
+a requirement for the long tail; finding footage that already exists does, or
+funding a new shoot does. (Its licence is also a shape worth knowing about — a
+bespoke `fpvlabs-license` that says "research use" and "commercial usage
+allowed" in the same breath, and so tells you nothing by name. The hardware and
+capture software are plain Apache 2.0; the dataset is not, and its licence text
+sits behind the same gate you need it to decide whether to pass — so the one
+thing a custom licence requires, reading it, cannot happen before you agree.)
+
+**The strongest single piece of evidence is what the best-resourced actor did.**
+When NVIDIA needed the largest egocentric corpus ever assembled for a world model
+— [DreamDojo](https://arxiv.org/html/2602.06949), 44,711 hours — it
+**crowdsourced 43,827 of them**, took 829 from EgoDex and shot 55 in-lab. Not one
+hour is described as found footage. The company that also ships the world-model
+platform, the curation substrate and the largest ego VLA still paid for capture
+rather than mining the web.
+
+And the four positions rest on fewer than four acquisitions. DreamDojo and
+[EgoScale](https://arxiv.org/abs/2602.16710) report **identical scene, task and
+object counts** — 9,869 / 6,015 / 43,237 — and the same 829-hour EgoDex
+component, in two papers from the same lab that never cite each other. So the
+corpus behind the world model and the corpus behind the VLA are, on the face of
+it, one corpus. Which sharpens the point rather than softening it: the
+best-resourced actor in the field bought its hours **once** and built everything
+downstream on that single purchase, because there was no second way to get them.
+
+**And a second vendor does the same thing, without needing to be inferred.**
+BeingBeyond states outright that **Being-H0, [Being-H0.5](https://arxiv.org/html/2601.12993v1)
+and [Being-H0.7](https://arxiv.org/html/2605.00078v1)** all pretrain on the same
+**UniHand 2.0** mixture — 35,000 hours, 16,000 of them egocentric human video.
+One acquisition, three products, said plainly rather than deduced from matching
+figures. Two organisations on two continents with the same economics is a shape,
+not an anecdote, and it is the cleanest explanation of why the gap persists:
+**if the corpus is the asset that pays for a whole model family, the acquisition
+layer is the last thing you publish.**
+
+The survey now has **five artefacts from that one lab** — the three models above,
+the tactile work **H-Tac/TTP**, and **[OpenMMEgo](https://github.com/BeingBeyond/OpenMMEgo)**,
+whose NeurIPS 2025 title promises *"Open Weights and Data"*. A year on, the
+weights are genuinely public (13 model repos) and the repository's entire data
+section reads *"We will release our code and data soon."* Its **OME10M** is 8.2 M
+QA pairs synthesised from Ego4D — annotations over someone else's video, the one
+shape that could have shipped without redistributing a frame. **The half of a
+promise that gets kept is the half that costs least**, and a claim of openness in
+a title travels into every citation while nothing verifies it.
+
+**The newest work keeps confirming it, in two ways.** By staging what the web
+already holds: [SABER](https://arxiv.org/html/2605.09613v1) needed ~100 hours of
+grocery stocking and shelf retrieval — among the most abundantly filmed activity
+on the open internet — and sent actors into real stores with head-mounted
+GoPros. And by calling something in-the-wild that isn't:
+[EgoWAM](https://arxiv.org/abs/2607.08436) reports that world-action-model
+co-training "scales more effectively with in-the-wild egocentric human data,"
+where the in-the-wild data is EgoVerse, captured on Project Aria glasses, with
+its 3D flow derived from the glasses' own VIO poses. In this literature
+*in-the-wild* means outside the robot's lab — never off the open web.
+
+It stays a hole because the citable unit is a corpus rather than a machine;
+because where it pays, the sourcing pipeline is the product and gets kept;
+because a tool that automates search → download → licence filtering carries legal
+exposure a dataset release does not; because "collect N hours matching this
+requirement" has no stable interface to standardise around; because the hard
+parts are contested judgement rather than deterministic transforms; and because
+the scaling results that make it worth paying for are about a year old.
+
+So the missing piece is specifically the **acquisition layer** — requirement →
+search → viewpoint proof → rights proof → manifest — as something you can
+obtain, inspect and re-run. That is what this repo is, and it is why it reuses
+the stages the field has already solved rather than reimplementing them.
+
+**What would falsify that**, stated so you can check rather than take it on
+trust: a public release, under terms permitting reuse, of a system that takes a
+stated requirement and returns clips with per-clip viewpoint evidence, rights
+provenance and acceptance status. Not a corpus — corpora exist, several are
+enormous, and HumanNet's is the largest. A *machine*, whose outputs audit back
+to their sources. If one appears, the survey says it should be edited to say so
+rather than defended.
+
+Full survey — both halves, the positioning table and references:
+**[docs/RELATED_WORK.md](docs/RELATED_WORK.md)**. It also carries a
+[corrections table](docs/RELATED_WORK.md#corrections-in-one-table) indexing every
+widely-repeated claim that did not survive being checked at its source —
+including several of the survey's own, kept visible rather than quietly amended
+— and a
+[vocabulary table](docs/RELATED_WORK.md#the-vocabulary-problem--four-phrases-that-do-not-mean-what-they-say)
+for four phrases that reliably mislead: *"in the wild"* means outside the lab,
+not off the internet; *"from existing web sources"* means from public datasets,
+not crawled; a licence on the paper or the code is not the terms of the data;
+and a dataset named for its size often counts something else.
 
 ## Installation
 
@@ -1441,6 +1826,9 @@ video-searching-agent/
 │   ├── tools/          # Gemini function calling tools
 │   └── web/            # FastAPI app, SSE streaming, middleware
 │       └── static/     # Zero-build web UI (index.html / styles.css / app.js)
+├── docs/               # DATASET.md, autoresearch/, and RELATED_WORK.md —
+│                       #   the schema, the loop's own notes, and how this
+│                       #   sits next to the literature
 ├── eval/               # Frozen eval set + runner (see eval/README.md)
 ├── qa/                 # Deployment sweep and whole-pipeline run
 ├── examples/           # Usage examples
