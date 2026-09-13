@@ -1626,7 +1626,7 @@ informed consent**.
 
 ### EgoVerse
 
-**[arXiv 2604.07607](https://arxiv.org/abs/2604.07607)** — 1,362 hours, 80,000
+**[arXiv 2604.07607](https://arxiv.org/abs/2604.07607)** (**v2, 7 Jul 2026**, re-read this sweep) — 1,362 hours, 80,000
 episodes, 1,965 tasks, 240 scenes, **2,087 unique demonstrators**, from a
 collaboration spanning Georgia Tech, Stanford, UC San Diego, ETH Zürich, MIT,
 Meta Reality Labs, Mecka AI and Scale AI. Split into **EgoVerse-A** (75 h, 5.5%:
@@ -1649,11 +1649,21 @@ between versions.
 
 ### MobileEgo Anywhere
 
-**[arXiv 2605.05945](https://arxiv.org/pdf/2605.05945)** — 200 hours across 354
-sessions from **16 contributors**, captured on iPhone Pro devices in head rigs in
-household environments. Average session 21.2 minutes, longest ~108. The app is
-hands-free by voice ("start" / "stop") and writes synchronised RGB, depth, IMU
-and ARKit 6-DoF pose into MCAP.
+**[arXiv 2605.05945](https://arxiv.org/abs/2605.05945)** (**v7, 8 Jul 2026** —
+seven revisions, and the figures moved) — quoted at v7: *"The released dataset
+contains **584 sessions** totaling **200 hours** from **20 contributors**,
+averaging **20.5 minutes** with a maximum of 108 minutes."* Captured on iPhone
+Pro devices in head rigs in household environments. The app is hands-free by
+voice ("start" / "stop") and writes synchronised RGB, depth, IMU and ARKit 6-DoF
+pose into MCAP.
+
+⚠️ **This document had 354 sessions, 16 contributors and 21.2-minute averages** —
+figures read at an earlier revision and carried since. The hour count and the
+108-minute maximum are unchanged; **the session and contributor counts grew by
+roughly 65% and 25%** as the collection continued. A dataset that is still being
+gathered has a scale that expires faster than a finished one, which is an
+argument for pinning the revision a figure was read at even when a paper's own
+citation does not.
 
 The **STERA** pipeline behind it:
 
@@ -1662,12 +1672,54 @@ The **STERA** pipeline behind it:
 2. **Atomic action labels** — a VLM writes captions with object modifiers and
    spatial prepositions ("transfer dough from metal bowl to large plate").
 3. **Hierarchical instructions** — an LLM organises those into a **three-level
-   tree**: 5-second manipulation steps → minute-scale sub-goals → full session
-   plans. 45,415 atomic spans, 5,570 episodes, 1,298 sub-goals.
+   tree**: a session-level goal, sub-goals, and episodes, with three invariants
+   enforced — *"unique span assignment, exact timestamp boundaries, and full
+   session coverage"*. ⚠️ **The counts this document carried — 45,415 atomic
+   spans, 5,570 episodes, 1,298 sub-goals — do not appear in v7 at all.** They are
+   retained here marked as **read at an earlier revision and not re-verifiable at
+   the current one**, which is the honest state: not withdrawn, not confirmed.
 
-**Licence CC BY 4.0.** Quality reporting is unusually candid: 87% of sessions
+🔴 **Licence — this document had it wrong, and wrong in the way it warns others
+about.** The entry said **"Licence CC BY 4.0."** That is the string
+`License: CC BY 4.0` on the **arXiv listing**, which governs the *paper*. The
+dataset is **[fpvlabs/stera-10m](https://huggingface.co/datasets/fpvlabs/stera-10m)**,
+whose card metadata says **`license: other`**, is **gated**, and returns **401 to
+an unauthenticated fetch** — so, as with its sibling below, **the licence text
+cannot be read before agreeing to it.** This is the
+[adjacent-artefact trap](#the-vocabulary-problem--four-phrases-that-do-not-mean-what-they-say)
+that §11 catalogues, committed by the document that catalogues it. Reclassified
+from *permissive* to **bespoke, unreadable** — the fifth licence shape, not the
+first.
+
+🔴 **And the sibling is the point: `fpvlabs` publishes both this and
+[Ego-OSCAR](#ego-oscar--capture-at-200-and-a-fifth-licence-shape).** The
+organisation's Hugging Face account holds exactly two datasets —
+**`stera-10m`** (MobileEgo Anywhere, 7,043 monthly downloads) and
+**`stereo-550`** (Ego-OSCAR's Stereo-550, **199,055 monthly downloads**) — both
+`license: other`, both gated. This survey had written them up as unrelated
+projects across two sections. **They are one lab, with one bespoke licence
+posture applied to both**, which is why Ego-OSCAR's `fpvlabs-license` and this
+`other` are the same thing seen twice. It is the third time the survey has found
+two entries that were really one group, after
+[NVIDIA's DreamDojo/EgoScale](#egoscale) and
+[BeingBeyond's five](#being-h07--one-corpus-three-products-and-a-second-vendor-doing-it).
+
+> **Worth noting the download figure.** Stereo-550's **199,055 monthly pulls**
+> exceed [Egocentric-100K](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost)'s
+> 145,830 — so the single most-pulled corpus in this document is one whose terms
+> **nobody can read without first accepting them.**
+
+**Also released, and not previously recorded here:** a `stera-sdk`, the
+`stera-10m` Hugging Face dataset, and a hosted visualisation platform — so the
+tooling side is genuinely shipped, whatever the terms say.
+
+Quality reporting is unusually candid: 87% of sessions
 passed all structural checks, 46 needed automatic correction, hand-pose
-consistency was evaluated on 98 of 354 sessions, human validation on 50.
+consistency was evaluated on 98 of 354 sessions, human validation on 50 — ⚠️ all
+four figures **read at the earlier revision and absent from v7**, so they are
+kept on the same footing as the annotation counts above: recorded, not
+re-confirmed. Note that "98 of 354" is now "98 of 584" if the denominator moved
+with the corpus.
 
 > **Bearing here — the third independent convergence on the same shape.** This
 > repo's task → action → event tree, [Action100M](#action100m)'s brief action →
@@ -2618,7 +2670,7 @@ Reading the licences across this document produces the wider pattern:
 | Action100M | CC BY 4.0 | ✅ with attribution |
 | Open-AoE | CC BY 4.0 | ✅ with attribution |
 | EgoLive | CC BY 4.0 | ✅ with attribution (distributed via JD Cloud) |
-| MobileEgo Anywhere | CC BY 4.0 | ✅ with attribution |
+| **MobileEgo Anywhere** — `fpvlabs/stera-10m` | **`license: other`**, gated, **401 unauthenticated** — the same bespoke posture as its sibling Stereo-550 *(this document previously recorded **CC BY 4.0**, which is the **arXiv paper's** licence)* | ⚠️ **unclassifiable** — unreadable before agreeing |
 | NeMo Curator | Apache 2.0 | ✅ |
 | **Ropedia Xperience-10M** | **"other" — gated, DocuSign, research only** | ❌ non-commercial |
 | EgoKit | toolkit only, no dataset | n/a — paper carries the arXiv licence |
@@ -2643,7 +2695,7 @@ Reading the licences across this document produces the wider pattern:
 | **LAION-BVD** | **research only** | ❌ |
 | **EgoInfinity (as a whole)** | MIT code, encumbered deps | ❌ until deps are swapped |
 | **Ego4D / Ego-Exo4D** | **signed agreement, terms not public** | ⚠️ unknowable until you sign — do not assume |
-| EgoVerse | no dataset licence stated (**re-checked at the paper this sweep; still none** — only the arXiv listing's, and access runs through the authors' EgoDB/S3 sync) | ⚠️ ask before use |
+| EgoVerse | no dataset licence stated (**re-checked at v2, 7 Jul 2026; still none** — zero occurrences of "CC BY" or "Apache" in the body, and the figures 1,362 h / 80 k episodes / 1,965 tasks / 240 scenes / 2,087 demonstrators all hold — only the arXiv listing's, and access runs through the authors' EgoDB/S3 sync) | ⚠️ ask before use |
 | Panda-70M (data) | inherits **[HD-VILA-100M](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago)**, whose stated terms are the **Open Use of Data Agreement (O-UDA)** | ✅ resolved — a ⚠️ this document carried for dozens of sweeps, answered by reading the upstream abstract |
 | EgoVid-5M | **Apache 2.0 on the release, which is annotations only** — three CSVs and `poses.zip`, **no video**; the footage is fetched from Ego4D under Ego4D's terms | ✅ resolved, and correctly scoped — the **second** "⚠️ check upstream" answered in two sweeps, both of which resolved *better* than the marker implied |
 
@@ -3651,7 +3703,7 @@ that failed.
 |---|---|---|---|
 | **"in the wild"** | found on the internet | *outside the robot's lab* — captured by the authors, on their own hardware, in real environments | [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean) (EgoVerse on Aria), [World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild) (own wearable suit), and the term's general use across [§2](#2-scaling-human-video-for-robot-learning). ✅ **One honest exception**: [EgoTac](#egotac--tactile-predicted-from-ordinary-video-and-a-ceiling-that-moved)'s in-the-wild inference really does run on found corpora |
 | **"from existing web sources"** | crawled from the internet | *from existing public research datasets* — Ego4D, EPIC-KITCHENS, HowTo100M, Something-Something | [RynnVLA-001](#rynnvla-001--filter-dont-convert) |
-| **a licence on the paper / the code / the repo** | the terms of the **data** | the terms of that adjacent artefact only — the dataset's terms are separate, and often absent | [EgoScale](#egoscale) (arXiv CC BY 4.0), [NIMBLE](#wilor--the-chokepoint-read-at-source) (repo MIT, paper CC BY), [EgoExoLearn](#egoexolearn) and [EgoHumanoid](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator) (code MIT / Apache 2.0) |
+| **a licence on the paper / the code / the repo** | the terms of the **data** | the terms of that adjacent artefact only — the dataset's terms are separate, and often absent | [EgoScale](#egoscale) (arXiv CC BY 4.0), [NIMBLE](#wilor--the-chokepoint-read-at-source) (repo MIT, paper CC BY), [EgoExoLearn](#egoexolearn) and [EgoHumanoid](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator) (code MIT / Apache 2.0), and — **committed by this document itself** — [MobileEgo Anywhere](#mobileego-anywhere), recorded as CC BY 4.0 for dozens of sweeps when that was the arXiv listing's licence and the dataset is gated `license: other` |
 | **a dataset named for its size** | that many hours of the thing you want | often a different unit, a different viewpoint, a different corpus entirely — or no corpus at all | [Ego-1K](#ego-1k) — 956 clips of 8–10 s, not 1,000 hours; [Ego-Exo4D](#ego-exo4d) — 1,286 h of which **221 are egocentric**; **`easpeeder/Egocentric-1M`** — a public, MIT-tagged repo containing [two files and no data](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 | **two projects one suffix apart** | distinct work, distinctly findable | the search engine silently picks one — **EgoTac** (arXiv 2608.15060) and **EgoTactile** (arXiv 2606.09243) are different 2026 papers on tactile from egocentric video, and a search for the first returns the second's dataset card, licence and all | [EgoTactile](#egotactile--tactile-measured-and-a-rig-that-keeps-the-glove-out-of-frame) |
 | **a name or title that asserts openness** | released, and released under terms | a statement of intent that propagates into every citation — **OpenMMEgo**'s title promises *"Open Weights and Data"*; a year on the weights are public and the repository's data section reads *"We will release our code and data soon"* | [OpenMMEgo](#openmmego--open-weights-and-data-half-kept) |
@@ -3669,7 +3721,7 @@ that failed.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Fifteen of them are
+index, not a summary, and each row links to the working. **Seventeen of them are
 this document's own errors** — marked *(this document…)* in the left column and
 counted honestly, because an earlier revision of this preamble said "three" long
 after the count had passed it, which is the same failure the table exists to
@@ -3701,6 +3753,8 @@ trust the rest of it.
 | **H-Tac's contact-rich result is "9.2% → 79.2%"** *(this document, compressing a five-column table into an arrow)* | Both figures are real, but they are **BeingH-0.5's score and theirs**, not a before/after of one system — and on vision defect the arrow started from the weaker of two baselines (π₀.₅ scores 17.8% against the 15.6% quoted). **The informative column is the pre-training ablation: 49.7% → 79.2%**, which isolates what the data buys | [§2](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) |
 | **CaptainCook4D is a 54-hour dataset** *(this document, attaching OpenEgo's slice to the source)* | Its own page says **384 recordings, 94.5 hours**. 54 h is what **OpenEgo ingests** (**200 of 384 recordings**, ~55% either way) — the same subset-versus-total trap as Ego-Exo4D's 1,286 h against 221 ego-hours. Traced this sweep to OpenEgo's Table 1, which lists ingested figures beside fully-ingested ones (**EgoDex's 829 h is all of it**) with no column distinguishing the two. Its **Apache 2.0**, previously taken second-hand from OpenEgo's `ATTRIBUTION.md`, verifies at the project page | [§1](#holoassist), [§11](#openego--somebody-does-this-properly-and-it-should-be-said-plainly) |
 | **H-Tac and the Being-H models are unrelated projects** *(this document, treating them separately for dozens of sweeps)* | **H-Tac is BeingBeyond's**, its method is named **TTP**, and the baseline in its headline table — **BeingH-0.5** — is the same group's own prior model. Four BeingBeyond artefacts in this survey, not three | [§2](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) |
+| **MobileEgo Anywhere is CC BY 4.0** *(this document, for dozens of sweeps — the adjacent-artefact trap it catalogues, committed by itself)* | That is the **arXiv listing's** licence, covering the paper. The dataset `fpvlabs/stera-10m` carries **`license: other`**, is gated, and **401s unauthenticated** — the same bespoke, unreadable posture as its sibling Stereo-550 | [§2](#mobileego-anywhere), [§11](#11-the-licence-trap) |
+| **MobileEgo Anywhere and Ego-OSCAR are unrelated projects** *(this document, writing them up in two sections)* | Both are **`fpvlabs`**. The org's Hugging Face account holds exactly two datasets — `stera-10m` and `stereo-550` — both `license: other`, both gated. **Third time the survey has found two entries that were one group**, after NVIDIA's and BeingBeyond's | [§2](#mobileego-anywhere) |
 | Build AI released ~1 M hours (Egocentric-1M) | **Not findable at the publisher across five attempts** spread over months, the last being the complete API index rather than a search. The only artefact of that name anywhere is an **empty third-party repo** — two files, a 21-byte README, no data | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 | EgoWAM trains on in-the-wild internet video | Its in-the-wild data is **EgoVerse on Project Aria**, flow from Aria VIO poses | [§2](#egowam--and-what-in-the-wild-turns-out-to-mean) |
 | EgoAVFlow needs no special capture, since it needs no robot demos | **Head-mounted RealSense D435 RGBD, plus a ChArUco board in every scene** | [§2](#egoavflow--no-robot-demonstrations-still-means-a-board-in-every-scene) |
