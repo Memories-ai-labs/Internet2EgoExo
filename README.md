@@ -285,9 +285,25 @@ them:
   shared action space for humans and robots"*, with its repo instructing you to
   *"register at the MANO website"* — so MANO is the **interlingua** in which a
   human hand and a robot hand are made commensurable, not a preprocessing step a
-  better reconstructor would remove. Swapping WiLoR is an afternoon and buys a
-  cleaner code licence; MANO is the layer that decides whether any of it is
-  shippable. The
+  better reconstructor would remove. **And there is a fourth layer, the one that
+  reaches furthest:** Microsoft's
+  [ViTRA-1M](https://huggingface.co/datasets/VITRA-VLA/VITRA-1M) — 1.22 M
+  episodes, ungated, **MIT** — ships MANO *as its file format*, `beta` and
+  `hand_pose` arrays straight out of `MANO_RIGHT`. Downstream users do not pass
+  through MANO in a pipeline they could swap; they parse it. Swapping WiLoR is an
+  afternoon and buys a cleaner code licence; MANO is the layer that decides
+  whether any of it is shippable.
+
+  **ViTRA is also the cleanest example of why naming a source is not recording a
+  licence.** Its card names its inputs three times — a `datasets:` field, a
+  per-source episode table, an acknowledgements line — and states the terms of
+  none of them. They are **Ego4D (77.6% of episodes), EPIC-KITCHENS, Ego-Exo4D
+  and Something-Something V2**: two signed-agreement corpora and one CC BY-NC.
+  The MIT stamp is correctly scoped — what ships is annotations only, ~91 GB of
+  `.npy` metadata indexing into raw video by name and frame number, not one pixel
+  — but the download is inert until you have signed for most of it, and nothing
+  on the page says so. Compare OpenEgo, which ships each source's licence text in
+  an `ATTRIBUTION.md`. The
   best lead out is **NIMBLE** — a bones-and-muscles hand model, MIT on the repo —
   but it is built in *"MANO topology"* and reuses manopth, so whether it clears
   those terms is unresolved and worth resolving before anything ships.
@@ -362,7 +378,20 @@ them:
   own surfaces, the last being its complete API index, which returns exactly
   four datasets and does not include it. The only artefact of that name anywhere
   is an unrelated **empty repo** — two files, a 21-byte README, an `mit` tag, no
-  data — which is what a name plus a licence field is worth without contents. The direction still holds —
+  data — which is what a name plus a licence field is worth without contents.
+  **The same trick now has a commercial version**, and it is the sharper one:
+  `Nexdata-AI/10000-Hour-Egocentric-Video-Dataset` holds **three files** — a
+  README advertising 4K stereo, 76-point body pose and step-level labels, and a
+  `meta.json` describing **one 59-second recording whose video is not in the
+  repo**. *"The complete dataset is available upon request."* An empty stub is an
+  abandonment; a listing is a product. It is one of **nineteen vendor sample or
+  catalogue cards among the forty most recently updated "egocentric" datasets on
+  Hugging Face** (24 July – 10 September 2026), from about fifteen company
+  accounts — so hours are being commoditised and monetised at once, which is
+  simply what a commodity market looks like as it forms. Both halves price the
+  same thing: the free drops set an undifferentiated hour at zero, and the
+  vendors charge for pose, labels, calibration and QC above it. **Neither sells
+  provenance.** The direction still holds —
   the field does reach for hours first — but the opposite bet, that legibility
   is what a manipulation corpus is *for*, is a less lonely place to stand than
   it looked. And it is not one publisher's quirk:
