@@ -171,7 +171,9 @@ Two neighbours are worth calling out directly:
 
 - **[SiMDex](https://arxiv.org/abs/2608.04196)** reaches our thesis from the
   other side of the pipe — mining <5 % of a 32 M-sample pool beats an equal-size
-  random draw. Selection, not volume, is the bottleneck.
+  random draw. Selection, not volume, is the bottleneck. Nothing is released:
+  its project page shows *Code* and *🤗 Hugging Face* buttons that are inert
+  `href="#"` links, so the result is one to reproduce, not a component to adopt.
 - **[NVIDIA Cosmos](https://arxiv.org/abs/2501.03575)** generates and evaluates
   data; we source it. Cosmos Curator presupposes a 20 M-hour archive — this is
   how a team without one gets to its first defensible thousand hours.
@@ -184,7 +186,19 @@ usable length after trimming: none of them fall out of a similarity search. They
 have to be asserted by an agent, justified with evidence, and written back as
 metadata. That is what the viewpoint classifier, the hands gate, the annotation
 tree and the four hour measures are for. Retrieval finds candidates; it does not
-certify them.
+certify them. (OmniRetriever's bench and 7B LoRA adapter are both Apache-2.0 and
+ungated; the training corpus behind them is not released.)
+
+The hard version of that retrieval problem now has a benchmark.
+**[S-EMBER](https://arxiv.org/abs/2607.02689)** (FAIR) is 3,141 videos / **388
+hours** on Ray-Ban Meta glasses with 9,448 QA pairs, and it asks a model to find
+the relevant moment in a continuous stream without knowing the boundaries in
+advance — which is exactly what a pipeline that indexes whole videos is
+implicitly asking of retrieval at query time, and what cutting semantically
+coherent clips converts into ordinary search. Even Gemini 3.1 Pro decays from 50 %
+accuracy on immediate recall to 29 % past eight minutes. Its terms make the
+survey's recurring point in one dataset: the arXiv HTML is CC BY 4.0, the code is
+MIT, and the **data is CC BY-NC 4.0 behind a name-and-affiliation gate**.
 
 And the set of things worth asserting per clip is growing.
 [EgoTac](https://arxiv.org/html/2608.15060) predicts dense contact and force
@@ -503,11 +517,13 @@ Full survey — both halves, the positioning table and references:
 widely-repeated claim that did not survive being checked at its source —
 including several of the survey's own, kept visible rather than quietly amended
 — and a
-[vocabulary table](docs/RELATED_WORK.md#the-vocabulary-problem--four-phrases-that-do-not-mean-what-they-say)
-for four phrases that reliably mislead: *"in the wild"* means outside the lab,
+[vocabulary table](docs/RELATED_WORK.md#the-vocabulary-problem--six-ways-a-name-misleads)
+for six ways a name misleads: *"in the wild"* means outside the lab,
 not off the internet; *"from existing web sources"* means from public datasets,
 not crawled; a licence on the paper or the code is not the terms of the data;
-and a dataset named for its size often counts something else.
+a dataset named for its size often counts something else; two projects a suffix
+apart get silently merged by a search engine; and a title that asserts openness
+outruns anything that could verify it.
 
 ## Installation
 

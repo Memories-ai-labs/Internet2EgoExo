@@ -120,7 +120,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [Six reasons the hole persists](#six-reasons-the-hole-persists)
   - [What this does and does not license us to claim](#what-this-does-and-does-not-license-us-to-claim)
 - [14. Build vs. reuse, per stage](#14-build-vs-reuse-per-stage)
-- [The vocabulary problem](#the-vocabulary-problem--four-phrases-that-do-not-mean-what-they-say)
+- [The vocabulary problem](#the-vocabulary-problem--six-ways-a-name-misleads)
 - [Corrections, in one table](#corrections-in-one-table)
 - [Positioning, in one table](#positioning-in-one-table)
 - [References](#references)
@@ -959,6 +959,28 @@ pipelines when asking what the open web can feed: **nothing here consumes found
 footage**; the strategies differ only in how they arrange the capture they
 control.
 
+**Terms, checked at the artefacts** (this entry carried none for sixty-two
+sweeps; see [the note on that omission](#corrections-in-one-table)). The code at
+[SimarKareer/EgoMimic](https://github.com/SimarKareer/EgoMimic) ships a **MIT**
+`LICENSE` — whose copyright line reads *"Copyright (c) 2023 Chen Wang"*, i.e.
+inherited from the MimicPlay/robomimic lineage it builds on rather than written
+for this release. The data sits at
+[`gatech/EgoMimic`](https://huggingface.co/datasets/gatech/EgoMimic): public,
+**ungated**, 1,258 downloads, last touched 1 Nov 2024 — and carrying **no
+dataset card whatsoever**. The API returns `cardData: null` and a single tag,
+`region:us`. There is no licence field, no terms, no README.
+
+> ⚠️ **Two things are true at once here, and the second is easy to miss.** The
+> repo's own README labels the link a **"Sample Dataset"**, and the artefact
+> matches: six HDF5 files — human and robot for each of *groceries*,
+> *smallclothfold* and *bowlplace*. So EgoMimic is simultaneously **partially
+> released** (three tasks of the paper's set, as a sample) and **terms
+> unstated** (an ungated public download with nothing attached saying what may
+> be done with it). It is the cleanest instance in this document of a dataset
+> that is *maximally easy to obtain and entirely unspecified to use* — the
+> opposite corner from a gated permissive release, and the corner readers
+> misread most often, because frictionless download reads as permission.
+
 ### EgoAVFlow — "no robot demonstrations" still means a board in every scene
 
 **[arXiv 2602.22461](https://arxiv.org/html/2602.22461v1)** (CC BY 4.0) — the
@@ -1247,7 +1269,7 @@ nothing; it is one that delivered exactly the half that costs least to give away
 > propagates into every citation, every listing and every search result that
 > mentions the work. A claim in a title is the most-copied claim a paper makes and
 > the least-checked. Added to
-> [the vocabulary table](#the-vocabulary-problem--four-phrases-that-do-not-mean-what-they-say)
+> [the vocabulary table](#the-vocabulary-problem--six-ways-a-name-misleads)
 > as a sixth trap: **a name or title that asserts openness is a claim about
 > intent, not a licence** — and `Open` in a project name is not evidence of
 > anything.
@@ -1420,7 +1442,7 @@ subfield as a set rather than a list.
 
 **Licence.** The listing carries only the arXiv perpetual non-exclusive licence
 — the *paper's* — with **no code, data or release statement** in the document.
-The [fifth instance](#the-vocabulary-problem--four-phrases-that-do-not-mean-what-they-say)
+The [fifth instance](#the-vocabulary-problem--six-ways-a-name-misleads)
 of the trap, so worth saying plainly: nothing here is obtainable yet.
 
 > **What this does to the argument, honestly stated.** It does **not** mean
@@ -1462,7 +1484,7 @@ that card carries a licence — so a sweep checking EgoTac's unresolved licence
 field, which is exactly what this one was doing, is one careless step from
 recording **CC BY-NC 4.0** against the wrong project. Caught by comparing arXiv
 IDs rather than names. Added to
-[the vocabulary table](#the-vocabulary-problem--four-phrases-that-do-not-mean-what-they-say)
+[the vocabulary table](#the-vocabulary-problem--six-ways-a-name-misleads)
 as a fifth trap: **near-identical names in the same subfield, where the search
 engine resolves the ambiguity for you and does not tell you it did.**
 
@@ -1696,7 +1718,7 @@ dataset is **[fpvlabs/stera-10m](https://huggingface.co/datasets/fpvlabs/stera-1
 whose card metadata says **`license: other`**, is **gated**, and returns **401 to
 an unauthenticated fetch** — so, as with its sibling below, **the licence text
 cannot be read before agreeing to it.** This is the
-[adjacent-artefact trap](#the-vocabulary-problem--four-phrases-that-do-not-mean-what-they-say)
+[adjacent-artefact trap](#the-vocabulary-problem--six-ways-a-name-misleads)
 that §11 catalogues, committed by the document that catalogues it. Reclassified
 from *permissive* to **bespoke, unreadable** — the fifth licence shape, not the
 first.
@@ -1893,6 +1915,29 @@ twentieth of the data.
 > hours, it is *the argument for why these hours*. That argument is what the
 > manifest, the viewpoint evidence and the quality gates exist to record.
 
+🔴 **Nothing is released, and the project page is built so that you would not
+notice.** [lin-nie.github.io/SiMDex](https://lin-nie.github.io/SiMDex/) presents
+four buttons in a row — *Paper*, *Demo*, **Code**, **🤗 Hugging Face**. The first
+two work. The last two are `<a href="#" class="disabled">`: styled as links,
+inert on click, with no "coming soon" label next to them even though the page's
+stylesheet defines a `.soon` class for exactly that purpose. There is no
+repository, no dataset, and **no licence stated anywhere** — paper, page or
+artefact. Cited at v1, the only version.
+
+> **Why this one stings.** SiMDex is the nearest published neighbour to this
+> repo's usability ranking, and the part worth having is not the 13.4-point
+> result — it is the recall→ranking→re-ranking machinery that produced it. That
+> is precisely what is not available. Read the entry as a *finding to reproduce*,
+> not a component to adopt.
+>
+> And note the presentation pattern, which is new to this document's
+> [naming and framing traps](#the-vocabulary-problem--six-ways-a-name-misleads):
+> earlier entries were undone by a word — "in the wild", "open", a licence on the
+> wrong artefact. This one is undone by **a dead link that looks like a live
+> one**. A reader skimming the header counts four affordances and infers four
+> things exist; nothing on the page is false, because nothing on the page is a
+> claim.
+
 ### Panda-70M
 
 **[CVPR 2024](https://github.com/snap-research/Panda-70M)** — 70.7 M
@@ -2082,24 +2127,111 @@ directions**.
   **13.3–18.0 R@1** on Clotho and SoundDescs; reaches the contemporary zero-shot
   specialist band of open video-text encoders on MSR-VTT and MSVD; **34.84
   AVG-all on OmniRetriever-Bench** (3,782 triples), +1.72 over Gemini Embedding 2.
+- **Terms, checked at the artefacts.** Both are on Hugging Face, both **ungated**,
+  both **Apache-2.0** on the card:
+  [`YunzeLiu/OmniRetriever-Bench`](https://huggingface.co/datasets/YunzeLiu/OmniRetriever-Bench)
+  (a single CSV, 61 downloads) and
+  [`YunzeLiu/OmniRetriever-7B`](https://huggingface.co/YunzeLiu/OmniRetriever-7B)
+  (a **LoRA adapter**, `library_name: peft`, `base_model: WAVE-7B`, 29
+  downloads). Both cards carry the `arxiv:2605.26641` tag, which is what ties a
+  personal namespace to the paper this document cites — worth stating, because
+  the [adjacent-artefact trap](#11-the-licence-trap) runs in this direction too:
+  a plausible name in a personal namespace is not by itself the paper's release.
+  Two consequences follow from the model being an adapter rather than weights:
+  the **base model's** terms govern alongside Apache-2.0, and what is published
+  is the benchmark and the delta, **not the training corpus** — the 12-direction
+  AVT data behind the result is not part of either artefact.
 
 ### S-EMBER
 
-**[arXiv 2607.02689](https://arxiv.org/pdf/2607.02689)** — the first benchmark
-for **streaming** egocentric memory retrieval, 15 hours of first-person video
-with multiple queries per sequence, released on Hugging Face and GitHub.
+**[arXiv 2607.02689](https://arxiv.org/abs/2607.02689)** (FAIR, Meta) — the first
+benchmark for **streaming** egocentric memory retrieval: **3,141 videos totalling
+388 hours** of organic activity captured on **Ray-Ban Meta smart glasses**, with
+**9,448 QA pairs**, each requiring manual visual proof through precise temporal
+localisation.
 
 The distinction it draws is the one that matters for an indexed corpus: standard
 video retrieval searches pre-segmented clips, whereas streaming memory retrieval
 must find the relevant moment in a continuous feed **without knowing the temporal
-boundaries in advance**. Baselines with GPT-4o and Gemini 3 leave large gaps.
+boundaries in advance**.
+
+🔴 **Three corrections, and the first is this document's own and the largest of
+them.** For sixty-two sweeps this entry read *"15 hours of first-person video"*
+and concluded *"the 15-hour benchmark is small, but the framing is the useful
+part."* **The paper says 388 hours, at both v1 and v2** — so the number cannot
+have come from the source at any version, which is the part worth admitting: the
+stated method of this document is that every entry was read at the source, and
+this one was not. 388 hours is not small. It is larger than
+[EPIC-KITCHENS-100](#epic-kitchens-100)'s 100, and larger than
+[Ego-Exo4D](#ego-exo4d)'s 221.26 egocentric hours. The dismissal was
+load-bearing and it was wrong.
+
+The other two are smaller and in the same paragraph. **GPT-4o is not a baseline
+here** — it appears once, text-only, given the question and temporal anchor
+metadata with *all visual input withheld*, as a deliberate "vision-tax"
+performance floor. And the Gemini evaluated is **Gemini 3.1 Pro**, not Gemini 3.
+The actual model panel is InternVL3.5-38B, Qwen3VL-32B, GPT-5.4,
+Llava-OneVision-7B and Gemini 3.1 Pro.
+
+**What the models actually fail at** is worth carrying, because it is a different
+claim at v2 than at v1. v1 reported a *localisation paradox*: temporal grounding
+precision does not improve with parameter count, resolution or frame density. v2
+reframes the headline as a **grounded recall gap** — models answer and localise
+with moderate competence *in isolation* yet succeed at both on the same query at
+**less than half the human rate**. Same corpus, same numbers, a reframed finding;
+the document cites it bare, so it inherits v2.
+
+> **A figure to keep.** Even Gemini 3.1 Pro decays from **50% accuracy for
+> immediate recall to 29% for events more than eight minutes prior**. Recall
+> quality is a function of temporal distance, not just of model size.
+
+**Terms, checked at the artefacts — and this is a seventh live instance of the
+[adjacent-artefact trap](#11-the-licence-trap).** The arXiv HTML is stamped
+**CC BY 4.0**; the dataset is not. The code at
+[facebookresearch/S-EMBER](https://github.com/facebookresearch/S-EMBER) is
+**MIT** (explicitly inherited: *"For the main pipeline structure-related code, we
+maintain the original license provided with lm-evaluation-harness"*), while its
+README states that *"the majority of S-EMBER is licensed under CC BY-NC 4.0"*
+with lmms-eval under separate terms. The data at
+[`facebook/S-EMBER`](https://huggingface.co/datasets/facebook/S-EMBER) is
+**CC BY-NC 4.0 and gated**, with a click-through requiring full name, affiliation
+and agreement to non-commercial use; 4,468 downloads. Three artefacts, three
+different licence records, none of them wrong — and a reader who took the number
+off the paper would have recorded the one that does not apply. **This is the
+third Meta FAIR dataset in this document whose permissive-looking stamp belongs
+to the paper rather than the data**, after [Action100M](#action100m) and
+[Ego-1K](#ego-1k).
+
+> ⚠️ **And there is a second copy, ungated.**
+> [`paper-review-only/S-EMBER`](https://huggingface.co/datasets/paper-review-only/S-EMBER)
+> carries the same **CC BY-NC 4.0**, the same two JSONL configs, and **no gate at
+> all** — 2,124 downloads against the official copy's 4,468. Its README says what
+> it is: *"an anonymized mirror provided for peer review… It contains the
+> complete benchmark. Author, institution, and provenance information has been
+> intentionally omitted for double-blind review."* The paper is now public and
+> attributed; the review mirror is still standing. Its counts — 9,429 questions
+> over 3,134 videos — sit nineteen questions and seven videos below the published
+> 9,448 / 3,141, which is itself the evidence that it is a **snapshot, not the
+> release**.
+>
+> Record it as a fact, not a shortcut. **The licence is identical on both copies,
+> so the ungated one grants nothing extra**: non-commercial either way, and the
+> gate exists to record *who took it*, not to change what they may do. Taking the
+> mirror to dodge a form means training on a snapshot that is already behind the
+> release, under terms that did not move. See
+> [§11](#11-the-licence-trap) for why this is an *access* fact and not a licence
+> one.
 
 > **Bearing here.** This is the failure mode our clipping stage exists to prevent.
 > A pipeline that indexes whole videos and hopes retrieval will find the moment is
 > attempting S-EMBER's hard problem at query time; a pipeline that has already cut
 > semantically coherent clips and written per-span annotations has converted it
-> into ordinary retrieval. The 15-hour benchmark is small, but the framing is the
-> useful part.
+> into ordinary retrieval. At 388 hours on shipping consumer glasses, it is also
+> the closest thing in this document to a preview of what wearable footage will
+> look like at volume: **consent-constrained rather than designed**, in the
+> paper's own words, with everyday routines dominating the distribution — the
+> same skew a web-sourced corpus inherits, arriving here from the opposite
+> direction.
 
 ### The gap this project fills
 
@@ -2840,6 +2972,19 @@ beside licence, access route and fraction: the artefact and revision the terms
 were read at, with a date.** Not the work — the *document*. This document had
 three of the four and still got it wrong, which is the argument for the fourth.
 
+**What the version audit found this sweep, run over all 45 arXiv IDs cited
+here.** Every ID resolved. Exactly **one pinned citation is behind its current
+version** — EgoDex at v1 against v3 — and that one is deliberate, for the reason
+above. **Eleven IDs are cited bare against papers that now have two or more
+versions**, which is the hole this audit had until it was widened to cover
+unpinned citations: a bare citation silently tracks whatever the paper says
+today. Most of that movement is harmless. One instance was not:
+[S-EMBER](#s-ember) **changed its headline finding between v1 and v2** — a
+*localisation paradox* became a *grounded recall gap* — on identical data. A bare
+citation of a claim that has been reframed is not stale, exactly; it is
+**quietly correct about a different sentence than the one you read**, which is
+harder to notice than being wrong.
+
 ⚠️ **Licence and access are separate axes, and collapsing them misleads.** A
 third-party [release tracker](https://egxodata.com/resources/robotics-data-release-tracker-2026)
 records Egocentric-10K as "gated; terms require review" — true of *access*, and
@@ -2848,6 +2993,19 @@ contact details before download while granting permissive terms afterwards.
 Conversely [Xperience-10M](#ropedia-xperience-10m--the-fidelity-wings-extreme-and-a-caution-about-reading-press-releases-as-availability)
 is gated **and** non-commercial. When recording rights per clip, record both:
 *can I get it* and *what may I do with it* fail independently.
+
+**The sharpest demonstration is [S-EMBER](#s-ember), because it is the same bytes
+in two access cells at once.** The publisher's copy, `facebook/S-EMBER`, is
+CC BY-NC 4.0 behind a name-and-affiliation gate. An anonymised mirror the authors
+posted for double-blind review, `paper-review-only/S-EMBER`, is CC BY-NC 4.0 with
+no gate, and has taken 2,124 downloads to the official copy's 4,468. One licence
+cell, two access cells, one dataset — and the second exists because the review
+process *requires* an artefact an anonymous stranger can read, and nothing takes
+it down at acceptance. Any field that stores a single value for "how open is
+this" will record whichever copy it happened to look at. **The access axis is not
+even single-valued per dataset**, which is the strongest argument in this
+document for storing the resolved URL you actually pulled from beside the terms
+you actually accepted.
 
 **Why this belongs in a Related Work document.** This repo already treats licence
 as a first-class per-clip field — CC filtering at search time, licence in the
@@ -3124,7 +3282,7 @@ license: mit
 No data, no description, no card, seven downloads. **An automated licence or
 availability scraper pointed at that name would record "Egocentric-1M — MIT,
 ungated, public" and be wrong in every way that matters.** It is the
-[size-named-dataset trap](#the-vocabulary-problem--four-phrases-that-do-not-mean-what-they-say)
+[size-named-dataset trap](#the-vocabulary-problem--six-ways-a-name-misleads)
 in its purest form: the name asserts a million hours, the artefact is a
 licence tag. Nothing here suggests bad faith by its uploader — a placeholder is
 a perfectly ordinary thing to push — but it is a good demonstration that **a
@@ -3751,22 +3909,28 @@ did them, not a research problem.
 
 ---
 
-## The vocabulary problem — four phrases that do not mean what they say
+## The vocabulary problem — six ways a name misleads
 
-Five sweeps found the same class of error independently, which makes it worth
+Separate sweeps found the same class of error independently, which makes it worth
 naming as a class. **None of these is a project misrepresenting itself.** Each
 phrase is standard usage inside its own subfield. They mislead only when read by
 someone asking this document's question — *did this footage come off the open
 internet, and may I use it?* — and every one of them, taken at face value, would
 have put a false claim into this survey.
 
-The heading says *phrases*, and four of the rows are. **The last two are not
-phrases at all** — one is two projects whose names differ by one suffix, where
-the failure happens in the search box rather than in the reading; the other is a
-claim of openness carried in a project's own name or title, where the failure is
-that the claim travels further than anything that could verify it. It is kept here because the
-consequence is identical: a fact about one artefact recorded against another. The
-defence is also identical, and it is the only one that works for all five —
+⚠️ **The heading used to say "four phrases" while the table held six rows, two of
+which are not phrases** — an inconsistency that survived several sweeps of the
+rows themselves, because the rows were what each sweep came to edit. It is fixed
+here, and it is the same shape as the reference-list failure recorded below: **a
+correction applied to the part you were looking at.**
+
+Four rows are phrases. The other two are not — one is two projects whose names
+differ by one suffix, where the failure happens in the search box rather than in
+the reading; the other is a claim of openness carried in a project's own name or
+title, where the failure is that the claim travels further than anything that
+could verify it. Both are kept here because the consequence is identical: a fact
+about one artefact recorded against another. The
+defence is also identical, and it is the only one that works for all six —
 **resolve to an identifier, not a name.** An arXiv ID, a repo path, a dataset
 card URL. Every row below is a case where the human-readable label was the thing
 that failed.
@@ -3790,16 +3954,38 @@ that failed.
 > to its authors and another to its users is not a lie; it is exactly the kind
 > of ambiguity a metadata field resolves and prose does not.
 
+**A seventh case belongs beside these without belonging in the table, because it
+is not a label at all.** [SiMDex](#simdex)'s project page offers *Paper · Demo ·
+Code · 🤗 Hugging Face* as four buttons in a row; the last two are
+`<a href="#" class="disabled">` — inert, unlabelled, with the page's own
+stylesheet carrying an unused `.soon` class. Nothing there is false, because
+nothing there is a claim: the misleading is done by an **affordance** rather than
+a word, and no amount of careful reading catches it, only clicking. The defence
+is the same one — resolve to an identifier — but the failure mode is worth
+separating, because every row above can be caught by a reader who is paying
+attention to the text, and this one cannot.
+
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Eighteen of them are
+index, not a summary, and each row links to the working. **Twenty-two of them are
 this document's own errors** — marked *(this document…)* in the left column and
 counted honestly, because an earlier revision of this preamble said "three" long
 after the count had passed it, which is the same failure the table exists to
 record. They are kept visible rather than quietly amended: a
 survey that silently fixes itself gives a reader no way to calibrate how much to
 trust the rest of it.
+
+> **Two of the four newest own-errors are not misreadings, and that is the
+> interesting part.** One entry stated a number that appears in no version of its
+> source; four entries stated no terms at all, against a preamble promising terms
+> per project; and a whole sweep's corrections landed in the body while the
+> reference list went on repeating what had just been disproved. A survey
+> accumulates these three shapes — **the unsourced figure, the silent omission,
+> and the partially-applied fix** — and only the first is the kind of error that
+> re-reading a source catches. The other two are found by auditing the document
+> against itself, which is why that is now a standing check rather than an
+> occasional one.
 
 | Claim in circulation | What the source says | Where |
 |---|---|---|
@@ -3827,6 +4013,11 @@ trust the rest of it.
 | **H-Tac and the Being-H models are unrelated projects** *(this document, treating them separately for dozens of sweeps)* | **H-Tac is BeingBeyond's**, its method is named **TTP**, and the baseline in its headline table — **BeingH-0.5** — is the same group's own prior model. Four BeingBeyond artefacts in this survey, not three | [§2](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) |
 | **MobileEgo Anywhere is CC BY 4.0** *(this document, for dozens of sweeps — the adjacent-artefact trap it catalogues, committed by itself)* | That is the **arXiv listing's** licence, covering the paper. The dataset `fpvlabs/stera-10m` carries **`license: other`**, is gated, and **401s unauthenticated** — the same bespoke, unreadable posture as its sibling Stereo-550 | [§2](#mobileego-anywhere), [§11](#11-the-licence-trap) |
 | **MobileEgo Anywhere and Ego-OSCAR are unrelated projects** *(this document, writing them up in two sections)* | Both are **`fpvlabs`**. The org's Hugging Face account holds exactly two datasets — `stera-10m` and `stereo-550` — both `license: other`, both gated. **Third time the survey has found two entries that were one group**, after NVIDIA's and BeingBeyond's | [§2](#mobileego-anywhere) |
+| **S-EMBER is "15 hours of first-person video"** *(this document, for sixty-two sweeps)* | The paper says **3,141 videos totalling 388 hours** on Ray-Ban Meta glasses, with **9,448 QA pairs** — and says it at **both v1 and v2**, so the figure cannot have come from the source at any version. The entry went on to dismiss it as *"small"*; 388 h is larger than EPIC-KITCHENS-100's 100 and than Ego-Exo4D's 221.26 ego-hours. **The largest single error this document has made about a number** | [§5](#s-ember) |
+| **S-EMBER's baselines are GPT-4o and Gemini 3** *(this document)* | **GPT-4o is not a baseline** — it appears once, text-only, with all visual input withheld, as a deliberate "vision-tax" floor. The Gemini is **3.1 Pro**. The panel is InternVL3.5-38B, Qwen3VL-32B, GPT-5.4, Llava-OneVision-7B and Gemini 3.1 Pro. v2 also **reframes the headline** from v1's *localisation paradox* to a **grounded recall gap** (both must hold on the same query: under half the human rate) | [§5](#s-ember) |
+| **S-EMBER is CC BY 4.0** | That is the **arXiv HTML's** stamp. The dataset `facebook/S-EMBER` is **CC BY-NC 4.0 and gated** behind name + affiliation; the code repo is **MIT**, inherited from lm-evaluation-harness, while its README states *"the majority of S-EMBER is licensed under CC BY-NC 4.0"*. Three artefacts, three records. **Third Meta FAIR dataset** whose permissive stamp belongs to the paper, after Action100M and Ego-1K. An **ungated anonymised review mirror** also exists, under the *same* CC BY-NC 4.0 — it grants nothing extra | [§5](#s-ember), [§11](#11-the-licence-trap) |
+| **Four entries stated no licence or access terms at all** — EgoMimic, SiMDex, OmniRetriever, S-EMBER *(this document, against its own stated method)* | The preamble promises that licence and scale *"are stated explicitly per project"*. For these four, neither was, anywhere in the document. Checked at source this sweep: EgoMimic **MIT code / ungated data with no card whatsoever**, SiMDex **nothing released** (its page's Code and 🤗 buttons are `href="#"`), OmniRetriever **Apache-2.0 bench + LoRA adapter**, S-EMBER as above. **An omission, not a misreading — which is why nothing flagged it for sixty-two sweeps** | [§1](#egomimic), [§4](#simdex), [§5](#omniretriever) |
+| **The References section still carried the six corrected CC BY 4.0 claims** *(this document)* | Last sweep's audit rewrote the six entries in the body and **left the reference list untouched**, so the document's own index contradicted its own corrections table for a full sweep. Fixed here. The lesson generalises: a correction is not applied until **every place the claim appears** is changed, and a survey that repeats each figure in a body entry, a table and a reference line has three | [References](#references) |
 | **Six entries recorded as dataset CC BY 4.0** — Action100M, Open-AoE, EgoLive, ENIGMA-360, EgoCS-400K, Ego-1K *(this document, systematically)* | In all six the only licence string is the **arXiv listing's**, which governs the manuscript. Three have **no dataset artefact stating terms at all**; the three that do state something **less** permissive — **Action100M and Ego-1K both carry Meta FAIR's `fair-noncommercial-research-license`** and **Open-AoE a bespoke `open-aoe-dataset-license`**. **Six of seven entries checked, all wrong the same direction.** The seventh, **HoloAssist**, was right — because its project page states the dataset's terms in a sentence | [§11](#11-the-licence-trap) |
 | Build AI released ~1 M hours (Egocentric-1M) | **Not findable at the publisher across five attempts** spread over months, the last being the complete API index rather than a search. The only artefact of that name anywhere is an **empty third-party repo** — two files, a 21-byte README, no data | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 | EgoWAM trains on in-the-wild internet video | Its in-the-wild data is **EgoVerse on Project Aria**, flow from Aria VIO poses | [§2](#egowam--and-what-in-the-wild-turns-out-to-mean) |
@@ -3885,29 +4076,29 @@ trust the rest of it.
 - *HOI4D.* (CC BY-NC 4.0) https://arxiv.org/pdf/2404.09933 · https://hoi4d.github.io/
 - Shi et al. (OpenDriveLab). *EgoHumanoid: Unlocking In-the-Wild Loco-Manipulation with Robot-Free Egocentric Demonstration.* RSS 2026, arXiv:2602.10106 (v2, 4 Jun 2026). (Apache 2.0 on the code; **no dataset licence stated**) https://arxiv.org/abs/2602.10106 · https://github.com/OpenDriveLab/EgoHumanoid
 - *EgoTactile: Learning Grasp Pressure for Everyday Objects from Egocentric Video.* ICML 2026 Spotlight, arXiv:2606.09243. (dataset **CC BY-NC 4.0**, ungated) https://arxiv.org/abs/2606.09243 · https://egotactile.github.io/ · https://huggingface.co/datasets/HustleHard/EgoTactile
-- *ENIGMA-360: An Ego-Exo Dataset for Human Behavior Understanding in Industrial Scenarios.* (CC BY 4.0) https://arxiv.org/html/2603.09741v2 · project page https://iplab.dmi.unict.it/ENIGMA-360 **has been unreachable across four checks — HTTP 500, then a connection failure, then HTTP 403, and now HTTP 403 again (9 Sep 2026, with and without a trailing slash) — while the lab host root returns 200. The error has stopped varying, which reads less like a flapping server than a settled block on that path. Still recorded as unstable rather than removed, but a fourth failure with the last two identical is worth more weight than three assorted ones; cite the arXiv HTML**
+- *ENIGMA-360: An Ego-Exo Dataset for Human Behavior Understanding in Industrial Scenarios.* (**dataset terms not stated anywhere** — the CC BY 4.0 is the arXiv listing's, covering the manuscript) https://arxiv.org/html/2603.09741v2 · project page https://iplab.dmi.unict.it/ENIGMA-360 **has been unreachable across four checks — HTTP 500, then a connection failure, then HTTP 403, and now HTTP 403 again (9 Sep 2026, with and without a trailing slash) — while the lab host root returns 200. The error has stopped varying, which reads less like a flapping server than a settled block on that path. Still recorded as unstable rather than removed, but a fourth failure with the last two identical is worth more weight than three assorted ones; cite the arXiv HTML**
 - *SABER: A Scalable Action-Based Embodied Dataset for Real-World VLA Adaptation.* DreamVu. (10 K-sample subset CC BY-NC 4.0; full corpus vendor-gated) https://arxiv.org/html/2605.09613v1 · https://huggingface.co/datasets/DreamVu/SABER-10K
 - *EgoDex: Learning Dexterous Manipulation from Large-Scale Egocentric Video.* (CC-BY-NC-ND) https://arxiv.org/abs/2505.11709 — **current version is v3 (9 Mar 2026); the `v1` link is cited deliberately where the licence is quoted**, because v3 no longer states it: https://arxiv.org/html/2505.11709v1
 - *EgoScale: Scaling Dexterous Manipulation with Diverse Egocentric Human Data.* GEAR @ NVIDIA Research. (code "coming soon"; no licence stated) https://arxiv.org/abs/2602.16710 · https://research.nvidia.com/labs/gear/egoscale/
 - Deng, Zhou et al. *HumanNet: Scaling Human-centric Video Learning to One Million Hours.* https://arxiv.org/abs/2605.06747
 - *Ego2Robot: Scalable Robot Data Synthesis from Egocentric Human Data.* https://arxiv.org/html/2608.02580
 - *EgoEngine: From Egocentric Human Videos to High-Fidelity Dexterous Robot Demonstrations.* https://arxiv.org/html/2606.12604v1 · https://egoengine.github.io
-- *EgoMimic: Scaling Imitation Learning via Egocentric Video.* https://arxiv.org/abs/2410.24221
+- *EgoMimic: Scaling Imitation Learning via Egocentric Video.* (code **MIT**; the HF *sample* dataset is ungated with **no card and no stated terms**) https://arxiv.org/abs/2410.24221 · https://github.com/SimarKareer/EgoMimic · https://huggingface.co/datasets/gatech/EgoMimic
 - *EgoAVFlow: Robot Policy Learning with Active Vision from Human Egocentric Videos via 3D Flow.* (CC BY 4.0; head-mounted RealSense D435 RGBD plus a ChArUco board per scene; 150 videos × 4 tasks; no dataset release stated) https://arxiv.org/html/2602.22461v1
 - *EgoWAM: World Action Models Beyond Pixels with In-the-Wild Egocentric Human Data.* (CC BY 4.0; "in-the-wild" = EgoVerse on Project Aria, flow from Aria VIO poses) https://arxiv.org/abs/2607.08436
 - *EgoHumanoid: humanoid loco-manipulation from egocentric human demonstrations.* RSS 2026. (code **Apache 2.0**; dataset terms not stated; PICO VR headset + 5 body trackers + ZED Mini depth) https://github.com/OpenDriveLab/EgoHumanoid
 - *World In Your Hands: A Large-Scale and Open-Source Ecosystem for Learning Human-Centric Manipulation in the Wild.* (1,045 h; Oracle Suite wearable; **no dataset licence stated — "will be open-source"**) https://arxiv.org/html/2512.24310v3
 - *OpenEgo: A Large-Scale Multimodal Egocentric Dataset for Dexterous Manipulation.* (1,107 h unifying six public datasets; **annotations only, per-source licence and attribution shipped as `ATTRIBUTION.md`**; code MIT, data release in progress) https://arxiv.org/html/2509.05513v1 · https://www.openegocentric.com · https://github.com/ahadjawaid/openego
-- *EgoCS-400K: An Egocentric Gameplay Dataset for World Models.* (CC BY 4.0; 400 K+ videos / 10,000+ h rendered from public HLTV match demos) https://arxiv.org/html/2606.18180v1 · https://EgoCS-400K.github.io
+- *EgoCS-400K: An Egocentric Gameplay Dataset for World Models.* (**dataset terms not stated** — CC BY 4.0 is the arXiv listing's; 400 K+ videos / 10,000+ h rendered from public HLTV match demos) https://arxiv.org/html/2606.18180v1 · https://EgoCS-400K.github.io
 - *ACE-Ego-0: Unifying Egocentric Human and Robotic Data for VLA Pretraining.* https://arxiv.org/html/2606.17200v1 (the project URL printed in the paper 404s)
-- *Open-AoE: An Open Egocentric Manipulation Dataset and Toolchain for Embodied Learning.* (CC BY 4.0) https://arxiv.org/abs/2607.14183
+- *Open-AoE: An Open Egocentric Manipulation Dataset and Toolchain for Embodied Learning.* (dataset **`license: other` / `open-aoe-dataset-license`** — bespoke, on `inclusionAI/OpenAoE-2000h`; the CC BY 4.0 is the arXiv listing's) https://arxiv.org/abs/2607.14183 · https://huggingface.co/datasets/inclusionAI/OpenAoE-2000h
 - *EgoVerse: An Egocentric Human Dataset for Robot Learning from Around the World.* https://arxiv.org/abs/2604.07607
 - *EgoKit: Towards Unified Low-Cost Egocentric Data Collection with Heterogeneous Devices.* (toolkit; no dataset) https://arxiv.org/pdf/2605.16797
 - *MobileEgo Anywhere: Open Infrastructure for long-horizon egocentric data on commodity hardware.* (CC BY 4.0) https://arxiv.org/pdf/2605.05945
 - Ego-Exo4D documentation (source of the 1286.30 h / 221.26 ego-h / 5035 takes figures). https://docs.ego-exo4d-data.org/
-- *EgoLive: A Large-Scale Egocentric Dataset from Real-World Human Tasks.* https://arxiv.org/html/2604.23570v1
+- *EgoLive: A Large-Scale Egocentric Dataset from Real-World Human Tasks.* (**dataset terms not stated anywhere**; the CC BY 4.0 once recorded here is the arXiv listing's) https://arxiv.org/html/2604.23570v1
 - *From Human Videos to Robot Manipulation: A Survey.* https://arxiv.org/html/2606.00054v1
-- *SiMDex: Mining Similar Egocentric Videos for Cross-Embodiment Dexterous Manipulation.* https://arxiv.org/abs/2608.04196
+- *SiMDex: Mining Similar Egocentric Videos for Cross-Embodiment Dexterous Manipulation.* (**nothing released** — the project page's Code and Hugging Face buttons are inert `href="#"` links; no licence stated) https://arxiv.org/abs/2608.04196 · https://lin-nie.github.io/SiMDex/
 - Chen et al. *Panda-70M: Captioning 70M Videos with Multiple Cross-Modality Teachers.* CVPR 2024. https://github.com/snap-research/Panda-70M
 - Wang et al. *InternVid.* https://arxiv.org/abs/2307.06942
 - NVIDIA. *Cosmos World Foundation Model Platform for Physical AI.* https://arxiv.org/abs/2501.03575
@@ -3916,14 +4107,14 @@ trust the rest of it.
 - Luo, Yue, Zhang, Feng, Zheng, Ye, Lu (BeingBeyond). *OpenMMEgo: Enhancing Egocentric Understanding for LMMs with Open Weights and Data.* NeurIPS 2025. (repo **MIT**; **OME10M and OMEBench not released** — *"We will release our code and data soon"*) https://github.com/BeingBeyond/OpenMMEgo
 - BeingBeyond Team. *Being-H0.7: A Latent World-Action Model from Egocentric Videos.* arXiv:2605.00078 (v1, 30 Apr 2026). (**no code or dataset licence stated in the paper**; pretrained on UniHand 2.0) https://arxiv.org/html/2605.00078v1 · https://research.beingbeyond.com/being-h07
 - Luo et al. (BeingBeyond). *Being-H0.5: Scaling Human-Centric Robot Learning for Cross-Embodiment Generalization.* arXiv:2601.12993, 19 Jan 2026. (code Apache-2.0; UniHand_Preview released with **no stated licence**; full UniHand-2.0 unreleased) https://arxiv.org/html/2601.12993v1 · https://github.com/BeingBeyond/Being-H · https://huggingface.co/datasets/BeingBeyond/UniHand_Preview
-- Meta Reality Labs. *Ego-1K: A Large-Scale Multiview Video Dataset for Egocentric Vision.* (CC BY 4.0) https://arxiv.org/html/2603.13741v1
+- Meta Reality Labs. *Ego-1K: A Large-Scale Multiview Video Dataset for Egocentric Vision.* (dataset **`fair-noncommercial-research-license`**, ungated, on `facebook/ego-1k`; the CC BY 4.0 is the arXiv listing's) https://arxiv.org/html/2603.13741v1 · https://huggingface.co/datasets/facebook/ego-1k
 - *HoloAssist.* (CDLA v2) https://holoassist.github.io/
 - *DROID: A Large-Scale In-The-Wild Robot Manipulation Dataset.* https://droid-dataset.github.io/
 - *AgiBotWorld-Beta.* (CC BY-NC-SA 4.0, gated) https://huggingface.co/datasets/agibot-world/AgiBotWorld-Beta
 - *Open X-Embodiment.* (no licence stated on the project page) https://robotics-transformer-x.github.io/
 - EGXO Data. *Robotics Data Release Tracker 2026.* (third-party tracker, v1.1.1, last updated 2026-07-25 — useful for monitoring, but it collapses licence and access; verify at the publisher) https://egxodata.com/resources/robotics-data-release-tracker-2026
-- Memories.ai Research. *OmniRetriever: Any-to-Any Audio-Video-Text Retrieval via Fusion-as-Teacher Distillation.* https://arxiv.org/abs/2605.26641
-- *S-EMBER: A Large-Scale Benchmark for Streaming Egocentric Memory Retrieval.* https://arxiv.org/pdf/2607.02689
+- Memories.ai Research. *OmniRetriever: Any-to-Any Audio-Video-Text Retrieval via Fusion-as-Teacher Distillation.* (bench and LoRA adapter both **Apache-2.0**, ungated; training corpus not released) https://arxiv.org/abs/2605.26641 · https://huggingface.co/datasets/YunzeLiu/OmniRetriever-Bench · https://huggingface.co/YunzeLiu/OmniRetriever-7B
+- *S-EMBER: A Large-Scale Benchmark for Streaming Egocentric Memory Retrieval.* FAIR, Meta. (3,141 videos / **388 h** / 9,448 QA pairs; dataset **CC BY-NC 4.0, gated**; code **MIT**; the arXiv HTML's CC BY 4.0 covers the manuscript only) https://arxiv.org/abs/2607.02689 · https://github.com/facebookresearch/S-EMBER · https://huggingface.co/datasets/facebook/S-EMBER
 - Ropedia. *Xperience-10M.* (gated, non-commercial) https://huggingface.co/datasets/ropedia-ai/xperience-10m · release note: https://ropedia.com/blog/20260316_xperience_10m · critique: https://technologies.org/ropedia-raises-30-million-for-physical-ai-training-data-but-the-dataset-math-doesnt-hold-up/
 
 ### Part II — pipeline and tooling
@@ -3939,7 +4130,7 @@ trust the rest of it.
 - Wang et al. *EgoInfinity: A Web-Scale 4D Hand-Object Interaction Data Engine.* Rice University. https://arxiv.org/abs/2606.17385 · https://github.com/Rice-RobotPI-Lab/EgoInfinity
 - *Panda-70M splitting module.* https://github.com/snap-research/Panda-70M/blob/main/splitting/README.md
 - NVIDIA. *cosmos-curate.* (code Apache 2.0) https://github.com/nvidia-cosmos/cosmos-curate
-- *Action100M.* (CC BY 4.0) https://arxiv.org/html/2601.10592v1
+- *Action100M.* (dataset **`fair-noncommercial-research-license`** on `facebook/action100m-preview`, a *preview* subset; the CC BY 4.0 is the arXiv listing's) https://arxiv.org/html/2601.10592v1
 - Microsoft. *VLM-Video-Action-Localization.* https://microsoft.github.io/VLM-Video-Action-Localization/
 - Build AI. *Egocentric-10K.* (Apache 2.0) https://www.humanoidsdaily.com/news/build-ai-open-sources-10-000-hours-of-factory-worker-video-to-scale-robot-learning · subset: https://huggingface.co/datasets/Voxel51/Egocentric_10K_subset
 - *annotated-egocentric-10k-dataset.* (Apache 2.0) https://github.com/fit-alessandro-berti/annotated-egocentric-10k-dataset
