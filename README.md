@@ -163,9 +163,24 @@ Those results are the economic case for collection; this repo is the collection.
 
 Worth keeping the denominator in view: **[DROID](https://droid-dataset.github.io/),
 the flagship open teleoperated robot dataset, is 350 hours** — thirteen
-institutions, fifty collectors, twelve months. HumanNet's "100 h of robot data"
-baseline is close to a third of it. Robot data is not merely expensive per hour;
-there is almost none of it by comparison.
+institutions, fifty collectors, twelve months, all verified at its own page.
+HumanNet's "100 h of robot data" baseline is close to a third of it. Robot data
+is not merely expensive per hour; there is almost none of it by comparison. But
+those 350 hours carry **language annotations on 95% of successful episodes**,
+which is the trade the whole substitution literature is arguing about: 350
+annotated hours against 10,000 raw ones.
+
+And the denominator has a provenance problem of its own. **DROID states its data
+terms nowhere** — not the project page, not the docs, and the data repo has no
+`LICENSE` (only the separate policy-learning repo does, MIT, over code). The
+loudest answer is a third party's: `cadene/droid`, a LeRobot conversion in a
+personal namespace, stamped **Apache-2.0**, ungated, **149,039 downloads**. That
+is the fourth time in this survey an uploader's licence field has stood in for a
+publisher's silence, and it is larger than the other three together. Its
+counterpart **AgiBotWorld-Beta** (2,976.4 h, CC BY-NC-SA 4.0 — non-commercial
+*and* share-alike) sits behind a **click-through, not a contact form**: 86,157
+downloads have passed through it. Most-restrictive terms, near-frictionless
+access. **The gate tells you nothing about the licence in either direction.**
 
 Two neighbours are worth calling out directly:
 

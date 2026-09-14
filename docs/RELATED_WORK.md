@@ -538,9 +538,58 @@ side actually is, and the answer is smaller than the rhetoric suggests.
 | Corpus | Scale | How it was made | Licence |
 |---|---|---|---|
 | **[DROID](https://droid-dataset.github.io/)** | **350 hours**, 76,000 trajectories, 564 scenes, 86 tasks, 1,417 camera viewpoints | Teleoperation on a standardised rig (Franka Panda 7-DoF, two Zed 2 stereo + wrist Zed Mini, Quest 2 controllers), **13 institutions, 50 collectors, 12 months** | Open dataset; terms not stated on the project page |
-| **[AgiBotWorld-Beta](https://huggingface.co/datasets/agibot-world/AgiBotWorld-Beta)** | **2,976.4 hours**, 1 M+ trajectories, 200+ task types, 87 atomic skills | **100 robots** — mobile dual-arm, 6-DoF dexterous hands, visual-tactile sensors; video, depth, joint positions/velocities/forces, end-effector state, odometry | 🔴 **CC BY-NC-SA 4.0**, contact-gated |
+| **[AgiBotWorld-Beta](https://huggingface.co/datasets/agibot-world/AgiBotWorld-Beta)** | **2,976.4 hours**, 1 M+ trajectories, 200+ task types, 87 atomic skills | **100 robots** — mobile dual-arm, 6-DoF dexterous hands, visual-tactile sensors; video, depth, joint positions/velocities/forces, end-effector state, odometry | 🔴 **CC BY-NC-SA 4.0**, **click-through gated (auto-approved)** — 86,157 downloads |
 | **[Open X-Embodiment](https://robotics-transformer-x.github.io/)** | 1 M+ trajectories, **22 embodiments**, 527 skills, 160,266 tasks — **hours not stated** | **60 existing datasets pooled** from 34 labs across 21 institutions; single arms through bimanual robots and quadrupeds | 🔴 **No overall licence stated on the project page**, and no statement of whether the 60 components retain their own |
 | Human ego, for scale | [Egocentric-100K](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) 100,405 h · [DreamDojo](#dreamdojo--and-the-strongest-evidence-in-this-document-for-13) 44,711 h | Crowdsourced / commissioned capture | Apache 2.0 / unstated |
+
+✅ **Every figure in that table was verified at its own source this sweep, and
+every one holds.** DROID's page: *"76k demonstration trajectories or 350h of
+interaction data, collected across 564 scenes and 86 tasks by 50 data collectors
+… over the course of 12 months"*, *"1417 camera viewpoints"*, *"the same hardware
+setup across all 13 institutions"*. AgiBot's card: *"1 million+ trajectories from
+100 robots, with a total duration of 2976.4 hours"*, *"200+ types of tasks"*,
+*"87 types of Atomic Skills"*. OpenX's page: *"1M+ real robot trajectories
+spanning 22 robot embodiments"*, *"pooling 60 existing robot datasets from 34
+robotic research labs"*, *"21 institutions, demonstrating 527 skills (160266
+tasks)"* — **and no hours figure and no licence anywhere on it.** These numbers
+carry the document's central economic claim, and they had never been checked.
+
+🟢 **One figure worth adding while there**: DROID ships **language annotations
+for 95% of its successful episodes (75 k)** — so the flagship open teleoperated
+corpus is not merely small, it is *annotated*, which is exactly the axis on which
+[§12](#12-free-hours-and-what-they-do-to-the-moat) says free egocentric hours
+arrive empty. 350 annotated hours against 10,000 raw ones is the trade the whole
+substitution literature is arguing about.
+
+⚠️ **Two refinements the re-read produced, both about access rather than scale.**
+
+**AgiBot is not contact-gated, as this entry said — it is a click-through.** The
+card's gate is `auto`: fill in first name, last name and affiliation, accept the
+*AgiBot World Community License Agreement*, and access is granted immediately.
+**86,157 downloads** have passed through it. The distinction matters here more
+than usual, because this is the document's own
+[licence-versus-access](#11-the-licence-trap) grid: AgiBot sits in
+*most-restrictive licence, near-frictionless access* — the same cell as
+Egocentric-10K, whose terms are Apache 2.0. **The gate tells you nothing about
+the terms in either direction.** *(A small staleness in their record, since this
+document collects them: the agreement text on the **Beta** release is headed
+"AgiBot World **Alpha** Release Date: December 30, 2024".)*
+
+🔴 **DROID states its data terms nowhere — and a third-party copy states them
+for it, to 149,039 downloads.** The project page has no licence. Neither does
+the documentation site. The data repository `droid-dataset/droid` has **no
+`LICENSE` file**; only the separate `droid_policy_learning` repo carries one,
+**MIT**, and that governs *code*. Meanwhile
+[`cadene/droid`](https://huggingface.co/datasets/cadene/droid) — a LeRobot
+conversion in a **personal** namespace, tagged `openx` — is stamped
+**`license: apache-2.0`**, ungated, and has been pulled **149,039 times**;
+`lerobot/droid_1.0.1` repeats the Apache-2.0 at 16,640. **That is the fourth
+instance of an uploader's licence field standing in for a publisher's silence**,
+after `simon055/EgoVid_frames`, `jxu124/OpenX-Embodiment` and
+`easpeeder/Egocentric-1M` — and by download count it is larger than the other
+three together. *No non-compliance is alleged; Apache-2.0 may well be what DROID
+intends.* **The point is that nobody downloading it can tell**, and the artefact
+that answers loudest is the one whose author had no standing to answer.
 
 **The ratios are the point.** Egocentric-100K is roughly **287× DROID** and **34×
 AgiBotWorld-Beta**. The flagship open teleoperated dataset — thirteen
@@ -2050,6 +2099,21 @@ artefact. Cited at v1, the only version.
 **[CVPR 2024](https://github.com/snap-research/Panda-70M)** — 70.7 M
 video–caption samples from 3.78 M source videos (~36 TB), with 10.47 M (8 TB) and
 2.4 M (1.6 TB) subsets and 6,000-sample validation and test splits. 703 stars.
+
+✅ **Audited at the repo's own table this sweep; every figure holds exactly** —
+70,723,513 samples from 3,779,763 videos, 10,473,922 from 3,755,240, 2,400,000
+from **800,000**, validation and test 6,000 each. 🟢 **And it publishes the
+column this document cares about and had never recorded: hours.** The full set is
+**167,000 hours** (37,000 for the 10 M subset, 7,560 for the 2 M, 18.5 for each
+eval split). **That is 167× DROID and larger than
+[Egocentric-100K](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost)'s
+100,405 h** — a reminder that the web-video corpora this pipeline's *tooling*
+comes from operate an order of magnitude above the egocentric ones its *subject
+matter* does. None of those hours are egocentric, which is the whole of §13 in
+one row. Its licence file also instructs, in a sentence: *"Users must follow the
+related license to use these video samples"*, pointing at **HD-VILA-100M's**
+— the inheritance the [derivation map](#who-feeds-whom--the-derivation-map)
+credits it for, stated by the publisher rather than inferred by a reader.
 
 The construction is a three-step design worth copying wholesale:
 
@@ -4142,7 +4206,7 @@ attention to the text, and this one cannot.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Twenty-three of them are
+index, not a summary, and each row links to the working. **Twenty-four of them are
 this document's own errors** — marked *(this document…)* in the left column and
 counted honestly, because an earlier revision of this preamble said "three" long
 after the count had passed it, which is the same failure the table exists to
@@ -4187,6 +4251,8 @@ trust the rest of it.
 | **H-Tac and the Being-H models are unrelated projects** *(this document, treating them separately for dozens of sweeps)* | **H-Tac is BeingBeyond's**, its method is named **TTP**, and the baseline in its headline table — **BeingH-0.5** — is the same group's own prior model. Four BeingBeyond artefacts in this survey, not three | [§2](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) |
 | **MobileEgo Anywhere is CC BY 4.0** *(this document, for dozens of sweeps — the adjacent-artefact trap it catalogues, committed by itself)* | That is the **arXiv listing's** licence, covering the paper. The dataset `fpvlabs/stera-10m` carries **`license: other`**, is gated, and **401s unauthenticated** — the same bespoke, unreadable posture as its sibling Stereo-550 | [§2](#mobileego-anywhere), [§11](#11-the-licence-trap) |
 | **MobileEgo Anywhere and Ego-OSCAR are unrelated projects** *(this document, writing them up in two sections)* | Both are **`fpvlabs`**. The org's Hugging Face account holds exactly two datasets — `stera-10m` and `stereo-550` — both `license: other`, both gated. **Third time the survey has found two entries that were one group**, after NVIDIA's and BeingBeyond's | [§2](#mobileego-anywhere) |
+| **DROID is an open dataset with terms you can look up** | **It states none.** Not the project page, not the documentation site, and the data repo `droid-dataset/droid` has **no `LICENSE`** — only the separate `droid_policy_learning` repo does, **MIT**, over code. The loudest answer is a third party's: [`cadene/droid`](https://huggingface.co/datasets/cadene/droid), a LeRobot conversion in a personal namespace, stamped **`apache-2.0`**, ungated, **149,039 downloads**. **Fourth instance of an uploader's licence field standing in for a publisher's silence — and larger than the other three together** | [§1](#the-robot-native-denominator) |
+| **AgiBotWorld-Beta is contact-gated** *(this document)* | It is a **click-through**, `gated: auto` — name, affiliation, accept the agreement, immediate access; **86,157 downloads**. Its CC BY-NC-SA 4.0 is still the most restrictive combination in this survey, which is the point: **most-restrictive licence, near-frictionless access**, the same access cell as Apache-2.0 Egocentric-10K | [§1](#the-robot-native-denominator) |
 | **A Hugging Face repo named `10000-Hour-Egocentric-Video-Dataset` holds 10,000 hours** | It holds **three files**: `.gitattributes`, a README, and a `meta.json` for **one 59.68-second PICO 4 Ultra recording whose video is not in the repo**. No licence field, ungated. *"The complete dataset is available upon request."* **The repository is the advertisement** — and it is one of nineteen vendor sample or catalogue cards among the forty most recently updated "egocentric" datasets | [§12](#the-other-thing-that-happened-to-hours-they-went-on-sale) |
 | **A bare `CC BY-ND 4.0` is a permissive licence** | It permits commercial use and forbids **derivatives** — for a training pipeline the worse half, since clipping, re-encoding, annotating and training all plausibly derive. Every other restrictive licence tracked here is **NC**, so a reader scanning for "NC" as the danger signal reads **BY-ND** as safe and has it backwards. Found on `UniDataPro/egocentric-video` | [§12](#the-other-thing-that-happened-to-hours-they-went-on-sale) |
 | **Ego2Robot's reuse risk is "roughly 38% CC-BY-NC-ND"** *(this document, from a name it never opened)* | True and beside the point. **ViTRA, 249 of its 1,940 input hours, had sat in the derivation map as a bare name for dozens of sweeps.** It is Microsoft's, and it is built from **Ego4D (77.6%), EPIC-KITCHENS, Ego-Exo4D and Something-Something V2**. Counting all four parents, **7 hours of 1,940 — 0.36% — come from a source with unambiguous terms** | [§2](#vitra--12-m-episodes-of-mano-over-four-other-peoples-corpora-stamped-mit), [§11](#who-feeds-whom--the-derivation-map) |
