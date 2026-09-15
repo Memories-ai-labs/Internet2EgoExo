@@ -35,6 +35,8 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
 
 - [1. Commissioned egocentric and ego–exo capture](#1-commissioned-egocentric-and-egoexo-capture)
   - [EPIC-KITCHENS-100](#epic-kitchens-100)
+  - [HD-EPIC](#hd-epic--41-hours-and-the-densest-annotation-in-this-document)
+  - [Nymeria](#nymeria--264-consented-participants-called-in-the-wild)
   - [Ego4D](#ego4d)
   - [Ego-Exo4D](#ego-exo4d)
   - [EgoExoLearn](#egoexolearn)
@@ -156,6 +158,109 @@ The original proof that a single domain captured deeply beats a broad shallow
 sweep for action recognition. **Licence: CC BY-NC 4.0 — commercial use
 prohibited**, with commercial terms available only by writing to the Bristol
 team.
+
+### HD-EPIC — 41 hours, and the densest annotation in this document
+
+**[hd-epic.github.io](https://hd-epic.github.io/site)** (CVPR 2025) — named three
+times in this survey as a source of
+[EgoScaler](#egoscaler--one-letter-from-the-entry-above-and-the-first-route-that-needs-only-rgb)'s
+pretraining set and never given an entry, which is the gap
+[ViTRA](#vitra--12-m-episodes-of-mano-over-four-other-peoples-corpora-stamped-mit)
+occupied two sweeps ago. From the same Bristol-led team as EPIC-KITCHENS, and
+announced by them as *"a new large-scale highly-detailed **validation**
+dataset."*
+
+**41 hours** of unscripted multi-day recording — and then the annotation, which
+is the point:
+
+| | |
+|---|---|
+| 4.4 M frames · **59,454 actions** (mean **2.0 s**, ±3.4) | 69 recipes · 558 ingredients |
+| **7.7 M hand masks** · 19.9 K object tracks | 50.9 K audio events |
+| **Digital twins of each scene** — annotation grounded in 3D | SLAM and **gaze** |
+| 26.6 K VQA questions | *"How"* and *"Why"* descriptions, recipe step pairs |
+
+**Licence: CC BY-NC 4.0**, stated on HD-EPIC's own page — *"All datasets and
+benchmarks on this page are copyright by us and published under the Creative
+Commons Attribution-NonCommercial 4.0 International License… You may not use the
+material for commercial purposes."* Commercial terms by writing to the team, as
+with EPIC-KITCHENS-100. ✅ **Read at the dataset's own surface, not an adjacent
+one** — the discipline this document adopted after finding six of its own
+permissive claims came off arXiv listings.
+
+> **Bearing here, and it is the counter-example to this repo's own pitch worth
+> keeping in view.** 41 hours is nothing — a twentieth of EPIC-KITCHENS-100, a
+> ten-thousandth of Egocentric-100K. **And it is more useful per hour than any
+> corpus in this survey**, because every second of it is grounded: masks, gaze,
+> 3D scene geometry, audio events, causal descriptions. The storage split says it
+> plainly — **1.9 TB of raw VRS against 115.5 GB of mp4**, with the annotations
+> (349 GB of SLAM-and-gaze, 27 GB of audio, 1.95 GB of hand masks) shipped
+> separately. **The whole §12 argument — that nominal hours commoditise and
+> legibility does not — is an argument someone else already ran to its
+> conclusion, at 41 hours.** The difference is that they got there by *capturing*
+> forty-one hours under total control, which is the one thing a found-footage
+> pipeline cannot do, and why this repo's answer has to be evidence per clip
+> rather than instrumentation per scene.
+
+### Nymeria — 264 consented participants, called "in the wild"
+
+**[projectaria.com/datasets/nymeria](https://www.projectaria.com/datasets/nymeria/)**
+(Meta, Project Aria) — the fourth parent of EgoScaler's set, and the other one
+this document had never opened. **The largest body-motion corpus here.**
+
+- **300 hours of daily activity**, across **1,200 sequences** and **264
+  participants**, in **50 indoor and outdoor locations** over **20 scenarios**.
+- **3,600 hours of *video data*** — the same 300 hours seen through multiple
+  synchronised streams. ⚠️ **Two hour-counts, twelve-fold apart, on one page.**
+  A reader quoting "3,600 hours" is quoting *camera*-hours; a reader quoting
+  "300" is quoting wall-clock. This document's
+  [hour axes](#12-free-hours-and-what-they-do-to-the-moat) already separate worn,
+  delivered, accepted and accepted-labeled hours; Nymeria adds the reminder that
+  even *worn* hours multiply by the number of sensors pointed at them.
+- **230 hours of motion with natural-language description** — 310.5 K sentences,
+  8.64 M words, annotated coarse-to-fine by watching synchronised ego, exo and
+  motion-rendered playback.
+- **400 km of travelling trajectory, 1,053 km of wrist motion.**
+
+**Licence: CC BY-NC 4.0**, behind an **email gate** — *"By submitting your email
+and accessing the Nymeria dataset, you agree to abide by the license and to
+receive emails in relation to the dataset."* ⚠️ **NymeriaPlus now supersedes it**,
+so anything citing "Nymeria" is citing a version with a named successor.
+
+🟢 **And it is the consent exemplar this document has been saying the field
+lacks.** Quoted: *"consent obtained from participants **and home owners**
+regarding data recording and usage. Data was collected and stored with
+de-identification. **EgoBlur was used to blur faces and license plates for all
+videos.**"* Set that beside
+[Egocentric-10K](#egocentric-10k)'s 10,000 factory hours, which carry **no
+consent documentation** while warning against surveillance uses. **Consent is a
+design choice, not a casualty of scale** — and Nymeria is what the choice looks
+like when it is made: consent from the people recorded *and* the people whose
+homes were recorded in, plus automated de-identification applied before release.
+
+> 🔴 **A fifth "in the wild", and the purest of them.** The dataset is subtitled
+> *"A massive dataset of multimodal egocentric daily motion **in the wild**"* and
+> describes itself as *"the world's largest dataset of human motion in the
+> wild"*. It is **264 recruited participants wearing Project Aria glasses under
+> signed consent in fifty chosen locations.** Nothing about that is
+> misrepresentation — *in the wild* here means *not in a motion-capture studio*,
+> which is the honest and useful sense in the motion-understanding literature.
+> But it is the fifth distinct project in this survey where the phrase, read by
+> someone asking *did this come off the open internet*, means the opposite of
+> what they would take it to mean. See
+> [the vocabulary table](#the-vocabulary-problem--six-ways-a-name-misleads).
+
+> 🔴 **What the two entries above finish.** EgoScaler's pretraining set is
+> **Apache-2.0**. Its four parents are now all read at source: **Ego4D** (signed
+> agreement, terms unpublished), **Ego-Exo4D** (signed agreement), **HD-EPIC**
+> (**CC BY-NC 4.0**) and **Nymeria** (**CC BY-NC 4.0**, email-gated). **Not one
+> of the four is permissively licensed. Two are explicitly non-commercial.** The
+> Apache-2.0 covers the authors' own extracted trajectories — the same correctly
+> scoped posture as ViTRA and EgoVid-5M — but **the card states none of this**,
+> and the derived artefact is the one with 30,436 downloads. **This is now the
+> second fully traced case of a permissive stamp sitting on top of four
+> non-permissive parents**, and unlike ViTRA's it has *zero* permissive parents
+> rather than merely unstated ones.
 
 ### Ego4D
 
@@ -866,9 +971,13 @@ hand annotation at all.
 **Terms.** `Biscue5/egoscaler-v2` is **Apache-2.0**, ungated, **30,436
 downloads**, in a **personal** namespace — tied to the paper only by its arXiv
 tag, with the model `Biscue5/pi0-egoscaler-v2` alongside. The four source corpora
-keep their own terms, which the card does not state: **the same gap as
-[ViTRA](#vitra--12-m-episodes-of-mano-over-four-other-peoples-corpora-stamped-mit)**,
-and two of the four sources are again signed-agreement corpora.
+keep their own terms, which the card does not state — and all four have now been
+read at source: **Ego4D** and **Ego-Exo4D** behind signed agreements,
+**[HD-EPIC](#hd-epic--41-hours-and-the-densest-annotation-in-this-document)** and **[Nymeria](#nymeria--264-consented-participants-called-in-the-wild)** both **CC BY-NC 4.0**. 🔴 **Not one of
+the four is permissively licensed; two are explicitly non-commercial.** The same
+gap as [ViTRA](#vitra--12-m-episodes-of-mano-over-four-other-peoples-corpora-stamped-mit),
+and worse in one respect: ViTRA's parents include unstated terms, EgoScaler's
+include none that are permissive at all.
 
 > **Bearing here, and it cuts both ways.** This is the strongest evidence in the
 > document that found footage can be turned into VLA training data by a pipeline
@@ -3340,6 +3449,11 @@ Every licence re-read this pass was **unchanged** — Open-AoE's bespoke terms,
 both Meta FAIR non-commercial cards, the two third-party stamps — so the
 corrections made against them hold. `yt-fts` still says, in its own README,
 *"This project is **abandoned** until unemployment inevitably finds me again."*
+*(One ID was added after that pass: **HD-EPIC's `2502.04144`**, verified at the
+abs page — title and author list match — and cited bare while the paper is at
+**v2**. So the next staleness pass runs over **48** IDs with **13** bare
+multi-version citations, and this note exists so the count is not mistaken for
+drift.)*
 
 > **The drift, which is the part worth recording.** Download counters moved
 > where licences did not: Open-AoE **562,935 → 560,619**, Ego-1K **46,489 →
@@ -4396,7 +4510,7 @@ that failed.
 
 | The phrase | What a reader assumes | What it denotes | Where |
 |---|---|---|---|
-| **"in the wild"** | found on the internet | *outside the robot's lab* — captured by the authors on their own hardware, **or lifted from existing research corpora** | [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean) (EgoVerse on Aria), [World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild) (own wearable suit), and the term's general use across [§2](#2-scaling-human-video-for-robot-learning). 🔴 **And a variant that is not authors' own capture at all**: [ViTRA](#vitra--12-m-episodes-of-mano-over-four-other-peoples-corpora-stamped-mit)'s *"'in-the-wild' egocentric human videos without any annotations"* are **Ego4D, EPIC-KITCHENS, Ego-Exo4D and Something-Something V2** — the phrase covering both *not-a-lab-capture* and *not-ours* in one document. ✅ **One honest exception**: [EgoTac](#egotac--tactile-predicted-from-ordinary-video-and-a-ceiling-that-moved)'s in-the-wild inference really does run on found corpora |
+| **"in the wild"** | found on the internet | *outside the robot's lab* — captured by the authors on their own hardware, **or lifted from existing research corpora**, **or captured from 264 recruited participants under signed consent** | [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean) (EgoVerse on Aria), [World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild) (own wearable suit), and the term's general use across [§2](#2-scaling-human-video-for-robot-learning). 🔴 **And a variant that is not authors' own capture at all**: [ViTRA](#vitra--12-m-episodes-of-mano-over-four-other-peoples-corpora-stamped-mit)'s *"'in-the-wild' egocentric human videos without any annotations"* are **Ego4D, EPIC-KITCHENS, Ego-Exo4D and Something-Something V2** — the phrase covering both *not-a-lab-capture* and *not-ours* in one document. ✅ **One honest exception**: [EgoTac](#egotac--tactile-predicted-from-ordinary-video-and-a-ceiling-that-moved)'s in-the-wild inference really does run on found corpora |
 | **"from existing web sources"** | crawled from the internet | *from existing public research datasets* — Ego4D, EPIC-KITCHENS, HowTo100M, Something-Something | [RynnVLA-001](#rynnvla-001--filter-dont-convert) |
 | **a licence on the paper / the code / the repo** | the terms of the **data** | the terms of that adjacent artefact only — the dataset's terms are separate, and often absent | [EgoScale](#egoscale) (arXiv CC BY 4.0), [NIMBLE](#wilor--the-chokepoint-read-at-source) (repo MIT, paper CC BY), [EgoExoLearn](#egoexolearn) and [EgoHumanoid](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator) (code MIT / Apache 2.0), and — **committed by this document itself** — [MobileEgo Anywhere](#mobileego-anywhere), recorded as CC BY 4.0 for dozens of sweeps when that was the arXiv listing's licence and the dataset is gated `license: other` |
 | **a dataset named for its size** | that many hours of the thing you want | often a different unit, a different viewpoint, a different corpus entirely — or no corpus at all | [Ego-1K](#ego-1k) — 956 clips of 8–10 s, not 1,000 hours; [Ego-Exo4D](#ego-exo4d) — 1,286 h of which **221 are egocentric**; **`easpeeder/Egocentric-1M`** — a public, MIT-tagged repo containing [two files and no data](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost); and **`Nexdata-AI/10000-Hour-Egocentric-Video-Dataset`** — three files, one of them the metadata of a [59-second recording it does not contain](#the-other-thing-that-happened-to-hours-they-went-on-sale) |
@@ -4473,6 +4587,8 @@ trust the rest of it.
 | **H-Tac and the Being-H models are unrelated projects** *(this document, treating them separately for dozens of sweeps)* | **H-Tac is BeingBeyond's**, its method is named **TTP**, and the baseline in its headline table — **BeingH-0.5** — is the same group's own prior model. Four BeingBeyond artefacts in this survey, not three | [§2](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) |
 | **MobileEgo Anywhere is CC BY 4.0** *(this document, for dozens of sweeps — the adjacent-artefact trap it catalogues, committed by itself)* | That is the **arXiv listing's** licence, covering the paper. The dataset `fpvlabs/stera-10m` carries **`license: other`**, is gated, and **401s unauthenticated** — the same bespoke, unreadable posture as its sibling Stereo-550 | [§2](#mobileego-anywhere), [§11](#11-the-licence-trap) |
 | **MobileEgo Anywhere and Ego-OSCAR are unrelated projects** *(this document, writing them up in two sections)* | Both are **`fpvlabs`**. The org's Hugging Face account holds exactly two datasets — `stera-10m` and `stereo-550` — both `license: other`, both gated. **Third time the survey has found two entries that were one group**, after NVIDIA's and BeingBeyond's | [§2](#mobileego-anywhere) |
+| **EgoScaler's Apache-2.0 set is built on permissively licensed sources** | **None of its four parents is permissive.** Ego4D and Ego-Exo4D are signed-agreement corpora; **HD-EPIC and Nymeria are both CC BY-NC 4.0**, the latter email-gated. The Apache-2.0 correctly covers the authors' own extracted trajectories, but the card states none of this — and **the derived artefact is the one with 30,436 downloads**. Second fully traced case of a permissive stamp over non-permissive parents, after ViTRA, and the first with *zero* permissive parents | [§1](#hd-epic--41-hours-and-the-densest-annotation-in-this-document), [§2](#egoscaler--one-letter-from-the-entry-above-and-the-first-route-that-needs-only-rgb) |
+| **Nymeria is 3,600 hours** | **300 hours of daily activity**; 3,600 is *camera*-hours across synchronised streams of the same wall-clock time. Both figures sit on one page. Even *worn* hours multiply by the number of sensors pointed at them | [§1](#nymeria--264-consented-participants-called-in-the-wild) |
 | **H-Tac has nothing released** *(this document, which reclassified it there on purpose)* | `BeingBeyond/H-Tac_Sample` has existed since **6 July 2026**: **98 episodes, 35,982 frames, 98 videos**, a **MIT `LICENSE`**, ungated, 234 downloads. The checks that produced *not released* were run against the paper and its printed project page — both still say nothing, and the page still 404s. **The release was in a namespace neither points at.** An absence of evidence in the two places a paper sends you is not evidence of absence | [§2](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) |
 | **A search for EgoScale's missing dataset finds EgoScale's dataset** | It finds **EgoScaler's** — a different paper by different authors at different institutions (2509.21986 vs 2602.16710). EgoScale's artefact has been *"Coming Soon"* for seven months; `Biscue5/egoscaler-v2` is **Apache-2.0, ungated, 30,436 downloads**. The only thing tying that card to its own paper is an `arxiv:` tag | [§2](#egoscaler--one-letter-from-the-entry-above-and-the-first-route-that-needs-only-rgb) |
 | **DreamDojo's model terms are unstated** | The *video* terms still are. The **weights** carry **`nvidia-open-model-license`** on `nvidia/DreamDojo` — a bespoke licence, found at the artefact after the paper had been read three times | [§11](#11-the-licence-trap) |
@@ -4540,6 +4656,8 @@ trust the rest of it.
 ### Part I — datasets and models
 
 - Grauman et al. *Ego-Exo4D: Understanding Skilled Human Activity from First- and Third-Person Perspectives.* CVPR 2024. https://arxiv.org/abs/2311.18259
+- *HD-EPIC: A Highly-Detailed Egocentric Video Dataset.* CVPR 2025. (41 h, 59,454 actions, 7.7 M hand masks, digital twins; **CC BY-NC 4.0**, stated on the dataset's own page) https://hd-epic.github.io/site · https://arxiv.org/abs/2502.04144
+- Meta / Project Aria. *Nymeria: A Massive Collection of Multimodal Egocentric Daily Motion in the Wild.* (300 h activity / 3,600 h video / 264 participants; **CC BY-NC 4.0**, email-gated; superseded by **NymeriaPlus**; EgoBlur applied to faces and licence plates, consent from participants and home owners) https://www.projectaria.com/datasets/nymeria/
 - Grauman et al. *Ego4D.* https://ego4d-data.org/
 - Damen et al. *Scaling Egocentric Vision: The EPIC-KITCHENS Dataset.* https://arxiv.org/pdf/1804.02748
 - Huang et al. *EgoExoLearn.* CVPR 2024. https://github.com/OpenGVLab/EgoExoLearn

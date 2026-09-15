@@ -161,6 +161,17 @@ of egocentric human video *matched or modestly surpassed* 100 h of real-robot
 data under fixed validation, against a 20,000 h upper bound it does not reach).
 Those results are the economic case for collection; this repo is the collection.
 
+**Two of those pools are now fully traced, and the result is worth stating.**
+[EgoScaler](https://arxiv.org/abs/2509.21986)'s pretraining set ships
+**Apache-2.0**; its four parents are Ego4D and Ego-Exo4D (signed agreements) and
+**HD-EPIC and Nymeria (both CC BY-NC 4.0)** — **not one permissively licensed,
+two explicitly non-commercial.** Microsoft's **ViTRA-1M** ships **MIT** over
+Ego4D, EPIC-KITCHENS, Ego-Exo4D and Something-Something V2. Both stamps are
+correctly scoped — what ships is annotations and trajectories, the authors' own
+work, not pixels — and **neither card says a word about what the sources
+require**. Naming a source is not recording its licence, and the derived
+artefacts are the ones with the download counts.
+
 **And one route that needs nothing from the capture.** Almost every published
 path from human video to robot data requires conditions somebody controlled — a
 calibration board in the scene, a VR headset on the demonstrator, object meshes,
@@ -441,7 +452,11 @@ them:
   Consent posture is a design choice, not a casualty of scale: the 10K card warns
   against surveillance uses while carrying no consent documentation, where
   [Open-AoE](https://arxiv.org/abs/2607.14183) collects under explicit informed
-  consent with face masking in-pipeline.
+  consent with face masking in-pipeline, and
+  [Nymeria](https://www.projectaria.com/datasets/nymeria/) takes consent from
+  **participants and home owners**, stores de-identified, and runs EgoBlur over
+  faces and licence plates before release. The choice is available at every
+  scale; it is simply made or not.
 
 ### Why no open-source project does exactly this
 
