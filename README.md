@@ -398,15 +398,20 @@ them:
   (100,405 h, 10.8 B frames, **456×256**), both Apache 2.0. Note what scaling
   cost: a 17× drop in pixels per frame, in a domain where finger articulation is
   the payload. And note how it landed — the publisher's own listing shows
-  the 256p corpus pulled **145,830** times last month against the 1080p corpus's
-  **40,875** — **3.6:1**, and *closing*. Four readings now run **4.8 → 5.3 → 4.5
-  → 3.6**: between the last two the 1080p corpus rose ~18% while the 256p corpus
-  fell ~7%. An earlier revision of this README quoted 470:1 off a single reading,
+  the 256p corpus pulled **124,711** times last month against the 1080p corpus's
+  **39,248** — **3.2:1**, and *closing*. Five readings now run **4.8 → 5.3 → 4.5
+  → 3.6 → 3.2**, monotonic since the second. A previous revision explained the
+  fall as the 1080p corpus growing; at the fifth reading **both fell** — 256p by
+  14.5%, 1080p by 4.0% — so what is shifting is *relative* pull, not absolute
+  demand. An earlier revision of this README quoted 470:1 off a single reading,
   and a later one called the ratio stable inside a 4.5–5.3:1 band — both are
   recorded in the survey's corrections. The counter is a rolling monthly *rate*,
   not a lifetime total; and three points showed variance where four show
-  direction. **The direction runs with this repo's bet**: demand for the
-  high-resolution corpus is growing and demand for the downsampled one is not. The reported
+  direction. **The direction still runs with this repo's bet** — the field's pull
+  is shifting toward the high-resolution corpus — but the stronger form of that
+  claim did not survive its next reading, which is recorded in the corrections
+  too. A trend can be real while the story told about it is wrong, and the story
+  is the part that gets quoted. The reported
   **Egocentric-1M** remains unverifiable: **five attempts** at the publisher's
   own surfaces, the last being its complete API index, which returns exactly
   four datasets and does not include it. The only artefact of that name anywhere
