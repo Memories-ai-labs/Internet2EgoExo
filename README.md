@@ -161,6 +161,24 @@ of egocentric human video *matched or modestly surpassed* 100 h of real-robot
 data under fixed validation, against a 20,000 h upper bound it does not reach).
 Those results are the economic case for collection; this repo is the collection.
 
+**And one route that needs nothing from the capture.** Almost every published
+path from human video to robot data requires conditions somebody controlled — a
+calibration board in the scene, a VR headset on the demonstrator, object meshes,
+matched kinematics. **[EgoScaler](https://arxiv.org/abs/2509.21986)** (Kyoto/NII/
+Sony — *not* NVIDIA's EgoScale, one letter away) does not: GPT-4o names the
+manipulated object and the action's start and end, Grounding DINO and SAM segment
+it, a dense 3D point tracker and point-cloud registration lift the object into a
+**6DoF trajectory** treated as an end-effector state. RGB frames and a language
+description, nothing else — a specification a found clip can meet. **It also
+sidesteps MANO entirely by tracking the object rather than the hand**, which is
+the most promising escape from that chokepoint anyone here has shown. Its
+pretraining set is **45,157 episodes kept from 124,559 extracted** — a 64%
+discard rate, stated plainly — with **313 verbs and 1,217 objects against DROID's
+194 and 907, on half the episodes**, and it beats from-scratch training by over
+20%. It was run on Ego4D, Ego-Exo4D, HD-EPIC and Nymeria, not on the web: the
+method is found-footage-compatible, the acquisition still isn't public. **That
+gap is this repository.**
+
 Worth keeping the denominator in view: **[DROID](https://droid-dataset.github.io/),
 the flagship open teleoperated robot dataset, is 350 hours** — thirteen
 institutions, fifty collectors, twelve months, all verified at its own page.
