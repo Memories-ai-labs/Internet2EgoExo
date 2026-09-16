@@ -230,7 +230,18 @@ usable length after trimming: none of them fall out of a similarity search. They
 have to be asserted by an agent, justified with evidence, and written back as
 metadata. That is what the viewpoint classifier, the hands gate, the annotation
 tree and the four hour measures are for. Retrieval finds candidates; it does not
-certify them. (OmniRetriever's bench and 7B LoRA adapter are both Apache-2.0 and
+certify them.
+
+**And the consumer has written the acceptance spec for us.** Being-H0.5's
+account of why 16,000 hours of public egocentric video were not enough names
+three things its sources lacked: *"accurate depth, stable camera alignment, and
+temporally precise interaction events."* That is the gate list, from a team that
+pre-trained on 35,000 hours — not *is it annotated*, but **is the depth metric,
+is the camera pose stable across the clip, and does the label boundary sit on the
+event rather than on the cut**. They also note that even the densely annotated
+benchmarks *"rely on offline calibration to approximate camera poses"* and align
+interaction labels *"to clip boundaries"*. A pipeline that records those three
+per clip is answering the question somebody actually asked. (OmniRetriever's bench and 7B LoRA adapter are both Apache-2.0 and
 ungated; the training corpus behind them is not released.)
 
 The hard version of that retrieval problem now has a benchmark.

@@ -188,6 +188,20 @@ with EPIC-KITCHENS-100. ✅ **Read at the dataset's own surface, not an adjacent
 one** — the discipline this document adopted after finding six of its own
 permissive claims came off arXiv listings.
 
+🔴 **And an independent user of it files a qualification this document should
+carry beside the praise.** [Being-H0.5](#being-h05--the-mano-action-space-at-35000-hours-and-a-preview-subset-with-no-terms), assembling 16,000 hours of human
+video and explaining why it had to build its own rig, writes: *"benchmarks like
+**HD-EPIC** and HOI4D rely on **offline calibration to approximate camera
+poses**, and their interaction labels are typically **aligned to clip boundaries**
+or a hand…"* — set against what they say they needed, *"accurate depth, stable
+camera alignment, and temporally precise interaction events."* **So the densest
+annotation in this survey is dense in the axes it chose and approximate in two
+that a downstream VLA team found load-bearing.** Nothing here is a defect
+claim — HD-EPIC's camera poses are recovered, not measured, which its own SLAM
+files make plain — but it is worth knowing that *"grounded in 3D"* and *"metric
+camera pose per frame"* are not the same sentence, and that the team who tried to
+use it at scale ran into the difference.
+
 > **Bearing here, and it is the counter-example to this repo's own pitch worth
 > keeping in view.** 41 hours is nothing — a twentieth of EPIC-KITCHENS-100, a
 > ten-thousandth of Egocentric-100K. **And it is more useful per hour than any
@@ -1528,12 +1542,40 @@ date"*: **35,000+ hours**, **120 billion tokens**, **400 M+ samples**, across
 visual-language** — and the human half yields *"134 million human data
 samples… a 100× increase over UniHand-1.0"*.
 
+✅ **All fourteen figures in this entry were audited against the paper's HTML
+this sweep, and every one holds exactly** — *"an expansive corpus comprising
+35,000+ hours of data and 120 billion tokens, totaling more than 400 million
+samples"*, *"16,000 hours of egocentric human video, 14,000 hours of robot
+manipulation, and 5,000 hours of general visual-language understanding data"*,
+*"30 distinct robotic platforms"*, *"134 million human data samples… a 100×
+increase"*, and *"LIBERO (98.9%) and RoboCasa (53.9%)… on five robotic
+platforms"*. This is the largest hour-figure attributed to a single corpus in
+this survey after HumanNet's million, it is quoted in the README, and it feeds
+the [derivation map](#who-feeds-whom--the-derivation-map) — it was overdue a
+check, and it passed. *(One sharpening: UniCraftor's set is **43 tabletop
+tasks**, not 43 tasks.)*
+
 🔴 **It builds directly on Egocentric-10K, which gives the derivation map its
 first downstream consumer of the Build AI corpus.** The human-video half
 integrates *"in-the-wild egocentric videos from large-scale public repositories,
-including Ego4D, EPIC-KITCHENS, Egocentric-10K, etc."* So the free-hours corpus
+including Ego4D, EPIC-KITCHENS, Egocentric-10K, etc."* — ⚠️ **a sixth instance of
+[the "in the wild" trap](#the-vocabulary-problem--six-ways-a-name-misleads), and the most self-contained: the phrase and its
+denial sit in the same sentence.** *In-the-wild* here modifies videos that the
+same clause identifies as coming from *public repositories*, by name. A reader
+who takes the adjective at face value and stops before the comma has the
+opposite of the fact. So the free-hours corpus
 of [§12](#egocentric-10k) is no longer only a thing that exists — it is a thing
 something at 35,000 hours was built on.
+
+🟢 **And they specify, in one clause, what annotation has to deliver.** The
+three things they say their sources lacked are *"accurate depth, stable camera
+alignment, and temporally precise interaction events."* **That is an acceptance
+specification written by the consumer**, and it is the most directly usable
+sentence in this survey for anyone building the gates in
+[§10](#10-annotate): not *"is it annotated"* but *is the depth metric, is the
+camera pose stable across the clip, and does the label boundary sit on the event
+rather than on the cut.* A pipeline that records those three per clip is
+answering the question a 35,000-hour pre-training team actually asked.
 
 ⚠️ **And their own assessment of it is this document's argument, in someone
 else's words.** *"Egocentric-10K features 10,000 hours of in-the-wild industrial
@@ -4510,7 +4552,7 @@ that failed.
 
 | The phrase | What a reader assumes | What it denotes | Where |
 |---|---|---|---|
-| **"in the wild"** | found on the internet | *outside the robot's lab* — captured by the authors on their own hardware, **or lifted from existing research corpora**, **or captured from 264 recruited participants under signed consent** | [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean) (EgoVerse on Aria), [World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild) (own wearable suit), and the term's general use across [§2](#2-scaling-human-video-for-robot-learning). 🔴 **And a variant that is not authors' own capture at all**: [ViTRA](#vitra--12-m-episodes-of-mano-over-four-other-peoples-corpora-stamped-mit)'s *"'in-the-wild' egocentric human videos without any annotations"* are **Ego4D, EPIC-KITCHENS, Ego-Exo4D and Something-Something V2** — the phrase covering both *not-a-lab-capture* and *not-ours* in one document. ✅ **One honest exception**: [EgoTac](#egotac--tactile-predicted-from-ordinary-video-and-a-ceiling-that-moved)'s in-the-wild inference really does run on found corpora |
+| **"in the wild"** | found on the internet | *outside the robot's lab* — captured by the authors on their own hardware, **or lifted from existing research corpora**, **or captured from 264 recruited participants under signed consent**, **or — in one sentence of [Being-H0.5](#being-h05--the-mano-action-space-at-35000-hours-and-a-preview-subset-with-no-terms) — *"in-the-wild egocentric videos from large-scale public repositories, including Ego4D, EPIC-KITCHENS, Egocentric-10K"***, where the phrase and its denial share a clause | [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean) (EgoVerse on Aria), [World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild) (own wearable suit), and the term's general use across [§2](#2-scaling-human-video-for-robot-learning). 🔴 **And a variant that is not authors' own capture at all**: [ViTRA](#vitra--12-m-episodes-of-mano-over-four-other-peoples-corpora-stamped-mit)'s *"'in-the-wild' egocentric human videos without any annotations"* are **Ego4D, EPIC-KITCHENS, Ego-Exo4D and Something-Something V2** — the phrase covering both *not-a-lab-capture* and *not-ours* in one document. ✅ **One honest exception**: [EgoTac](#egotac--tactile-predicted-from-ordinary-video-and-a-ceiling-that-moved)'s in-the-wild inference really does run on found corpora |
 | **"from existing web sources"** | crawled from the internet | *from existing public research datasets* — Ego4D, EPIC-KITCHENS, HowTo100M, Something-Something | [RynnVLA-001](#rynnvla-001--filter-dont-convert) |
 | **a licence on the paper / the code / the repo** | the terms of the **data** | the terms of that adjacent artefact only — the dataset's terms are separate, and often absent | [EgoScale](#egoscale) (arXiv CC BY 4.0), [NIMBLE](#wilor--the-chokepoint-read-at-source) (repo MIT, paper CC BY), [EgoExoLearn](#egoexolearn) and [EgoHumanoid](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator) (code MIT / Apache 2.0), and — **committed by this document itself** — [MobileEgo Anywhere](#mobileego-anywhere), recorded as CC BY 4.0 for dozens of sweeps when that was the arXiv listing's licence and the dataset is gated `license: other` |
 | **a dataset named for its size** | that many hours of the thing you want | often a different unit, a different viewpoint, a different corpus entirely — or no corpus at all | [Ego-1K](#ego-1k) — 956 clips of 8–10 s, not 1,000 hours; [Ego-Exo4D](#ego-exo4d) — 1,286 h of which **221 are egocentric**; **`easpeeder/Egocentric-1M`** — a public, MIT-tagged repo containing [two files and no data](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost); and **`Nexdata-AI/10000-Hour-Egocentric-Video-Dataset`** — three files, one of them the metadata of a [59-second recording it does not contain](#the-other-thing-that-happened-to-hours-they-went-on-sale) |
