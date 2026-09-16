@@ -665,6 +665,19 @@ side actually is, and the answer is smaller than the rhetoric suggests.
 | **[Open X-Embodiment](https://robotics-transformer-x.github.io/)** | 1 M+ trajectories, **22 embodiments**, 527 skills, 160,266 tasks — **hours not stated** | **60 existing datasets pooled** from 34 labs across 21 institutions; single arms through bimanual robots and quadrupeds | 🔴 **No overall licence stated on the project page**, and no statement of whether the 60 components retain their own |
 | Human ego, for scale | [Egocentric-100K](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) 100,405 h · [DreamDojo](#dreamdojo--and-the-strongest-evidence-in-this-document-for-13) 44,711 h | Crowdsourced / commissioned capture | Apache 2.0 / unstated |
 
+⚠️ **One number in that table is restated elsewhere at 3.7× and it is worth
+knowing before you compare anything.** [OpenWAM](#openwam--the-first-project-here-whose-open-survives-being-checked)'s pretraining table lists
+**DROID at 1,285 hours**; DROID's own page says **350**. The likely cause is
+camera-hours against wall-clock — DROID records two Zed 2 stereo cameras plus a
+wrist Zed Mini — and it is the same multiplication
+[Nymeria](#nymeria--264-consented-participants-called-in-the-wild) performs on
+one page (300 activity-hours, 3,600 video-hours). **The difference here is that
+it is two publications disagreeing about one corpus, with neither stating its
+unit.** This document uses **350**, because that is what the publisher states.
+**A reader comparing hour-counts across papers is, silently, comparing different
+units** — which is the strongest argument in this section for the manifest
+recording *what was counted*, not just how much.
+
 ✅ **Every figure in that table was verified at its own source this sweep, and
 every one holds.** DROID's page: *"76k demonstration trajectories or 350h of
 interaction data, collected across 564 scenes and 86 tasks by 50 data collectors
@@ -1457,6 +1470,88 @@ world-to-action information flow, and synchronized joint denoising"*; and
 embodied pretraining *"principally improves out-of-domain generalization"*, with
 one-stage co-training over egocentric and robot data. **OpenWAM-α** is pretrained
 on roughly **6,400 hours** of egocentric human and robot data.
+
+**Its pretraining mixture, read off Table 4 of the PDF** — *"Full"* is each
+source's raw size, *"Curated + Sampled"* what actually trained the model, and
+*"Share"* its per-epoch sample share:
+
+| Source | Type | FPS | Full frames / hours | Used frames / hours | Share |
+|---|---|---|---|---|---|
+| **Egocentric data (theirs)** | human video | 30 | 744.9 M / **6,897 h** | 155.7 M / **1,442 h** | **30.1%** |
+| **AgiBotWorld-Beta** | real robot | 15 | 124.5 M / 2,306 h | 96.9 M / 1,794 h | **18.6%** |
+| **RoboCOIN** | real robot | 30 | 104.5 M / 956 h | 74.1 M / 686 h | 14.3% |
+| **DROID** | real robot | 10 | 46.3 M / **1,285 h** | 36.3 M / 1,007 h | 7.0% |
+| **InternData-A1** | simulation | 30 | 313.7 M / 2,904 h | 155.5 M / 1,440 h | 30.0% |
+| **Total** | 21 robot + human | | 1,333.9 M / **14,348 h** | **518.5 M / 6,369 h** | 100% |
+
+**Three things fall out of that table, and each matters to a different part of
+this document.**
+
+🔴 **1. The egocentric 30% is the lab's own unreleased corpus.** The row is
+headed *"Egocentric data (**ours**)"*, and the text describes *"a dataset we
+carefully constructed for manipulation-centric world modeling — 71.6 K long-form
+first-person recordings… covering **3,006 everyday manipulation tasks**"*. So the
+most open release in this survey is pretrained on **6,897 hours nobody else can
+have**. **That is §13 arriving in its most favourable case**: a team publishes
+twenty checkpoints, the code, the benchmarks and the evaluation harness, and the
+one thing that stays in-house is the corpus. *(The paper also gives a
+per-recording duration that this document's PDF text extraction renders
+ambiguously and which does not reconcile with 6,897 h on either reading, so it is
+not quoted here — 71.6 K recordings and 3,006 tasks are the figures that
+verified.)*
+
+🔴 **2. AgiBotWorld-Beta is 18.6% of the mixture — and it is CC BY-NC-SA 4.0.**
+Non-commercial **and share-alike**, the most restrictive combination in this
+survey, feeding **Apache-2.0** checkpoints. **This is the third fully traced case
+of a permissive stamp over non-permissive parents**, after
+[ViTRA](#vitra--12-m-episodes-of-mano-over-four-other-peoples-corpora-stamped-mit)
+and [EgoScaler](#egoscaler--one-letter-from-the-entry-above-and-the-first-route-that-needs-only-rgb),
+and it is the one where the terms are designed to propagate: ShareAlike exists
+precisely to travel into derivatives. *Nothing improper is alleged — weights
+trained on data are not obviously a derivative work of it, and that question is
+unsettled everywhere. The point is narrower: **the mixture table is in the paper,
+and the licence consequence is in neither the paper nor the model cards.***
+
+⚠️ **3. DROID appears here as 1,285 hours. Its own page says 350.** A **3.7×**
+restatement of the corpus this document uses as
+[the denominator](#the-robot-native-denominator). The likely reason is the
+[Nymeria pattern](#nymeria--264-consented-participants-called-in-the-wild) —
+DROID records **two Zed 2 stereo cameras plus a wrist Zed Mini**, so camera-hours
+multiply wall-clock hours — but **neither paper says which unit it is using.**
+This is the first case in this survey of **the same corpus counted differently by
+two publications**, and it is worse than a project overstating its own scale:
+**a reader comparing hour-counts across papers is silently comparing different
+units.** The denominator section states 350 h because that is what DROID's own
+page states; the 1,285 is recorded here as unexplained rather than used.
+
+🟢 **And the ablation is the most carefully controlled substitution experiment in
+this document, because the budget is fixed.** Under *"an identical **600-hour
+data budget**"*, drawing egocentric human video from **[EgoDex](#egodex)** and
+robot trajectories from RoboCOIN: robot-only spends all 600 h on robot data; the
+two mixed variants spend **350 h egocentric + 250 h robot**, either two-stage
+(ego then robot) or one-stage co-training. Result, quoted: embodied pretraining
+*"yields modest gains for in-domain performance, but… strong performance gains in
+OOD evaluation"*, and **"robot-only pretraining yields the strongest ID
+performance, while both mixed strategies generalize better OOD."**
+
+> **That is a trade-off, not a win, and it is more useful than a win.**
+> [HumanNet](#humannet) compared 1,000 human hours against 100 robot hours —
+> unequal budgets. [ReWeight](#reweight--the-control-simdex-did-not-run) showed
+> that *which* human hours you pick is worth 13 points. OpenWAM asks the third
+> question: **at a fixed budget, how should the hours be split** — and answers
+> that robot hours buy in-domain fit while egocentric hours buy generalisation.
+> **For a collection system that means the product is not "hours" and not even
+> "good hours", but hours whose contribution can be predicted**: a buyer with 600
+> hours of budget needs to know which axis they are short on before they know
+> what to buy.
+>
+> **And note what the egocentric data is allowed to do.** Because it *"carries no
+> robot action labels… its action and proprioception channels remain fully masked
+> and it supervises only the world stream."* **Unlabelled egocentric video trains
+> the model's picture of how the world moves, not its picture of what to do.**
+> That is the cleanest statement in this survey of the ceiling on raw hours — and
+> the precise reason [§12](#12-free-hours-and-what-they-do-to-the-moat)'s free
+> corpora are worth less than their size suggests.
 
 ✅ **And then it ships, which is the finding.** Checked at the artefacts this
 sweep: **20 model repositories in the `OpenWAM` organisation, every one
@@ -3845,6 +3940,7 @@ except the one marked as an inference.
 | 🔴 [H-Tac](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) (HOI-Tac, ~106 h) | **11 public datasets** — ARCTIC, DexYCB, H2O, H2O3D, HO3D, HOCap, HOI4D, HOT3D, InterHand2.6M, OakInk-v1/v2 | **The largest aggregation here and the least documented**: no licence stated for H-Tac, inputs described only as "public datasets", no release. HOI4D alone is CC BY-NC |
 | ✅ [OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly) (1,107 h) | **EgoDex 829 h** *(all of it)* + HoloAssist 166 + CaptainCook4D 54 *(of 94.5)* + HOI4D 44 + HOT3D 13.3 + HO-Cap 0.67 — **audited at its Table 1; the six sum to 1,106.97** | **The only row with full per-source provenance**: annotations only, no video redistributed, each source's licence text shipped with attribution, and explicit author permission for the CC-BY-NC-ND component. *(Not the only pointers-only release, and not the first: **HD-VILA-100M** below did it in 2022, and **[EgoVid-5M](#egovid-5m)** ships annotations-only under Apache 2.0. Three instances now — the posture is common; the per-source attribution is not)* |
 | ✅ [HD-VILA-100M](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago) (103 M clips, 371.5 K h) | **3.3 M YouTube uploads**, selected by channel popularity + 720p + English subtitles | **URLs only, under a named licence (O-UDA), in 2022** — the release posture OpenEgo is praised for, at ~335× the hours and four years earlier. What it lacks is per-source provenance: one blanket licence over three million third-party uploads |
+| 🔴 [OpenWAM-α](#openwam--the-first-project-here-whose-open-survives-being-checked) (20 Apache-2.0 checkpoints) | **their own unreleased 6,897 h egocentric corpus** (30.1% share) + **AgiBotWorld-Beta 18.6%** + RoboCOIN 14.3% + DROID 7.0% + InternData-A1 30.0% | **CC BY-NC-SA 4.0 at 18.6% of the mixture** — non-commercial *and* share-alike, the terms designed to propagate — under Apache-2.0 weights. **Third traced case of a permissive stamp over non-permissive parents.** The mixture table is in the paper; the licence consequence is in neither the paper nor the cards |
 | [Open X-Embodiment](#the-robot-native-denominator) | **60 datasets, 34 labs** | unknowable without tracing sixty |
 | [EgoInfinity](#egoinfinity--lift-to-4d-then-reproject), Ego2Robot, [MobileEgo](#mobileego-anywhere) | **WiLoR** (+ MANO, YOLO) | **CC-BY-NC-ND** *model* in the annotation path |
 | 🔴 [ViTRA](#vitra--12-m-episodes-of-mano-over-four-other-peoples-corpora-stamped-mit) (1.22 M episodes, **ungated, MIT**) | **MANO — as the file format**, not the pipeline | `beta`, `hand_pose` and every joint array are MANO-shaped. Downstream users do not pass through it, they **parse** it |
@@ -4799,6 +4895,7 @@ trust the rest of it.
 | **MobileEgo Anywhere and Ego-OSCAR are unrelated projects** *(this document, writing them up in two sections)* | Both are **`fpvlabs`**. The org's Hugging Face account holds exactly two datasets — `stera-10m` and `stereo-550` — both `license: other`, both gated. **Third time the survey has found two entries that were one group**, after NVIDIA's and BeingBeyond's | [§2](#mobileego-anywhere) |
 | **EgoScaler's Apache-2.0 set is built on permissively licensed sources** | **None of its four parents is permissive.** Ego4D and Ego-Exo4D are signed-agreement corpora; **HD-EPIC and Nymeria are both CC BY-NC 4.0**, the latter email-gated. The Apache-2.0 correctly covers the authors' own extracted trajectories, but the card states none of this — and **the derived artefact is the one with 30,436 downloads**. Second fully traced case of a permissive stamp over non-permissive parents, after ViTRA, and the first with *zero* permissive parents | [§1](#hd-epic--41-hours-and-the-densest-annotation-in-this-document), [§2](#egoscaler--one-letter-from-the-entry-above-and-the-first-route-that-needs-only-rgb) |
 | **Nymeria is 3,600 hours** | **300 hours of daily activity**; 3,600 is *camera*-hours across synchronised streams of the same wall-clock time. Both figures sit on one page. Even *worn* hours multiply by the number of sensors pointed at them | [§1](#nymeria--264-consented-participants-called-in-the-wild) |
+| **Hours are hours, so corpora can be compared across papers** | **DROID is 350 hours on its own page and 1,285 in [OpenWAM](#openwam--the-first-project-here-whose-open-survives-being-checked)'s pretraining table — a 3.7× restatement of the same corpus, with neither publication stating its unit.** Multi-camera rigs multiply wall-clock into camera-hours ([Nymeria](#nymeria--264-consented-participants-called-in-the-wild) prints 300 and 3,600 on one page). **The first case here of one corpus counted differently by two publications** | [§1](#the-robot-native-denominator) |
 | **Adding human video to robot post-training helps** | **Only if you choose which.** [ReWeight](#reweight--the-control-simdex-did-not-run) runs the control SiMDex did not: π₀.₅ post-trained on **robot data only 39%**, **robot + randomly mixed human data 44%**, **robot + selected human data 57%**. Random mixing buys 5 points; selection buys 18. Its paper is explicit that naive mixing *"can **degrade** policy performance"* — so delivering hours without an argument for them is not merely inefficient | [§4](#reweight--the-control-simdex-did-not-run) |
 | **A paper that says "we release X" has released X** | [MINT](#mint--camera-alignment-at-scale-and-a-release-sentence-with-no-address) states *"We release the model, training and inference code, labeling pipeline, and a curated 1,021-hour egocentric trajectory dataset"* and **contains no URL anywhere, in v1 or v2** — no repo, no project page, no card, and nothing findable on Hugging Face. **A new shape: a release in the present tense with nowhere to go.** Recorded as *not locatable*, which is not the same as *not released* | [§4](#mint--camera-alignment-at-scale-and-a-release-sentence-with-no-address), [§11](#11-the-licence-trap) |
 | **"Open" in a project's name never survives checking** *(the shape this survey had caught three times)* | ✅ [OpenWAM](#openwam--the-first-project-here-whose-open-survives-being-checked) survives it: **20 Apache-2.0 model repos, 6 datasets, Apache-2.0 code, and all three surfaces its paper names resolve.** The control row the trap catalogue needed — though **3 of its 6 datasets carry no licence tag**, and **its ~6,400 h pretraining corpus is not among them** | [§2](#openwam--the-first-project-here-whose-open-survives-being-checked) |

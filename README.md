@@ -193,6 +193,10 @@ gap is this repository.**
 Worth keeping the denominator in view: **[DROID](https://droid-dataset.github.io/),
 the flagship open teleoperated robot dataset, is 350 hours** — thirteen
 institutions, fifty collectors, twelve months, all verified at its own page.
+(OpenWAM's pretraining table lists the same corpus at **1,285 hours**. Neither
+publication says whether it is counting wall-clock or camera-hours across DROID's
+three cameras. **Comparing hour-counts across papers is comparing different
+units**, which is why the manifest records what was counted.)
 HumanNet's "100 h of robot data" baseline is close to a third of it. Robot data
 is not merely expensive per hour; there is almost none of it by comparison. But
 those 350 hours carry **language annotations on 95% of successful episodes**,
@@ -233,9 +237,19 @@ Two neighbours are worth calling out directly:
   and **contains no URL anywhere**.
 - **[OpenWAM](https://arxiv.org/abs/2609.07398)** is the one that ships: **20
   Apache-2.0 checkpoints, six datasets, Apache-2.0 code**, every surface its
-  paper names resolving. The ~6,400-hour corpus it was pretrained on is not among
-  them — **even the best release publishes the weights and keeps the
-  acquisition.**
+  paper names resolving. Its pretraining table shows why that still leaves §13
+  standing: **30.1% of the mixture is the lab's own unreleased 6,897-hour
+  egocentric corpus**, and **18.6% is AgiBotWorld-Beta, which is CC BY-NC-SA
+  4.0** — non-commercial *and* share-alike — under Apache-2.0 weights. **Even
+  the best release publishes the weights and keeps the acquisition.**
+  Its ablation is the most carefully controlled substitution result we have
+  found, because the budget is fixed: at **an identical 600-hour budget**,
+  robot-only pretraining wins in-domain while **350 h egocentric + 250 h robot
+  generalises better out-of-domain**. Robot hours buy fit; egocentric hours buy
+  generalisation. And the egocentric half *"supervises only the world stream"* —
+  with no action labels, its action and proprioception channels stay masked.
+  **Unlabelled hours teach the model how the world moves, not what to do**, which
+  is the ceiling on free corpora stated by someone who measured it.
 - **[NVIDIA Cosmos](https://arxiv.org/abs/2501.03575)** generates and evaluates
   data; we source it. Cosmos Curator presupposes a 20 M-hour archive — this is
   how a team without one gets to its first defensible thousand hours.
