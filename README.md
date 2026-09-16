@@ -218,6 +218,24 @@ Two neighbours are worth calling out directly:
   random draw. Selection, not volume, is the bottleneck. Nothing is released:
   its project page shows *Code* and *🤗 Hugging Face* buttons that are inert
   `href="#"` links, so the result is one to reproduce, not a component to adopt.
+- **[ReWeight](https://arxiv.org/abs/2609.13851)** runs the control SiMDex did
+  not, and it is the sharpest number in this section. Post-training π₀.₅:
+  **robot data only 39 %, robot + randomly mixed human data 44 %, robot +
+  selected human data 57 %.** Random mixing buys 5 points; selection buys 18 —
+  and the paper notes that naive mixing *"can **degrade** policy performance"*.
+  **Delivering hours without an argument for them is not merely inefficient; it
+  can make the model worse.** Also unreleased.
+- **[MINT](https://arxiv.org/abs/2609.04958)** does the middle term of that
+  acceptance spec: from RGB alone it jointly predicts camera trajectory, field of
+  view, hand states and **per-frame hand observability** — a learned hands gate —
+  and runs **3.67× faster than the labelling pipeline that supervises it**. Its
+  paper says *"we release"* the model, code, pipeline and a 1,021-hour dataset,
+  and **contains no URL anywhere**.
+- **[OpenWAM](https://arxiv.org/abs/2609.07398)** is the one that ships: **20
+  Apache-2.0 checkpoints, six datasets, Apache-2.0 code**, every surface its
+  paper names resolving. The ~6,400-hour corpus it was pretrained on is not among
+  them — **even the best release publishes the weights and keeps the
+  acquisition.**
 - **[NVIDIA Cosmos](https://arxiv.org/abs/2501.03575)** generates and evaluates
   data; we source it. Cosmos Curator presupposes a 20 M-hour archive — this is
   how a team without one gets to its first defensible thousand hours.

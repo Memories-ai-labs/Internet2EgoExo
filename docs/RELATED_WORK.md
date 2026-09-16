@@ -58,6 +58,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [EgoMimic](#egomimic)
   - [EgoAVFlow](#egoavflow--no-robot-demonstrations-still-means-a-board-in-every-scene)
   - [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean)
+  - [OpenWAM](#openwam--the-first-project-here-whose-open-survives-being-checked)
   - [EgoHumanoid](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator)
   - [EgoVLA](#egovla--mano-as-the-action-space-not-just-the-annotation)
   - [Being-H0.5](#being-h05--the-mano-action-space-at-35000-hours-and-a-preview-subset-with-no-terms)
@@ -75,6 +76,8 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [ACE-Ego-0](#ace-ego-0)
 - [3. Selection is the hard part, not collection](#3-selection-is-the-hard-part-not-collection)
   - [SiMDex](#simdex)
+  - [ReWeight](#reweight--the-control-simdex-did-not-run)
+  - [MINT](#mint--camera-alignment-at-scale-and-a-release-sentence-with-no-address)
   - [Panda-70M](#panda-70m)
   - [InternVid](#internvid)
   - [NeMo Curator](#nemo-curator)
@@ -1433,6 +1436,61 @@ DINO-based prediction gave up to **4× out-of-distribution generalisation** and
 is where the human-video gain lives — which is an argument for annotating what
 happens next in a clip, not only what is in it.
 
+### OpenWAM — the first project here whose "Open" survives being checked
+
+**[arXiv 2609.07398](https://arxiv.org/abs/2609.07398)** (7 Sep 2026, 24
+authors) — a world-action model stack in the same family as
+[EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean) and
+[Being-H0.7](#being-h07--one-corpus-three-products-and-a-second-vendor-doing-it),
+and this document's **positive control** for a trap it has caught three times.
+
+**The premise is methodological, not scalar.** Existing world-action systems are
+*"monolithic: the generative backbone, visual representation, architecture,
+information flow, inference procedure, and training data are tightly coupled,
+obscuring which design choices matter and why."* **OpenWAM-Infra** factorises
+that design space into composable modules with unified training, inference,
+deployment and evaluation; **OpenWAM-Study** then runs controlled experiments
+over it. Three stated principles: upstream knowledge transfers through a
+*"sufficiently capable generative backbone and a compact, information-rich latent
+space"*; world–action synergy needs *"dedicated action capacity, explicit
+world-to-action information flow, and synchronized joint denoising"*; and
+embodied pretraining *"principally improves out-of-domain generalization"*, with
+one-stage co-training over egocentric and robot data. **OpenWAM-α** is pretrained
+on roughly **6,400 hours** of egocentric human and robot data.
+
+✅ **And then it ships, which is the finding.** Checked at the artefacts this
+sweep: **20 model repositories in the `OpenWAM` organisation, every one
+Apache-2.0 and ungated** — the pretrain foundation model plus per-platform
+checkpoints (Franka, ARX-X5, Piper, a dexterous hand) and per-benchmark ones
+(LIBERO, RoboCasa365, RoboCasa-GR1, RoboTwin, VLABench, EBench) — **six
+datasets**, and an **Apache-2.0 `LICENSE`** on the code repository. The paper's
+own comments field names three surfaces — project page, code, *"Model & Data"* —
+and **all three resolve**.
+
+> **Why this belongs in the document rather than in a footnote.** This survey has
+> now caught the openness claim failing three times:
+> [OpenMMEgo](#openmmego--open-weights-and-data-half-kept)'s title promises *"Open
+> Weights and Data"* over a year-old *"we will release our code and data soon"*;
+> [Open-AoE](#open-aoe) is *"Open"* under a bespoke one-publisher licence;
+> [MINT](#mint--camera-alignment-at-scale-and-a-release-sentence-with-no-address)
+> says *"we release"* and gives no address. **A trap catalogue with no control row
+> is just a complaint.** OpenWAM is the control: **the same word in the same
+> position in the title, and the artefacts are there.** It is the counterpart to
+> [HoloAssist](#holoassist) in the licence audit — the entry that was right, kept
+> visible so the failures mean something.
+
+⚠️ **Two qualifications, because the control has to be read as carefully as the
+failures.** First, **three of the six datasets carry no licence tag at all**
+(`RoboCasa365`, `RoboCasa_GR1`, `wuji_teleop_data_subset`); the other three are
+MIT or Apache-2.0. **Even the best release in this survey has unstated terms on
+half its data.** Second, and more to the point of
+[§13](#13-why-no-open-source-project-does-exactly-this): **the six datasets are
+benchmarks, assets and a teleoperation *subset*. The ~6,400-hour pretraining
+corpus is not among them.** Twenty checkpoints ship; the thing they were trained
+on does not. **That is the document's standing observation arriving in its most
+favourable possible case** — when a team does everything else right, the
+acquisition layer is *still* the last thing published.
+
 ### EgoHumanoid — whole-body transfer, and a VR rig on the demonstrator
 
 **[arXiv 2602.10106](https://arxiv.org/abs/2602.10106)** (v2, 4 Jun 2026) ·
@@ -2413,6 +2471,116 @@ artefact. Cited at v1, the only version.
 > one**. A reader skimming the header counts four affordances and infers four
 > things exist; nothing on the page is false, because nothing on the page is a
 > claim.
+
+### ReWeight — the control SiMDex did not run
+
+**[arXiv 2609.13851](https://arxiv.org/abs/2609.13851)** (12 Sep 2026; Wang,
+Huang, Ko, Bai, Jiang) — the same problem as [SiMDex](#simdex), attacked
+independently three weeks later, and with the one comparison that turns the
+result into an argument.
+
+**Mechanism.** A **cross-embodiment visuomotor representation** combining visual
+observations with *future actions* measures behavioural similarity between human
+and robot demonstrations. **Optimal transport** then retrieves the human
+demonstrations relevant to the target robot data, and a sample-level weighting
+gives more weight to samples with smaller cross-embodiment discrepancy. So:
+retrieval at the demonstration level, weighting at the sample level, over π₀.₅.
+
+🟢 **The numbers, and why the middle column is the whole point.** In simulation,
+across eight tasks:
+
+| Post-training data | Average success |
+|---|---|
+| **robot data only** | **39%** |
+| **robot + randomly mixed human data** | **44%** |
+| **robot + ReWeight-selected human data** | **57%** |
+
+**Adding human data at random buys 5 points. Choosing which human data buys 18.**
+Real-world, across four tasks: **68.8%**, beating those two baselines by **28.8**
+and **13.8** points.
+
+> **This is the cleanest statement of "selection, not volume" in the document,
+> and it is cleaner than SiMDex's** — because SiMDex compared its mined subset
+> against *an equal quantity of randomly sampled human data*, while ReWeight puts
+> **robot-only, random-mix and selected-mix in one table**. That third baseline is
+> what shows the failure mode: *"directly mixing human and robot data can
+> introduce cross-embodiment discrepancies and **degrade** policy performance."*
+> A collection system that delivers hours without an argument for them is not
+> merely inefficient — **it can make the downstream model worse**, and the gap
+> between 44% and 57% is the price of the argument.
+
+🔴 **Nothing is released, and the project page has an unusual defect worth
+recording.** [reweight-vla.github.io](https://reweight-vla.github.io/) carries no
+code, no data, no checkpoints, and **no licence**. Its only outbound artefact
+link points at a **Hugging Face collection belonging to a different project
+entirely** — `furonghuang-lab`'s TraceVLA — almost certainly unedited boilerplate
+from the page template the authors started from. **A new variant for the
+[trap list](#the-vocabulary-problem--six-ways-a-name-misleads):** SiMDex's links
+were dead, EgoScale's name collided with a live project's, and this one is a
+**live link to the wrong project's artefacts.** A reader who follows it lands
+somewhere real, which is the worst case of the three.
+
+### MINT — camera alignment at scale, and a release sentence with no address
+
+**[arXiv 2609.04958](https://arxiv.org/abs/2609.04958)** (v2) — *"Minting
+IN-the-Wild Trajectories"*. It answers, directly, the middle term of the
+[acceptance specification](#being-h05--the-mano-action-space-at-35000-hours-and-a-preview-subset-with-no-terms)
+a 35,000-hour pre-training team wrote: *accurate depth, **stable camera
+alignment**, temporally precise interaction events.*
+
+**Mechanism.** From one shared spatiotemporal video representation over **RGB
+alone**, MINT jointly predicts **camera trajectory, field of view, camera-frame
+hand states, and per-frame hand observability**, then produces world-space hand
+motion by explicit coordinate transformation — replacing the usual stack of
+separate camera-motion, depth, hand-reconstruction and trajectory-refinement
+stages. Supervision comes from **EgoPipeline**, a labelling pipeline that
+annotates **1,021 hours** of public egocentric video drawn from **Ego4D,
+EPIC-KITCHENS and [EgoDex](#egodex)** with camera trajectories and **bimanual
+MANO states**; MINT pretrains on those pseudo-labels, then fine-tunes on a small
+high-quality set.
+
+**Results**, zero-shot on benchmarks it never trained on: **0.945 frame accuracy,
+13.646 mm PA-MPJPE-p, 55.058 px EPE-p** for camera-frame bimanual reconstruction
+on HOT3D; **4.690 mm RPE-T and 0.284° RPE-R** for camera trajectory; and **a
+3.67× end-to-end speedup over the labelling pipeline that supervises it** —
+i.e. the student is cheaper than the teacher, which is what makes it usable as a
+gate rather than an offline annotation job.
+
+> 🟢 **Two things here matter more than the accuracy numbers.** First,
+> **per-frame hand observability** is a *hands gate* — a learned, per-frame
+> answer to "are the hands actually visible here", which is one of the checks
+> this repo asserts per clip and which has so far had no published foundation
+> model behind it. Second, the whole thing runs on **RGB alone**, joining
+> [EgoScaler](#egoscaler--one-letter-from-the-entry-above-and-the-first-route-that-needs-only-rgb)
+> as work compatible with footage you did not capture. **The difference is
+> instructive: EgoScaler escapes MANO by tracking objects; MINT goes through
+> MANO and gets the hands.** You can have found-footage compatibility or a
+> MANO-free chain, and nobody has yet shown both with hands.
+
+🔴 **Two encumbrances, and the second is a shape this document has not recorded
+before.**
+
+1. **EgoDex is one of its three sources.** A 1,021-hour derived trajectory corpus
+   built partly on a **CC-BY-NC-ND** dataset would carry those terms — making
+   this the **sixth** downstream artefact resting on EgoDex, the document's
+   most-reused chokepoint. And the labels are **MANO states**, so the corpus is
+   MANO-shaped at the level of the file, as
+   [ViTRA's](#vitra--12-m-episodes-of-mano-over-four-other-peoples-corpora-stamped-mit)
+   is.
+2. 🔴 **The paper says *"We release the model, training and inference code,
+   labeling pipeline, and a curated 1,021-hour egocentric trajectory dataset"* —
+   and gives no address for any of it.** There is **no URL anywhere in the
+   paper**: no repository, no project page, no dataset card, in v1 or v2. A
+   Hugging Face search for the model and for EgoPipeline returns nothing.
+   **This is a new failure shape for the [licence-and-release
+   table](#11-the-licence-trap): not *"coming soon"*, not a title asserting
+   openness, not a dead button — a release stated in the present tense with
+   nowhere to go.** Recorded as **not locatable**, which is distinct from *not
+   released*: the artefacts may well exist somewhere this document cannot find.
+
+⚠️ **And a seventh *"in the wild"*, this one inside an acronym.** *Minting
+IN-the-Wild Trajectories* — the trajectories are minted from Ego4D, EPIC-KITCHENS
+and EgoDex.
 
 ### Panda-70M
 
@@ -4631,6 +4799,9 @@ trust the rest of it.
 | **MobileEgo Anywhere and Ego-OSCAR are unrelated projects** *(this document, writing them up in two sections)* | Both are **`fpvlabs`**. The org's Hugging Face account holds exactly two datasets — `stera-10m` and `stereo-550` — both `license: other`, both gated. **Third time the survey has found two entries that were one group**, after NVIDIA's and BeingBeyond's | [§2](#mobileego-anywhere) |
 | **EgoScaler's Apache-2.0 set is built on permissively licensed sources** | **None of its four parents is permissive.** Ego4D and Ego-Exo4D are signed-agreement corpora; **HD-EPIC and Nymeria are both CC BY-NC 4.0**, the latter email-gated. The Apache-2.0 correctly covers the authors' own extracted trajectories, but the card states none of this — and **the derived artefact is the one with 30,436 downloads**. Second fully traced case of a permissive stamp over non-permissive parents, after ViTRA, and the first with *zero* permissive parents | [§1](#hd-epic--41-hours-and-the-densest-annotation-in-this-document), [§2](#egoscaler--one-letter-from-the-entry-above-and-the-first-route-that-needs-only-rgb) |
 | **Nymeria is 3,600 hours** | **300 hours of daily activity**; 3,600 is *camera*-hours across synchronised streams of the same wall-clock time. Both figures sit on one page. Even *worn* hours multiply by the number of sensors pointed at them | [§1](#nymeria--264-consented-participants-called-in-the-wild) |
+| **Adding human video to robot post-training helps** | **Only if you choose which.** [ReWeight](#reweight--the-control-simdex-did-not-run) runs the control SiMDex did not: π₀.₅ post-trained on **robot data only 39%**, **robot + randomly mixed human data 44%**, **robot + selected human data 57%**. Random mixing buys 5 points; selection buys 18. Its paper is explicit that naive mixing *"can **degrade** policy performance"* — so delivering hours without an argument for them is not merely inefficient | [§4](#reweight--the-control-simdex-did-not-run) |
+| **A paper that says "we release X" has released X** | [MINT](#mint--camera-alignment-at-scale-and-a-release-sentence-with-no-address) states *"We release the model, training and inference code, labeling pipeline, and a curated 1,021-hour egocentric trajectory dataset"* and **contains no URL anywhere, in v1 or v2** — no repo, no project page, no card, and nothing findable on Hugging Face. **A new shape: a release in the present tense with nowhere to go.** Recorded as *not locatable*, which is not the same as *not released* | [§4](#mint--camera-alignment-at-scale-and-a-release-sentence-with-no-address), [§11](#11-the-licence-trap) |
+| **"Open" in a project's name never survives checking** *(the shape this survey had caught three times)* | ✅ [OpenWAM](#openwam--the-first-project-here-whose-open-survives-being-checked) survives it: **20 Apache-2.0 model repos, 6 datasets, Apache-2.0 code, and all three surfaces its paper names resolve.** The control row the trap catalogue needed — though **3 of its 6 datasets carry no licence tag**, and **its ~6,400 h pretraining corpus is not among them** | [§2](#openwam--the-first-project-here-whose-open-survives-being-checked) |
 | **H-Tac has nothing released** *(this document, which reclassified it there on purpose)* | `BeingBeyond/H-Tac_Sample` has existed since **6 July 2026**: **98 episodes, 35,982 frames, 98 videos**, a **MIT `LICENSE`**, ungated, 234 downloads. The checks that produced *not released* were run against the paper and its printed project page — both still say nothing, and the page still 404s. **The release was in a namespace neither points at.** An absence of evidence in the two places a paper sends you is not evidence of absence | [§2](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) |
 | **A search for EgoScale's missing dataset finds EgoScale's dataset** | It finds **EgoScaler's** — a different paper by different authors at different institutions (2509.21986 vs 2602.16710). EgoScale's artefact has been *"Coming Soon"* for seven months; `Biscue5/egoscaler-v2` is **Apache-2.0, ungated, 30,436 downloads**. The only thing tying that card to its own paper is an `arxiv:` tag | [§2](#egoscaler--one-letter-from-the-entry-above-and-the-first-route-that-needs-only-rgb) |
 | **DreamDojo's model terms are unstated** | The *video* terms still are. The **weights** carry **`nvidia-open-model-license`** on `nvidia/DreamDojo` — a bespoke licence, found at the artefact after the paper had been read three times | [§11](#11-the-licence-trap) |
@@ -4732,6 +4903,9 @@ trust the rest of it.
 - Ego-Exo4D documentation (source of the 1286.30 h / 221.26 ego-h / 5035 takes figures). https://docs.ego-exo4d-data.org/
 - *EgoLive: A Large-Scale Egocentric Dataset from Real-World Human Tasks.* (**dataset terms not stated anywhere**; the CC BY 4.0 once recorded here is the arXiv listing's) https://arxiv.org/html/2604.23570v1
 - *From Human Videos to Robot Manipulation: A Survey.* https://arxiv.org/html/2606.00054v1
+- Wang, Huang, Ko, Bai, Jiang. *ReWeight: Leveraging Human Data for VLA Post-Training via Demonstration Retrieval and Sample Weighting.* arXiv:2609.13851. (**nothing released**; the project page's only artefact link points at another project's Hugging Face collection) https://arxiv.org/abs/2609.13851 · https://reweight-vla.github.io/
+- Zhu, Cai, Wang et al. *MINT: A Unified Model for World-Space Camera and Hand Motion Estimation from Scalable Egocentric Pipeline Supervision.* arXiv:2609.04958 (v2). (**states "we release the model, training and inference code, labeling pipeline, and a curated 1,021-hour egocentric trajectory dataset" and gives no URL anywhere in the paper** — recorded as *not locatable*) https://arxiv.org/abs/2609.04958
+- Wang, Huang, Li et al. *OpenWAM: An Open, Modular Exploration Towards Systematic World-Action Model Pretraining.* arXiv:2609.07398. (✅ **20 Apache-2.0 model repos, 6 datasets, Apache-2.0 code — all three named surfaces resolve**; the ~6,400 h pretraining corpus is not among them, and 3 of 6 datasets carry no licence tag) https://arxiv.org/abs/2609.07398 · https://github.com/OpenWAM-Official/OpenWAM · https://huggingface.co/OpenWAM · https://openwam-official.github.io/
 - *SiMDex: Mining Similar Egocentric Videos for Cross-Embodiment Dexterous Manipulation.* (**nothing released** — the project page's Code and Hugging Face buttons are inert `href="#"` links; no licence stated) https://arxiv.org/abs/2608.04196 · https://lin-nie.github.io/SiMDex/
 - Chen et al. *Panda-70M: Captioning 70M Videos with Multiple Cross-Modality Teachers.* CVPR 2024. https://github.com/snap-research/Panda-70M
 - Wang et al. *InternVid.* https://arxiv.org/abs/2307.06942
