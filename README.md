@@ -198,7 +198,12 @@ publication says whether it is counting wall-clock or camera-hours across DROID'
 three cameras. **Comparing hour-counts across papers is comparing different
 units**, which is why the manifest records what was counted.)
 HumanNet's "100 h of robot data" baseline is close to a third of it. Robot data
-is not merely expensive per hour; there is almost none of it by comparison. But
+is not merely expensive per hour; there is almost none of it by comparison —
+though the honest multiple is smaller than DROID alone suggests. Adding the two
+corpora the survey opened this week, **RoboCOIN (956 h, 15 embodiments)** and
+AgiBotWorld-Beta (2,976 h), the open real-robot total is roughly **4,300 hours**,
+so Egocentric-100K is **23× the robot side**, not 287×. That is the number worth
+arguing from. But
 those 350 hours carry **language annotations on 95% of successful episodes**,
 which is the trade the whole substitution literature is arguing about: 350
 annotated hours against 10,000 raw ones.

@@ -663,6 +663,8 @@ side actually is, and the answer is smaller than the rhetoric suggests.
 | **[DROID](https://droid-dataset.github.io/)** | **350 hours**, 76,000 trajectories, 564 scenes, 86 tasks, 1,417 camera viewpoints | Teleoperation on a standardised rig (Franka Panda 7-DoF, two Zed 2 stereo + wrist Zed Mini, Quest 2 controllers), **13 institutions, 50 collectors, 12 months** | Open dataset; terms not stated on the project page |
 | **[AgiBotWorld-Beta](https://huggingface.co/datasets/agibot-world/AgiBotWorld-Beta)** | **2,976.4 hours**, 1 M+ trajectories, 200+ task types, 87 atomic skills | **100 robots** — mobile dual-arm, 6-DoF dexterous hands, visual-tactile sensors; video, depth, joint positions/velocities/forces, end-effector state, odometry | 🔴 **CC BY-NC-SA 4.0**, **click-through gated (auto-approved)** — 86,157 downloads |
 | **[Open X-Embodiment](https://robotics-transformer-x.github.io/)** | 1 M+ trajectories, **22 embodiments**, 527 skills, 160,266 tasks — **hours not stated** | **60 existing datasets pooled** from 34 labs across 21 institutions; single arms through bimanual robots and quadrupeds | 🔴 **No overall licence stated on the project page**, and no statement of whether the 60 components retain their own |
+| **[RoboCOIN](https://huggingface.co/RoboCOIN)** *(Wu et al., arXiv:2511.17441)* | **956 hours**, **15 embodiments** — 2.7× DROID | Real-robot teleoperation, shipped as **100+ separate per-task Hugging Face datasets**, every one `gated: auto`; **59,642 monthly downloads in aggregate** | ⚠️ **`license: apache-2.0` — plus obligations the gate adds** (see below) |
+| **[InternData-A1](https://huggingface.co/datasets/InternRobotics/InternData-A1)** *(Tian et al., arXiv:2511.16651)* | **2,904 hours**, 4 embodiments — **simulation** | Synthetic manipulation across single-arm and bimanual skills under environmental variation | 🔴 **CC BY-NC-SA 4.0 — stated *only inside the gate prompt*.** The card carries **no `license:` tag**; 90,872 downloads |
 | Human ego, for scale | [Egocentric-100K](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) 100,405 h · [DreamDojo](#dreamdojo--and-the-strongest-evidence-in-this-document-for-13) 44,711 h | Crowdsourced / commissioned capture | Apache 2.0 / unstated |
 
 ⚠️ **One number in that table is restated elsewhere at 3.7× and it is worth
@@ -727,8 +729,42 @@ three together. *No non-compliance is alleged; Apache-2.0 may well be what DROID
 intends.* **The point is that nobody downloading it can tell**, and the artefact
 that answers loudest is the one whose author had no standing to answer.
 
-**The ratios are the point.** Egocentric-100K is roughly **287× DROID** and **34×
-AgiBotWorld-Beta**. The flagship open teleoperated dataset — thirteen
+🟢 **The bottom two rows were added this sweep, from [OpenWAM](#openwam--the-first-project-here-whose-open-survives-being-checked)'s pretraining
+table — two robot corpora this document had never opened, and the denominator is
+better for having them.** They do not rescue the robot side: the open real-robot
+total is now roughly **350 + 2,976 + 956 ≈ 4,300 hours**, against
+Egocentric-100K's 100,405. **The scarcity claim survives at 23× rather than
+287×**, which is the honest number to argue from, and stating it that way is
+worth more than the larger one.
+
+⚠️ **RoboCOIN carries a licence shape this document has not recorded: a
+permissive tag with obligations bolted on at the gate.** The card says
+`license: apache-2.0`. The gate you must accept before downloading says: *"By
+accessing this dataset, you agree to **cite the associated paper** in your
+research/publications… You agree to **not use the dataset to conduct experiments
+that cause harm to human subjects**."* **Apache-2.0 requires neither.** So the
+artefact carries two instruments that do not agree about what you owe, and a user
+who downloads has accepted both. **This document's grid treats licence and access
+as independent axes — RoboCOIN shows the gate can *add terms*, not merely control
+who passes**, which means "what may I do with it" is not answerable from the
+licence field alone even when the licence field is a standard one.
+
+🔴 **And InternData-A1 inverts the third-party-stamp pattern.** Its official card
+has **no `license:` tag at all**; the terms — **CC BY-NC-SA 4.0** — appear only
+inside a gate prompt behind **nine fields** including phone number, job title and
+country. Meanwhile
+[`griffinlabs/InternData-A1-LeRobot-v3.0-by-embodiment`](https://huggingface.co/datasets/griffinlabs/InternData-A1-LeRobot-v3.0-by-embodiment),
+a third-party conversion, is **ungated**, has **24,586 downloads**, and is tagged
+**`cc-by-nc-sa-4.0`** — correctly. **Fifth instance of an uploader's licence
+field standing in for a publisher's, and the first where the uploader is the one
+telling the truth in public.** With `cadene/droid` a third party asserted
+Apache-2.0 over a publisher's silence, too permissively. Here a third party
+states the *restrictive* terms the publisher put behind a form. **Same pattern,
+opposite direction, and in both cases the searchable, ungated copy is the one
+shaping what readers believe.**
+
+**The ratios are the point.** Egocentric-100K is roughly **287× DROID**, **34×
+AgiBotWorld-Beta**, and **23× the open real-robot corpora combined**. The flagship open teleoperated dataset — thirteen
 institutions, fifty people, a year — is **350 hours**. That is why the
 substitution arguments matter economically at all: robot data is not merely
 expensive per hour, there is *almost none of it* by comparison.
@@ -4895,6 +4931,8 @@ trust the rest of it.
 | **MobileEgo Anywhere and Ego-OSCAR are unrelated projects** *(this document, writing them up in two sections)* | Both are **`fpvlabs`**. The org's Hugging Face account holds exactly two datasets — `stera-10m` and `stereo-550` — both `license: other`, both gated. **Third time the survey has found two entries that were one group**, after NVIDIA's and BeingBeyond's | [§2](#mobileego-anywhere) |
 | **EgoScaler's Apache-2.0 set is built on permissively licensed sources** | **None of its four parents is permissive.** Ego4D and Ego-Exo4D are signed-agreement corpora; **HD-EPIC and Nymeria are both CC BY-NC 4.0**, the latter email-gated. The Apache-2.0 correctly covers the authors' own extracted trajectories, but the card states none of this — and **the derived artefact is the one with 30,436 downloads**. Second fully traced case of a permissive stamp over non-permissive parents, after ViTRA, and the first with *zero* permissive parents | [§1](#hd-epic--41-hours-and-the-densest-annotation-in-this-document), [§2](#egoscaler--one-letter-from-the-entry-above-and-the-first-route-that-needs-only-rgb) |
 | **Nymeria is 3,600 hours** | **300 hours of daily activity**; 3,600 is *camera*-hours across synchronised streams of the same wall-clock time. Both figures sit on one page. Even *worn* hours multiply by the number of sensors pointed at them | [§1](#nymeria--264-consented-participants-called-in-the-wild) |
+| **A permissive licence tag tells you what you may do** | Not when the gate adds terms. **RoboCOIN's card says `license: apache-2.0`; its gate makes you agree to cite the paper and to avoid experiments harming human subjects** — neither of which Apache-2.0 requires. Two instruments, no statement of which governs, and a downloader has accepted both. **The access gate can add obligations, not merely control who passes** | [§1](#the-robot-native-denominator) |
+| **The publisher's copy is the authoritative one to read terms from** | **InternData-A1's official card carries no `license:` tag at all** — its CC BY-NC-SA 4.0 sits inside a gate prompt behind nine fields. A **third-party ungated conversion with 24,586 downloads tags it correctly**. Fifth uploader-stamp instance and the first where the uploader is the one stating the terms in public — the inverse of `cadene/droid`, which asserted Apache-2.0 over a publisher's silence | [§1](#the-robot-native-denominator) |
 | **Hours are hours, so corpora can be compared across papers** | **DROID is 350 hours on its own page and 1,285 in [OpenWAM](#openwam--the-first-project-here-whose-open-survives-being-checked)'s pretraining table — a 3.7× restatement of the same corpus, with neither publication stating its unit.** Multi-camera rigs multiply wall-clock into camera-hours ([Nymeria](#nymeria--264-consented-participants-called-in-the-wild) prints 300 and 3,600 on one page). **The first case here of one corpus counted differently by two publications** | [§1](#the-robot-native-denominator) |
 | **Adding human video to robot post-training helps** | **Only if you choose which.** [ReWeight](#reweight--the-control-simdex-did-not-run) runs the control SiMDex did not: π₀.₅ post-trained on **robot data only 39%**, **robot + randomly mixed human data 44%**, **robot + selected human data 57%**. Random mixing buys 5 points; selection buys 18. Its paper is explicit that naive mixing *"can **degrade** policy performance"* — so delivering hours without an argument for them is not merely inefficient | [§4](#reweight--the-control-simdex-did-not-run) |
 | **A paper that says "we release X" has released X** | [MINT](#mint--camera-alignment-at-scale-and-a-release-sentence-with-no-address) states *"We release the model, training and inference code, labeling pipeline, and a curated 1,021-hour egocentric trajectory dataset"* and **contains no URL anywhere, in v1 or v2** — no repo, no project page, no card, and nothing findable on Hugging Face. **A new shape: a release in the present tense with nowhere to go.** Recorded as *not locatable*, which is not the same as *not released* | [§4](#mint--camera-alignment-at-scale-and-a-release-sentence-with-no-address), [§11](#11-the-licence-trap) |
@@ -5015,6 +5053,8 @@ trust the rest of it.
 - Meta Reality Labs. *Ego-1K: A Large-Scale Multiview Video Dataset for Egocentric Vision.* (dataset **`fair-noncommercial-research-license`**, ungated, on `facebook/ego-1k`; the CC BY 4.0 is the arXiv listing's) https://arxiv.org/html/2603.13741v1 · https://huggingface.co/datasets/facebook/ego-1k
 - *HoloAssist.* (CDLA v2) https://holoassist.github.io/
 - *DROID: A Large-Scale In-The-Wild Robot Manipulation Dataset.* https://droid-dataset.github.io/
+- Wu et al. *RoboCOIN.* arXiv:2511.17441. (**956 h, 15 embodiments**; `license: apache-2.0` **plus gate obligations Apache-2.0 does not contain** — citation required, no experiments harming human subjects; shipped as 100+ per-task datasets, all `gated: auto`, 59,642 monthly downloads in aggregate) https://huggingface.co/RoboCOIN
+- Tian et al. *InternData-A1.* arXiv:2511.16651. (**2,904 h simulation**; **CC BY-NC-SA 4.0 stated only inside the gate prompt** — the card carries no `license:` tag; 90,872 downloads. An ungated third-party LeRobot conversion tags the terms correctly at 24,586 downloads) https://huggingface.co/datasets/InternRobotics/InternData-A1 · https://huggingface.co/datasets/griffinlabs/InternData-A1-LeRobot-v3.0-by-embodiment
 - *AgiBotWorld-Beta.* (CC BY-NC-SA 4.0, gated) https://huggingface.co/datasets/agibot-world/AgiBotWorld-Beta
 - *Open X-Embodiment.* (no licence stated on the project page) https://robotics-transformer-x.github.io/
 - EGXO Data. *Robotics Data Release Tracker 2026.* (third-party tracker, v1.1.1, last updated 2026-07-25 — useful for monitoring, but it collapses licence and access; verify at the publisher. ⚠️ **Also a data vendor**: `egxodata/egxo-household-egocentric-video-evaluation` is gated under a bespoke `egxo-controlled-commercial-access` licence — the tracker is not a disinterested source) https://egxodata.com/resources/robotics-data-release-tracker-2026
