@@ -2775,6 +2775,35 @@ quality.
 Stated caveats: 15% of clips are only 360P–720P and "may not perform as well"
 for generation, and 85% run under 10 seconds.
 
+**Terms, read at the artefact this sweep — the entry had never stated them, and
+the claim they support is repeated four times elsewhere in this document.**
+[`OpenGVLab/InternVid`](https://huggingface.co/datasets/OpenGVLab/InternVid)
+carries **`cc-by-nc-sa-4.0`** ✅ — **non-commercial *and* share-alike**, as the
+[derivation map](#who-feeds-whom--the-derivation-map) has been saying. So the
+claim holds; it was simply being asserted from a table rather than from the card.
+
+⚠️ **And the card carries the shape found one sweep ago at
+[RoboCOIN](#the-robot-native-denominator): a gate that adds an obligation the
+licence does not contain.** InternVid's `extra_gated_prompt` reads *"You agree to
+not use the data to conduct experiments that cause harm to human subjects."*
+RoboCOIN's reads *"You agree to not use the dataset to conduct experiments that
+cause harm to human subjects."* **Near-verbatim, across two unrelated publishers
+in different subfields.** Two instances make it a pattern rather than an oddity,
+and the near-identical wording says what the pattern is: **the gate text itself
+is a circulating artefact**, copied between release templates the way a `LICENSE`
+file is. **Nobody wrote a bespoke clause; somebody reused one** — which is worth
+knowing, because it means the added obligation should be expected on the *next*
+card too, and read rather than assumed absent.
+
+🔴 **A third instance of one corpus in two access cells, and the first where both
+copies are the publisher's own.** `OpenGVLab/InternVid` is **gated (auto)**;
+`OpenGVLab/InternVid-Full` is **ungated**. Same organisation, same
+**CC BY-NC-SA 4.0**. [S-EMBER](#s-ember)'s ungated copy was a leftover review
+mirror and `InternData-A1`'s was a third party's conversion — **here the
+publisher maintains both**, so a reader's experience of how open InternVid is
+depends entirely on which of two sibling cards they land on. **The access axis is
+not single-valued per dataset, and this time nobody else is to blame for it.**
+
 🔴 **Licence — resolved on re-check, and it moved category.** An earlier revision
 of this entry recorded *no licence stated on either surface*. Re-read at the
 Hugging Face dataset page this sweep, the card carries **`cc-by-nc-sa-4.0`**,
@@ -3624,7 +3653,7 @@ Reading the licences across this document produces the wider pattern:
 | **EgoTactile** | **CC BY-NC 4.0**, ungated (plus `EgoTactile-OXT` on the same terms) | ❌ non-commercial — but stated, which neither EgoTac nor H-Tac manages |
 | **EgoTac** | **nothing released** — no repo, no card, no project page, and no *"we release"* anywhere in the body | 🔴 reclassified from *terms unstated* to **not released**: there is nothing to attach terms to |
 | 🔴 **H-Tac / TTP** (BeingBeyond) | **partially released** — the printed project page `beingbeyond.github.io/TTP/` still returns **404**, but `BeingBeyond/H-Tac_Sample` on Hugging Face holds **98 episodes / 35,982 frames / 98 videos** under a **MIT** `LICENSE`, ungated, 234 downloads | 🔴 **corrected again**: this table said *not released* for several sweeps. The release was in a namespace neither the paper nor the project URL points at. **HOI-Tac — the 106 h over eleven other datasets — is still not in it** |
-| ⚠️ **Open X-Embodiment, third-party mirror** | `jxu124/OpenX-Embodiment` self-describes as *"an unofficial Dataset Repo"* and carries **`license: cc-by-4.0`** over a 55-in-1 aggregation whose official position states **no overall licence**. **20,235 monthly pulls, up ~69% since it was first recorded here** | 🔴 **do not rely on it** — an uploader's licence field is an assertion, not a finding, and this one is being relied on more each month |
+| ⚠️ **Open X-Embodiment, third-party mirror** | `jxu124/OpenX-Embodiment` self-describes as *"an unofficial Dataset Repo"* and carries **`license: cc-by-4.0`** over a 55-in-1 aggregation whose official position states **no overall licence**. **between 12,000 and 20,235 monthly pulls across four readings** — most recently 18,581 | 🔴 **do not rely on it** — an uploader's licence field is an assertion, not a finding, and this one is being relied on more each month |
 | **LAION-BVD** | **research only** | ❌ |
 | **EgoInfinity (as a whole)** | MIT code, encumbered deps | ❌ until deps are swapped |
 | **Ego4D / Ego-Exo4D** | **signed agreement, terms not public** | ⚠️ unknowable until you sign — do not assume |
@@ -3796,12 +3825,21 @@ added — HD-EPIC, ReWeight, MINT, OpenWAM, ViTRA, EgoScaler, RoboCOIN,
 InternData-A1 — so a rising total is growth, not drift.)*
 
 > **The drift, which is the part worth recording.** Download counters moved
-> where licences did not. Across three readings `jxu124/OpenX-Embodiment` — the
-> unofficial `cc-by-4.0` stamp over a pool whose official position states **no
-> overall licence** — has gone **12,000 → 16,909 → 20,235**, up about **69%**.
-> **The one artefact here that a reader should trust least is the one gaining
-> readers fastest**, which is the whole argument for recording terms per clip
-> rather than hoping the ecosystem converges on the right answer. The rest of
+> where licences did not. `jxu124/OpenX-Embodiment` — the unofficial `cc-by-4.0`
+> stamp over a pool whose official position states **no overall licence** — now
+> reads **12,000 → 16,909 → 20,235 → 18,581** across four readings.
+>
+> 🔴 **The previous revision of this paragraph called that "up about 69%", and
+> that was this document making the exact error it had spent the same commit
+> warning against.** Three ascending points were written up as a trend in the
+> sentence immediately after a passage explaining that three points show variance
+> and four show direction. **The fourth point is down 8.2%.** What survives is the
+> weaker and still useful statement: **the unofficial mirror has been pulled
+> between twelve and twenty thousand times a month at every reading, and that is
+> the artefact a reader should trust least** — which remains the argument for
+> recording terms per clip rather than hoping the ecosystem converges. *(Kept
+> rather than amended, because a document that catches itself in the same commit
+> as the sermon should say so.)* The rest of
 > the drift, 17 Sep: Open-AoE **564,333**, Ego-1K **60,268** (+21.5%),
 > AgiBotWorld-Beta **102,027** (+18.4%), `cadene/droid` **141,335** (−5.2%),
 > `egoscaler-v2` **27,912** (−8.3%), ViTRA-1M **2,526**.
@@ -4160,11 +4198,11 @@ read straight off the cards.
 > **Second, the ratio has since collapsed.** Re-read at the dataset cards this
 > sweep, like for like:
 >
-> | Card | 1st | 2nd | 3rd | 4th | 5th | **6th** | Resolution |
-> |---|---|---|---|---|---|---|---|
-> | Egocentric-100K | **164,868** | **158,934** | **156,632** | **145,830** | **124,711** | **123,111** | 456×256 |
-> | Egocentric-10K | **34,519** | **30,087** | **34,587** | **40,875** | **39,248** | **69,216** | 1080p |
-> | *ratio* | *4.8:1* | *5.3:1* | *4.5:1* | *3.6:1* | *3.2:1* | ***1.8:1*** | |
+> | Card | 1st | 2nd | 3rd | 4th | 5th | 6th | **7th** | Resolution |
+> |---|---|---|---|---|---|---|---|---|
+> | Egocentric-100K | **164,868** | **158,934** | **156,632** | **145,830** | **124,711** | **123,111** | **119,683** | 456×256 |
+> | Egocentric-10K | **34,519** | **30,087** | **34,587** | **40,875** | **39,248** | **69,216** | **73,594** | 1080p |
+> | *ratio* | *4.8:1* | *5.3:1* | *4.5:1* | *3.6:1* | *3.2:1* | *1.8:1* | ***1.6:1*** | |
 >
 > That is **single digits**, not 470:1.
 >
@@ -4224,6 +4262,19 @@ read straight off the cards.
 > same one the previous four readings showed; the magnitude is not yet
 > evidence.** It is flagged here to be re-read before anything rests on it —
 > which is the whole point of having written the rule down twice already.
+>
+> **Re-read eight hours later, as promised — and it did not wash out.** The
+> seventh reading is **119,683 / 73,594 = 1.6:1**: the 256p corpus down another
+> **2.8%**, the 1080p corpus up a further **6.3%**. **A single batch does not keep
+> climbing.** But this still does not settle it, and the reason is worth stating
+> because it is the kind of thing that gets skipped: **a rolling thirty-day
+> counter holds a burst inside the window for thirty days**, so the *level*
+> staying high proves nothing. **The discriminating observation is whether it
+> plateaus or keeps rising** — a burst sits flat at its new level and then falls
+> off a cliff when it ages out; sustained demand keeps climbing. **Two readings
+> in, it is climbing.** The claim this document will make when there are enough
+> points is still the one it has made since the fourth reading: the ratio is
+> closing. The claim it is *not* making yet is how fast.
 >
 > ⚠️ **And the publisher's two surfaces disagree.** The organisation listing
 > shows **1.95 M** for Egocentric-100K against the card's 164,868, while
@@ -4898,7 +4949,7 @@ attention to the text, and this one cannot.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Twenty-six of them are
+index, not a summary, and each row links to the working. **Twenty-seven of them are
 this document's own errors** — marked *(this document…)* in the left column and
 counted honestly, because an earlier revision of this preamble said "three" long
 after the count had passed it, which is the same failure the table exists to
@@ -4946,8 +4997,10 @@ trust the rest of it.
 | **MobileEgo Anywhere and Ego-OSCAR are unrelated projects** *(this document, writing them up in two sections)* | Both are **`fpvlabs`**. The org's Hugging Face account holds exactly two datasets — `stera-10m` and `stereo-550` — both `license: other`, both gated. **Third time the survey has found two entries that were one group**, after NVIDIA's and BeingBeyond's | [§2](#mobileego-anywhere) |
 | **EgoScaler's Apache-2.0 set is built on permissively licensed sources** | **None of its four parents is permissive.** Ego4D and Ego-Exo4D are signed-agreement corpora; **HD-EPIC and Nymeria are both CC BY-NC 4.0**, the latter email-gated. The Apache-2.0 correctly covers the authors' own extracted trajectories, but the card states none of this — and **the derived artefact is the one with 27,912 downloads**. Second fully traced case of a permissive stamp over non-permissive parents, after ViTRA, and the first with *zero* permissive parents | [§1](#hd-epic--41-hours-and-the-densest-annotation-in-this-document), [§2](#egoscaler--one-letter-from-the-entry-above-and-the-first-route-that-needs-only-rgb) |
 | **Nymeria is 3,600 hours** | **300 hours of daily activity**; 3,600 is *camera*-hours across synchronised streams of the same wall-clock time. Both figures sit on one page. Even *worn* hours multiply by the number of sensors pointed at them | [§1](#nymeria--264-consented-participants-called-in-the-wild) |
+| **A gate only controls who gets in** | **Two publishers' gates add an obligation their licence does not contain, in near-identical words** — RoboCOIN (`apache-2.0`): *"You agree to not use the dataset to conduct experiments that cause harm to human subjects"*; InternVid (`cc-by-nc-sa-4.0`): *"You agree to not use the data to conduct experiments that cause harm to human subjects."* **The gate text is itself a circulating artefact**, copied between release templates — so expect the added clause on the next card and read it rather than assume it absent | [§1](#the-robot-native-denominator), [§9](#internvid) |
 | **A permissive licence tag tells you what you may do** | Not when the gate adds terms. **RoboCOIN's card says `license: apache-2.0`; its gate makes you agree to cite the paper and to avoid experiments harming human subjects** — neither of which Apache-2.0 requires. Two instruments, no statement of which governs, and a downloader has accepted both. **The access gate can add obligations, not merely control who passes** | [§1](#the-robot-native-denominator) |
 | **The publisher's copy is the authoritative one to read terms from** | **InternData-A1's official card carries no `license:` tag at all** — its CC BY-NC-SA 4.0 sits inside a gate prompt behind nine fields. A **third-party ungated conversion with 24,586 downloads tags it correctly**. Fifth uploader-stamp instance and the first where the uploader is the one stating the terms in public — the inverse of `cadene/droid`, which asserted Apache-2.0 over a publisher's silence | [§1](#the-robot-native-denominator) |
+| **The unofficial OpenX mirror is "up ~69%"** *(this document, in the same commit as a passage warning against exactly this)* | Three ascending readings were written up as a trend one paragraph after explaining that **three points show variance and four show direction**. **The fourth reading is down 8.2%** — 12,000 → 16,909 → 20,235 → **18,581**. What survives is weaker and still useful: the mirror has been pulled **between twelve and twenty thousand times a month at every reading** | [§11](#11-the-licence-trap) |
 | **The 256p/1080p download ratio is 3.2:1 and falling steadily** | **A sixth reading gives 1.8:1** — but via a **+76.4% jump on the 1080p corpus in about a day** (39,248 → 69,216) against a flat 256p corpus. A rolling thirty-day rate cannot move three-quarters in a day unless a large batch landed inside the window. **Recorded, not used**: the direction matches the previous four readings, the magnitude is not yet evidence. Neighbours moved +18% to +21% over the same interval while others fell, so it is not a platform-wide counting change either | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 | **Hours are hours, so corpora can be compared across papers** | **DROID is 350 hours on its own page and 1,285 in [OpenWAM](#openwam--the-first-project-here-whose-open-survives-being-checked)'s pretraining table — a 3.7× restatement of the same corpus, with neither publication stating its unit.** Multi-camera rigs multiply wall-clock into camera-hours ([Nymeria](#nymeria--264-consented-participants-called-in-the-wild) prints 300 and 3,600 on one page). **The first case here of one corpus counted differently by two publications** | [§1](#the-robot-native-denominator) |
 | **Adding human video to robot post-training helps** | **Only if you choose which.** [ReWeight](#reweight--the-control-simdex-did-not-run) runs the control SiMDex did not: π₀.₅ post-trained on **robot data only 39%**, **robot + randomly mixed human data 44%**, **robot + selected human data 57%**. Random mixing buys 5 points; selection buys 18. Its paper is explicit that naive mixing *"can **degrade** policy performance"* — so delivering hours without an argument for them is not merely inefficient | [§4](#reweight--the-control-simdex-did-not-run) |

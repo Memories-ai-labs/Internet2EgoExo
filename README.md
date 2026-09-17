@@ -364,7 +364,13 @@ them:
   assembled dataset carries no stated licence and is not released. A permissive
   licence on a checkpoint answers a question about the weights and tells you
   nothing about what went into them — which is why rights have to be recorded
-  where the footage enters rather than reconstructed from what comes out. The survey maps the whole chain —
+  where the footage enters rather than reconstructed from what comes out. And the
+  licence field is not the whole instrument: **two publishers' download gates add
+  an obligation their licence does not contain, in near-identical words** —
+  RoboCOIN under `apache-2.0` and InternVid under `cc-by-nc-sa-4.0` both make you
+  agree not to run experiments harming human subjects. **The gate text is itself
+  a circulating artefact**, copied between release templates, so it should be read
+  rather than assumed absent. The survey maps the whole chain —
   [who feeds whom](docs/RELATED_WORK.md#who-feeds-whom--the-derivation-map) — and
   two chokepoints carry most of the risk. **EgoDex** (CC-BY-NC-ND) sits inside at
   least five downstream corpora and models, supplying 75% of OpenEgo's hours
@@ -457,13 +463,14 @@ them:
   (100,405 h, 10.8 B frames, **456×256**), both Apache 2.0. Note what scaling
   cost: a 17× drop in pixels per frame, in a domain where finger articulation is
   the payload. And note how it landed — the publisher's own listing shows
-  the 256p corpus pulled **123,111** times last month against the 1080p corpus's
-  **69,216** — **1.8:1**, and *closing fast*. Six readings now run **4.8 → 5.3 →
-  4.5 → 3.6 → 3.2 → 1.8**. ⚠️ The sixth is recorded rather than used: it is a
-  **+76% jump on the 1080p corpus in about a day** against a flat 256p corpus,
-  which in a rolling thirty-day rate is a burst inside the window, not a trend.
-  The direction matches the previous four readings; the magnitude needs a second
-  look before anything rests on it. A previous revision explained the
+  the 256p corpus pulled **119,683** times last month against the 1080p corpus's
+  **73,594** — **1.6:1**, and *closing fast*. Seven readings now run **4.8 → 5.3
+  → 4.5 → 3.6 → 3.2 → 1.8 → 1.6**. ⚠️ The last two are recorded rather than used:
+  the sixth was a **+76% jump on the 1080p corpus in about a day**, and while the
+  seventh shows it still climbing rather than washing out, **a rolling thirty-day
+  counter holds a burst inside its window for thirty days**, so the level proves
+  nothing — only whether it keeps rising or plateaus will. The direction matches
+  every reading since the third; the speed is not yet claimable. A previous revision explained the
   fall as the 1080p corpus growing; at the fifth reading **both fell** — 256p by
   14.5%, 1080p by 4.0% — so what is shifting is *relative* pull, not absolute
   demand. An earlier revision of this README quoted 470:1 off a single reading,
