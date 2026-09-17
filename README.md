@@ -212,7 +212,7 @@ And the denominator has a provenance problem of its own. **DROID states its data
 terms nowhere** — not the project page, not the docs, and the data repo has no
 `LICENSE` (only the separate policy-learning repo does, MIT, over code). The
 loudest answer is a third party's: `cadene/droid`, a LeRobot conversion in a
-personal namespace, stamped **Apache-2.0**, ungated, **149,039 downloads**. That
+personal namespace, stamped **Apache-2.0**, ungated, **141,335 downloads**. That
 is the fourth time in this survey an uploader's licence field has stood in for a
 publisher's silence, and it is larger than the other three together. Its
 counterpart **AgiBotWorld-Beta** (2,976.4 h, CC BY-NC-SA 4.0 — non-commercial
@@ -457,9 +457,13 @@ them:
   (100,405 h, 10.8 B frames, **456×256**), both Apache 2.0. Note what scaling
   cost: a 17× drop in pixels per frame, in a domain where finger articulation is
   the payload. And note how it landed — the publisher's own listing shows
-  the 256p corpus pulled **124,711** times last month against the 1080p corpus's
-  **39,248** — **3.2:1**, and *closing*. Five readings now run **4.8 → 5.3 → 4.5
-  → 3.6 → 3.2**, monotonic since the second. A previous revision explained the
+  the 256p corpus pulled **123,111** times last month against the 1080p corpus's
+  **69,216** — **1.8:1**, and *closing fast*. Six readings now run **4.8 → 5.3 →
+  4.5 → 3.6 → 3.2 → 1.8**. ⚠️ The sixth is recorded rather than used: it is a
+  **+76% jump on the 1080p corpus in about a day** against a flat 256p corpus,
+  which in a rolling thirty-day rate is a burst inside the window, not a trend.
+  The direction matches the previous four readings; the magnitude needs a second
+  look before anything rests on it. A previous revision explained the
   fall as the 1080p corpus growing; at the fifth reading **both fell** — 256p by
   14.5%, 1080p by 4.0% — so what is shifting is *relative* pull, not absolute
   demand. An earlier revision of this README quoted 470:1 off a single reading,
