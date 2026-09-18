@@ -303,6 +303,13 @@ repository, dataset, project page or licence anywhere in the paper.** That is no
 a curated list — it is everything matching the query in a single week, and the
 base rate was four out of four.
 
+**And a card can fail in either direction.** `gatech/EgoMimic` is ungated with no
+card at all — no description, no licence. `tars-robotics/OmniVitac` has **27,810
+downloads and a card whose entire content is `license: cc-by-nc-4.0`** — its
+21,000 trajectories across 86 tasks are stated only in the paper. Terms without
+identity, or identity without terms: **both halves are needed and publishers keep
+shipping one.**
+
 And the set of things worth asserting per clip is growing.
 [EgoTac](https://arxiv.org/html/2608.15060) predicts dense contact and force
 fields **from ordinary egocentric RGB**, zero-shot on Ego4D, EPIC-KITCHENS and

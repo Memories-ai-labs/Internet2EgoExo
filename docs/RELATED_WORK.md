@@ -68,6 +68,8 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [EgoTac](#egotac--tactile-predicted-from-ordinary-video-and-a-ceiling-that-moved)
   - [EgoTactile](#egotactile--tactile-measured-and-a-rig-that-keeps-the-glove-out-of-frame)
   - [H-Tac](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual)
+  - [The wristband](#the-wristband--tactile-measured-without-instrumenting-the-hand-and-a-fourth-position)
+  - [OmniViTac](#omnivitac--tactile-on-the-robot-side-27810-downloads-and-a-card-that-says-only-its-licence)
   - [Open-AoE](#open-aoe)
   - [EgoVerse](#egoverse)
   - [MobileEgo Anywhere](#mobileego-anywhere)
@@ -905,7 +907,7 @@ average success rate over a no-pretraining baseline.**
 >
 > **Code is marked "Coming Soon"** — re-verified again this sweep at the GEAR
 > project page, which is dated **19 Feb 2026** and still shows
-> *"[GitHub (Coming Soon!)]"* as of **9 Sep 2026**: **roughly seven months**, across
+> *"[GitHub (Coming Soon!)]"* — the page is dated **19 Feb 2026** and was re-checked **18 Sep 2026**, so **211 days**, across
 > repeated checks. Recorded as a dated observation rather than a prediction — the
 > release may still come, but a plan cannot be built on it. The page has shown
 > the same thing at every check: no active link, no
@@ -1966,6 +1968,33 @@ can obtain, and the gap is now measured in months rather than asserted.** That
 is the difference between the second failure mode and the third, and WIYH is
 drifting from one to the other.
 
+🟡 **A fourth look found a strong candidate, and it is recorded as a candidate.**
+[`tars-robotics/WIYH`](https://huggingface.co/datasets/tars-robotics/WIYH) —
+**CC BY-NC 4.0, ungated, `size_categories: n>1T`, 15,855 downloads**, created
+25 Mar 2026, tagged `ego-centric`, `robotic manipulation`, `world model`,
+`vision-language-action model`, `pretty_name: WIYH`. **Everything about it fits**
+— the initials, the domain, the scale class, and a release date three months
+after the paper.
+
+**What it does not have is the one thing this document requires: a tie.** The
+card carries **no arXiv tag**, and its README is not a dataset card at all — it
+is a *"WorldCode Exported JSON Field Specification"*, describing `worldcode_name`,
+`subtasks`, `camera_calibration` and per-frame fields. **The words "World In Your
+Hands" do not appear in it.** By the rule this document applied to
+[ACE-Ego-0](#ace-ego-0) two sweeps ago — *one tag is the difference between an
+artefact and a coincidence* — **this stays unresolved**, and it would be resolved
+by a single `arxiv:2512.24310` tag, a sentence in the README, or a link from the
+paper. **Recording it is still worth doing**: a later sweep that finds this card
+cold should know it was already examined and why it was not accepted.
+
+⚠️ **And its publisher shows the shape at scale.** `tars-robotics` ships **four
+datasets — WIYH, OmniViTac, OmniViTac_Samples and Libero — every one CC BY-NC
+4.0, every one ungated, 44,789 combined monthly downloads** — and the two largest
+have **no descriptive card**: one is an internal field spec, the other is
+**licence front-matter and nothing else**. **The terms are stated and the
+identity is not**, which is the exact inverse of the failure this document
+usually records, and just as hard to build on.
+
 **And "in the wild" means what it always means here.** Third instance, after
 [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean) and the phrase's usage
 throughout this section: the paper's *in-the-wild* is *"collected in diverse
@@ -2333,6 +2362,38 @@ corpora, not a replacement for contact sensing in a benchmark.
 
 🔴 **No repository, no dataset, no project page, and no licence** — nothing named
 anywhere in the paper.
+
+### OmniViTac — tactile on the robot side, 27,810 downloads, and a card that says only its licence
+
+**[arXiv 2603.19201](https://arxiv.org/abs/2603.19201)** (v3) — the four
+positions above are all about *human* hands. This is the robot-side counterpart,
+and the largest visuo-tactile corpus in this document: **21,000+ trajectories
+across 86 tasks and 100+ objects**.
+
+**Its diagnosis is this document's own, applied to tactile.** Contact-rich tasks
+*"require accurate perception of contact forces, friction changes, and state
+transitions that cannot be reliably inferred from vision alone"*, and progress is
+held back by two things: *"existing datasets are small in scale and narrow in
+task coverage"*, and *"current methods treat tactile signals as **passive
+observations** rather than using them to model contact dynamics or enable
+closed-loop control explicitly."* The second half is the interesting one for a
+collection system: **a tactile field recorded but not used to predict what
+happens next is an annotation, not a signal.**
+
+**Terms**: [`tars-robotics/OmniVitac`](https://huggingface.co/datasets/tars-robotics/OmniVitac)
+is **CC BY-NC 4.0**, **ungated**, **27,810 downloads** — more than
+[EgoTactile](#egotactile--tactile-measured-and-a-rig-that-keeps-the-glove-out-of-frame)
+and [H-Tac](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual)
+combined, by a wide margin.
+
+⚠️ **And its entire dataset card is three lines of YAML naming the licence.** No
+description, no scale figures, no schema, no link to the paper, no arXiv tag —
+the card's whole content is `license: cc-by-nc-4.0`. The scale figures above come
+from the *paper*; nothing on the artefact states them. **This is the EgoMimic
+shape** — real data, real traffic, a real licence, **and no way to tell from the
+download what it is** — except that where EgoMimic omitted the licence and kept
+the description, this omits the description and keeps the licence. **Both halves
+are needed and publishers keep shipping one.**
 
 ### Open-AoE
 
@@ -3759,7 +3820,7 @@ Reading the licences across this document produces the wider pattern:
 | **Ego-OSCAR** — hardware + software | **Apache 2.0** (verified at the repo's `LICENSE`) | ✅ |
 | **Ego-OSCAR** — Stereo-550 dataset | **`fpvlabs-license`**, bespoke: "research use", but "commercial usage allowed"; gated, **and the licence text itself is behind the gate** | ⚠️ **unclassifiable** — the one thing a custom licence needs is a reading, and it cannot be read before agreeing |
 | **EgoCS-400K** | 🔴 **no dataset licence stated** — only the **arXiv listing's CC BY 4.0**; no repository, no card, no download location named in the paper | ⚠️ **unresolved** — previously recorded here as CC BY 4.0 (rendered gameplay, not real-world footage) |
-| **World In Your Hands** | **none stated in the paper; "will be open-source"** | ⚠️ unresolved — get the dataset licence in writing |
+| **World In Your Hands** | **none stated in the paper; "will be open-source"** — 🟡 a strong candidate artefact exists (`tars-robotics/WIYH`, **CC BY-NC 4.0**, ungated, >1 TB, 15,855 downloads) but **carries no arXiv tag and never names the project** | ⚠️ **still unresolved** — one tag would settle it |
 | **EgoTactile** | **CC BY-NC 4.0**, ungated (plus `EgoTactile-OXT` on the same terms) | ❌ non-commercial — but stated, which neither EgoTac nor H-Tac manages |
 | **EgoTac** | **nothing released** — no repo, no card, no project page, and no *"we release"* anywhere in the body | 🔴 reclassified from *terms unstated* to **not released**: there is nothing to attach terms to |
 | 🔴 **H-Tac / TTP** (BeingBeyond) | **partially released** — the printed project page `beingbeyond.github.io/TTP/` still returns **404**, but `BeingBeyond/H-Tac_Sample` on Hugging Face holds **98 episodes / 35,982 frames / 98 videos** under a **MIT** `LICENSE`, ungated, 234 downloads | 🔴 **corrected again**: this table said *not released* for several sweeps. The release was in a namespace neither the paper nor the project URL points at. **HOI-Tac — the 106 h over eleven other datasets — is still not in it** |
@@ -5158,6 +5219,7 @@ trust the rest of it.
 | **MobileEgo Anywhere and Ego-OSCAR are unrelated projects** *(this document, writing them up in two sections)* | Both are **`fpvlabs`**. The org's Hugging Face account holds exactly two datasets — `stera-10m` and `stereo-550` — both `license: other`, both gated. **Third time the survey has found two entries that were one group**, after NVIDIA's and BeingBeyond's | [§2](#mobileego-anywhere) |
 | **EgoScaler's Apache-2.0 set is built on permissively licensed sources** | **None of its four parents is permissive.** Ego4D and Ego-Exo4D are signed-agreement corpora; **HD-EPIC and Nymeria are both CC BY-NC 4.0**, the latter email-gated. The Apache-2.0 correctly covers the authors' own extracted trajectories, but the card states none of this — and **the derived artefact is the one with 27,912 downloads**. Second fully traced case of a permissive stamp over non-permissive parents, after ViTRA, and the first with *zero* permissive parents | [§1](#hd-epic--41-hours-and-the-densest-annotation-in-this-document), [§2](#egoscaler--one-letter-from-the-entry-above-and-the-first-route-that-needs-only-rgb) |
 | **Nymeria is 3,600 hours** | **300 hours of daily activity**; 3,600 is *camera*-hours across synchronised streams of the same wall-clock time. Both figures sit on one page. Even *worn* hours multiply by the number of sensors pointed at them | [§1](#nymeria--264-consented-participants-called-in-the-wild) |
+| **A dataset card either documents the data or it does not exist** | **Publishers ship half a card, and which half varies.** `gatech/EgoMimic` is ungated with **no card at all** — description absent, licence absent. `tars-robotics/OmniVitac` has **27,810 downloads and a card whose entire content is `license: cc-by-nc-4.0`** — terms stated, identity absent; its 21,000 trajectories and 86 tasks are stated only in the paper. **Both halves are needed and publishers keep shipping one** | [§2](#omnivitac--tactile-on-the-robot-side-27810-downloads-and-a-card-that-says-only-its-licence), [§1](#egomimic) |
 | **A gate only controls who gets in** | **Two publishers' gates add an obligation their licence does not contain, in near-identical words** — RoboCOIN (`apache-2.0`): *"You agree to not use the dataset to conduct experiments that cause harm to human subjects"*; InternVid (`cc-by-nc-sa-4.0`): *"You agree to not use the data to conduct experiments that cause harm to human subjects."* **The gate text is itself a circulating artefact**, copied between release templates — so expect the added clause on the next card and read it rather than assume it absent | [§1](#the-robot-native-denominator), [§9](#internvid) |
 | **A permissive licence tag tells you what you may do** | Not when the gate adds terms. **RoboCOIN's card says `license: apache-2.0`; its gate makes you agree to cite the paper and to avoid experiments harming human subjects** — neither of which Apache-2.0 requires. Two instruments, no statement of which governs, and a downloader has accepted both. **The access gate can add obligations, not merely control who passes** | [§1](#the-robot-native-denominator) |
 | **The publisher's copy is the authoritative one to read terms from** | **InternData-A1's official card carries no `license:` tag at all** — its CC BY-NC-SA 4.0 sits inside a gate prompt behind nine fields. A **third-party ungated conversion with 24,586 downloads tags it correctly**. Fifth uploader-stamp instance and the first where the uploader is the one stating the terms in public — the inverse of `cadene/droid`, which asserted Apache-2.0 over a publisher's silence | [§1](#the-robot-native-denominator) |
@@ -5245,6 +5307,7 @@ trust the rest of it.
 - Li, Zhu, Wang, Chen, Liu. *From Gameplay to Policy: Towards Scalable Robot Data Collection via Gamified Robot-Free Interaction* (**Project Kitchen / Game2Policy**). arXiv:2609.18650. (+10.0 pts sim, +18.3 pts real, few-shot; **nothing named**) https://arxiv.org/abs/2609.18650
 - Xiao, Zhang, Dong, Ma, Jin. *MEgoVista: Multi-view Ego-aware Motion Estimation for Metric 4D Hands and Head in the Wild.* arXiv:2609.16684. (metric gauge from calibrated stereo; hand ownership settled at detection; scored against independent Chingmu optical capture; **nothing named**) https://arxiv.org/abs/2609.16684
 - Liu, Ma, Rui, Wei, Ma. *UMI-Bridge: Action-Anchored Latent Alignment across Human and Robot Manipulation Data.* arXiv:2609.18232. (**91.7% vs 73.3%** against naive co-training; beats full-data robot-only with 25% of robot demos; **nothing named**) https://arxiv.org/abs/2609.18232
+- *OmniVTA / OmniViTac: Visuo-Tactile World Modeling for Contact-Rich Robotic Manipulation.* arXiv:2603.19201 (v3). (21,000+ trajectories, 86 tasks, 100+ objects; dataset **CC BY-NC 4.0**, ungated, 27,810 downloads — **card is licence front-matter and nothing else**) https://arxiv.org/abs/2603.19201 · https://huggingface.co/datasets/tars-robotics/OmniVitac
 - *EgoTactile: Learning Grasp Pressure for Everyday Objects from Egocentric Video.* ICML 2026 Spotlight, arXiv:2606.09243. (dataset **CC BY-NC 4.0**, ungated) https://arxiv.org/abs/2606.09243 · https://egotactile.github.io/ · https://huggingface.co/datasets/HustleHard/EgoTactile
 - *ENIGMA-360: An Ego-Exo Dataset for Human Behavior Understanding in Industrial Scenarios.* (**dataset terms not stated anywhere** — the CC BY 4.0 is the arXiv listing's, covering the manuscript) https://arxiv.org/html/2603.09741v2 · project page https://iplab.dmi.unict.it/ENIGMA-360 **has now failed six checks — HTTP 500, a connection failure, then HTTP 403 four times running (latest 15 Sep 2026, with and without a trailing slash) — while the lab host root returns 200 each time. Four identical 403s in a row is not a flapping server; it is a settled block on that path, and the entry is reclassified from *unstable* to **gone**. Cite the arXiv HTML**
 - *SABER: A Scalable Action-Based Embodied Dataset for Real-World VLA Adaptation.* DreamVu. (10 K-sample subset CC BY-NC 4.0; full corpus vendor-gated) https://arxiv.org/html/2605.09613v1 · https://huggingface.co/datasets/DreamVu/SABER-10K
@@ -5261,7 +5324,7 @@ trust the rest of it.
 - *EgoAVFlow: Robot Policy Learning with Active Vision from Human Egocentric Videos via 3D Flow.* (CC BY 4.0; head-mounted RealSense D435 RGBD plus a ChArUco board per scene; 150 videos × 4 tasks; no dataset release stated) https://arxiv.org/html/2602.22461v1
 - *EgoWAM: World Action Models Beyond Pixels with In-the-Wild Egocentric Human Data.* (CC BY 4.0; "in-the-wild" = EgoVerse on Project Aria, flow from Aria VIO poses) https://arxiv.org/abs/2607.08436
 - *EgoHumanoid: humanoid loco-manipulation from egocentric human demonstrations.* RSS 2026. (code **Apache 2.0**; dataset terms not stated; PICO VR headset + 5 body trackers + ZED Mini depth) https://github.com/OpenDriveLab/EgoHumanoid
-- *World In Your Hands: A Large-Scale and Open-Source Ecosystem for Learning Human-Centric Manipulation in the Wild.* (1,045 h; Oracle Suite wearable; **no dataset licence stated — "will be open-source"**) https://arxiv.org/html/2512.24310v3
+- *World In Your Hands: A Large-Scale and Open-Source Ecosystem for Learning Human-Centric Manipulation in the Wild.* (1,045 h; Oracle Suite wearable; **no dataset licence stated — "will be open-source"**; 🟡 candidate artefact `tars-robotics/WIYH`, CC BY-NC 4.0, ungated, **untied to the paper**) https://arxiv.org/html/2512.24310v3
 - *OpenEgo: A Large-Scale Multimodal Egocentric Dataset for Dexterous Manipulation.* (1,107 h unifying six public datasets; **annotations only, per-source licence and attribution shipped as `ATTRIBUTION.md`**; code MIT, data release in progress) https://arxiv.org/html/2509.05513v1 · https://www.openegocentric.com · https://github.com/ahadjawaid/openego
 - *EgoCS-400K: An Egocentric Gameplay Dataset for World Models.* (**dataset terms not stated** — CC BY 4.0 is the arXiv listing's; 400 K+ videos / 10,000+ h rendered from public HLTV match demos) https://arxiv.org/html/2606.18180v1 · https://EgoCS-400K.github.io
 - *ACE-Ego-0: Unifying Egocentric Human and Robotic Data for VLA Pretraining.* https://arxiv.org/html/2606.17200v1 (the project URL printed in the paper 404s)
