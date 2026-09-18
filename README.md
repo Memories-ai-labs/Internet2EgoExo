@@ -292,6 +292,17 @@ accuracy on immediate recall to 29 % past eight minutes. Its terms make the
 survey's recurring point in one dataset: the arXiv HTML is CC BY 4.0, the code is
 MIT, and the **data is CC BY-NC 4.0 behind a name-and-affiliation gate**.
 
+**One week's worth of evidence for that, gathered without looking for it.** The
+sweep of 18 September read four papers posted 15–16 September — a Meta wristband
+measuring contact force from tendon pressure **without instrumenting the hand**,
+a **VR-gamified** data-collection platform, a pipeline producing **metric** 4D
+hands from unprepared recordings, and a cross-embodiment alignment method
+beating a full-data robot baseline on **25% of the robot demos**. Every one
+proposes data-collection or data-conversion machinery. **Not one names a
+repository, dataset, project page or licence anywhere in the paper.** That is not
+a curated list — it is everything matching the query in a single week, and the
+base rate was four out of four.
+
 And the set of things worth asserting per clip is growing.
 [EgoTac](https://arxiv.org/html/2608.15060) predicts dense contact and force
 fields **from ordinary egocentric RGB**, zero-shot on Ego4D, EPIC-KITCHENS and

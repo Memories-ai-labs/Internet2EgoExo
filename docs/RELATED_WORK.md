@@ -122,6 +122,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [EgoVid-5M](#egovid-5m)
   - [EgoCS-400K](#egocs-400k--10000-free-hours-sourced-from-the-internet-and-why-13-survives-it)
   - [The structural read](#the-structural-read)
+  - [A third way to get hours: manufacture them](#a-third-way-to-get-hours-manufacture-them)
   - [The other thing that happened to hours: they went on sale](#the-other-thing-that-happened-to-hours-they-went-on-sale)
 - [13. Why no open-source project does exactly this](#13-why-no-open-source-project-does-exactly-this)
   - [Where the effort actually went](#where-the-effort-actually-went)
@@ -2276,6 +2277,63 @@ difference is not scale or sophistication — it is a file somebody chose to wri
 *Nothing improper is alleged*; the paper may simply predate its own release
 process.
 
+### The wristband — tactile *measured without instrumenting the hand*, and a fourth position
+
+**[arXiv 2609.16518](https://arxiv.org/abs/2609.16518)** (16 Sep 2026; Kolev,
+Ma, Goesele, De Nardi, Engel — the Project Aria side of Meta Reality Labs) —
+this document has spent four entries building a three-way taxonomy of where
+tactile comes from. **There is a fourth position, and it dissolves the problem
+the other three work around.**
+
+**Mechanism.** **Flexible capacitive sensor arrays around the wrist**, requiring
+**no electrical skin contact**, feeding a recurrent network that maps the
+pressure signal to hand state. The insight is anatomical rather than
+computational: *"muscle contraction and tendon displacement produce pressure
+patterns, which correlate strongly with hand pose and interaction force."*
+Validated against synchronised optical mocap for pose and a **tactile glove** for
+force, across isolated finger motion, fingertip-force stress tests and natural
+hand–object manipulation.
+
+**Numbers**: **4.6° mean finger-joint MAE** on isolated single-user motion; and
+across four users manipulating everyday objects, per-finger contact force at
+**R² = 0.57**, rising to **0.75** when an external pose signal is supplied.
+
+> 🟢 **Why this is a fourth position and not a variant of the third.** The
+> taxonomy so far divides on *what a found clip can supply*:
+> [H-Tac](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual)
+> **derives** contact from object meshes (closed to found footage),
+> [EgoTac](#egotac--tactile-predicted-from-ordinary-video-and-a-ceiling-that-moved)
+> **predicts** it from RGB (open), and
+> [EgoTactile](#egotactile--tactile-measured-and-a-rig-that-keeps-the-glove-out-of-frame)
+> **measures** it with a glove (the supervision that makes prediction trainable).
+> **The wristband measures it too — but off the hand.** EgoTactile's whole rig
+> design exists to solve one problem: *the glove is in the training pixels*. Its
+> answer was to film a **bare** hand while a synchronised **off-camera gloved**
+> hand supplied the reference — two hands, one protocol. **The wristband gets
+> both from one hand**, because the sensor sits proximal to everything the camera
+> cares about. **The visual-domain gap EgoTac names as its limitation and
+> EgoTactile solves by choreography, this makes structurally impossible.**
+
+⚠️ **Read the R² honestly, though.** **0.57 across four users on natural
+manipulation** is a correlation, not a measurement — and it needs **an external
+pose signal to reach 0.75**, which means the wristband alone is weaker than the
+glove it is validated against. This is a *supervision* instrument for building
+corpora, not a replacement for contact sensing in a benchmark.
+
+> **The sentence that matters for this repo is the authors' own framing**: the
+> wristband is *"one node in a constellation of everyday wearables — e.g. paired
+> with an egocentric camera — **adding the contact force that vision cannot
+> observe and taking over when the hand is occluded**."* That is a two-clause
+> statement of what an egocentric corpus structurally cannot contain, from the
+> lab that builds the cameras. **Occlusion is the failure mode this repo's hands
+> gate exists to detect and discard; here it is the failure mode a second sensor
+> is designed to cover.** A collection system that only filters cannot recover
+> those frames — which is the honest limit on found footage, stated by someone
+> building the alternative.
+
+🔴 **No repository, no dataset, no project page, and no licence** — nothing named
+anywhere in the paper.
+
 ### Open-AoE
 
 **[arXiv 2607.14183](https://arxiv.org/abs/2607.14183)** — ~2,000 hours of
@@ -2641,6 +2699,29 @@ and **13.8** points.
 > merely inefficient — **it can make the downstream model worse**, and the gap
 > between 44% and 57% is the price of the argument.
 
+🟢 **A third independent measurement of the same thing, four days later.**
+**[UMI-Bridge](https://arxiv.org/abs/2609.18232)** (16 Sep 2026) uses the
+handheld **UMI** gripper as an *intermediate domain*, aligning human and robot
+representations *"according to action equivalence rather than pixel
+similarity"* — UMI's action supervision anchors the latent to end-effector
+motion and gripper behaviour, with synchronised head–wrist observations and
+paired ego–UMI clips bridging the viewpoints. It trains a dual-view latent
+action model **on human data with no robot demonstrations at all**, then freezes
+it to regularise VLA post-training. **91.7% mean success against 73.3% for naive
+co-training on matched data**, and on two data-efficiency tasks it **beats a
+full-data robot-only baseline using 25% of the robot demonstrations.**
+
+> **Three papers in one fortnight, three mechanisms, one finding.** ReWeight
+> selects by cross-embodiment discrepancy;
+> [OpenWAM](#openwam--the-first-project-here-whose-open-survives-being-checked)
+> splits a fixed budget; UMI-Bridge aligns through a shared physical interface.
+> **All three report that the naive version — mix human and robot data and
+> train — is the one that underperforms.** The disagreement in this literature
+> is no longer *whether* human video substitutes for robot data. It is
+> **what you have to know about a clip before it helps**, which is the question
+> a manifest answers and an hour count does not. 🔴 *No repository, dataset,
+> project page or licence named in the paper.*
+
 🔴 **Nothing is released, and the project page has an unusual defect worth
 recording.** [reweight-vla.github.io](https://reweight-vla.github.io/) carries no
 code, no data, no checkpoints, and **no licence**. Its only outbound artefact
@@ -2713,6 +2794,35 @@ before.**
 ⚠️ **And a seventh *"in the wild"*, this one inside an acronym.** *Minting
 IN-the-Wild Trajectories* — the trajectories are minted from Ego4D, EPIC-KITCHENS
 and EgoDex.
+
+🟢 **And a week later, the *first* term of the same specification gets an
+answer.** **[MEgoVista](https://arxiv.org/abs/2609.16684)** (15 Sep 2026) turns a
+single **unprepared** head-worn recording into **metric** two-hand and head
+motion in one gravity-aligned world frame. Its diagnosis of the status quo is
+the one this document has been circling: today's metric hand labels come from
+studio rigs and instrumented headsets, and *"neither leaves a prepared setting,
+and neither is checked against an independent reference."* Three properties it
+claims against that:
+
+- it **takes its metric gauge from calibrated stereo rather than a monocular
+  prior**, *"installing scale at initialisation so policies receive physical
+  units, not arbitrary coordinates"* — which is the acceptance spec's **accurate
+  depth**, where [MINT](#mint--camera-alignment-at-scale-and-a-release-sentence-with-no-address)
+  answered **stable camera alignment**;
+- it **settles hand ownership at detection so bystander hands stay out of the
+  wearer's trajectory** — 🟢 **a per-clip gate nobody else in this survey
+  states**, and one a found-footage pipeline needs badly, since crowded scenes
+  are exactly where web video differs from a lab;
+- it is **scored inside a motion-capture volume against independent Chingmu
+  optical capture**, *"under a protocol that audits its own reference and charges
+  what a method declines to predict"* — i.e. abstention is penalised rather than
+  quietly excluded, which is the evaluation discipline this document's
+  [acceptance rate](#12-free-hours-and-what-they-do-to-the-moat) argument needs.
+
+⚠️ **An eighth *"in the wild"*, in its subtitle** — *"Metric 4D Hands and Head in
+the Wild"* — where *in the wild* means **unprepared settings recorded by the
+wearer**, a fifth distinct sense in this survey. 🔴 **And no repository, dataset,
+project page or licence is named in the paper.**
 
 ### Panda-70M
 
@@ -4545,6 +4655,45 @@ and no amount of downstream processing fixes it.
 
 **Retrieval proposes; pixels decide. The moat is in the deciding.**
 
+### A third way to get hours: manufacture them
+
+**[arXiv 2609.18650](https://arxiv.org/abs/2609.18650)** (16 Sep 2026) — this
+section has treated hours as something you either **capture** (§1) or **find**
+(§13). **Project Kitchen** is a third thing: a **VR-based gamified egocentric
+data-collection platform** that *"turns data collection into an engaging gameplay
+experience"* and then transfers the result to real robots.
+
+**Mechanism.** The platform is deliberately **independent of robot embodiment and
+hardware**, which is the point — it is what makes crowdsourcing possible where a
+teleoperation rig does not. **Game2Policy** then extracts **embodiment-invariant
+affordance cues — contact points and sub-goal states — from gameplay
+trajectories**; an affordance model pre-trained on game-collected data is jointly
+fine-tuned with downstream policies using *"only a handful of real-robot
+demonstrations."* Reported: **+10.0 points in simulation and +18.3 points on real
+robots** in the few-shot setting.
+
+> **This is the second gameplay entry in this document, and the two are
+> opposites.** [EgoCS-400K](#egocs-400k--10000-free-hours-sourced-from-the-internet-and-why-13-survives-it)
+> **harvested** 10,000 hours of Counter-Strike demos that existed anyway — the
+> cheapest possible acquisition, because the domain hands you ground truth for
+> free. Project Kitchen **induces** the hours: it builds a game whose purpose is
+> to produce the data. **Harvesting scales with what people already did;
+> manufacturing scales with how many people you can persuade to play.** Both
+> sidestep the licence problem entirely, which is worth saying plainly — **data
+> you caused to exist has no upstream terms to inherit.**
+>
+> **And that is the sharpest framing of what this repo is betting against.** The
+> three routes to an hour are now: *commission it* (expensive, clean, small),
+> *manufacture it* (novel, clean, unproven at scale), or *find it* (abundant,
+> cheap, and encumbered in exactly the ways this document catalogues). **§13's
+> claim was never that finding is the only way — it is that finding is the one
+> nobody has published the machinery for.** A gamified platform is a new answer
+> to the first half of the question and no answer at all to the second: its
+> hours are as unavailable to anyone else as EgoScale's.
+
+🔴 **No repository, no dataset, no project page, no licence** — nothing named in
+the paper.
+
 ### The other thing that happened to hours: they went on sale
 
 The sweep that produced this section has been watching for a *third* giveaway.
@@ -4660,6 +4809,18 @@ acquisition layer does not exist is false, and this document asserted it for
 twenty-five sweeps while carrying the refutation in §2.** That is recorded here
 rather than quietly repaired, because how a survey handles its own strongest
 counterexample is the only real test of it.
+
+🔴 **One week's worth of evidence, gathered without looking for it.** The sweep
+of 18 Sep read **four** papers posted 15–16 Sep 2026 — [the Meta wristband](#the-wristband--tactile-measured-without-instrumenting-the-hand-and-a-fourth-position),
+[Project Kitchen](#a-third-way-to-get-hours-manufacture-them), [MEgoVista](#mint--camera-alignment-at-scale-and-a-release-sentence-with-no-address)
+and [UMI-Bridge](#simdex) — every one of them proposing **data-collection or
+data-conversion machinery**, which is precisely the layer this section is about.
+**Not one of the four names a repository, a dataset, a project page or a
+licence. Anywhere in the paper.** That is not a curated list; it is everything
+matching the query in a single week. **§13 is usually argued retrospectively,
+from projects whose release status settled years ago. This is the same
+observation made prospectively, on work published the day before it was read** —
+and the base rate, in the week it was measured, was four out of four.
 
 **So what actually survives, stated as narrowly as the evidence allows.** Not
 *nobody built one* — somebody did. What is missing is the layer as **open,
@@ -5080,6 +5241,10 @@ trust the rest of it.
 - Huang et al. *EgoExoLearn.* CVPR 2024. https://github.com/OpenGVLab/EgoExoLearn
 - *HOI4D.* (CC BY-NC 4.0) https://arxiv.org/pdf/2404.09933 · https://hoi4d.github.io/
 - Shi et al. (OpenDriveLab). *EgoHumanoid: Unlocking In-the-Wild Loco-Manipulation with Robot-Free Egocentric Demonstration.* RSS 2026, arXiv:2602.10106 (v2, 4 Jun 2026). (Apache 2.0 on the code; **no dataset licence stated**) https://arxiv.org/abs/2602.10106 · https://github.com/OpenDriveLab/EgoHumanoid
+- Kolev, Ma, Goesele, De Nardi, Engel (Meta Reality Labs). *Beyond Gestures: Estimating Full Hand Pose and Contact Forces from Wrist-Worn Pressure Sensor Array.* arXiv:2609.16518. (4.6° finger-joint MAE; per-finger force R²=0.57, 0.75 with external pose; **no repository, dataset, project page or licence named**) https://arxiv.org/abs/2609.16518
+- Li, Zhu, Wang, Chen, Liu. *From Gameplay to Policy: Towards Scalable Robot Data Collection via Gamified Robot-Free Interaction* (**Project Kitchen / Game2Policy**). arXiv:2609.18650. (+10.0 pts sim, +18.3 pts real, few-shot; **nothing named**) https://arxiv.org/abs/2609.18650
+- Xiao, Zhang, Dong, Ma, Jin. *MEgoVista: Multi-view Ego-aware Motion Estimation for Metric 4D Hands and Head in the Wild.* arXiv:2609.16684. (metric gauge from calibrated stereo; hand ownership settled at detection; scored against independent Chingmu optical capture; **nothing named**) https://arxiv.org/abs/2609.16684
+- Liu, Ma, Rui, Wei, Ma. *UMI-Bridge: Action-Anchored Latent Alignment across Human and Robot Manipulation Data.* arXiv:2609.18232. (**91.7% vs 73.3%** against naive co-training; beats full-data robot-only with 25% of robot demos; **nothing named**) https://arxiv.org/abs/2609.18232
 - *EgoTactile: Learning Grasp Pressure for Everyday Objects from Egocentric Video.* ICML 2026 Spotlight, arXiv:2606.09243. (dataset **CC BY-NC 4.0**, ungated) https://arxiv.org/abs/2606.09243 · https://egotactile.github.io/ · https://huggingface.co/datasets/HustleHard/EgoTactile
 - *ENIGMA-360: An Ego-Exo Dataset for Human Behavior Understanding in Industrial Scenarios.* (**dataset terms not stated anywhere** — the CC BY 4.0 is the arXiv listing's, covering the manuscript) https://arxiv.org/html/2603.09741v2 · project page https://iplab.dmi.unict.it/ENIGMA-360 **has now failed six checks — HTTP 500, a connection failure, then HTTP 403 four times running (latest 15 Sep 2026, with and without a trailing slash) — while the lab host root returns 200 each time. Four identical 403s in a row is not a flapping server; it is a settled block on that path, and the entry is reclassified from *unstable* to **gone**. Cite the arXiv HTML**
 - *SABER: A Scalable Action-Based Embodied Dataset for Real-World VLA Adaptation.* DreamVu. (10 K-sample subset CC BY-NC 4.0; full corpus vendor-gated) https://arxiv.org/html/2605.09613v1 · https://huggingface.co/datasets/DreamVu/SABER-10K
