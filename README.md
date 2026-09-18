@@ -303,12 +303,30 @@ repository, dataset, project page or licence anywhere in the paper.** That is no
 a curated list — it is everything matching the query in a single week, and the
 base rate was four out of four.
 
-**And a card can fail in either direction.** `gatech/EgoMimic` is ungated with no
+**And the competition is not the one we had been naming.** This survey spent
+seventy-six sweeps comparing found footage against **teleoperation** — DROID's
+350 hours, thirteen institutions, a Franka each. The cheaper rival is
+**[UMI](https://umi-gripper.github.io/)**: a hand-held parallel-jaw gripper with
+a GoPro on it, MIT hardware and code, producing demonstrations that transfer to
+robot policies directly. **[FastUMI-100K](https://arxiv.org/abs/2510.08022)** is
+**100 K+ trajectories across 54 tasks — more than DROID's 76 k — collected
+without a single robot**, in robot-compatible end-effector format, with no
+retargeting and no MANO. Its Hugging Face copy is ungated at **269,342
+downloads**. **Found footage's advantages over that are real and narrow: scene
+and object diversity no device deployment can buy, at a volume no capture
+programme reaches.** Its disadvantage is what this survey is about. **Anyone
+arguing for the found-footage route should be arguing against UMI, not against
+teleoperation.**
+
+**And a card can fail in either direction — in three directions, as it turns
+out.** `gatech/EgoMimic` is ungated with no
 card at all — no description, no licence. `tars-robotics/OmniVitac` has **27,810
 downloads and a card whose entire content is `license: cc-by-nc-4.0`** — its
-21,000 trajectories across 86 tasks are stated only in the paper. Terms without
-identity, or identity without terms: **both halves are needed and publishers keep
-shipping one.**
+21,000 trajectories across 86 tasks are stated only in the paper. And
+`IPEC-COMMUNITY/FastUMI_100k_lerobot`, at **269,342 downloads**, has a thorough
+4.3 KB README — overview, scale, install instructions, a link to the paper —
+**and no YAML front-matter at all, so no licence.** Neither half, one half, the
+other half: **both are needed and publishers keep shipping one.**
 
 And the set of things worth asserting per clip is growing.
 [EgoTac](https://arxiv.org/html/2608.15060) predicts dense contact and force

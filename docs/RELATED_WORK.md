@@ -69,6 +69,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [EgoTactile](#egotactile--tactile-measured-and-a-rig-that-keeps-the-glove-out-of-frame)
   - [H-Tac](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual)
   - [The wristband](#the-wristband--tactile-measured-without-instrumenting-the-hand-and-a-fourth-position)
+  - [The UMI family](#the-umi-family--capture-without-a-robot-and-the-blind-spot-this-survey-had)
   - [OmniViTac](#omnivitac--tactile-on-the-robot-side-27810-downloads-and-a-card-that-says-only-its-licence)
   - [Open-AoE](#open-aoe)
   - [EgoVerse](#egoverse)
@@ -668,6 +669,7 @@ side actually is, and the answer is smaller than the rhetoric suggests.
 | **[Open X-Embodiment](https://robotics-transformer-x.github.io/)** | 1 M+ trajectories, **22 embodiments**, 527 skills, 160,266 tasks — **hours not stated** | **60 existing datasets pooled** from 34 labs across 21 institutions; single arms through bimanual robots and quadrupeds | 🔴 **No overall licence stated on the project page**, and no statement of whether the 60 components retain their own |
 | **[RoboCOIN](https://huggingface.co/RoboCOIN)** *(Wu et al., arXiv:2511.17441)* | **956 hours**, **15 embodiments** — 2.7× DROID | Real-robot teleoperation, shipped as **100+ separate per-task Hugging Face datasets**, every one `gated: auto`; **59,642 monthly downloads in aggregate** | ⚠️ **`license: apache-2.0` — plus obligations the gate adds** (see below) |
 | **[InternData-A1](https://huggingface.co/datasets/InternRobotics/InternData-A1)** *(Tian et al., arXiv:2511.16651)* | **2,904 hours**, 4 embodiments — **simulation** | Synthetic manipulation across single-arm and bimanual skills under environmental variation | 🔴 **CC BY-NC-SA 4.0 — stated *only inside the gate prompt*.** The card carries **no `license:` tag**; 90,872 downloads |
+| 🔴 **[FastUMI-100K](#the-umi-family--capture-without-a-robot-and-the-blind-spot-this-survey-had)** *(UMI-style, no robot)* | **100 K+ trajectories**, 54 tasks — **more trajectories than DROID** | A **hand-held gripper with a GoPro**; multi-view wrist fisheye plus high-frequency end-effector states, LeRobot v2.1 | 🔴 **none stated** — ungated, **269,342 downloads** |
 | Human ego, for scale | [Egocentric-100K](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) 100,405 h · [DreamDojo](#dreamdojo--and-the-strongest-evidence-in-this-document-for-13) 44,711 h | Crowdsourced / commissioned capture | Apache 2.0 / unstated |
 
 ⚠️ **One number in that table is restated elsewhere at 3.7× and it is worth
@@ -2362,6 +2364,80 @@ corpora, not a replacement for contact sensing in a benchmark.
 
 🔴 **No repository, no dataset, no project page, and no licence** — nothing named
 anywhere in the paper.
+
+### The UMI family — capture without a robot, and the blind spot this survey had
+
+**UMI** is named seven times in this document — as
+[UMI-Bridge](#simdex)'s intermediate domain — and has never had an entry. It is
+not one project but a **capture category**, and it is the cheapest controlled
+capture anywhere in this survey.
+
+**[UMI](https://umi-gripper.github.io/)** (Chi et al., Stanford) is a **hand-held
+parallel-jaw gripper with a GoPro mounted on it**. A person walks around
+squeezing it; what comes out is *"in-the-wild human demonstrations"* that
+transfer **directly** to robot policies, with *"latency matching and a
+relative-trajectory action representation"* making the learned policies
+*"hardware-agnostic and deployable across multiple robot platforms."* Code and
+hardware: **MIT**.
+
+| Variant | What it adds | Artefact |
+|---|---|---|
+| **UMI** | the handheld gripper + GoPro pattern itself | code **MIT** |
+| **FastUMI** ([2409.19499](https://arxiv.org/abs/2409.19499)) | hardware-decoupled redesign; **drops the VIO dependency** | `IPEC-COMMUNITY/FastUMI-Data` — **MIT**, gated, 3,034 downloads |
+| **FastUMI-100K** ([2510.08022](https://arxiv.org/abs/2510.08022)) | **100 K+ trajectories, 54 tasks**, household environments, multi-view wrist fisheye + high-frequency end-effector states, LeRobot v2.1 | `IPEC-COMMUNITY/FastUMI_100k_lerobot` — ungated, **269,342 downloads**, 🔴 **no licence** |
+| **RealDexUMI** ([2606.06033](https://arxiv.org/abs/2606.06033)) | **wearable**: a shared dexterous end-effector with **in-hand vision and fingertip tactile**, plus a palm-side isomorphic glove | none found |
+| **TacUMI** ([2601.14550](https://arxiv.org/abs/2601.14550)) | ViTac sensors, force-torque, pose tracker on a robot-compatible gripper | a 2-download repo, no licence |
+
+🔴 **What this does to [the denominator](#the-robot-native-denominator), and it
+is the sharpest version of that section's point.** **FastUMI-100K is 100 K+
+demonstration trajectories. DROID is 76 k** — thirteen institutions, fifty
+collectors, a Franka each, twelve months. **UMI-style collection produced more
+trajectories, in robot-compatible action format, without a single robot.** The
+scarcity of teleoperated data is not a law about how hard manipulation data is
+to get; **it is a consequence of insisting on a robot in the loop**, and a
+handheld gripper removes it.
+
+> 🟡 **And what it does to this repo's thesis is less comfortable, which is why
+> it belongs here.** UMI does **not** weaken
+> [§13](#13-why-no-open-source-project-does-exactly-this): none of this is found
+> footage, and UMI scales the way [Ego-OSCAR](#ego-oscar--capture-at-200-and-a-fifth-licence-shape)
+> and UniCraftor scale — **by deploying devices to people**. But it sharpens the
+> comparison an hour of found footage has to win. **The competition is no longer
+> teleoperation at 350 hours and rising slowly.** It is a **$400-ish handheld
+> gripper** producing **robot-compatible end-effector trajectories** — no
+> retargeting, no MANO, no embodiment gap to cross — already at **100 K
+> trajectories and 269,342 downloads**. Found footage's advantages over UMI are
+> real and narrow: **scene and object diversity no device deployment can buy, at
+> a volume no capture programme reaches.** Its disadvantage is exactly what this
+> document spends five thousand lines on. **Anyone arguing for the found-footage
+> route should be arguing against UMI, not against teleoperation** — and this
+> survey had not noticed it was there.
+
+> **RealDexUMI is the limit case of "match at capture".**
+> [EgoMimic](#egomimic) closed the embodiment gap by choosing a robot that
+> minimises kinematic difference from a human hand. RealDexUMI closes it by
+> having the human **wear the robot's actual end-effector** — *"a shared
+> dexterous end-effector module"* giving *"zero-gap end-effector data, with
+> matched in-hand observations, tactile signals, contacts"*. **There is no gap
+> to cross because there is one hand.** It is the cleanest answer in this
+> document to the retargeting problem, and it is available to precisely nobody
+> who did not buy the hardware.
+
+🔴 **A third shape of half-a-card, and it completes the set.**
+`FastUMI_100k_lerobot` has **a real 4.3 KB README** — overview, scale figures,
+LeRobot install instructions, a link to the paper — and **no YAML front-matter
+at all**, so **no licence field**. Set against the other two:
+
+| Artefact | Downloads | Description | Licence |
+|---|---|---|---|
+| `gatech/EgoMimic` | 1,258 | ❌ | ❌ |
+| `tars-robotics/OmniVitac` | 27,810 | ❌ | ✅ CC BY-NC 4.0 |
+| **`IPEC-COMMUNITY/FastUMI_100k_lerobot`** | **269,342** | ✅ **thorough** | ❌ **none** |
+
+**Neither half, one half, the other half — and the one with the most downloads in
+this survey bar Open-AoE is the one that tells you everything except what you may
+do with it.** The same organisation's earlier, smaller FastUMI-Data *is* MIT and
+*is* gated; **the big ungated one is the one that lost its terms.**
 
 ### OmniViTac — tactile on the robot side, 27,810 downloads, and a card that says only its licence
 
@@ -5219,6 +5295,7 @@ trust the rest of it.
 | **MobileEgo Anywhere and Ego-OSCAR are unrelated projects** *(this document, writing them up in two sections)* | Both are **`fpvlabs`**. The org's Hugging Face account holds exactly two datasets — `stera-10m` and `stereo-550` — both `license: other`, both gated. **Third time the survey has found two entries that were one group**, after NVIDIA's and BeingBeyond's | [§2](#mobileego-anywhere) |
 | **EgoScaler's Apache-2.0 set is built on permissively licensed sources** | **None of its four parents is permissive.** Ego4D and Ego-Exo4D are signed-agreement corpora; **HD-EPIC and Nymeria are both CC BY-NC 4.0**, the latter email-gated. The Apache-2.0 correctly covers the authors' own extracted trajectories, but the card states none of this — and **the derived artefact is the one with 27,912 downloads**. Second fully traced case of a permissive stamp over non-permissive parents, after ViTRA, and the first with *zero* permissive parents | [§1](#hd-epic--41-hours-and-the-densest-annotation-in-this-document), [§2](#egoscaler--one-letter-from-the-entry-above-and-the-first-route-that-needs-only-rgb) |
 | **Nymeria is 3,600 hours** | **300 hours of daily activity**; 3,600 is *camera*-hours across synchronised streams of the same wall-clock time. Both figures sit on one page. Even *worn* hours multiply by the number of sensors pointed at them | [§1](#nymeria--264-consented-participants-called-in-the-wild) |
+| **Robot-format manipulation data is scarce because robots are expensive** | **Scarce because of the robot in the loop, which a handheld gripper removes.** [FastUMI-100K](#the-umi-family--capture-without-a-robot-and-the-blind-spot-this-survey-had) is **100 K+ demonstration trajectories in robot-compatible end-effector format, collected with no robot at all** — against DROID's 76 k from thirteen institutions and fifty collectors over twelve months. **The competition for an hour of found footage is no longer teleoperation; it is a $400-ish gripper already at 269,342 downloads** | [§1](#the-robot-native-denominator), [§2](#the-umi-family--capture-without-a-robot-and-the-blind-spot-this-survey-had) |
 | **A dataset card either documents the data or it does not exist** | **Publishers ship half a card, and which half varies.** `gatech/EgoMimic` is ungated with **no card at all** — description absent, licence absent. `tars-robotics/OmniVitac` has **27,810 downloads and a card whose entire content is `license: cc-by-nc-4.0`** — terms stated, identity absent; its 21,000 trajectories and 86 tasks are stated only in the paper. **Both halves are needed and publishers keep shipping one** | [§2](#omnivitac--tactile-on-the-robot-side-27810-downloads-and-a-card-that-says-only-its-licence), [§1](#egomimic) |
 | **A gate only controls who gets in** | **Two publishers' gates add an obligation their licence does not contain, in near-identical words** — RoboCOIN (`apache-2.0`): *"You agree to not use the dataset to conduct experiments that cause harm to human subjects"*; InternVid (`cc-by-nc-sa-4.0`): *"You agree to not use the data to conduct experiments that cause harm to human subjects."* **The gate text is itself a circulating artefact**, copied between release templates — so expect the added clause on the next card and read it rather than assume it absent | [§1](#the-robot-native-denominator), [§9](#internvid) |
 | **A permissive licence tag tells you what you may do** | Not when the gate adds terms. **RoboCOIN's card says `license: apache-2.0`; its gate makes you agree to cite the paper and to avoid experiments harming human subjects** — neither of which Apache-2.0 requires. Two instruments, no statement of which governs, and a downloader has accepted both. **The access gate can add obligations, not merely control who passes** | [§1](#the-robot-native-denominator) |
@@ -5349,6 +5426,11 @@ trust the rest of it.
 - Luo et al. (BeingBeyond). *Being-H0.5: Scaling Human-Centric Robot Learning for Cross-Embodiment Generalization.* arXiv:2601.12993, 19 Jan 2026. (code Apache-2.0; UniHand_Preview released with **no stated licence**; full UniHand-2.0 unreleased) https://arxiv.org/html/2601.12993v1 · https://github.com/BeingBeyond/Being-H · https://huggingface.co/datasets/BeingBeyond/UniHand_Preview
 - Meta Reality Labs. *Ego-1K: A Large-Scale Multiview Video Dataset for Egocentric Vision.* (dataset **`fair-noncommercial-research-license`**, ungated, on `facebook/ego-1k`; the CC BY 4.0 is the arXiv listing's) https://arxiv.org/html/2603.13741v1 · https://huggingface.co/datasets/facebook/ego-1k
 - *HoloAssist.* (CDLA v2) https://holoassist.github.io/
+- Chi et al. *Universal Manipulation Interface (UMI).* (hand-held gripper + GoPro; code and hardware **MIT**) https://umi-gripper.github.io/ · https://github.com/real-stanford/universal_manipulation_interface
+- *FastUMI: A Scalable and Hardware-Independent Universal Manipulation Interface with Dataset.* arXiv:2409.19499. (dataset **MIT**, gated, 3,034 downloads) https://arxiv.org/abs/2409.19499 · https://huggingface.co/datasets/IPEC-COMMUNITY/FastUMI-Data
+- *FastUMI-100K: Advancing Data-Driven Robotic Manipulation with a Large-Scale UMI-Style Dataset.* arXiv:2510.08022. (**100 K+ trajectories, 54 tasks**; ungated, **269,342 downloads**, 🔴 **no licence field** — a thorough README with no YAML front-matter) https://arxiv.org/abs/2510.08022 · https://huggingface.co/datasets/IPEC-COMMUNITY/FastUMI_100k_lerobot
+- *RealDexUMI: A Wearable Universal Manipulation Interface for Dexterous Robot Learning.* arXiv:2606.06033 (v2). (**"zero-gap end-effector data"** — shared dexterous hand, in-hand vision, fingertip tactile; no artefact found) https://arxiv.org/abs/2606.06033
+- *TacUMI: A Multi-Modal Universal Manipulation Interface for Contact-Rich Tasks.* arXiv:2601.14550. (ViTac + force-torque + pose tracker; no licence) https://arxiv.org/abs/2601.14550
 - *DROID: A Large-Scale In-The-Wild Robot Manipulation Dataset.* https://droid-dataset.github.io/
 - Wu et al. *RoboCOIN.* arXiv:2511.17441. (**956 h, 15 embodiments**; `license: apache-2.0` **plus gate obligations Apache-2.0 does not contain** — citation required, no experiments harming human subjects; shipped as 100+ per-task datasets, all `gated: auto`, 59,642 monthly downloads in aggregate) https://huggingface.co/RoboCOIN
 - Tian et al. *InternData-A1.* arXiv:2511.16651. (**2,904 h simulation**; **CC BY-NC-SA 4.0 stated only inside the gate prompt** — the card carries no `license:` tag; 90,872 downloads. An ungated third-party LeRobot conversion tags the terms correctly at 24,586 downloads) https://huggingface.co/datasets/InternRobotics/InternData-A1 · https://huggingface.co/datasets/griffinlabs/InternData-A1-LeRobot-v3.0-by-embodiment
