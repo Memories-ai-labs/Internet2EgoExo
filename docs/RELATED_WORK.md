@@ -114,6 +114,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [VLM-Video-Action-Localization](#vlm-video-action-localization)
 - [11. The licence trap](#11-the-licence-trap)
   - [WiLoR — the chokepoint, read at source](#wilor--the-chokepoint-read-at-source)
+  - [Awesome Egocentric Atlas — the index somebody else is keeping](#awesome-egocentric-atlas--somebody-else-is-keeping-this-index-and-its-licence-column-is-empty-four-times-in-five)
   - [OpenEgo — somebody does this properly](#openego--somebody-does-this-properly-and-it-should-be-said-plainly)
   - [Who feeds whom — the derivation map](#who-feeds-whom--the-derivation-map)
 - [12. Free hours, and what they do to the moat](#12-free-hours-and-what-they-do-to-the-moat)
@@ -1741,11 +1742,72 @@ headset recording `.svo2`, and a Linux workstation to receive it. The view
 alignment is *depth-based*, so the depth stream is not optional decoration —
 it is what makes the human view transformable into the robot's.
 
-**Licence.** **Code Apache 2.0**, stated plainly. **Dataset terms are not
-stated**; a sample dataset sits on Hugging Face under the same name, split into
+🔴 **Licence — and this document's sharpest own-error yet, because the artefact
+was found, named, and then not read.** The entry said: *"Dataset terms are not
+stated; a sample dataset sits on Hugging Face under the same name, split into
 robot and human subsets, with no scale figure given anywhere in the
-documentation. The same shape as [EgoExoLearn](#egoexolearn): a clear code
-licence doing double duty as an implied data licence it does not actually grant.
+documentation."* Checked at the card on 19 Sep 2026,
+[`OpenDriveLab/EgoHumanoid`](https://huggingface.co/datasets/OpenDriveLab/EgoHumanoid)
+carries **`license: apache-2.0`** in its YAML front matter *and* as a Hub tag, is
+**ungated**, has **504 downloads**, and its README opens with a scale table. The
+card was last modified **6 Jun 2026**; the sentence claiming otherwise was written
+**1 Sep 2026**, so nothing moved — **the field was there to read the whole time.**
+
+> **This is a different failure from the one [H-Tac](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual)
+> produced, and a worse one.** There the release sat in a namespace neither the
+> paper nor the project page pointed at, so the checks that returned *not
+> released* were at least looking in the places a reader is sent. Here the
+> document **had already located the artefact and written a sentence about it** —
+> and recorded *terms not stated* and *no scale figure* without opening the card
+> that states both. **Finding an artefact and reading it are two steps, and only
+> the first leaves a trace in the prose.**
+
+**What the card actually says, and it is the interesting part.** The sample is
+**50 robot teleoperation episodes** (Unitree G1) and **one** egocentric human
+episode:
+
+| Subset | Content | Episodes |
+|---|---|---|
+| `example/robot/` | Robot teleoperation (Unitree G1) | **50** |
+| `example/human/` | Egocentric human demonstration (PICO VR + ZED) | **1** |
+
+🔴 **The released sample of a paper titled *"Robot-Free Egocentric
+Demonstration"* is fifty-to-one robot-to-human.** No dishonesty is alleged — the
+card calls itself a sample for smoke-testing the co-training pipeline, and says
+so plainly. But a reader who takes the release as a proxy for the method gets the
+thesis exactly inverted, and **the ratio in the artefact is the opposite of the
+ratio in the argument.**
+
+**And the paper promises less than the artefact delivers.** Its Appendix F is a
+**License of Assets** section — a genuinely rare and good thing, listing MIT for
+the latent-diffusion and MoGe components, Apache 2.0 for DINOv2 and openpi, and
+the **NVIDIA non-commercial licence for GR00T-WholeBodyControl**, which the system
+integrates. Its closing sentence is *"We will open-source our assets, including
+**code and models**, under the Apache 2.0 License"* — code and models, not data.
+The supplementary separately says *"We will open-source our **code and data**."*
+**Two promises, one licence between them, and the licence is attached to the one
+that does not include the data.** The Hub card then grants Apache 2.0 over the
+data anyway. **The most conscientious licence appendix in this survey is the one
+that omits the licence a downloader needs**, and the artefact is more permissive
+than the paper it belongs to.
+
+⚠️ **Neither surface a reader is sent to points at the release.** The paper
+contains **zero occurrences of "Hugging Face"**; the project page at
+`opendrivelab.com/EgoHumanoid/` links to **arXiv and GitHub only** and contains
+the words *dataset*, *download* and *licence* **not once**. The card links
+*forward* to all three. **The link is one-directional, and it points the way a
+reader never travels.** (The third surface, the GitHub README, is unreadable from
+this environment — the proxy 403s `github.com` — so this is two of three checked,
+both silent, and that limit is stated rather than glossed.)
+
+**Three copies, two of them nobody's job.** Besides OpenDriveLab's 504-download
+original there is **`SII-JinChen/EgoHumanoid`** (151 downloads, Apache-2.0 — the
+Shanghai Innovation Institute co-author's own namespace) and
+**`introvoyz042/EgoHumanoid`** (67, Apache-2.0), a personal account that also
+mirrors `awesome-egocentric-atlas` and `egoengine-repro-artifacts`. All three
+carry the same licence, so nothing is lost here — but it is the same structure
+that produced the survey's four **uploader-stamp** cases, and it is one card edit
+away from producing a fifth.
 
 **Bearing here.** This is the fifth published route in this section, and it
 moves the input requirement in the *opposite* direction from what found footage
@@ -4177,7 +4239,49 @@ AgiBotWorld-Beta 105,552, `cadene/droid` 104,783, OmniViTac 27,749 — every one
 identical to the previous sweep's reading eight hours earlier, which is what a
 **rolling thirty-day rate refreshed daily** should look like at that interval. No
 ninth reading is recorded for the ratio, because re-reading a value the publisher
-has not recomputed is not a second observation. `yt-fts` still says, in its own README,
+has not recomputed is not a second observation.
+
+✅ **A new standing check, added the sweep after it would have paid for itself.**
+Search the Hugging Face API by **`arxiv:<id>`** for every arXiv ID this document
+cites, and diff the result against what the document says exists. Run for the
+first time on 19 Sep 2026 over all 63 IDs, it:
+
+- **found three releases recorded here as unreleased or unlicensed** — most
+  importantly [`OpenDriveLab/EgoHumanoid`](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator)
+  (Apache-2.0, ungated, 504 downloads), plus two further copies of it and a
+  licence-less `BeingBeyond/TTP` model repo;
+- **found the [Awesome Egocentric Atlas](#awesome-egocentric-atlas--somebody-else-is-keeping-this-index-and-its-licence-column-is-empty-four-times-in-five)**,
+  which answered to eighteen IDs at once and is the largest single finding of the
+  last twenty sweeps;
+- 🟢 **and confirmed eight negatives that had been asserted from absence** —
+  EgoScale, EgoCS-400K, EgoLive, ENIGMA-360, HumanNet, World In Your Hands,
+  SiMDex and EgoTac return **no Hub artefact carrying their arXiv ID**. Those
+  entries had been classified *not released* by looking where the paper points;
+  they are now classified that way by asking the index what exists. **A negative
+  from the right query is worth more than a negative from three page-loads**, and
+  World In Your Hands in particular is now doubly settled: the
+  [`tars-robotics/WIYH` candidate](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild) still carries **no
+  arXiv tag**, which is exactly why this query does not find it.
+
+🔴 **Counters that did move**, re-read the same day: `facebook/ego-1k`
+**61,932 → 56,664**, `inclusionAI/OpenAoE-2000h` **539,829 → 520,848**,
+`IPEC-COMMUNITY/FastUMI_100k_lerobot` **269,342 → 265,883**,
+`BeingBeyond/UniHand_Preview` **13,377 → 11,136**, `fpvlabs/stereo-550`
+**242,618 → 241,301**, `fpvlabs/stera-10m` **7,043 → 6,263**, `facebook/S-EMBER`
+**4,468 → 4,611**, `Biscue5/egoscaler-v2` **27,912 → 22,274**, `gatech/EgoMimic`
+**1,258 → 1,284**, `tars-robotics/WIYH` **15,855 → 13,485**,
+`BeingBeyond/H-Tac_Sample` **234 → 199**, and `DreamVu/SABER-10K` **19 → 18**
+overnight — which at least establishes that SABER's counter is live rather than
+frozen, and that eighteen is a real rate and not a stuck value. **Eleven of
+thirteen fell.** No inference is drawn from that: these are single readings eight
+hours to a few weeks apart on a rolling window, and this document has already
+recorded twice what happens when a direction is read off too few of them.
+🔴 **One is not a counter at all and needs fixing in the prose**:
+[OpenWAM](#openwam--the-first-project-here-whose-open-survives-being-checked) is
+described here as **20 Apache-2.0 model repos**; the namespace now holds **46**,
+alongside the same **6 datasets, 3 of them still with no licence tag**. The
+control row for *"open survives checking"* got more open, and the survey was
+quoting a five-sweep-old count. `yt-fts` still says, in its own README,
 *"This project is **abandoned** until unemployment inevitably finds me again."*
 *(The ID count has grown from 45 to **62** over seven sweeps as entries were
 added — HD-EPIC, ReWeight, MINT, OpenWAM, ViTRA, EgoScaler, RoboCOIN,
@@ -4234,6 +4338,97 @@ inherits the restrictions of every model and corpus used to build it.** Clean
 clips processed by a non-commercial pipeline do not produce a shippable dataset.
 Rights are a property of the whole provenance chain, and the chain is only as
 free as its most restrictive link.
+
+### Awesome Egocentric Atlas — somebody else is keeping this index, and its licence column is empty four times in five
+
+🔴 **The single most useful thing found in eighty sweeps, and it was found by a
+check this document should have been running from the start.** Searching Hugging
+Face by the **`arxiv:` tag** of every paper cited here — rather than by project
+name — returned
+[`cy0307/awesome-egocentric-atlas`](https://huggingface.co/datasets/cy0307/awesome-egocentric-atlas)
+against **eighteen** of them at once. It is **MIT, ungated, 3,333 downloads, 17
+likes**, created 16 Jun 2026, last modified 23 Aug 2026, and it is not a paper: it
+is a **machine-readable catalogue of 1,044 egocentric resources** as CSV, mirrored
+to a [GitHub repo](https://github.com/ChaoYue0307/awesome-egocentric-atlas) and an
+interactive site, with a CHANGELOG, a `CITATION.cff`, contribution guidelines and
+READMEs in seven languages.
+
+**Its schema is close to the one this document keeps arguing for.** One row per
+resource, with `kind` (dataset / benchmark / model / toolkit / collection),
+`released`, `venue`, **`license`**, **`status`** — an *access* state, separately
+from the licence: `open`, `partial`, `request`, `benchmark`, or `watch` — plus
+`scale`, `tasks`, `modalities`, and three URL columns. **It models licence and
+access as independent axes**, which is the distinction this survey spent a dozen
+sweeps arriving at, and it ships the result as data rather than prose.
+
+🔴 **And then the columns are empty.**
+
+| Column | What it holds across 1,044 rows |
+|---|---|
+| `license` | **blank in 859 — 82.3%.** A further 35 read *"not specified"*, so **85.6% carry no usable term** |
+| `status` | **`watch` in 726 — 69.5%** (catalogued but not obtainable). **`open` in 232 — 22.2%** |
+| spelling | the populated 15% does not group: **`MIT` (11) and `mit` (5)**, **`Apache-2.0` (7) and `apache-2.0` (21)**, **`CC BY-NC 4.0` (2) and `cc-by-nc-4.0` (26)**, **`CC BY-NC-SA 4.0` (4) and `cc-by-nc-sa-4.0` (2)** — the same instrument under two keys, so even a filter over the filled cells undercounts |
+
+**This is the strongest evidence in this document for [§11](#11-the-licence-trap),
+precisely because it is not this document's.** A survey of eighty entries
+reporting that terms are usually missing can be dismissed as a biased sample
+chosen to make that point. **An independent index built by someone else, over
+1,044 resources, with a licence column it wanted to fill, reaches the same
+conclusion at thirteen times the sample size**: rights are *unknown* for the large
+majority of this literature, and that is a property of the literature, not of who
+is looking.
+
+**The scored comparison, on the 21 rows this document can check at an artefact.**
+Every verdict below was re-verified at the card or the publisher's page on
+19 Sep 2026, not taken from either document's memory:
+
+| Verdict | Rows |
+|---|---|
+| ✅ **Agrees** (12) | `Ego-1K` → `fair-noncommercial-research-license`; `Egocentric-10K` and `Egocentric-100K` → `apache-2.0` **with `status: request`** — correct on *both* axes; `PRISM` → `cc-by-nc-4.0`, `request`; `Open-AoE` → `other`; and eight blank/`watch` rows that are genuinely nothing-released — EgoScale, EgoCS-400K, EgoLive, ENIGMA-360, HumanNet, World In Your Hands, SiMDex, EgoTac |
+| 🔴 **Wrong** (9) | **`FastUMI-100K` → `apache-2.0`**, where the card has **`cardData: null` and no licence tag of any kind** — a licence invented for the survey's flagship *no-licence* artefact. **`Open X-Embodiment` → `cc-by-4.0` at the official project URL**, where that page states **no overall licence** and the `cc-by-4.0` belongs to the unofficial `jxu124` mirror. **`Nymeria` → `CC BY-NC-SA 4.0`**, where `projectaria/Nymeria` is **`cc-by-nc-4.0`** — a share-alike added. **`EgoVid-5M` → `not specified`**, where the release is **Apache 2.0**. **`MobileEgo Anywhere` → `cc-by-nc-4.0`**, where `fpvlabs/stera-10m` is **`license: other`**. **`EgoDex` → blank and `watch`**, where the terms are **CC-BY-NC-ND** and the zips serve **HTTP 200 with no auth**. And three **misses** — `SABER`, `H-Tac / TTP` and `EgoHumanoid` recorded as `watch` with no licence, where `DreamVu/SABER-10K` (CC BY-NC 4.0, gated), `BeingBeyond/H-Tac_Sample` (MIT, ungated) and `OpenDriveLab/EgoHumanoid` (Apache-2.0, ungated) all exist |
+
+> **Read the wrong column and it is a list of this document's own mistakes.**
+> The `Open X-Embodiment` row is **the uploader-stamp error** — a third party's
+> licence field standing in for a publisher's silence — which this survey has now
+> catalogued four times and committed once itself, against MobileEgo Anywhere.
+> The three misses are **the H-Tac shape**: a release sitting in the authors' own
+> namespace that the paper does not point at, which this document got wrong twice,
+> the second time [this sweep](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator).
+> **Two independent efforts, the same two failure modes, in some of the same
+> places.** That is much better evidence that these are structural than either
+> effort's self-diagnosis, and it is the argument for the check below rather than
+> for more care.
+
+✅ **So the fix is a query, not a discipline.** Both efforts fail where a human
+decides whether to go looking. Neither fails where a machine can ask. **Every
+release that this pass found and both documents had missed carries an `arxiv:`
+tag naming its own paper** — so *"list the Hub artefacts tagged with this paper's
+arXiv ID"* would have found all three, for free, with no judgement involved.
+That query is now part of the staleness pass; what it returned the first time it
+ran is [recorded below](#12-free-hours-and-what-they-do-to-the-moat). **The
+document's recurring lesson has been *check at the artefact*. The sharper version
+is: *ask the artefact index, because it is the only party that knows what exists.***
+
+⚠️ **What this does to [§13](#13-why-no-open-source-project-does-exactly-this),
+stated before anyone else has to.** §13 claims there is no open, auditable,
+reusable **acquisition** infrastructure. The Atlas is not that, and the difference
+is not a quibble: it is an **index of corpora**, one row per published resource,
+where the thing §13 says is missing is a **machine** that turns open web video
+into clips and records provenance **per clip**. The Atlas has 1,044 rows; a week
+of one crawl has millions. But it *is* prior art for the narrower claim this
+document also makes — *record licence and access as separate fields, per project,
+in machine-readable form* — and that claim now has to be stated as **"the field
+has one such index, it is one person's side project, and its licence column is
+85.6% empty"**, not as "nobody does this." Same narrowing as
+[HumanNet](#humannet) and [HD-VILA-100M](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago)
+forced, and for the same reason: the document keeps finding that the thing it
+says is absent exists in a partial form somebody built and could not finish.
+
+*(A second copy, `introvoyz042/awesome-egocentric-atlas`, 843 downloads, carries
+the same MIT and the same content in a personal namespace — the same account that
+mirrors `OpenDriveLab/EgoHumanoid` and `egoengine-repro-artifacts`. Nothing is
+wrong with any of them today. It is simply worth noticing that the survey's
+uploader-stamp failure mode has a standing supply of uploaders.)*
 
 ### OpenEgo — somebody does this properly, and it should be said plainly
 
@@ -4375,7 +4570,7 @@ except the one marked as an inference.
 | 🔴 [H-Tac](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) (HOI-Tac, ~106 h) | **11 public datasets** — ARCTIC, DexYCB, H2O, H2O3D, HO3D, HOCap, HOI4D, HOT3D, InterHand2.6M, OakInk-v1/v2 | **The largest aggregation here and the least documented**: no licence stated for H-Tac, inputs described only as "public datasets", no release. HOI4D alone is CC BY-NC |
 | ✅ [OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly) (1,107 h) | **EgoDex 829 h** *(all of it)* + HoloAssist 166 + CaptainCook4D 54 *(of 94.5)* + HOI4D 44 + HOT3D 13.3 + HO-Cap 0.67 — **audited at its Table 1; the six sum to 1,106.97** | **The only row with full per-source provenance**: annotations only, no video redistributed, each source's licence text shipped with attribution, and explicit author permission for the CC-BY-NC-ND component. *(Not the only pointers-only release, and not the first: **HD-VILA-100M** below did it in 2022, and **[EgoVid-5M](#egovid-5m)** ships annotations-only under Apache 2.0. Three instances now — the posture is common; the per-source attribution is not)* |
 | ✅ [HD-VILA-100M](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago) (103 M clips, 371.5 K h) | **3.3 M YouTube uploads**, selected by channel popularity + 720p + English subtitles | **URLs only, under a named licence (O-UDA), in 2022** — the release posture OpenEgo is praised for, at ~335× the hours and four years earlier. What it lacks is per-source provenance: one blanket licence over three million third-party uploads |
-| 🔴 [OpenWAM-α](#openwam--the-first-project-here-whose-open-survives-being-checked) (20 Apache-2.0 checkpoints) | **their own unreleased 6,897 h egocentric corpus** (30.1% share) + **AgiBotWorld-Beta 18.6%** + RoboCOIN 14.3% + DROID 7.0% + InternData-A1 30.0% | **CC BY-NC-SA 4.0 at 18.6% of the mixture** — non-commercial *and* share-alike, the terms designed to propagate — under Apache-2.0 weights. **Third traced case of a permissive stamp over non-permissive parents.** The mixture table is in the paper; the licence consequence is in neither the paper nor the cards |
+| 🔴 [OpenWAM-α](#openwam--the-first-project-here-whose-open-survives-being-checked) (46 Apache-2.0 checkpoints) | **their own unreleased 6,897 h egocentric corpus** (30.1% share) + **AgiBotWorld-Beta 18.6%** + RoboCOIN 14.3% + DROID 7.0% + InternData-A1 30.0% | **CC BY-NC-SA 4.0 at 18.6% of the mixture** — non-commercial *and* share-alike, the terms designed to propagate — under Apache-2.0 weights. **Third traced case of a permissive stamp over non-permissive parents.** The mixture table is in the paper; the licence consequence is in neither the paper nor the cards |
 | [Open X-Embodiment](#the-robot-native-denominator) | **60 datasets, 34 labs** | unknowable without tracing sixty |
 | [EgoInfinity](#egoinfinity--lift-to-4d-then-reproject), Ego2Robot, [MobileEgo](#mobileego-anywhere) | **WiLoR** (+ MANO, YOLO) | **CC-BY-NC-ND** *model* in the annotation path |
 | 🔴 [ViTRA](#vitra--12-m-episodes-of-mano-over-four-other-peoples-corpora-stamped-mit) (1.22 M episodes, **ungated, MIT**) | **MANO — as the file format**, not the pipeline | `beta`, `hand_pose` and every joint array are MANO-shaped. Downstream users do not pass through it, they **parse** it |
@@ -5388,15 +5583,28 @@ attention to the text, and this one cannot.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Twenty-nine of them are
-this document's own errors** — marked *(this document…)* in the left column and
+index, not a summary, and each row links to the working. **Thirty-two of them are
+this document's own errors** *(counted by the marker itself this sweep rather than
+by eye: the previous revision said twenty-nine, which was one short even before
+this round's four were added — the count of the count was also drifting)* — marked *(this document…)* in the left column and
 counted honestly, because an earlier revision of this preamble said "three" long
 after the count had passed it, which is the same failure the table exists to
 record. They are kept visible rather than quietly amended: a
 survey that silently fixes itself gives a reader no way to calibrate how much to
 trust the rest of it.
 
-> **Two of the four newest own-errors are not misreadings, and that is the
+> 🔴 **The newest own-error is the one that should worry a reader most, because
+> the discipline that was supposed to prevent it had already run.** The standing
+> rule since the H-Tac miss has been *check at the artefact, not the paper*. The
+> EgoHumanoid entry **named the artefact in its own sentence** and still recorded
+> *terms not stated*, three months after the card had published them. **A rule
+> only binds where someone applies it, and a survey has no way to notice the
+> places it did not.** What fixed it was not more care but a query — see the
+> [`arxiv:` tag check](#awesome-egocentric-atlas--somebody-else-is-keeping-this-index-and-its-licence-column-is-empty-four-times-in-five),
+> which found the same class of miss in an independent index built by someone
+> else.
+
+> **Two of the four earlier own-errors are not misreadings, and that is the
 > interesting part.** One entry stated a number that appears in no version of its
 > source; four entries stated no terms at all, against a preamble promising terms
 > per project; and a whole sweep's corrections landed in the body while the
@@ -5447,7 +5655,7 @@ trust the rest of it.
 | **Hours are hours, so corpora can be compared across papers** | **DROID is 350 hours on its own page and 1,285 in [OpenWAM](#openwam--the-first-project-here-whose-open-survives-being-checked)'s pretraining table — a 3.7× restatement of the same corpus, with neither publication stating its unit.** Multi-camera rigs multiply wall-clock into camera-hours ([Nymeria](#nymeria--264-consented-participants-called-in-the-wild) prints 300 and 3,600 on one page). **The first case here of one corpus counted differently by two publications** | [§1](#the-robot-native-denominator) |
 | **Adding human video to robot post-training helps** | **Only if you choose which.** [ReWeight](#reweight--the-control-simdex-did-not-run) runs the control SiMDex did not: π₀.₅ post-trained on **robot data only 39%**, **robot + randomly mixed human data 44%**, **robot + selected human data 57%**. Random mixing buys 5 points; selection buys 18. Its paper is explicit that naive mixing *"can **degrade** policy performance"* — so delivering hours without an argument for them is not merely inefficient | [§4](#reweight--the-control-simdex-did-not-run) |
 | **A paper that says "we release X" has released X** | [MINT](#mint--camera-alignment-at-scale-and-a-release-sentence-with-no-address) states *"We release the model, training and inference code, labeling pipeline, and a curated 1,021-hour egocentric trajectory dataset"* and **contains no URL anywhere, in v1 or v2** — no repo, no project page, no card, and nothing findable on Hugging Face. **A new shape: a release in the present tense with nowhere to go.** Recorded as *not locatable*, which is not the same as *not released* | [§4](#mint--camera-alignment-at-scale-and-a-release-sentence-with-no-address), [§11](#11-the-licence-trap) |
-| **"Open" in a project's name never survives checking** *(the shape this survey had caught three times)* | ✅ [OpenWAM](#openwam--the-first-project-here-whose-open-survives-being-checked) survives it: **20 Apache-2.0 model repos, 6 datasets, Apache-2.0 code, and all three surfaces its paper names resolve.** The control row the trap catalogue needed — though **3 of its 6 datasets carry no licence tag**, and **its ~6,400 h pretraining corpus is not among them** | [§2](#openwam--the-first-project-here-whose-open-survives-being-checked) |
+| **"Open" in a project's name never survives checking** *(the shape this survey had caught three times)* | ✅ [OpenWAM](#openwam--the-first-project-here-whose-open-survives-being-checked) survives it: **46 Apache-2.0 model repos (20 when first counted, re-counted 19 Sep 2026), 6 datasets, Apache-2.0 code, and all three surfaces its paper names resolve.** The control row the trap catalogue needed — though **3 of its 6 datasets carry no licence tag**, and **its ~6,400 h pretraining corpus is not among them** | [§2](#openwam--the-first-project-here-whose-open-survives-being-checked) |
 | **H-Tac has nothing released** *(this document, which reclassified it there on purpose)* | `BeingBeyond/H-Tac_Sample` has existed since **6 July 2026**: **98 episodes, 35,982 frames, 98 videos**, a **MIT `LICENSE`**, ungated, 234 downloads. The checks that produced *not released* were run against the paper and its printed project page — both still say nothing, and the page still 404s. **The release was in a namespace neither points at.** An absence of evidence in the two places a paper sends you is not evidence of absence | [§2](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) |
 | **A search for EgoScale's missing dataset finds EgoScale's dataset** | It finds **EgoScaler's** — a different paper by different authors at different institutions (2509.21986 vs 2602.16710). EgoScale's artefact has been *"Coming Soon"* for seven months; `Biscue5/egoscaler-v2` is **Apache-2.0, ungated, 27,912 downloads**. The only thing tying that card to its own paper is an `arxiv:` tag | [§2](#egoscaler--one-letter-from-the-entry-above-and-the-first-route-that-needs-only-rgb) |
 | **DreamDojo's model terms are unstated** | The *video* terms still are. The **weights** carry **`nvidia-open-model-license`** on `nvidia/DreamDojo` — a bespoke licence, found at the artefact after the paper had been read three times | [§11](#11-the-licence-trap) |
@@ -5478,6 +5686,12 @@ trust the rest of it.
 | Action100M has 100 M instances | **147 M** temporally localised segments from 1.2 M instructional videos | [§10](#action100m) |
 | cosmos-curate and NeMo Curator are rival tools | Cosmos-Xenna is **NeMo Curator's production executor** | [§9](#cosmos-curate) |
 | A tracker lists Egocentric-10K as gated, so it isn't Apache 2.0 | Both are true — **licence and access are separate axes** | [§11](#11-the-licence-trap) |
+| **EgoHumanoid's dataset terms are not stated, and its sample gives no scale figure** *(this document, 1 Sep 2026, in a sentence that names the artefact)* | [`OpenDriveLab/EgoHumanoid`](https://huggingface.co/datasets/OpenDriveLab/EgoHumanoid) carries **`license: apache-2.0`** in its YAML and as a Hub tag, is **ungated**, has **504 downloads**, and its README opens with an episode table. The card was last modified **6 Jun 2026** — three months before the sentence — so nothing moved. **A worse failure than the H-Tac miss**: there the artefact was never found; here it was found, named, and not opened. **Finding an artefact and reading it are two steps, and only the first leaves a trace in the prose** | [§2](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator) |
+| **A release is a fair proxy for what a paper is about** | EgoHumanoid is titled *"…with **Robot-Free** Egocentric Demonstration"*; its released sample is **50 robot teleoperation episodes and 1 human episode**. The card is honest — it calls itself a smoke-test sample — but **the ratio in the artefact is the inverse of the ratio in the argument.** Its paper promises *"code and models"* under Apache 2.0 and its supplementary promises *"code and data"*; **the licence is attached to the promise that excludes the data**, and the card grants it anyway | [§2](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator) |
+| **Nobody keeps a machine-readable index of this literature's licences and access states** *(this document's §11, implicitly, for eighty sweeps)* | **[`cy0307/awesome-egocentric-atlas`](https://huggingface.co/datasets/cy0307/awesome-egocentric-atlas) does** — MIT, ungated, **1,044 resources** as CSV with separate `license` and `status` columns, 3,333 downloads. Narrowed rather than dropped, because **the columns are empty**: licence blank or *"not specified"* in **85.6%**, `status: watch` in **69.5%**, and the filled 15% does not group (`MIT`/`mit`, `Apache-2.0`/`apache-2.0`). **The strongest §11 evidence here, precisely because it is not this document's own sample** | [§11](#awesome-egocentric-atlas--somebody-else-is-keeping-this-index-and-its-licence-column-is-empty-four-times-in-five) |
+| **An independent index would catch what one survey misses** | On the 21 rows this document can check at an artefact, the Atlas **agrees on 12 and is wrong on 9** — and the nine are **this document's own two failure modes**. It puts `cc-by-4.0` on **Open X-Embodiment's official page**, where the publisher states nothing and that stamp belongs to the `jxu124` mirror (**the uploader-stamp error**), and it records `watch`/no-licence for **SABER, H-Tac and EgoHumanoid**, whose releases sit in their authors' own namespaces (**the H-Tac shape**). It also invents **`apache-2.0` for `FastUMI-100K`**, whose card has `cardData: null`. **Two independent efforts, the same two failure modes, in some of the same places** — which is better evidence that they are structural than either effort's self-diagnosis | [§11](#awesome-egocentric-atlas--somebody-else-is-keeping-this-index-and-its-licence-column-is-empty-four-times-in-five) |
+| **Checking at the artefact is the discipline that catches missing releases** *(this document's standing rule since the H-Tac miss)* | It is not enough, because it still requires a human to decide where to look — and both this document and the Atlas failed exactly there. **Every release both had missed carries an `arxiv:` tag naming its own paper**, so the query *"list Hub artefacts tagged with this arXiv ID"* finds them with no judgement involved. Run over all 63 IDs it found three releases, the Atlas itself, and **confirmed eight not-released classifications that had been asserted from absence**. **The sharper rule: ask the artefact index, because it is the only party that knows what exists** | [§11](#awesome-egocentric-atlas--somebody-else-is-keeping-this-index-and-its-licence-column-is-empty-four-times-in-five) |
+| **OpenWAM ships 20 Apache-2.0 model repos** *(this document, five sweeps stale)* | **46**, re-counted at the namespace 19 Sep 2026, alongside the same 6 datasets, **3 still with no licence tag**. The control row for *"open survives checking"* got more open while the survey quoted an old count — **a live value in a claim that reads like a property** | [§2](#openwam--the-first-project-here-whose-open-survives-being-checked) |
 | **SABER's grocery footage was staged — a team "sent actors into stores with GoPros"** *(this document, for dozens of sweeps, as a load-bearing §13 example)* | The paper says the opposite and says it three times: *"human workers performing everyday retail tasks… in fully operational store conditions"*, *"all captured **without staging, scripting**, or teleoperation overhead"*, *"during natural shopping activity"* — and the vendor's page agrees (*"Every clip was recorded in a working environment"*, *"a head-mounted camera on the worker"*). The trigger was the paper's **"primary actors"**, used in the scene sense throughout. **The correction cuts against this document**: instrumenting people already doing the work is far cheaper than staging, so commissioned capture is cheaper than recorded here. What survives is the part that was never about cost — the purchase was the **synchronised second viewpoint**, not the footage | [§1](#saber--commissioned-egoexo-capture-in-a-domain-the-internet-is-full-of), [§13](#13-why-no-open-source-project-does-exactly-this) |
 | **SABER's 10 K subset is "released publicly", so the restrictive licence is at least on something you can have** *(this document, quoting the paper rather than checking the artefact)* | `DreamVu/SABER-10K` is **`gated: auto`** behind four fields, its README is unreadable unauthenticated and its files **401**. **19 downloads, 0 likes** in five and a half months. The control rules the gate out as the cause: the same publisher's `PRISM-100K`, created eleven days earlier with the **same licence, same gate and same domain**, reads **360 downloads and 7 likes**. Both halves of a "partially released" corpus were gated, at different strengths | [§1](#saber--commissioned-egoexo-capture-in-a-domain-the-internet-is-full-of), [§11](#11-the-licence-trap) |
 | **A paper that prints a URL for its dataset has told you where the dataset is** | SABER's *"The dataset can be accessed via the following link"* points at `dreamvu.ai/saber`, which **308s to a path that does not exist and lands on the vendor's homepage** — a page about a different corpus, where SABER appears once as a link back to the arXiv paper. **HTTP 200 throughout.** A 404 would have said the route was gone; a 200 on the front page says nothing is wrong. The corpus it was meant to reach is *"available under NDA"*. New shape, adjacent to [MINT](#mint--camera-alignment-at-scale-and-a-release-sentence-with-no-address)'s release sentence with no address: **an address that resolves, to the wrong thing** | [§1](#saber--commissioned-egoexo-capture-in-a-domain-the-internet-is-full-of), [§11](#11-the-licence-trap) |
@@ -5560,7 +5774,7 @@ trust the rest of it.
 - *From Human Videos to Robot Manipulation: A Survey.* https://arxiv.org/html/2606.00054v1
 - Wang, Huang, Ko, Bai, Jiang. *ReWeight: Leveraging Human Data for VLA Post-Training via Demonstration Retrieval and Sample Weighting.* arXiv:2609.13851. (**nothing released**; the project page's only artefact link points at another project's Hugging Face collection) https://arxiv.org/abs/2609.13851 · https://reweight-vla.github.io/
 - Zhu, Cai, Wang et al. *MINT: A Unified Model for World-Space Camera and Hand Motion Estimation from Scalable Egocentric Pipeline Supervision.* arXiv:2609.04958 (v2). (**states "we release the model, training and inference code, labeling pipeline, and a curated 1,021-hour egocentric trajectory dataset" and gives no URL anywhere in the paper** — recorded as *not locatable*) https://arxiv.org/abs/2609.04958
-- Wang, Huang, Li et al. *OpenWAM: An Open, Modular Exploration Towards Systematic World-Action Model Pretraining.* arXiv:2609.07398. (✅ **20 Apache-2.0 model repos, 6 datasets, Apache-2.0 code — all three named surfaces resolve**; the ~6,400 h pretraining corpus is not among them, and 3 of 6 datasets carry no licence tag) https://arxiv.org/abs/2609.07398 · https://github.com/OpenWAM-Official/OpenWAM · https://huggingface.co/OpenWAM · https://openwam-official.github.io/
+- Wang, Huang, Li et al. *OpenWAM: An Open, Modular Exploration Towards Systematic World-Action Model Pretraining.* arXiv:2609.07398. (✅ **46 Apache-2.0 model repos — 20 when first counted, re-counted 19 Sep 2026 — 6 datasets, Apache-2.0 code; all three named surfaces resolve**; the ~6,400 h pretraining corpus is not among them, and 3 of 6 datasets carry no licence tag) https://arxiv.org/abs/2609.07398 · https://github.com/OpenWAM-Official/OpenWAM · https://huggingface.co/OpenWAM · https://openwam-official.github.io/
 - *SiMDex: Mining Similar Egocentric Videos for Cross-Embodiment Dexterous Manipulation.* (**nothing released** — the project page's Code and Hugging Face buttons are inert `href="#"` links; no licence stated) https://arxiv.org/abs/2608.04196 · https://lin-nie.github.io/SiMDex/
 - Chen et al. *Panda-70M: Captioning 70M Videos with Multiple Cross-Modality Teachers.* CVPR 2024. https://github.com/snap-research/Panda-70M
 - Wang et al. *InternVid.* https://arxiv.org/abs/2307.06942

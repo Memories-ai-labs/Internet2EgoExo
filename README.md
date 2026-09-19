@@ -240,8 +240,9 @@ Two neighbours are worth calling out directly:
   and runs **3.67× faster than the labelling pipeline that supervises it**. Its
   paper says *"we release"* the model, code, pipeline and a 1,021-hour dataset,
   and **contains no URL anywhere**.
-- **[OpenWAM](https://arxiv.org/abs/2609.07398)** is the one that ships: **20
-  Apache-2.0 checkpoints, six datasets, Apache-2.0 code**, every surface its
+- **[OpenWAM](https://arxiv.org/abs/2609.07398)** is the one that ships: **46
+  Apache-2.0 checkpoints** (20 when first counted; re-counted 19 Sep 2026), **six
+  datasets, Apache-2.0 code**, every surface its
   paper names resolving. Its pretraining table shows why that still leaves §13
   standing: **30.1% of the mixture is the lab's own unreleased 6,897-hour
   egocentric corpus**, and **18.6% is AgiBotWorld-Beta, which is CC BY-NC-SA
@@ -693,9 +694,18 @@ the stages the field has already solved rather than reimplementing them.
 trust: a public release, under terms permitting reuse, of a system that takes a
 stated requirement and returns clips with per-clip viewpoint evidence, rights
 provenance and acceptance status. Not a corpus — corpora exist, several are
-enormous, and HumanNet's is the largest. A *machine*, whose outputs audit back
-to their sources. If one appears, the survey says it should be edited to say so
-rather than defended.
+enormous, and HumanNet's is the largest. Not an index either, though one now
+exists and the survey says so: **[`cy0307/awesome-egocentric-atlas`](https://huggingface.co/datasets/cy0307/awesome-egocentric-atlas)**
+is MIT, ungated and machine-readable, **1,044 resources** with separate `license`
+and `status` columns — the two-axis schema this survey spent a dozen sweeps
+arriving at, shipped as CSV by someone else. It is one row per *published
+resource*, where the missing thing is per *clip*, so §13 holds; but the narrower
+claim has to be stated narrowly. 🔴 **And its columns are the argument**: licence
+blank or "not specified" in **85.6%** of rows, `status: watch` in **69.5%**. An
+independent index over thirteen times this survey's sample reaches the same
+conclusion — rights are unknown for most of this literature. A *machine*, whose
+outputs audit back to their sources, is still what would falsify §13. If one
+appears, the survey says it should be edited to say so rather than defended.
 
 Full survey — both halves, the positioning table and references:
 **[docs/RELATED_WORK.md](docs/RELATED_WORK.md)**. It also carries a
