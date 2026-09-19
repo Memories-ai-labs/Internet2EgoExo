@@ -510,14 +510,22 @@ requirement-driven collector exists to close.
 most recent commissioned ego–exo corpus in this document, and the one whose
 domain most sharply raises the question §13 answers.
 
+✅ **All nine figures below re-verified at the source on 19 Sep 2026**, against
+`arXiv:2605.09613v1` — still the only version. ~100 h, multiple stores, 480p
+GoPro ego, six calibrated ALIA views, 44.8 K samples split 25 K / 18.6 K / 1.2 K,
+GR00T N1.6, 29.3% against 13.4%, ≈2.19×: **every one holds.** What did not hold
+was a sentence this document wrapped around them, and the three release claims
+it took from the paper rather than from the artefacts.
+
 **Approximately 100 hours** of in-store footage, collected across *multiple*
-real grocery stores — the paper says "multiple" and never gives a count.
-Dual-stream capture: **ego on a head-mounted GoPro recording at 480p**, worn by
-the primary actors; **exo on a DreamVu ALIA omnidirectional camera**, one fixed
-unit supplying "six calibrated and synchronized wide-angle views that span the
-full surround environment." Actors perform the full shopping and stocking
-workflow — stocking shelves, retrieving items, navigating aisles — in
-operational stores, with no robot hardware present during collection.
+real grocery stores — the paper says "multiple" and never gives a count, though
+**its sibling does**: see the DreamVu programme note below. Dual-stream capture:
+**ego on a head-mounted GoPro recording at 480p**, worn by the primary actors;
+**exo on a DreamVu ALIA omnidirectional camera**, one fixed unit supplying "six
+calibrated and synchronized wide-angle views that span the full surround
+environment." The wearers perform the full shopping and stocking workflow —
+stocking shelves, retrieving items, navigating aisles — in operational stores,
+with no robot hardware present during collection.
 
 What ships is not hours but retargeted action: **44.8 K training samples** in
 three streams — **25 K** LAPA-style latent action sequences, **18.6 K**
@@ -527,21 +535,94 @@ humanoid. Post-trained into GR00T N1.6, it reports a **29.3% mean success rate
 across ten retail manipulation tasks against a 13.4% fine-tuning baseline**,
 about 2.19×.
 
-**Licence — and the split that matters.** "A 10K-sample subset of SABER is
-released publicly under a CC BY-NC 4.0 license" on Hugging Face
-(`DreamVu/SABER-10K`); the full corpus is reachable only through the vendor's
-own page. So: **less than a quarter of the samples, non-commercial, and the
-rest behind a vendor gate.** A fourth shape for [§11](#11-the-licence-trap) —
-not merely restrictive, unstated, or unreleased, but *partially* released, with
-the restrictive licence attached to the part you can actually have.
+🔴 **This document said the footage was staged. The source says the opposite,
+and this document never had evidence for it.** The paper: SABER records *"human
+workers performing everyday retail tasks — stocking shelves, retrieving items,
+navigating aisles — in fully operational store conditions"*, *"all captured
+without staging, scripting, or teleoperation overhead"*, *"during natural
+shopping activity."* The vendor's own Robot Data page says the same in its own
+words — *"Every clip was recorded in a working environment"*, *"A head-mounted
+camera on the worker"*, *"Customer names are withheld by agreement."* **The word
+this document tripped on is "primary actors"**, which the paper uses throughout
+in the scene sense, not the hired-performer one: the ALIA *"simultaneously
+captures all people present, including the primary actor(s)."* Recruitment,
+casting, scripting and compensation appear nowhere in the paper. Workers do.
 
-**The catch, and it is the one this document keeps finding.** Grocery stocking
-and shelf retrieval are among the most abundantly filmed activities on the open
-internet — retail training footage, shift vlogs, body-cam and helmet-cam uploads.
-A team that needed a hundred hours of it **sent actors into stores with GoPros
-anyway**. The exocentric half explains part of that: a synchronised 360° view
-from a calibrated fixed unit is not something found footage ever supplies. But
-the egocentric half is ordinary head-mounted video, and it was still staged.
+**And the correction costs something, which is why it is worth being exact
+about.** Staging is the expensive half of commissioned capture — you pay for the
+performance, the venue and the schedule. Instrumenting people already doing the
+work removes all three, and what is left is a GoPro, one fixed rig, and the
+annotation bill. So SABER is a **cheaper** counter-example than this document was
+treating it as, and the cost gap [§13](#13-why-no-open-source-project-does-exactly-this)
+argues from narrows again — the same direction [Ego-OSCAR](#ego-oscar--capture-at-200-and-a-fifth-licence-shape)
+pushed it, from the other end.
+
+**What survives is the part that was never about cost.** Grocery stocking and
+shelf retrieval are among the most abundantly filmed activities on the open
+internet — retail training footage, shift vlogs, body-cam and helmet-cam uploads —
+and a team that needed a hundred hours of it put its own cameras in stores
+anyway. But the thing bought was not the footage. The ego stream alone is
+ordinary head-mounted video the web has in quantity; what found footage cannot
+supply is that stream **synchronised frame-for-frame with a fixed 360° stereo
+unit standing in the same room**. The paper's own framing agrees — it describes
+the input as *"unpaired human shopping video"* that the pipeline then enriches.
+**The purchase was the second viewpoint and the registration between the two**,
+which is the claim §13 actually rests on, now stated without the staging error
+attached to it.
+
+🔴 **"Released publicly" is gated, the full corpus is under NDA, and the address
+the paper prints for it is a redirect to a marketing page.** Three routes are
+named; none of them is open, and only one of them is even about SABER:
+
+| Route | What it resolves to, checked 19 Sep 2026 |
+|---|---|
+| `https://dreamvu.ai/saber` — *"The dataset can be accessed via the following link"* | **308 → `www.dreamvu.ai/saber` → `www.dreamvu.ai/`.** The path does not exist and the site redirects unknown paths to its homepage, which is about **Liberty3D**, a different 360°-world-model corpus. SABER appears there exactly once, in a Research list, as a link back to the arXiv paper. **HTTP 200, and nothing about the dataset** |
+| [`DreamVu/SABER-10K`](https://huggingface.co/datasets/DreamVu/SABER-10K) — *"released publicly under a CC BY-NC 4.0 license"* | Real, and the licence is exactly as stated. But **`gated: auto`** behind four fields (full name, institutional or corporate email, organisation, description of intended use); the **README itself is unreadable unauthenticated** and files return **401**. Three configs matching the three streams. **19 downloads, 0 likes** since 2 Apr 2026 |
+| The vendor's Robot Data page | Describes this corpus by name of task — *"Stocking and replenishment · Grocery · ego + exo + wrist"* — under **"Full dataset available under NDA."** It also lists a **wrist camera** in that capture stack, which the paper never mentions |
+
+**So the fourth licence shape is worse than this document recorded it.**
+*Partially released* implied one gate around the part you cannot have and an open
+door to the part you can. There are **two gates at different strengths** — an
+access request for the tenth, an NDA for the rest — and the route printed for the
+rest leads to a homepage. **A 404 would have been more informative**: it would
+have said the route was gone. A 200 on the front page says nothing is wrong.
+
+**The nineteen downloads are recorded, and this time the discriminating test was
+available immediately.** Nineteen in five and a half months is the smallest
+counter in this survey by two orders of magnitude, and the tempting reading is
+demand for commissioned retail data. A gated counter cannot carry that: it
+measures **completed access requests**, not interest. The control is the same
+publisher's [`DreamVu/PRISM-100K`](https://huggingface.co/datasets/DreamVu/PRISM-100K)
+— created eleven days earlier, **same CC BY-NC 4.0, same `gated: auto`, same
+retail domain, same ego/exo tags** — and it reads **360 downloads and 7 likes**.
+Same friction, ~19× the pulls. **The gate is ruled out as the explanation**; what
+is left is the audience, not the paperwork, and a VLM corpus has a much larger one
+than a GR00T-N1.6 post-training set. Two single readings, so the *size* of the gap
+is not yet evidence — only the elimination is.
+
+**One control worth recording, because the survey's most common trap did not
+fire here.** The arXiv listing for SABER is **CC BY-NC-SA 4.0**; the dataset is
+**CC BY-NC 4.0**. Two different licences, one paragraph apart, in the exact
+configuration that produced the adjacent-artefact error for Action100M, Ego-1K,
+S-EMBER, NIMBLE and MobileEgo Anywhere. It did not fire because **the paper
+states the dataset's licence in its own body text**, with the URL beside it. That
+is the whole fix, it costs one sentence, and almost nothing else in this survey
+does it.
+
+**The DreamVu programme, which is two corpora and not one.** The same vendor
+published [`PRISM`](https://arxiv.org/abs/2603.29281) (arXiv 2603.29281v1) — a
+**270 K-sample multi-view retail video SFT corpus for embodied VLMs**, captured
+from *"egocentric, exocentric and 360° viewpoints across five supermarket
+locations"*, ~11.8 M frames at 4 fps and ~730 M tokens. So **the store count
+SABER withholds, its sibling prints: five.** Not provably the same five — the
+papers never cross-reference — but it is the only number either publication
+gives, and the two HF releases are eleven days apart from one account. Worth
+noting for [§13](#13-why-no-open-source-project-does-exactly-this): the
+commissioned-capture entrants in this survey increasingly ship **a programme**
+rather than a dataset, which is a different thing to compete with than a corpus.
+One asymmetry between the two: PRISM-100K carries an `arxiv:` tag pointing at its
+paper and **SABER-10K carries none**, so the link the paper makes to the artefact
+is not made back.
 
 **And the resolution is the tell.** The paper does not say which GoPro model or
 why the setting was chosen, but no GoPro's native ceiling is anywhere near
@@ -1804,7 +1885,8 @@ Three artefacts, three positions:
 
 **The middle row is the one that matters**, and it is the fourth licence shape —
 *partially released* — with a twist [SABER](#saber--commissioned-egoexo-capture-in-a-domain-the-internet-is-full-of)
-did not have. SABER's released quarter at least carries CC BY-NC 4.0. Here the
+did not have. SABER's released quarter at least carries CC BY-NC 4.0 (*though it
+is gated too, which this document did not check until sweep 79*). Here the
 released subset carries nothing, and **the card does not say what is in it**:
 *"This data is a subset of the pretraining data for Being-H0.5."* Since the
 mixture it is drawn from includes **Ego4D** (unpublished agreement) and
@@ -3892,7 +3974,7 @@ Reading the licences across this document produces the wider pattern:
 | **EPIC-KITCHENS-100** | **CC BY-NC 4.0** | ❌ (commercial terms by email to Bristol) |
 | **HOI4D** | **CC BY-NC 4.0** | ❌ non-commercial |
 | **ENIGMA-360** | 🔴 **no dataset licence stated** — only the **arXiv listing's CC BY 4.0**, and its project page has now failed **eight**, the last six with an identical 403 | ⚠️ **unresolved** — previously recorded here as CC BY 4.0 |
-| **SABER** | **CC BY-NC 4.0 — on a 10 K-sample subset only; the full corpus is vendor-gated** | ❌ non-commercial, and partial |
+| **SABER** | **CC BY-NC 4.0 — on a 10 K-sample subset only, and that subset is itself `gated: auto` behind four fields (401 unauthenticated, 19 downloads). The rest is *"available under NDA"* per the vendor, and the access URL the paper prints redirects to the vendor's homepage** | ❌ non-commercial, partial, **and both halves gated** |
 | **Ego-OSCAR** — hardware + software | **Apache 2.0** (verified at the repo's `LICENSE`) | ✅ |
 | **Ego-OSCAR** — Stereo-550 dataset | **`fpvlabs-license`**, bespoke: "research use", but "commercial usage allowed"; gated, **and the licence text itself is behind the gate** | ⚠️ **unclassifiable** — the one thing a custom licence needs is a reading, and it cannot be read before agreeing |
 | **EgoCS-400K** | 🔴 **no dataset licence stated** — only the **arXiv listing's CC BY 4.0**; no repository, no card, no download location named in the paper | ⚠️ **unresolved** — previously recorded here as CC BY 4.0 (rendered gameplay, not real-world footage) |
@@ -4000,6 +4082,16 @@ on a real, downloadable artefact, and has to notice separately that it covers
 under a quarter of what the paper reports. **Record the licence, the access
 route, *and* the fraction — three fields, not one.**
 
+🔴 **And "downloadable" was this document's word, not the artefact's.** Checked
+at the artefact rather than the paper, `DreamVu/SABER-10K` is **`gated: auto`
+behind four fields** and **401s unauthenticated**, so the paper's *"released
+publicly"* means *released behind an access request*. The other half is *"available
+under NDA"* per the vendor's own page, and the URL the paper prints for it
+**redirects to the vendor's homepage** — HTTP 200, no dataset. So the fourth shape
+is really **two gates of different strength plus a dead address that does not
+announce itself as one**, and the three fields above should have been four:
+licence, access route, fraction, **and whether the route resolves to the thing.**
+
 **All four corners of the licence × access grid are occupied** — though the
 permissive/open corner was **re-tenanted this sweep**: it used to be held by
 EgoCS-400K on a CC BY 4.0 that turned out to be the paper's, and is now held by
@@ -4040,10 +4132,12 @@ beside licence, access route and fraction: the artefact and revision the terms
 were read at, with a date.** Not the work — the *document*. This document had
 three of the four and still got it wrong, which is the argument for the fourth.
 
-**What the version audit found this sweep, run over all 47 arXiv IDs cited
-here.** Every ID resolved. Exactly **one pinned citation is behind its current
-version** — EgoDex at v1 against v3 — and that one is deliberate, for the reason
-above. **Twelve IDs are cited bare against papers that now have two or more
+**What the version audit found when it was first widened, over the 47 arXiv IDs
+cited here then** *(the current run is the ✅ block below; this paragraph is kept
+for the one finding it turned up, not for its counts)*. Every ID resolved. Exactly
+**one pinned citation was behind its current version** — EgoDex at v1 against v3 —
+and that one is deliberate, for the reason above. **Twelve IDs were cited bare
+against papers that had two or more
 versions**, which is the hole this audit had until it was widened to cover
 unpinned citations: a bare citation silently tracks whatever the paper says
 today. Most of that movement is harmless. One instance was not:
@@ -4054,18 +4148,36 @@ citation of a claim that has been reframed is not stale, exactly; it is
 harder to notice than being wrong.
 
 ✅ **Re-run in full 19 Sep 2026, and stated so a later sweep can tell movement
-from drift.** All **62** arXiv IDs resolved, **37 at their cited version**,
-**18 bare against multi-version papers**, **1 deliberately pinned behind**.
-**165 URLs** checked; **34 non-2xx**, of which **32 are the proxy's blanket 403
-on `github.com`** and **2 are real** — **the same two for the third pass
-running**:
+from drift.** All **63** arXiv IDs resolved (62 in the audit script plus
+**PRISM 2603.29281**, added and verified at v1 the same day), **43 at their cited
+version**, **18 bare against multi-version papers**, **1 deliberately pinned
+behind**. SABER's `2605.09613` is **v1 against a current v1** — there is no later
+version, so the nine figures re-verified in that entry are the only ones the paper
+has ever stated. **185 URLs** checked; **38 non-2xx**, of which **33 are the
+proxy's blanket 403 on `github.com`**, **3 are not URLs at all** (`localhost:8000`
+and two placeholders inside code blocks), and **2 are real** — **the same two for
+the fourth pass running**:
 [H-Tac's printed `beingbeyond.github.io/TTP/`](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual)
-(**404, eighth consecutive**) and **ENIGMA-360's project page** — **403 for the
-sixth time running**, while `iplab.dmi.unict.it/` itself returns **200**. **Eight
-failures, the last six identical**: that entry stays classified **gone**.
+(**404, ninth consecutive**) and **ENIGMA-360's project page** — **403 for the
+seventh time running**, while `iplab.dmi.unict.it/` itself returns **200**. **Nine
+failures, the last seven identical**: that entry stays classified **gone**.
+
+⚠️ **And one apparent failure was the checker's, not the document's.** Two lines
+came back non-2xx — `beingbeyond.github.io/TTP/\`` at 404 and
+`huggingface.co/datasets/facebook/ego-1k\`` at 401 — because the URL extractor
+had swallowed a trailing backtick from the Markdown. Refetched clean,
+**`facebook/ego-1k` returns 200**; TTP's 404 is real either way. Recorded because
+a link checker that reports a live page as dead is the same class of defect as
+the document's own: **a tool's output is a claim, and it gets checked like one.**
 Every licence re-read this pass was **unchanged** — Open-AoE's bespoke terms,
 both Meta FAIR non-commercial cards, the two third-party stamps — so the
-corrections made against them hold. `yt-fts` still says, in its own README,
+corrections made against them hold. **So were the counters**: Egocentric-100K
+119,604, Egocentric-10K 71,219, `jxu124/OpenX-Embodiment` 19,447,
+AgiBotWorld-Beta 105,552, `cadene/droid` 104,783, OmniViTac 27,749 — every one
+identical to the previous sweep's reading eight hours earlier, which is what a
+**rolling thirty-day rate refreshed daily** should look like at that interval. No
+ninth reading is recorded for the ratio, because re-reading a value the publisher
+has not recomputed is not a second observation. `yt-fts` still says, in its own README,
 *"This project is **abandoned** until unemployment inevitably finds me again."*
 *(The ID count has grown from 45 to **62** over seven sweeps as entries were
 added — HD-EPIC, ReWeight, MINT, OpenWAM, ViTRA, EgoScaler, RoboCOIN,
@@ -5058,11 +5170,16 @@ acquisition layer is genuinely absent rather than merely unfashionable: the
 best-resourced actor in the field paid for capture instead.
 
 **And the newest work keeps confirming it, in two different ways.** *By
-staging what the web already holds*: [SABER](#saber--commissioned-egoexo-capture-in-a-domain-the-internet-is-full-of)
+instrumenting what the web already holds*: [SABER](#saber--commissioned-egoexo-capture-in-a-domain-the-internet-is-full-of)
 needed about a hundred hours of grocery stocking and shelf retrieval — one of the
-more abundantly filmed activity classes on the open internet — and sent actors
-into real stores with head-mounted GoPros. *By calling something in-the-wild that
-isn't*: [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean) reports that
+more abundantly filmed activity classes on the open internet — and put its own
+cameras on workers in real stores instead. 🔴 *(This document said "sent actors
+into real stores" for dozens of sweeps. The paper says the capture was of workers
+at work, **"without staging, scripting, or teleoperation overhead"** — corrected
+in the entry, and it makes commissioned capture **cheaper** than recorded here,
+not more expensive. What the money bought was the synchronised second viewpoint,
+which is the part found footage cannot supply.)* *By calling something in-the-wild
+that isn't*: [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean) reports that
 world-action-model co-training "scales more effectively with in-the-wild
 egocentric human data," and its in-the-wild data is EgoVerse, captured on Project
 Aria glasses, with its 3D flow derived from the glasses' own VIO poses. The
@@ -5271,7 +5388,7 @@ attention to the text, and this one cannot.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Twenty-seven of them are
+index, not a summary, and each row links to the working. **Twenty-nine of them are
 this document's own errors** — marked *(this document…)* in the left column and
 counted honestly, because an earlier revision of this preamble said "three" long
 after the count had passed it, which is the same failure the table exists to
@@ -5354,13 +5471,16 @@ trust the rest of it.
 | EgoExoLearn / EgoHumanoid are openly licensed datasets | Their **MIT and Apache 2.0 licences cover the code**; neither states dataset terms | [§1](#egoexolearn), [§2](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator) |
 | Ego-1K is ~1,000 hours of egocentric video | **956 videos of ~8–10 seconds** from a 16-camera rig, for novel-view synthesis | [§1](#ego-1k) |
 | Open X-Embodiment is an openly licensed pooled corpus | **No overall licence stated**, and no position on whether its 60 components keep their own | [§2](#the-robot-native-denominator) |
-| The high-fidelity corpora are free too | Xperience-10M **gated, non-commercial**; AgiBotWorld-Beta **CC BY-NC-SA**; EgoScale **unreleased**; SABER **a quarter released, CC BY-NC** | [§11](#11-the-licence-trap) |
+| The high-fidelity corpora are free too | Xperience-10M **gated, non-commercial**; AgiBotWorld-Beta **CC BY-NC-SA**; EgoScale **unreleased**; SABER **a quarter released, CC BY-NC, and that quarter gated** | [§11](#11-the-licence-trap) |
 | EgoInfinity processed 142 M clips / 14.6 years | Its abstract makes **no** scale claim; those are Action100M's figures, and EgoInfinity's curated set is **106 videos** | [§8](#egoinfinity--lift-to-4d-then-reproject) |
 | HumanNet: 1,000 h ego video *beat* 100 h robot data | "**matched or modestly surpassed**" — and that 100 h is ~a third of all of DROID | [§2](#humannet) |
 | LAION-BVD is a ready 1.3 B-URL pool | **Research use only**, downloads still marked *coming soon* | [§7](#laion-bvd) |
 | Action100M has 100 M instances | **147 M** temporally localised segments from 1.2 M instructional videos | [§10](#action100m) |
 | cosmos-curate and NeMo Curator are rival tools | Cosmos-Xenna is **NeMo Curator's production executor** | [§9](#cosmos-curate) |
 | A tracker lists Egocentric-10K as gated, so it isn't Apache 2.0 | Both are true — **licence and access are separate axes** | [§11](#11-the-licence-trap) |
+| **SABER's grocery footage was staged — a team "sent actors into stores with GoPros"** *(this document, for dozens of sweeps, as a load-bearing §13 example)* | The paper says the opposite and says it three times: *"human workers performing everyday retail tasks… in fully operational store conditions"*, *"all captured **without staging, scripting**, or teleoperation overhead"*, *"during natural shopping activity"* — and the vendor's page agrees (*"Every clip was recorded in a working environment"*, *"a head-mounted camera on the worker"*). The trigger was the paper's **"primary actors"**, used in the scene sense throughout. **The correction cuts against this document**: instrumenting people already doing the work is far cheaper than staging, so commissioned capture is cheaper than recorded here. What survives is the part that was never about cost — the purchase was the **synchronised second viewpoint**, not the footage | [§1](#saber--commissioned-egoexo-capture-in-a-domain-the-internet-is-full-of), [§13](#13-why-no-open-source-project-does-exactly-this) |
+| **SABER's 10 K subset is "released publicly", so the restrictive licence is at least on something you can have** *(this document, quoting the paper rather than checking the artefact)* | `DreamVu/SABER-10K` is **`gated: auto`** behind four fields, its README is unreadable unauthenticated and its files **401**. **19 downloads, 0 likes** in five and a half months. The control rules the gate out as the cause: the same publisher's `PRISM-100K`, created eleven days earlier with the **same licence, same gate and same domain**, reads **360 downloads and 7 likes**. Both halves of a "partially released" corpus were gated, at different strengths | [§1](#saber--commissioned-egoexo-capture-in-a-domain-the-internet-is-full-of), [§11](#11-the-licence-trap) |
+| **A paper that prints a URL for its dataset has told you where the dataset is** | SABER's *"The dataset can be accessed via the following link"* points at `dreamvu.ai/saber`, which **308s to a path that does not exist and lands on the vendor's homepage** — a page about a different corpus, where SABER appears once as a link back to the arXiv paper. **HTTP 200 throughout.** A 404 would have said the route was gone; a 200 on the front page says nothing is wrong. The corpus it was meant to reach is *"available under NDA"*. New shape, adjacent to [MINT](#mint--camera-alignment-at-scale-and-a-release-sentence-with-no-address)'s release sentence with no address: **an address that resolves, to the wrong thing** | [§1](#saber--commissioned-egoexo-capture-in-a-domain-the-internet-is-full-of), [§11](#11-the-licence-trap) |
 
 > **The pattern in the left column is worth naming.** Almost every row is a
 > *scale* or a *licence* claim, and almost every one fails in the same
@@ -5412,7 +5532,8 @@ trust the rest of it.
 - *OmniVTA / OmniViTac: Visuo-Tactile World Modeling for Contact-Rich Robotic Manipulation.* arXiv:2603.19201 (v3). (21,000+ trajectories, 86 tasks, 100+ objects; dataset **CC BY-NC 4.0**, ungated, 27,810 downloads — **card is licence front-matter and nothing else**) https://arxiv.org/abs/2603.19201 · https://huggingface.co/datasets/tars-robotics/OmniVitac
 - *EgoTactile: Learning Grasp Pressure for Everyday Objects from Egocentric Video.* ICML 2026 Spotlight, arXiv:2606.09243. (dataset **CC BY-NC 4.0**, ungated) https://arxiv.org/abs/2606.09243 · https://egotactile.github.io/ · https://huggingface.co/datasets/HustleHard/EgoTactile
 - *ENIGMA-360: An Ego-Exo Dataset for Human Behavior Understanding in Industrial Scenarios.* (**dataset terms not stated anywhere** — the CC BY 4.0 is the arXiv listing's, covering the manuscript) https://arxiv.org/html/2603.09741v2 · project page https://iplab.dmi.unict.it/ENIGMA-360 **has now failed six checks — HTTP 500, a connection failure, then HTTP 403 four times running (latest 15 Sep 2026, with and without a trailing slash) — while the lab host root returns 200 each time. Four identical 403s in a row is not a flapping server; it is a settled block on that path, and the entry is reclassified from *unstable* to **gone**. Cite the arXiv HTML**
-- *SABER: A Scalable Action-Based Embodied Dataset for Real-World VLA Adaptation.* DreamVu. (10 K-sample subset CC BY-NC 4.0; full corpus vendor-gated) https://arxiv.org/html/2605.09613v1 · https://huggingface.co/datasets/DreamVu/SABER-10K
+- *SABER: A Scalable Action-Based Embodied Dataset for Real-World VLA Adaptation.* DreamVu. (10 K-sample subset **CC BY-NC 4.0 and `gated: auto`, 19 downloads**; full corpus **"available under NDA"**; the paper's `dreamvu.ai/saber` access URL **redirects to the vendor homepage**) https://arxiv.org/html/2605.09613v1 · https://huggingface.co/datasets/DreamVu/SABER-10K
+- Rouhi & Sakurikar et al. *PRISM: A Multi-View Multi-Capability Retail Video Dataset for Embodied Vision-Language Models.* DreamVu. (270 K samples, ego + exo + 360° across **five supermarket locations**, ~11.8 M frames; `DreamVu/PRISM-100K` **CC BY-NC 4.0, `gated: auto`, 360 downloads**) https://arxiv.org/abs/2603.29281 · https://huggingface.co/datasets/DreamVu/PRISM-100K
 - *EgoDex: Learning Dexterous Manipulation from Large-Scale Egocentric Video.* (CC-BY-NC-ND) https://arxiv.org/abs/2505.11709 — **current version is v3 (9 Mar 2026); the `v1` link is cited deliberately where the licence is quoted**, because v3 no longer states it: https://arxiv.org/html/2505.11709v1
 - Yoshida, Kurita, Nishimura, Mori (Kyoto Univ. / NII / Inst. of Science Tokyo / Sony Interactive Entertainment). *Developing Vision-Language-Action Model from Egocentric Videos* (**EgoScaler**, **not** EgoScale). arXiv:2509.21986. (dataset and model both **Apache-2.0**, ungated, 27,912 downloads; built from Ego4D / Ego-Exo4D / HD-EPIC / Nymeria, whose terms the card does not state) https://arxiv.org/abs/2509.21986 · https://huggingface.co/datasets/Biscue5/egoscaler-v2
 - *EgoTactile-OXT.* (CC BY-NC 4.0, ungated — EgoTactile in Open X-Embodiment format) https://huggingface.co/datasets/HustleHard/EgoTactile-OXT

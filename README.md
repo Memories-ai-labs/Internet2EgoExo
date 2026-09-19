@@ -659,11 +659,17 @@ shape that could have shipped without redistributing a frame. **The half of a
 promise that gets kept is the half that costs least**, and a claim of openness in
 a title travels into every citation while nothing verifies it.
 
-**The newest work keeps confirming it, in two ways.** By staging what the web
-already holds: [SABER](https://arxiv.org/html/2605.09613v1) needed ~100 hours of
-grocery stocking and shelf retrieval — among the most abundantly filmed activity
-on the open internet — and sent actors into real stores with head-mounted
-GoPros. And by calling something in-the-wild that isn't:
+**The newest work keeps confirming it, in two ways.** By instrumenting what the
+web already holds: [SABER](https://arxiv.org/html/2605.09613v1) needed ~100 hours
+of grocery stocking and shelf retrieval — among the most abundantly filmed
+activity on the open internet — and put head-mounted GoPros on workers in real
+stores instead. What it bought was not the footage but the **synchronised second
+viewpoint**: a fixed 360° unit in the same room, frame-locked to the head camera,
+which is the one thing found footage never supplies. (This README said "sent
+actors into real stores" for dozens of sweeps; the paper says the capture was of
+workers at work, *"without staging, scripting, or teleoperation overhead"* —
+corrected, and it makes commissioned capture **cheaper** than recorded here.)
+And by calling something in-the-wild that isn't:
 [EgoWAM](https://arxiv.org/abs/2607.08436) reports that world-action-model
 co-training "scales more effectively with in-the-wild egocentric human data,"
 where the in-the-wild data is EgoVerse, captured on Project Aria glasses, with
