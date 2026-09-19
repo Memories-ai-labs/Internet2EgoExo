@@ -212,7 +212,7 @@ And the denominator has a provenance problem of its own. **DROID states its data
 terms nowhere** — not the project page, not the docs, and the data repo has no
 `LICENSE` (only the separate policy-learning repo does, MIT, over code). The
 loudest answer is a third party's: `cadene/droid`, a LeRobot conversion in a
-personal namespace, stamped **Apache-2.0**, ungated, **141,335 downloads**. That
+personal namespace, stamped **Apache-2.0**, ungated, **104,783 downloads**. That
 is the fourth time in this survey an uploader's licence field has stood in for a
 publisher's silence, and it is larger than the other three together. Its
 counterpart **AgiBotWorld-Beta** (2,976.4 h, CC BY-NC-SA 4.0 — non-commercial
@@ -499,14 +499,17 @@ them:
   (100,405 h, 10.8 B frames, **456×256**), both Apache 2.0. Note what scaling
   cost: a 17× drop in pixels per frame, in a domain where finger articulation is
   the payload. And note how it landed — the publisher's own listing shows
-  the 256p corpus pulled **119,683** times last month against the 1080p corpus's
-  **73,594** — **1.6:1**, and *closing fast*. Seven readings now run **4.8 → 5.3
-  → 4.5 → 3.6 → 3.2 → 1.8 → 1.6**. ⚠️ The last two are recorded rather than used:
-  the sixth was a **+76% jump on the 1080p corpus in about a day**, and while the
-  seventh shows it still climbing rather than washing out, **a rolling thirty-day
-  counter holds a burst inside its window for thirty days**, so the level proves
-  nothing — only whether it keeps rising or plateaus will. The direction matches
-  every reading since the third; the speed is not yet claimable. A previous revision explained the
+  the 256p corpus pulled **119,604** times last month against the 1080p corpus's
+  **71,219** — **1.7:1**. Eight readings run **4.8 → 5.3 → 4.5 → 3.6 → 3.2 → 1.8
+  → 1.6 → 1.7**. ⚠️ The last three are recorded rather than used. The sixth was a
+  **+76% jump on the 1080p corpus in about a day**; the test set up to tell a
+  burst from real demand was *does it keep climbing or plateau* — **it
+  plateaued**, three readings in a narrow band around seventy thousand. That is
+  the burst signature, so the **sustained-demand explanation is disconfirmed**
+  and the decisive check is whether the counter falls sharply around
+  **mid-October**, thirty days after the jump. **Until then this README leans on
+  3.2:1, the last reading before the discontinuity.** The direction has held
+  since the third reading; the speed is not claimable. A previous revision explained the
   fall as the 1080p corpus growing; at the fifth reading **both fell** — 256p by
   14.5%, 1080p by 4.0% — so what is shifting is *relative* pull, not absolute
   demand. An earlier revision of this README quoted 470:1 off a single reading,
