@@ -69,6 +69,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [EgoTactile](#egotactile--tactile-measured-and-a-rig-that-keeps-the-glove-out-of-frame)
   - [H-Tac](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual)
   - [The wristband](#the-wristband--tactile-measured-without-instrumenting-the-hand-and-a-fourth-position)
+  - [TouchSight and HumanTouch — a fifth tactile position](#touchsight-and-humantouch--a-fifth-position-and-a-licence-that-lives-on-another-platform)
   - [The UMI family](#the-umi-family--capture-without-a-robot-and-the-blind-spot-this-survey-had)
   - [OmniViTac](#omnivitac--tactile-on-the-robot-side-27810-downloads-and-a-card-that-says-only-its-licence)
   - [Open-AoE](#open-aoe)
@@ -127,6 +128,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [EgoCS-400K](#egocs-400k--10000-free-hours-sourced-from-the-internet-and-why-13-survives-it)
   - [The structural read](#the-structural-read)
   - [A third way to get hours: manufacture them](#a-third-way-to-get-hours-manufacture-them)
+  - [BinoGen — twenty million synthetic binocular frames](#binogen--twenty-million-synthetic-binocular-frames-and-a-release-conditioned-on-an-event)
   - [The other thing that happened to hours: they went on sale](#the-other-thing-that-happened-to-hours-they-went-on-sale)
 - [13. Why no open-source project does exactly this](#13-why-no-open-source-project-does-exactly-this)
   - [Where the effort actually went](#where-the-effort-actually-went)
@@ -2509,6 +2511,104 @@ corpora, not a replacement for contact sensing in a benchmark.
 🔴 **No repository, no dataset, no project page, and no licence** — nothing named
 anywhere in the paper.
 
+### TouchSight and HumanTouch — a fifth position, and a licence that lives on another platform
+
+**[arXiv 2609.20414](https://arxiv.org/abs/2609.20414)** (v1, 17 Sep 2026;
+Tsinghua + SparkLab@Xspark AI) · project page
+[`xsparkai.com/sparklab/humantouch`](https://xsparkai.com/sparklab/humantouch/) ·
+[`chuqiaoLyu/Xspark-HumanTouch`](https://huggingface.co/datasets/chuqiaoLyu/Xspark-HumanTouch)
+· [the same corpus on ModelScope](https://www.modelscope.cn/datasets/chuqiaoLyu/Xspark-HumanTouch)
+— found by the recency pass on 20 Sep, three days after posting, and it lands on
+two of this document's open questions at once.
+
+🟢 **The fifth human-side position, and it attacks the constraint this document
+had called structural.** The taxonomy above divides on what a found clip can
+supply: H-Tac **derives** contact from meshes, EgoTac **predicts** it from RGB,
+EgoTactile **measures** it with a glove, the wristband **measures it off the
+hand**. TouchSight adds a fifth: **measure with the glove, then remove the glove
+from the pixels.** It trains on **500 hours of pressure-glove recordings**, then
+builds **TwinTouch-20H — 20 hours of paired video in which generative models
+re-render the gloved footage as bare-hand observations against new backgrounds
+while preserving the original measured tactile labels.**
+
+> **This is the direct answer to the problem EgoTactile solved by choreography.**
+> That rig exists because *the glove is in the training pixels*, and its fix was
+> two hands and a protocol — film a bare hand, reference a synchronised gloved one
+> off-camera. TouchSight pays the instrumentation cost once and then **edits the
+> glove out in post, keeping the labels**. Its closing claim is the one that
+> matters here: *"dense tactile signals can be recovered from egocentric vision
+> alone, **without tactile instrumentation at capture time**."* If that holds, it
+> is the **third RGB-only route** in this survey after
+> [EgoScaler](#egoscaler--one-letter-from-the-entry-above-and-the-first-route-that-needs-only-rgb)
+> and [MINT](#mint--camera-alignment-at-scale-and-a-release-sentence-with-no-address),
+> and the first one that recovers a channel the camera never saw.
+
+⚠️ **Read at the limits the paper states.** The bare-hand generalisation is
+reported as *qualitative* on unseen datasets; the quantitative comparison is on
+**OakInk2**, and the scaling claim is that accuracy *"improves consistently as
+glove supervision scales"* — which is a statement about how much gloved capture
+you need, not about needing none. **The capture requirement has moved from every
+hour to the supervision set**, which is a real change in the economics and not
+the elimination of it.
+
+**And the corpus underneath it is a capture programme with a dated commitment.**
+The project page is **HumanTouch: A Multimodal System for Scalable Human-Hand
+Tactile Acquisition** (published 7 Aug 2026). Its released first version is
+**~100 hours — ten canonical tasks `X001`–`X010`, about ten hours each, on a
+60 Hz unified timeline with all modalities synchronised**, in LeRobot format,
+**88,085 files**. The roadmap on the card promises **~1,000 hours** *"within one
+to two months"*, and the project page is more specific: ***"expand the public
+release to 1,000 hours by the end of September 2026."*** 📅 **That is ten days
+out and checkable, so this document will check it** — the same treatment given to
+the mid-October download-ratio test, and for the same reason: a dated promise is
+worth more than an undated one only if somebody returns on the date.
+
+🔴 **The licence is the finding, and it is a shape this survey has not recorded
+before: the terms are on the other platform.** The same corpus, from the same
+publisher, sits on both hubs:
+
+| Copy | Licence | Access | Counter |
+|---|---|---|---|
+| **Hugging Face** `chuqiaoLyu/Xspark-HumanTouch` | 🔴 **none** — `cardData: null`; the only tags are `size_categories`, `modality:video`, `region:us` | ungated | **12,285** |
+| **ModelScope** `chuqiaoLyu/Xspark-HumanTouch` | **CC-BY-NC-4.0** | ungated | **2,584,370** |
+
+**The README is identical on both, and its licence section reads, in full:
+*"数据集许可以 ModelScope 仓库页标注的许可证为准"* — the dataset licence is governed
+by the licence stated on the ModelScope repository page.** So the publisher did
+not omit the terms; **it wrote a pointer instead of a licence, and aimed the
+pointer at a different platform.** A reader who lands on Hugging Face — where the
+Hub's own licence facet will file this corpus as unlicensed — has to know that
+ModelScope exists, find the matching repository, and accept that a page on
+another service governs bytes pulled from this one.
+
+> **Why this is its own shape and not one of the six.** It is not *terms
+> unstated* — they are stated. Not the *adjacent-artefact* trap — no paper or
+> code licence is standing in for the data's. Not an *uploader stamp* — **both
+> copies are the publisher's own.** It is a **cross-platform licence pointer**,
+> and it fails in the way this survey cares about: the artefact you downloaded
+> does not carry the terms you accepted, and the manifest field *"licence, as
+> read at the artefact"* comes back empty for a corpus that has one.
+
+⚠️ **The two counters are not comparable and the gap is not evidence.** Hugging
+Face's is a rolling thirty-day rate; ModelScope's is undocumented on the API
+response and may well be cumulative, file-level, or both — over **88,085 files**,
+file-level counting alone would inflate it by orders of magnitude. **2.58 M is
+recorded as a number this document read, not as a demand measurement**, which is
+the rule the download-ratio series exists to enforce.
+
+🔴 **The real finding is about this survey, not about HumanTouch: ModelScope is a
+distribution surface it has never checked.** Every artefact-level verification in
+this document — eighty sweeps of them — has queried Hugging Face, GitHub, or a
+project page. The `arxiv:`-tag query installed [last sweep](#awesome-egocentric-atlas--somebody-else-is-keeping-this-index-and-its-licence-column-is-empty-four-times-in-five)
+searches the Hub and would not have found this corpus either. **Two sweeps
+running, the fix has been *query a different index* — and both times the index
+the survey was not asking held something it had concluded was absent.** The
+honest statement of scope is now: *this survey's negative results are negative
+about Hugging Face, GitHub and the paper's own pages, and say nothing about
+ModelScope, OpenDataLab, BAAI, or any other hub.* Stated as a limit rather than
+fixed in one sweep, because fixing it means re-running every *not released*
+classification against a second index, and that is a pass of its own.
+
 ### The UMI family — capture without a robot, and the blind spot this survey had
 
 **UMI** is named seven times in this document — as
@@ -4019,7 +4119,7 @@ Reading the licences across this document produces the wider pattern:
 | Asset | Licence | Commercial use |
 |---|---|---|
 | Egocentric-10K / -100K | Apache 2.0 | ✅ (see §12 caveats) |
-| Egocentric-1M | Apache 2.0 *(reported only; absent from the publisher's complete API index, five attempts)* | ⚠️ confirm the release exists before relying on it — and note that an **empty third-party repo of the same name** now carries an `mit` tag |
+| Egocentric-1M | Apache 2.0 *(reported only; absent from the publisher's complete API index, **six attempts** — the sixth, 20 Sep 2026, a fresh recency scan of every "egocentric" dataset by last-modified date)* | ⚠️ confirm the release exists before relying on it — and note that an **empty third-party repo of the same name** carries an `mit` tag: `easpeeder/Egocentric-1M` holds **exactly two files**, `.gitattributes` and a README whose entire content is the three-line YAML `license: mit`, with 8 downloads. **Terms without data — the exact inverse of [FastUMI-100K](#the-umi-family--capture-without-a-robot-and-the-blind-spot-this-survey-had)**, which is 265,883 downloads of data without terms |
 | **Action100M** | 🔴 **`fair-noncommercial-research-license`** on `facebook/action100m-preview` — Meta FAIR's own terms. *(This document recorded **CC BY 4.0**, which is the **arXiv listing's** licence.)* Note also it is a **preview** subset | ❌ **non-commercial** — the document previously told readers the opposite |
 | **Open-AoE** | 🔴 **`license: other`, `license_name: open-aoe-dataset-license`** on `inclusionAI/OpenAoE-2000h` — **bespoke**, with a staged *"Release Roadmap"*. *(Recorded here as **CC BY 4.0**, which is the **arXiv listing's**.)* **564,333 downloads a month** | ⚠️ **unclassifiable** — a one-publisher licence, read it in full |
 | **EgoLive** | 🔴 **no dataset licence stated anywhere** — the only licence string in the paper is the **arXiv listing's CC BY 4.0**, and distribution runs through a commercial data marketplace (`robotdata-market.jdcloud.com`) whose terms are not the paper's | ⚠️ **unresolved** — previously recorded here as CC BY 4.0 |
@@ -4240,6 +4340,19 @@ identical to the previous sweep's reading eight hours earlier, which is what a
 **rolling thirty-day rate refreshed daily** should look like at that interval. No
 ninth reading is recorded for the ratio, because re-reading a value the publisher
 has not recomputed is not a second observation.
+
+⚠️ **And the new check has a stated scope limit, found one sweep after it was
+installed.** It queries **Hugging Face**. The
+[HumanTouch corpus](#touchsight-and-humantouch--a-fifth-position-and-a-licence-that-lives-on-another-platform)
+found on 20 Sep is **CC-BY-NC-4.0 on ModelScope and carries no licence field at
+all on the Hub**, and neither copy is tagged with its paper's arXiv ID — so this
+check would not have found it, and did not. **Two sweeps running, the fix has
+been *query a different index*, and both times the index the survey was not
+asking held something it had concluded was absent.** Every *not released* and
+*terms unstated* classification in this document should therefore be read as
+negative about **Hugging Face, GitHub and the paper's own pages**, and silent
+about ModelScope, OpenDataLab, BAAI and the rest. Re-running them against a
+second index is a pass of its own and has not been done.
 
 ✅ **A new standing check, added the sweep after it would have paid for itself.**
 Search the Hugging Face API by **`arxiv:<id>`** for every arXiv ID this document
@@ -5162,6 +5275,54 @@ robots** in the few-shot setting.
 🔴 **No repository, no dataset, no project page, no licence** — nothing named in
 the paper.
 
+### BinoGen — twenty million synthetic binocular frames, and a release conditioned on an event
+
+**[arXiv 2609.19881](https://arxiv.org/abs/2609.19881)** (v1, 17 Sep 2026) — a
+**fourth** way to get hours, and the first that needs no people at all.
+
+**Mechanism.** An automated generator for *"embodiment-aware egocentric binocular
+visual experiences in indoor environments"*: generative scene synthesis,
+probabilistic object instantiation, appearance randomisation, stochastic
+trajectory generation, and **configurable binocular camera rigs** — so the
+observer's *viewing height, field of view, binocular geometry and motion* are
+parameters rather than properties of whoever wore the camera. Output is
+**40,000 synchronised binocular videos × 500 frames at 10 FPS = over 20 million
+annotated images**, each with *"perfectly aligned depth maps, optical flow,
+surface normals, segmentation masks, object coordinates, and camera poses."*
+Reported to improve real-world depth estimation, object detection and video
+object tracking when mixed in.
+
+> **Where it sits among the four routes.** *Commission* an hour (expensive,
+> clean, small); *manufacture* it by inducing human play
+> ([Project Kitchen](#a-third-way-to-get-hours-manufacture-them)); *harvest*
+> manufactured hours somebody already produced
+> ([EgoCS-400K](#egocs-400k--10000-free-hours-sourced-from-the-internet-and-why-13-survives-it));
+> or **synthesise it outright**, which is BinoGen. All three of the non-capture
+> routes share the property this section keeps returning to — **data you caused
+> to exist has no upstream terms to inherit** — and BinoGen is the purest case,
+> because there is no recording of any person anywhere in it.
+
+⚠️ **And that purity is exactly its limit for this repo.** The annotations are
+*"perfectly aligned"* because the renderer knows the answer; found footage is
+hard precisely where synthesis is trivial, and easy — scene, object and
+behaviour diversity drawn from the actual world — precisely where synthesis is
+hard. BinoGen's own framing is **augmentation** (*"incorporating BinoGen data
+consistently improves real-world visual perception"*), not replacement. It is a
+strong argument that the **perception** layers can be pre-trained synthetically,
+and no argument at all about the **manipulation** payload this survey is about.
+A renderer cannot tell you what people do with objects it was told to place.
+
+🔴 **Nothing is released, and the promise is the weakest form this document has
+catalogued.** The paper contains **zero external URLs**. Its Appendix B, *"Code
+and dataset release"*, reads in full: *"We will release the complete BinoGen
+framework **upon publication**, including the data generation pipeline and the
+complete binocular video dataset with annotations."* The arXiv listing is
+**CC BY-NC-SA 4.0**, which covers the manuscript. **"Upon publication" is a
+condition the reader cannot observe and cannot date, and a preprint that is never
+accepted has never broken it** — see
+[§13](#13-why-no-open-source-project-does-exactly-this) for why that makes it the
+only one of five release-promise shapes that cannot be falsified.
+
 ### The other thing that happened to hours: they went on sale
 
 The sweep that produced this section has been watching for a *third* giveaway.
@@ -5289,6 +5450,34 @@ matching the query in a single week. **§13 is usually argued retrospectively,
 from projects whose release status settled years ago. This is the same
 observation made prospectively, on work published the day before it was read** —
 and the base rate, in the week it was measured, was four out of four.
+
+🔴 **The next cohort broke it, which is the point of measuring prospectively.**
+The sweep of 20 Sep read the **17 September** papers under the same query. Two
+propose data machinery, and they split:
+
+| 17 Sep paper | What it proposes | Release surface named |
+|---|---|---|
+| **[BinoGen](#binogen--twenty-million-synthetic-binocular-frames-and-a-release-conditioned-on-an-event)** (2609.19881) | a generator for egocentric **binocular** experience — 40,000 synthetic videos × 500 frames = **20 M annotated images** with depth, flow, normals, semantics, poses | 🔴 **none.** The paper contains **zero external URLs**. Its Appendix B is titled *"Code and dataset release"* and reads, in full: *"We will release the complete BinoGen framework **upon publication**, including the data generation pipeline and the complete binocular video dataset with annotations."* |
+| **[TouchSight](#touchsight-and-humantouch--a-fifth-position-and-a-licence-that-lives-on-another-platform)** (2609.20414) | glove-supervised dense contact force, with the glove **generatively removed** from the training pixels | ✅ **a project page that resolves, and a corpus that is actually downloadable** — ~100 hours on two hubs, ungated, today |
+
+**So this week is one out of two, and the streak is over at five out of six.**
+That is recorded prominently rather than buried, because **a prospective test
+whose reported base rate only ever goes one way is not being run, it is being
+quoted.** The counter-example is also the strongest kind: not a paper that
+promised better, but one that **shipped** — and shipped, as it happens, on a hub
+this survey had never looked at.
+
+🔴 **BinoGen supplies a fifth shape for the release-promise family, and it is the
+one with the least purchase on it.** *"Soon"* (OpenMMEgo) is undated. *"Coming
+Soon"* (EgoScale) is undated and has now run 211 days. A present-tense *"we
+release"* with no address (MINT) at least asserts the thing exists. *"Will be
+open-source"* (World In Your Hands) is a commitment without a date. **"Upon
+publication"** is different from all four: it is a condition the reader **cannot
+observe, cannot date, and which may never occur** — a preprint that is never
+accepted has, on its own terms, never broken the promise. **Of the five, it is
+the only one that cannot be falsified**, and it is worth saying that a reader
+should treat it as the weakest available assurance rather than the most
+procedural-sounding one.
 
 **So what actually survives, stated as narrowly as the evidence allows.** Not
 *nobody built one* — somebody did. What is missing is the layer as **open,
@@ -5583,7 +5772,7 @@ attention to the text, and this one cannot.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Thirty-two of them are
+index, not a summary, and each row links to the working. **Thirty-four of them are
 this document's own errors** *(counted by the marker itself this sweep rather than
 by eye: the previous revision said twenty-nine, which was one short even before
 this round's four were added — the count of the count was also drifting)* — marked *(this document…)* in the left column and
@@ -5686,6 +5875,10 @@ trust the rest of it.
 | Action100M has 100 M instances | **147 M** temporally localised segments from 1.2 M instructional videos | [§10](#action100m) |
 | cosmos-curate and NeMo Curator are rival tools | Cosmos-Xenna is **NeMo Curator's production executor** | [§9](#cosmos-curate) |
 | A tracker lists Egocentric-10K as gated, so it isn't Apache 2.0 | Both are true — **licence and access are separate axes** | [§11](#11-the-licence-trap) |
+| **The prospective §13 base rate is four out of four** *(this document, from one week)* | **The next cohort broke it.** Of the two 17 Sep papers proposing data machinery, **BinoGen names no surface at all** (zero external URLs; *"we will release… upon publication"*) but **[TouchSight](#touchsight-and-humantouch--a-fifth-position-and-a-licence-that-lives-on-another-platform) ships** — a project page that resolves and **~100 hours downloadable today**. **One out of two; the streak ends at five out of six.** Recorded prominently, because **a prospective test whose base rate only ever goes one way is not being run, it is being quoted** | [§13](#13-why-no-open-source-project-does-exactly-this) |
+| **A publisher either states its dataset's terms or does not** | **It can state them on a different platform.** `chuqiaoLyu/Xspark-HumanTouch` is **CC-BY-NC-4.0 on ModelScope** and has **`cardData: null`, no licence field, on Hugging Face** — same publisher, same corpus, same README, whose licence section reads only *"the dataset licence is governed by the licence stated on the ModelScope repository page."* **A pointer instead of a licence, aimed at another hub.** Not *terms unstated*, not the adjacent-artefact trap, not an uploader stamp — **a seventh shape: the cross-platform licence pointer**, where the artefact you downloaded does not carry the terms you accepted | [§2](#touchsight-and-humantouch--a-fifth-position-and-a-licence-that-lives-on-another-platform), [§11](#11-the-licence-trap) |
+| **This survey's "not released" findings are findings about the world** *(this document, eighty sweeps of artefact checks)* | They are findings about **three surfaces** — Hugging Face, GitHub, and the paper's own pages. **ModelScope has never been queried**, and the first time it was, it held a ~100-hour tactile corpus with **2,584,370 recorded downloads** and a licence the Hub copy does not carry. Even the `arxiv:`-tag query installed the sweep before would not have found it. **Stated as a scope limit rather than fixed**, because fixing it means re-running every negative against a second index | [§11](#awesome-egocentric-atlas--somebody-else-is-keeping-this-index-and-its-licence-column-is-empty-four-times-in-five) |
+| **Tactile from ordinary video needs the glove out of the training pixels** — solved by choreography (EgoTactile's two-hand rig) | **Or by editing it out afterwards.** [TouchSight](#touchsight-and-humantouch--a-fifth-position-and-a-licence-that-lives-on-another-platform) trains on **500 h of pressure-glove recordings**, then generatively **re-renders the gloved footage as bare-hand video while keeping the measured labels** (TwinTouch-20H, 20 h). **A fifth human-side tactile position**, and a claim of dense force *"from egocentric vision alone, without tactile instrumentation at capture time"* — ⚠️ with bare-hand generalisation reported as **qualitative**, and accuracy that *"improves consistently as glove supervision scales"*. The capture requirement moved to the supervision set; it did not vanish | [§2](#touchsight-and-humantouch--a-fifth-position-and-a-licence-that-lives-on-another-platform) |
 | **EgoHumanoid's dataset terms are not stated, and its sample gives no scale figure** *(this document, 1 Sep 2026, in a sentence that names the artefact)* | [`OpenDriveLab/EgoHumanoid`](https://huggingface.co/datasets/OpenDriveLab/EgoHumanoid) carries **`license: apache-2.0`** in its YAML and as a Hub tag, is **ungated**, has **504 downloads**, and its README opens with an episode table. The card was last modified **6 Jun 2026** — three months before the sentence — so nothing moved. **A worse failure than the H-Tac miss**: there the artefact was never found; here it was found, named, and not opened. **Finding an artefact and reading it are two steps, and only the first leaves a trace in the prose** | [§2](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator) |
 | **A release is a fair proxy for what a paper is about** | EgoHumanoid is titled *"…with **Robot-Free** Egocentric Demonstration"*; its released sample is **50 robot teleoperation episodes and 1 human episode**. The card is honest — it calls itself a smoke-test sample — but **the ratio in the artefact is the inverse of the ratio in the argument.** Its paper promises *"code and models"* under Apache 2.0 and its supplementary promises *"code and data"*; **the licence is attached to the promise that excludes the data**, and the card grants it anyway | [§2](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator) |
 | **Nobody keeps a machine-readable index of this literature's licences and access states** *(this document's §11, implicitly, for eighty sweeps)* | **[`cy0307/awesome-egocentric-atlas`](https://huggingface.co/datasets/cy0307/awesome-egocentric-atlas) does** — MIT, ungated, **1,044 resources** as CSV with separate `license` and `status` columns, 3,333 downloads. Narrowed rather than dropped, because **the columns are empty**: licence blank or *"not specified"* in **85.6%**, `status: watch` in **69.5%**, and the filled 15% does not group (`MIT`/`mit`, `Apache-2.0`/`apache-2.0`). **The strongest §11 evidence here, precisely because it is not this document's own sample** | [§11](#awesome-egocentric-atlas--somebody-else-is-keeping-this-index-and-its-licence-column-is-empty-four-times-in-five) |

@@ -304,6 +304,16 @@ repository, dataset, project page or licence anywhere in the paper.** That is no
 a curated list — it is everything matching the query in a single week, and the
 base rate was four out of four.
 
+🔴 **The next cohort broke it, which is the point of measuring prospectively.**
+Of the two papers posted 17 September proposing data machinery, **BinoGen**
+(20 M synthetic binocular frames) names **zero URLs** and promises release
+*"upon publication"* — a condition a reader cannot observe and a preprint that is
+never accepted never breaks. But **[TouchSight](https://arxiv.org/abs/2609.20414)
+shipped**: a project page that resolves, and **~100 hours of synchronised tactile
+capture downloadable today**. **One out of two; the streak ends at five out of
+six**, and that is recorded up front — a prospective test whose base rate only
+ever goes one way is not being run, it is being quoted.
+
 **And the competition is not the one we had been naming.** This survey spent
 seventy-six sweeps comparing found footage against **teleoperation** — DROID's
 350 hours, thirteen institutions, a Franka each. The cheaper rival is
@@ -347,7 +357,19 @@ tactile — [H-Tac](https://arxiv.org/html/2607.01067), whose largest component
 computes contact by *"thresholding the distance between the hand surface and
 object meshes"* — needs per-frame object geometry, which internet video does not
 come with. **Derived tactile is closed to found footage; predicted tactile is
-open.** H-Tac is worth the read anyway for what contact buys. The headline comparison is
+open.** 🟢 **And a fifth position arrived on 17 September that attacks the
+constraint EgoTactile's rig was built around**: TouchSight trains on **500 hours
+of pressure-glove recordings** and then **generatively re-renders the gloved
+footage as bare-hand video, keeping the measured labels** — editing the
+instrument out in post instead of choreographing it out of frame. ⚠️ Its
+bare-hand generalisation is reported as *qualitative*, and accuracy *"improves
+consistently as glove supervision scales"*, so the capture requirement moved to
+the supervision set rather than disappearing. 🔴 Its corpus is also the survey's
+cleanest licence warning yet: **CC-BY-NC-4.0 on ModelScope, and no licence field
+at all on the Hugging Face copy** — same publisher, same bytes, terms on one hub
+only. **ModelScope is a distribution surface this survey had never queried**, so
+every "not released" finding in it should be read as negative about Hugging Face,
+GitHub and the paper's own pages, and silent about the rest. H-Tac is worth the read anyway for what contact buys. The headline comparison is
 **9.2% to 79.2%** on contact-rich tasks, but that is their method against a
 baseline; the number that isolates what the *data* buys is their own
 pre-training ablation, **49.7% without it against 79.2% with** — about a 59%
