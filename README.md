@@ -367,9 +367,23 @@ consistently as glove supervision scales"*, so the capture requirement moved to
 the supervision set rather than disappearing. 🔴 Its corpus is also the survey's
 cleanest licence warning yet: **CC-BY-NC-4.0 on ModelScope, and no licence field
 at all on the Hugging Face copy** — same publisher, same bytes, terms on one hub
-only. **ModelScope is a distribution surface this survey had never queried**, so
-every "not released" finding in it should be read as negative about Hugging Face,
-GitHub and the paper's own pages, and silent about the rest. H-Tac is worth the read anyway for what contact buys. The headline comparison is
+only. **ModelScope was a distribution surface this survey had never queried.** 🟢 It
+has been now — roughly two dozen names, and **every "not released" finding
+held**: no ModelScope artefact exists for EgoScale, EgoCS-400K, EgoLive, World In
+Your Hands, SiMDex, EgoTac, OpenMMEgo, Egocentric-1M, Project Kitchen, MEgoVista,
+UMI-Bridge, BinoGen, EgoMimic, FastUMI, EgoHumanoid, H-Tac, EgoTactile,
+EgoScaler, EgoInfinity or EgoEngine. 🔴 **What the pass did find is the survey's
+sharpest licence case.** EgoDex is **CC-BY-NC-ND** — non-commercial, *no
+derivatives* — and two ModelScope re-uploads carry **Apache 2.0** at **814,750
+combined downloads**, one naming Apple's EgoDex in its own card and describing a
+repack. Every previous uploader stamp here filled a publisher's *silence*; **this
+one contradicts a publisher who spoke.** And the tell that made those detectable
+is gone: on ModelScope a mirroring account publishes into organisations'
+namespaces, so `OpenGVLab/InternVid` reads `cc-by-nc-sa-4.0` while
+`OpenGVLab/InternVid-Full` reads `Apache 2.0` — **both `cc-by-nc-sa-4.0` on
+Hugging Face**. **A manifest that records only "the licence as read at the
+artefact" faithfully records the wrong answer**; it has to store the resolved
+source URL too. H-Tac is worth the read anyway for what contact buys. The headline comparison is
 **9.2% to 79.2%** on contact-rich tasks, but that is their method against a
 baseline; the number that isolates what the *data* buys is their own
 pre-training ablation, **49.7% without it against 79.2% with** — about a 59%

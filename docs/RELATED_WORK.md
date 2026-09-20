@@ -116,6 +116,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
 - [11. The licence trap](#11-the-licence-trap)
   - [WiLoR — the chokepoint, read at source](#wilor--the-chokepoint-read-at-source)
   - [Awesome Egocentric Atlas — the index somebody else is keeping](#awesome-egocentric-atlas--somebody-else-is-keeping-this-index-and-its-licence-column-is-empty-four-times-in-five)
+  - [The second index, queried at last](#the-second-index-queried-at-last--and-the-strongest-uploader-stamp-case-yet)
   - [OpenEgo — somebody does this properly](#openego--somebody-does-this-properly-and-it-should-be-said-plainly)
   - [Who feeds whom — the derivation map](#who-feeds-whom--the-derivation-map)
 - [12. Free hours, and what they do to the moat](#12-free-hours-and-what-they-do-to-the-moat)
@@ -813,7 +814,10 @@ conversion in a **personal** namespace, tagged `openx` — is stamped
 `lerobot/droid_1.0.1` repeats the Apache-2.0 at 16,640. **That is the fourth
 instance of an uploader's licence field standing in for a publisher's silence**,
 after `simon055/EgoVid_frames`, `jxu124/OpenX-Embodiment` and
-`easpeeder/Egocentric-1M` — and by download count it is larger than the other
+`easpeeder/Egocentric-1M` — with a **fifth** found on ModelScope
+([`AQUAbyssteus/egoverse-mirror-…`](#the-second-index-queried-at-last--and-the-strongest-uploader-stamp-case-yet),
+Apache-2.0 over EgoVerse's silence, 149,576 downloads) and, in the same pass, the
+first cases where a stamp **contradicts** a publisher who did speak — and by download count it is larger than the other
 three together. *No non-compliance is alleged; Apache-2.0 may well be what DROID
 intends.* **The point is that nobody downloading it can tell**, and the artefact
 that answers loudest is the one whose author had no standing to answer.
@@ -1384,6 +1388,27 @@ the record, not the release.*
 > two-of-three, and still nobody with all three.** The claim survives, and it
 > survives on better evidence: it is now a pattern across two exemplars rather
 > than an absence noted once.
+
+🟢 **And ViTRA has a second artefact this document had not opened either —
+`microsoft/VITRA-TeleData`, the robot half.** Found on the ModelScope pass of
+20 Sep and confirmed on both hubs: **MIT, ungated**, *"real-world robot
+teleoperation demonstrations collected using a **7-DoF robotic arm equipped with
+a dexterous hand and a head-mounted RGB camera**,"* each episode carrying
+synchronised numeric state alongside the video. **It is the one artefact in this
+survey whose licence field reads identically on both indexes** — MIT on Hugging
+Face and MIT on ModelScope — which after the three contradictions found the same
+morning is worth recording as the control rather than as the unremarkable case.
+
+> **Why it matters beyond the licence.** VITRA-1M is 1.2 M episodes of *human*
+> hand motion lifted from four other corpora; VITRA-TeleData is *robot*
+> teleoperation **with a head-mounted RGB camera on the operator**. The same
+> group published both halves of the pairing this section is about — human
+> egocentric video on one side, robot demonstrations recorded from an egocentric
+> viewpoint on the other — and **the MIT on the robot half is the authors' own
+> capture, so unlike VITRA-1M's it is unqualified by anyone else's terms.** The
+> download split is its own small fact: **687 on Hugging Face against 34,750 on
+> ModelScope**, on counters that are not comparable, but not in a direction this
+> document would have guessed.
 
 ### EgoEngine
 
@@ -4132,7 +4157,7 @@ Reading the licences across this document produces the wider pattern:
 | cosmos-curate (code) | Apache 2.0 | ✅ (models separate) |
 | video2dataset | MIT | ✅ |
 | Exo2Ego-V | Apache 2.0 | ✅ |
-| **EgoDex** | **CC-BY-NC-ND** | ❌ non-commercial, no derivatives |
+| **EgoDex** | **CC-BY-NC-ND** — 🔴 and **two ModelScope re-uploads carry `Apache License 2.0` instead**, at **814,750 combined downloads**, one of them naming Apple's EgoDex in its own card and describing a repack | ❌ non-commercial, no derivatives — **and the copy most people pull says otherwise** |
 | **EPIC-KITCHENS-100** | **CC BY-NC 4.0** | ❌ (commercial terms by email to Bristol) |
 | **HOI4D** | **CC BY-NC 4.0** | ❌ non-commercial |
 | **ENIGMA-360** | 🔴 **no dataset licence stated** — only the **arXiv listing's CC BY 4.0**, and its project page has now failed **eight**, the last six with an identical 403 | ⚠️ **unresolved** — previously recorded here as CC BY 4.0 |
@@ -4542,6 +4567,106 @@ the same MIT and the same content in a personal namespace — the same account t
 mirrors `OpenDriveLab/EgoHumanoid` and `egoengine-repro-artifacts`. Nothing is
 wrong with any of them today. It is simply worth noticing that the survey's
 uploader-stamp failure mode has a standing supply of uploaders.)*
+
+### The second index, queried at last — and the strongest uploader-stamp case yet
+
+Last sweep this document admitted a scope limit and declined to fix it in the
+same breath: **every negative result here had been checked against Hugging Face,
+GitHub and the paper's own pages, and never against ModelScope**, and re-running
+them against a second index was *"a pass of its own."* 🟢 **This is that pass.**
+Roughly two dozen project names — every entry classified *not released* or *terms
+unstated*, plus the largest released corpora — were queried against ModelScope's
+dataset index on 20 Sep 2026.
+
+✅ **The negatives held, which is the result this document least expected and
+should say first.** No ModelScope artefact exists for **EgoScale, EgoCS-400K,
+EgoLive, World In Your Hands, SiMDex, EgoTac, OpenMMEgo/OME10M, Egocentric-1M,
+DreamDojo's video, Project Kitchen, MEgoVista, UMI-Bridge, BinoGen, EgoMimic,
+FastUMI, EgoHumanoid, H-Tac, EgoTactile, EgoScaler, ACE-Ego-0, EgoInfinity,
+EgoAVFlow or EgoEngine.** **The admitted blind spot was real and the conclusions
+drawn through it survive it** — which is worth stating plainly, because a survey
+that announces a methodological hole and then never reports what was in it has
+made the announcement do the work of the check.
+
+🔴 **Four things were in it, and the first is the sharpest licence finding in
+this document.**
+
+**1. EgoDex, re-uploaded under Apache-2.0, at 814,750 downloads.** EgoDex is
+**CC-BY-NC-ND** — non-commercial, *no derivatives* — and is already the
+[chokepoint inside at least six downstream artefacts](#egodex). Two ModelScope
+copies carry a permissive stamp instead:
+
+| Copy | Licence stated | Downloads | What its own card says |
+|---|---|---|---|
+| `YuhengZhao/EgoDex` | **Apache License 2.0** | **112,959** | *"本数据集是Apple的EgoDex数据集中的训练集部分，包含了Part1到Part5全部内容"* — "this dataset is the training-set portion of **Apple's EgoDex**, containing all of Part 1 to Part 5", repacked into 50 GB-safe archives |
+| `luyitas/egosim_egodex_egovid_full` | **Apache License 2.0** | **701,791** | **EgoDex 5,000 clips + EgoVid 5,000 clips**, re-encoded to 16 fps 720p for EgoSim training |
+
+> 🔴 **This is a new category, and a worse one than the four uploader stamps
+> already catalogued.** `simon055/EgoVid_frames`, `jxu124/OpenX-Embodiment`,
+> `easpeeder/Egocentric-1M` and `cadene/droid` all state terms **where the
+> publisher stated none** — an uploader speaking into a silence. **Here the
+> publisher spoke, clearly, and the uploader's field says something else.** The
+> first card names Apple's EgoDex explicitly and describes a **repack**, which is
+> the operation *ND* exists to govern; the second describes a **re-encode and a
+> merge with EgoVid**, which is two derivative operations. *No legal conclusion is
+> drawn here and none is needed for the point that matters to a pipeline:* **a
+> downloader reading the licence field on the copy they actually pulled gets
+> "Apache-2.0" for footage whose publisher wrote "NC-ND", and 814,750 pulls have
+> gone through that field.** A manifest that records *the terms as read at the
+> artefact* would faithfully record the wrong answer. **The only field that
+> survives this is one that records the resolved source URL as well**, which is
+> the argument this document has been making for the weaker case and now has the
+> strong one for.
+
+**2. A platform mirroring account publishing into publishers' namespaces — with
+two licences for one corpus.** On ModelScope, `OpenGVLab/InternVid` reads
+**`cc-by-nc-sa-4.0`** and `OpenGVLab/InternVid-Full` reads **`Apache License
+2.0`**, on near-identical README text (1,925 and 1,918 characters). On Hugging
+Face **both** read `cc-by-nc-sa-4.0`. The tell is in the metadata: both
+ModelScope records have **`CreatedBy: Cherrytest`** and **`Owner: OpenGVLab`** —
+as does `builddotai/Egocentric-10K` — so a **platform-side mirroring account is
+creating repositories inside other organisations' namespaces**, and gave two
+copies of one corpus two different licences.
+
+> 🔴 **This is the uploader-stamp failure mode wearing the publisher's
+> namespace**, which removes the one cue that made the previous four detectable.
+> `jxu124/` and `cadene/` are visibly personal; **`OpenGVLab/InternVid-Full` is
+> not.** And the divergent field is the permissive one: Apache-2.0 drops both the
+> **non-commercial** restriction and the **share-alike** obligation that
+> CC-BY-NC-SA-4.0 exists to propagate — on the corpus whose
+> [gate text](#internvid) already adds an obligation its licence does not contain.
+> **Three instruments now describe InternVid, and they disagree by platform.**
+
+**3. EgoVerse, Apache-2.0, 149,576 downloads — the fifth stamp into a silence.**
+`AQUAbyssteus/egoverse-mirror-v2-aria-all-mono` says *mirror* in its own name,
+carries the platform's **default card** with no description, and is stamped
+**Apache License 2.0**. [EgoVerse's own terms are not stated anywhere](#egoverse)
+— re-verified at v2, zero occurrences of "CC BY" or "Apache" in the paper — and
+access runs through the authors' EgoDB/S3 sync. **So the loudest published
+answer about EgoVerse's terms is again a third party's**, exactly as with DROID,
+and this one has been pulled 149,576 times.
+
+**4. Where this data actually gets pulled from.** The same artefacts, both hubs,
+read on the same day:
+
+| Corpus | Hugging Face | ModelScope |
+|---|---|---|
+| `microsoft/VITRA-TeleData` (**MIT on both** — the one row where the two indexes agree) | **687** | **34,750** |
+| Open-AoE 2000h | 520,848 | **7,849,250** |
+| Egocentric-10K | 71,219 | **1,106,046** |
+| Xperience-10M | *(gated, DocuSign)* | **1,012,177** |
+
+⚠️ **The two columns are not comparable and no ratio is claimed.** Hugging Face's
+counter is a rolling thirty-day rate; ModelScope's is undocumented on its API
+response and may be cumulative, file-level, or both. **What the table supports is
+only that these corpora have substantial ModelScope presence** — which is the
+thing a survey that never queried ModelScope could not have known, and is enough
+on its own to justify the pass.
+
+✅ **The check is now standing**, alongside the `arxiv:`-tag Hub query: every new
+*not released* or *terms unstated* classification is queried against both
+indexes before it is written. **Two sweeps in a row the fix was *ask a different
+index*; this is the sweep that stopped discovering that and started doing it.**
 
 ### OpenEgo — somebody does this properly, and it should be said plainly
 
@@ -5772,7 +5897,7 @@ attention to the text, and this one cannot.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Thirty-four of them are
+index, not a summary, and each row links to the working. **Thirty-six of them are
 this document's own errors** *(counted by the marker itself this sweep rather than
 by eye: the previous revision said twenty-nine, which was one short even before
 this round's four were added — the count of the count was also drifting)* — marked *(this document…)* in the left column and
@@ -5875,6 +6000,9 @@ trust the rest of it.
 | Action100M has 100 M instances | **147 M** temporally localised segments from 1.2 M instructional videos | [§10](#action100m) |
 | cosmos-curate and NeMo Curator are rival tools | Cosmos-Xenna is **NeMo Curator's production executor** | [§9](#cosmos-curate) |
 | A tracker lists Egocentric-10K as gated, so it isn't Apache 2.0 | Both are true — **licence and access are separate axes** | [§11](#11-the-licence-trap) |
+| **An uploader's licence field is a problem because publishers stay silent** *(this document's framing across four catalogued cases)* | **It is worse than that: a stamp can contradict a publisher who spoke clearly.** EgoDex is **CC-BY-NC-ND** — non-commercial, *no derivatives* — and two ModelScope copies carry **`Apache License 2.0`** at **814,750 combined downloads**. One names *"Apple's EgoDex"* in its own card and describes a **repack**; the other a **re-encode merged with EgoVid**. *No legal conclusion is drawn.* The pipeline consequence is the point: **a manifest recording "the terms as read at the artefact" faithfully records the wrong answer**, and only a field that also stores the resolved source URL survives it | [§11](#the-second-index-queried-at-last--and-the-strongest-uploader-stamp-case-yet) |
+| **A personal namespace is the tell that a licence field is an uploader's** | **Not on a platform that lets a mirroring account publish into an organisation's namespace.** On ModelScope `OpenGVLab/InternVid` reads **`cc-by-nc-sa-4.0`** and `OpenGVLab/InternVid-Full` reads **`Apache License 2.0`**, on near-identical READMEs — while **both read `cc-by-nc-sa-4.0` on Hugging Face**. Both ModelScope records were **`CreatedBy: Cherrytest`**, as was `builddotai/Egocentric-10K`. **The cue that made the previous four detectable is absent, and the divergent field is the permissive one** — Apache-2.0 drops the non-commercial restriction *and* the share-alike obligation | [§11](#the-second-index-queried-at-last--and-the-strongest-uploader-stamp-case-yet) |
+| **The survey's negatives are negative about one hub** *(this document, stating the limit last sweep and declining to fix it)* | 🟢 **Fixed, and they held.** Roughly two dozen names queried against ModelScope: **no artefact exists** for EgoScale, EgoCS-400K, EgoLive, World In Your Hands, SiMDex, EgoTac, OpenMMEgo, Egocentric-1M, DreamDojo's video, Project Kitchen, MEgoVista, UMI-Bridge, BinoGen, EgoMimic, FastUMI, EgoHumanoid, H-Tac, EgoTactile, EgoScaler, ACE-Ego-0, EgoInfinity, EgoAVFlow or EgoEngine. **The blind spot was real and the conclusions drawn through it survive it** — reported because a survey that announces a hole and never says what was in it has made the announcement do the check's work | [§11](#the-second-index-queried-at-last--and-the-strongest-uploader-stamp-case-yet) |
 | **The prospective §13 base rate is four out of four** *(this document, from one week)* | **The next cohort broke it.** Of the two 17 Sep papers proposing data machinery, **BinoGen names no surface at all** (zero external URLs; *"we will release… upon publication"*) but **[TouchSight](#touchsight-and-humantouch--a-fifth-position-and-a-licence-that-lives-on-another-platform) ships** — a project page that resolves and **~100 hours downloadable today**. **One out of two; the streak ends at five out of six.** Recorded prominently, because **a prospective test whose base rate only ever goes one way is not being run, it is being quoted** | [§13](#13-why-no-open-source-project-does-exactly-this) |
 | **A publisher either states its dataset's terms or does not** | **It can state them on a different platform.** `chuqiaoLyu/Xspark-HumanTouch` is **CC-BY-NC-4.0 on ModelScope** and has **`cardData: null`, no licence field, on Hugging Face** — same publisher, same corpus, same README, whose licence section reads only *"the dataset licence is governed by the licence stated on the ModelScope repository page."* **A pointer instead of a licence, aimed at another hub.** Not *terms unstated*, not the adjacent-artefact trap, not an uploader stamp — **a seventh shape: the cross-platform licence pointer**, where the artefact you downloaded does not carry the terms you accepted | [§2](#touchsight-and-humantouch--a-fifth-position-and-a-licence-that-lives-on-another-platform), [§11](#11-the-licence-trap) |
 | **This survey's "not released" findings are findings about the world** *(this document, eighty sweeps of artefact checks)* | They are findings about **three surfaces** — Hugging Face, GitHub, and the paper's own pages. **ModelScope has never been queried**, and the first time it was, it held a ~100-hour tactile corpus with **2,584,370 recorded downloads** and a licence the Hub copy does not carry. Even the `arxiv:`-tag query installed the sweep before would not have found it. **Stated as a scope limit rather than fixed**, because fixing it means re-running every negative against a second index | [§11](#awesome-egocentric-atlas--somebody-else-is-keeping-this-index-and-its-licence-column-is-empty-four-times-in-five) |
