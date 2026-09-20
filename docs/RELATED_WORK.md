@@ -47,6 +47,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [SABER](#saber--commissioned-egoexo-capture-in-a-domain-the-internet-is-full-of)
   - [Ego-OSCAR](#ego-oscar--capture-at-200-and-a-fifth-licence-shape)
 - [2. Scaling human video for robot learning](#2-scaling-human-video-for-robot-learning)
+  - [DROID — the denominator, and the eleven answers other people give for it](#droid--the-denominator-this-survey-leans-on-and-the-eleven-answers-other-people-give-for-it)
   - [The robot-native denominator](#the-robot-native-denominator)
   - [EgoDex](#egodex)
   - [EgoScale](#egoscale)
@@ -741,6 +742,96 @@ because the doc keeps returning to them:
 Only the first is even in principle compatible with footage found rather than
 shot — and even Ego2Robot's published corpus is built from curated sets.
 
+### DROID — the denominator this survey leans on, and the eleven answers other people give for it
+
+**[arXiv 2403.12945](https://arxiv.org/abs/2403.12945)** (v2, 22 Apr 2025) ·
+[project page](https://droid-dataset.github.io/) ·
+[code](https://github.com/droid-dataset/droid) — 🔴 **named thirty times in this
+document and never given an entry.** It is the number the whole scarcity argument
+divides by: *"an hour of human video is worth more than an hour of robot data"*
+is empty without it, and *"the scarcity claim survives at 23× rather than 287×"*
+is arithmetic with DROID on the bottom. **A survey should not run its central
+comparison against a corpus it never wrote up**, so this is the entry, read at
+source on 20 Sep 2026.
+
+**Mechanism.** *Distributed* robot interaction: **the same hardware in every
+lab**, so the corpus is a sum of identical rigs rather than a merge of
+incompatible ones. Each station is a **Franka Panda 7-DoF arm, two adjustable
+Zed 2 stereo cameras, a wrist-mounted Zed Mini, and an Oculus Quest 2 headset
+with controllers for teleoperation**, all on a **portable height-adjustable
+desk** — the last detail being the design decision, because it is what lets one
+rig produce 564 scenes instead of one.
+
+**Numbers, verified.** **76 k demonstration trajectories / 350 hours**, **564
+scenes**, **50 data collectors across North America, Asia and Europe**, **12
+months**, **13 institutions**, **1,417 camera viewpoints** with intrinsic and
+extrinsic stereo calibration. Language: **three natural-language annotations for
+95% of all successful episodes**, and the page puts successful episodes at
+**75 k of 76 k** — a ~98.7% success rate, which is itself a fact about
+teleoperated capture that found footage cannot match.
+
+⚠️ **One figure in this document was the project page's rather than the
+paper's.** The **paper says 84 tasks at both v1 and v2**; **the project page says
+86**; this document carried **86**. Small in magnitude and exactly the shape
+[Ego-Exo4D](#ego-exo4d) already taught — *cite the figure with its sentence* —
+except that here the two sentences are the same team's, on surfaces published a
+year apart. Corrected to 84 with the discrepancy kept visible rather than
+silently picking one.
+
+🔴 **The rights position: it open-sources everything except the terms.** The
+abstract says *"We open source the full dataset, policy learning code, and a
+detailed guide for reproducing our robot hardware setup"* — and:
+
+- the **project page states no licence**, re-checked this sweep;
+- the **documentation site states none**;
+- **`droid-dataset/droid` has no `LICENSE` file at all** — the raw URL returns
+  **404**, verified directly;
+- only **`droid_policy_learning`** carries one (**MIT**), and it governs *code*.
+
+**So the most-cited open robot corpus in this survey has never stated what may be
+done with its data.** That is not an accusation of restriction; it is the absence
+of any statement either way, on a corpus whose whole framing is openness.
+
+🔴 **And into that silence, eleven other parties have answered — with at least
+five different licences.** Read across both hubs on 20 Sep:
+
+| Copy | Licence stated | Downloads |
+|---|---|---|
+| `cadene/droid` — a LeRobot conversion in a **personal** namespace | **apache-2.0** | **91,575** (HF) |
+| `lerobot/droid_1.0.1` | **apache-2.0** | 17,502 (HF) · **68,184** (MS) |
+| 🔴 **`lerobot/droid_100`** | **`mit` on Hugging Face**, **`Apache License 2.0` on ModelScope** | 3,062 · **27,325** |
+| `nvidia/Cosmos3-DROID` | **`openmdw-1.1`** — the Linux Foundation's Open Model, Data & Weights licence, a family that appears nowhere else in this survey | 20,226 (HF) · **113,846** (MS) |
+| `Salesforce/3d_optical_flow_droid` | **mit** | 86,562 (MS) |
+| `allenai/MolmoAct2-DROID-Dataset` | **apache-2.0** | 17,399 (MS) |
+| `nv-community/PointWorld-DROID` | **other** | 454 (MS) |
+| `lerobot-raw/droid_raw`, `lerobot-raw/droid_100_raw`, `EDiRobotics/droid_low_resolution`, `youliangtan/droid_100_to_hg` | 🔴 **no licence field** | 10,977 · 435 · 285 · 26 |
+
+> 🔴 **`lerobot/droid_100` is the finding, and it is the second instance of a
+> pattern this survey named one sweep ago.** Same organisation, same repository
+> name, **MIT on one hub and Apache-2.0 on the other** — and the ModelScope
+> record is again **`CreatedBy: Cherrytest`**, the platform mirroring account that
+> also produced
+> [`OpenGVLab/InternVid-Full`'s Apache-2.0 against its CC-BY-NC-SA-4.0 sibling](#the-second-index-queried-at-last--and-the-strongest-uploader-stamp-case-yet).
+> **One occurrence was an anecdote; two make it a behaviour of the mirroring
+> path**, and the behaviour is that a licence field gets re-typed by whoever
+> moves the bytes. Both divergences here are between *permissive* licences, so
+> nothing restrictive is being dropped — **which is precisely why it is worth
+> recording now**: the mechanism is visible in a harmless case, and the
+> [EgoDex re-uploads](#the-second-index-queried-at-last--and-the-strongest-uploader-stamp-case-yet)
+> show what it does in a harmful one.
+
+**Bearing here.** DROID is the strongest case for the *opposite* of this repo's
+bet, and it should be stated that way: **it is what disciplined, standardised,
+consented, fully-documented capture looks like**, with calibration, near-total
+task success, and language annotation on 95% of it — every quality axis where
+found footage is weak. What it cost was **thirteen institutions, fifty people and
+a year**, for **350 hours**. That ratio is the argument, and it is the argument
+whether or not the licence is ever stated. **But the licence is the part this
+survey is about**, and DROID makes the cleanest possible case for storing the
+*resolved source URL* beside the terms: a team that pulls "DROID" gets one of
+five different licences depending on which of eleven artefacts they happened to
+click, and **the publisher has said nothing that would settle it.**
+
 ### The robot-native denominator
 
 Several entries below argue that an hour of human video is worth more than an
@@ -749,7 +840,7 @@ side actually is, and the answer is smaller than the rhetoric suggests.
 
 | Corpus | Scale | How it was made | Licence |
 |---|---|---|---|
-| **[DROID](https://droid-dataset.github.io/)** | **350 hours**, 76,000 trajectories, 564 scenes, 86 tasks, 1,417 camera viewpoints | Teleoperation on a standardised rig (Franka Panda 7-DoF, two Zed 2 stereo + wrist Zed Mini, Quest 2 controllers), **13 institutions, 50 collectors, 12 months** | Open dataset; terms not stated on the project page |
+| **[DROID](#droid--the-denominator-this-survey-leans-on-and-the-eleven-answers-other-people-give-for-it)** | **350 hours**, 76,000 trajectories, 564 scenes, **84 tasks** *(the paper, at both versions; **the project page says 86**, and this document carried 86)*, 1,417 camera viewpoints | Teleoperation on a standardised rig (Franka Panda 7-DoF, two Zed 2 stereo + wrist Zed Mini, Quest 2 controllers), **13 institutions, 50 collectors, 12 months** | Open dataset; terms not stated on the project page |
 | **[AgiBotWorld-Beta](https://huggingface.co/datasets/agibot-world/AgiBotWorld-Beta)** | **2,976.4 hours**, 1 M+ trajectories, 200+ task types, 87 atomic skills | **100 robots** — mobile dual-arm, 6-DoF dexterous hands, visual-tactile sensors; video, depth, joint positions/velocities/forces, end-effector state, odometry | 🔴 **CC BY-NC-SA 4.0**, **click-through gated (auto-approved)** — **102,027** downloads |
 | **[Open X-Embodiment](https://robotics-transformer-x.github.io/)** | 1 M+ trajectories, **22 embodiments**, 527 skills, 160,266 tasks — **hours not stated** | **60 existing datasets pooled** from 34 labs across 21 institutions; single arms through bimanual robots and quadrupeds | 🔴 **No overall licence stated on the project page**, and no statement of whether the 60 components retain their own |
 | **[RoboCOIN](https://huggingface.co/RoboCOIN)** *(Wu et al., arXiv:2511.17441)* | **956 hours**, **15 embodiments** — 2.7× DROID | Real-robot teleoperation, shipped as **100+ separate per-task Hugging Face datasets**, every one `gated: auto`; **59,642 monthly downloads in aggregate** | ⚠️ **`license: apache-2.0` — plus obligations the gate adds** (see below) |
@@ -810,7 +901,7 @@ the documentation site. The data repository `droid-dataset/droid` has **no
 **MIT**, and that governs *code*. Meanwhile
 [`cadene/droid`](https://huggingface.co/datasets/cadene/droid) — a LeRobot
 conversion in a **personal** namespace, tagged `openx` — is stamped
-**`license: apache-2.0`**, ungated, and has been pulled **104,783 times**;
+**`license: apache-2.0`**, ungated, and has been pulled **104,783 times**, 91,575 at the latest reading;
 `lerobot/droid_1.0.1` repeats the Apache-2.0 at 16,640. **That is the fourth
 instance of an uploader's licence field standing in for a publisher's silence**,
 after `simon055/EgoVid_frames`, `jxu124/OpenX-Embodiment` and
@@ -5897,7 +5988,7 @@ attention to the text, and this one cannot.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Thirty-six of them are
+index, not a summary, and each row links to the working. **Thirty-eight of them are
 this document's own errors** *(counted by the marker itself this sweep rather than
 by eye: the previous revision said twenty-nine, which was one short even before
 this round's four were added — the count of the count was also drifting)* — marked *(this document…)* in the left column and
@@ -5973,7 +6064,7 @@ trust the rest of it.
 | **H-Tac has nothing released** *(this document, which reclassified it there on purpose)* | `BeingBeyond/H-Tac_Sample` has existed since **6 July 2026**: **98 episodes, 35,982 frames, 98 videos**, a **MIT `LICENSE`**, ungated, 234 downloads. The checks that produced *not released* were run against the paper and its printed project page — both still say nothing, and the page still 404s. **The release was in a namespace neither points at.** An absence of evidence in the two places a paper sends you is not evidence of absence | [§2](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) |
 | **A search for EgoScale's missing dataset finds EgoScale's dataset** | It finds **EgoScaler's** — a different paper by different authors at different institutions (2509.21986 vs 2602.16710). EgoScale's artefact has been *"Coming Soon"* for seven months; `Biscue5/egoscaler-v2` is **Apache-2.0, ungated, 27,912 downloads**. The only thing tying that card to its own paper is an `arxiv:` tag | [§2](#egoscaler--one-letter-from-the-entry-above-and-the-first-route-that-needs-only-rgb) |
 | **DreamDojo's model terms are unstated** | The *video* terms still are. The **weights** carry **`nvidia-open-model-license`** on `nvidia/DreamDojo` — a bespoke licence, found at the artefact after the paper had been read three times | [§11](#11-the-licence-trap) |
-| **DROID is an open dataset with terms you can look up** | **It states none.** Not the project page, not the documentation site, and the data repo `droid-dataset/droid` has **no `LICENSE`** — only the separate `droid_policy_learning` repo does, **MIT**, over code. The loudest answer is a third party's: [`cadene/droid`](https://huggingface.co/datasets/cadene/droid), a LeRobot conversion in a personal namespace, stamped **`apache-2.0`**, ungated, **104,783 downloads**. **Fourth instance of an uploader's licence field standing in for a publisher's silence — and larger than the other three together** | [§1](#the-robot-native-denominator) |
+| **DROID is an open dataset with terms you can look up** | **It states none.** Not the project page, not the documentation site, and the data repo `droid-dataset/droid` has **no `LICENSE`** — only the separate `droid_policy_learning` repo does, **MIT**, over code. The loudest answer is a third party's: [`cadene/droid`](https://huggingface.co/datasets/cadene/droid), a LeRobot conversion in a personal namespace, stamped **`apache-2.0`**, ungated, **104,783 downloads** (91,575 at the 20 Sep reading). **Fourth instance of an uploader's licence field standing in for a publisher's silence — and larger than the other three together** | [§1](#the-robot-native-denominator) |
 | **AgiBotWorld-Beta is contact-gated** *(this document)* | It is a **click-through**, `gated: auto` — name, affiliation, accept the agreement, immediate access; **86,157 downloads**. Its CC BY-NC-SA 4.0 is still the most restrictive combination in this survey, which is the point: **most-restrictive licence, near-frictionless access**, the same access cell as Apache-2.0 Egocentric-10K | [§1](#the-robot-native-denominator) |
 | **A Hugging Face repo named `10000-Hour-Egocentric-Video-Dataset` holds 10,000 hours** | It holds **three files**: `.gitattributes`, a README, and a `meta.json` for **one 59.68-second PICO 4 Ultra recording whose video is not in the repo**. No licence field, ungated. *"The complete dataset is available upon request."* **The repository is the advertisement** — and it is one of nineteen vendor sample or catalogue cards among the forty most recently updated "egocentric" datasets | [§12](#the-other-thing-that-happened-to-hours-they-went-on-sale) |
 | **A bare `CC BY-ND 4.0` is a permissive licence** | It permits commercial use and forbids **derivatives** — for a training pipeline the worse half, since clipping, re-encoding, annotating and training all plausibly derive. Every other restrictive licence tracked here is **NC**, so a reader scanning for "NC" as the danger signal reads **BY-ND** as safe and has it backwards. Found on `UniDataPro/egocentric-video` | [§12](#the-other-thing-that-happened-to-hours-they-went-on-sale) |
@@ -6000,6 +6091,10 @@ trust the rest of it.
 | Action100M has 100 M instances | **147 M** temporally localised segments from 1.2 M instructional videos | [§10](#action100m) |
 | cosmos-curate and NeMo Curator are rival tools | Cosmos-Xenna is **NeMo Curator's production executor** | [§9](#cosmos-curate) |
 | A tracker lists Egocentric-10K as gated, so it isn't Apache 2.0 | Both are true — **licence and access are separate axes** | [§11](#11-the-licence-trap) |
+| **DROID has 86 tasks** *(this document, from the project page)* | **The paper says 84, at both v1 and v2.** The project page says 86. Same team, two surfaces published a year apart, and this document took the one that was not the paper. Small in magnitude and exactly the *cite the figure with its sentence* discipline [Ego-Exo4D](#ego-exo4d) already forced — corrected to 84 with the discrepancy left visible rather than one silently chosen | [§1](#droid--the-denominator-this-survey-leans-on-and-the-eleven-answers-other-people-give-for-it) |
+| **The most-cited robot corpus in this survey has an entry** *(this document, for eighty-two sweeps)* | **It had a table row.** DROID is named **thirty times**, is the denominator the 23× scarcity claim divides by, and had no write-up at all. **A survey should not run its central comparison against a corpus it never opened** — now written up from source: 76 k trajectories / 350 h, 564 scenes, 50 collectors, 13 institutions, 12 months, 1,417 calibrated viewpoints, language on **95% of successful episodes** where successful is **75 k of 76 k** | [§1](#droid--the-denominator-this-survey-leans-on-and-the-eleven-answers-other-people-give-for-it) |
+| **DROID states no terms, so the field is simply empty** | **Eleven other parties have filled it, with at least five different licences** — `apache-2.0` (`cadene/droid` 91,575; `lerobot/droid_1.0.1`; `allenai/MolmoAct2-DROID-Dataset`), `mit` (`Salesforce/3d_optical_flow_droid`, 86,562), **`openmdw-1.1`** (`nvidia/Cosmos3-DROID`, a licence family appearing nowhere else here), `other`, and **four copies with no licence field at all**. `droid-dataset/droid` has **no `LICENSE`** — the raw URL 404s. **A team that pulls "DROID" gets one of five licences depending which of eleven artefacts they clicked** | [§1](#droid--the-denominator-this-survey-leans-on-and-the-eleven-answers-other-people-give-for-it) |
+| **The `Cherrytest` licence divergence was a one-off** *(what a single instance supported)* | **Second instance, same mechanism.** `lerobot/droid_100` is **`mit` on Hugging Face and `Apache License 2.0` on ModelScope** — same org, same repository name, and the ModelScope record is again `CreatedBy: Cherrytest`. **One occurrence is an anecdote; two make it a behaviour of the mirroring path**, which is that the licence field gets re-typed by whoever moves the bytes. Both DROID divergences are permissive-to-permissive, so nothing restrictive is dropped — **which is why it is worth recording here**: the mechanism is visible in the harmless case, and the EgoDex re-uploads show it in the harmful one | [§1](#droid--the-denominator-this-survey-leans-on-and-the-eleven-answers-other-people-give-for-it), [§11](#the-second-index-queried-at-last--and-the-strongest-uploader-stamp-case-yet) |
 | **An uploader's licence field is a problem because publishers stay silent** *(this document's framing across four catalogued cases)* | **It is worse than that: a stamp can contradict a publisher who spoke clearly.** EgoDex is **CC-BY-NC-ND** — non-commercial, *no derivatives* — and two ModelScope copies carry **`Apache License 2.0`** at **814,750 combined downloads**. One names *"Apple's EgoDex"* in its own card and describes a **repack**; the other a **re-encode merged with EgoVid**. *No legal conclusion is drawn.* The pipeline consequence is the point: **a manifest recording "the terms as read at the artefact" faithfully records the wrong answer**, and only a field that also stores the resolved source URL survives it | [§11](#the-second-index-queried-at-last--and-the-strongest-uploader-stamp-case-yet) |
 | **A personal namespace is the tell that a licence field is an uploader's** | **Not on a platform that lets a mirroring account publish into an organisation's namespace.** On ModelScope `OpenGVLab/InternVid` reads **`cc-by-nc-sa-4.0`** and `OpenGVLab/InternVid-Full` reads **`Apache License 2.0`**, on near-identical READMEs — while **both read `cc-by-nc-sa-4.0` on Hugging Face**. Both ModelScope records were **`CreatedBy: Cherrytest`**, as was `builddotai/Egocentric-10K`. **The cue that made the previous four detectable is absent, and the divergent field is the permissive one** — Apache-2.0 drops the non-commercial restriction *and* the share-alike obligation | [§11](#the-second-index-queried-at-last--and-the-strongest-uploader-stamp-case-yet) |
 | **The survey's negatives are negative about one hub** *(this document, stating the limit last sweep and declining to fix it)* | 🟢 **Fixed, and they held.** Roughly two dozen names queried against ModelScope: **no artefact exists** for EgoScale, EgoCS-400K, EgoLive, World In Your Hands, SiMDex, EgoTac, OpenMMEgo, Egocentric-1M, DreamDojo's video, Project Kitchen, MEgoVista, UMI-Bridge, BinoGen, EgoMimic, FastUMI, EgoHumanoid, H-Tac, EgoTactile, EgoScaler, ACE-Ego-0, EgoInfinity, EgoAVFlow or EgoEngine. **The blind spot was real and the conclusions drawn through it survive it** — reported because a survey that announces a hole and never says what was in it has made the announcement do the check's work | [§11](#the-second-index-queried-at-last--and-the-strongest-uploader-stamp-case-yet) |

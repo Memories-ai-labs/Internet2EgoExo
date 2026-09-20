@@ -212,9 +212,18 @@ And the denominator has a provenance problem of its own. **DROID states its data
 terms nowhere** — not the project page, not the docs, and the data repo has no
 `LICENSE` (only the separate policy-learning repo does, MIT, over code). The
 loudest answer is a third party's: `cadene/droid`, a LeRobot conversion in a
-personal namespace, stamped **Apache-2.0**, ungated, **104,783 downloads**. That
+personal namespace, stamped **Apache-2.0**, ungated, **104,783 downloads**
+(91,575 at the 20 September reading). That
 is the fourth time in this survey an uploader's licence field has stood in for a
-publisher's silence, and it is larger than the other three together. Its
+publisher's silence, and it is larger than the other three together. 🔴 **And
+counted across both hubs it is not one answer but eleven, carrying at least five
+different licences** — `apache-2.0` on three copies, `mit` on two,
+**`openmdw-1.1`** on NVIDIA's Cosmos3-DROID, `other` on one, and **no licence
+field at all on four more**. One repository, `lerobot/droid_100`, is **MIT on
+Hugging Face and Apache-2.0 on ModelScope**. **A team that pulls "DROID" gets one
+of five licences depending which artefact they clicked, and the publisher has
+said nothing that would settle it** — which is the cleanest case in the survey
+for storing the resolved source URL beside the terms, not just the terms. Its
 counterpart **AgiBotWorld-Beta** (2,976.4 h, CC BY-NC-SA 4.0 — non-commercial
 *and* share-alike) sits behind a **click-through, not a contact form**: 86,157
 downloads have passed through it. Most-restrictive terms, near-frictionless
