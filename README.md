@@ -545,16 +545,23 @@ them:
   (100,405 h, 10.8 B frames, **456×256**), both Apache 2.0. Note what scaling
   cost: a 17× drop in pixels per frame, in a domain where finger articulation is
   the payload. And note how it landed — the publisher's own listing shows
-  the 256p corpus pulled **119,604** times last month against the 1080p corpus's
-  **71,219** — **1.7:1**. Eight readings run **4.8 → 5.3 → 4.5 → 3.6 → 3.2 → 1.8
-  → 1.6 → 1.7**. ⚠️ The last three are recorded rather than used. The sixth was a
-  **+76% jump on the 1080p corpus in about a day**; the test set up to tell a
-  burst from real demand was *does it keep climbing or plateau* — **it
-  plateaued**, three readings in a narrow band around seventy thousand. That is
-  the burst signature, so the **sustained-demand explanation is disconfirmed**
-  and the decisive check is whether the counter falls sharply around
-  **mid-October**, thirty days after the jump. **Until then this README leans on
-  3.2:1, the last reading before the discontinuity.** The direction has held
+  the 256p corpus pulled **123,659** times last month against the 1080p corpus's
+  **70,302** — **1.8:1**. Nine readings run **4.8 → 5.3 → 4.5 → 3.6 → 3.2 → 1.8
+  → 1.6 → 1.7 → 1.8**. ⚠️ The last four are recorded rather than used. The sixth
+  was a **+76% jump on the 1080p corpus in about a day**; the test set up to tell
+  a burst from real demand was *does it keep climbing or plateau* — **it
+  plateaued**, now four readings in a narrow band around seventy thousand. That
+  is the burst signature, so the **sustained-demand explanation is
+  disconfirmed**, and the decisive check is **mid-October**, thirty days after
+  the jump. **Until then this README leans on 3.2:1, the last reading before the
+  discontinuity.** 🟢 **The ninth reading also added the control this series
+  always lacked.** Eighteen counters were read the same morning, not two, and
+  **fourteen fell** — median about **−1.3%**. Against that basket the 1080p
+  corpus moved **−1.3%, exactly the median and indistinguishable from platform
+  drift**, while 256p **rose 3.4%**, second-largest gain of the eighteen. **A
+  ratio survives platform-wide drift; a level does not**, so the mid-October test
+  is restated: the burst is confirmed only if 1080p falls sharply *relative to
+  the basket*, not merely in absolute terms. The direction has held
   since the third reading; the speed is not claimable. A previous revision explained the
   fall as the 1080p corpus growing; at the fifth reading **both fell** — 256p by
   14.5%, 1080p by 4.0% — so what is shifting is *relative* pull, not absolute

@@ -1088,7 +1088,7 @@ average success rate over a no-pretraining baseline.**
 >
 > **Code is marked "Coming Soon"** — re-verified again this sweep at the GEAR
 > project page, which is dated **19 Feb 2026** and still shows
-> *"[GitHub (Coming Soon!)]"* — the page is dated **19 Feb 2026** and was re-checked **18 Sep 2026**, so **211 days**, across
+> *"[GitHub (Coming Soon!)]"* — the page is dated **19 Feb 2026** and was re-checked **21 Sep 2026**, so **214 days**, across
 > repeated checks. Recorded as a dated observation rather than a prediction — the
 > release may still come, but a plan cannot be built on it. The page has shown
 > the same thing at every check: no active link, no
@@ -4425,16 +4425,44 @@ citation of a claim that has been reframed is not stale, exactly; it is
 **quietly correct about a different sentence than the one you read**, which is
 harder to notice than being wrong.
 
-✅ **Re-run in full 19 Sep 2026, and stated so a later sweep can tell movement
-from drift.** All **63** arXiv IDs resolved (62 in the audit script plus
-**PRISM 2603.29281**, added and verified at v1 the same day), **43 at their cited
-version**, **18 bare against multi-version papers**, **1 deliberately pinned
-behind**. SABER's `2605.09613` is **v1 against a current v1** — there is no later
-version, so the nine figures re-verified in that entry are the only ones the paper
-has ever stated. **185 URLs** checked; **38 non-2xx**, of which **33 are the
-proxy's blanket 403 on `github.com`**, **3 are not URLs at all** (`localhost:8000`
-and two placeholders inside code blocks), and **2 are real** — **the same two for
-the fourth pass running**:
+✅ **Re-run in full again 21 Sep 2026.** All **66** arXiv IDs resolved — **46 at
+their cited version**, **19 bare against multi-version papers**, **1 deliberately
+pinned behind** (EgoDex). One paper moved and was re-read because of it:
+[OmniViTac](#omnivitac--tactile-on-the-robot-side-27810-downloads-and-a-card-that-says-only-its-licence)
+is now at **v3** (10 Aug 2026) against a bare citation, and its figures —
+**21,000+ trajectories, 86 tasks, 100+ objects** — are **unchanged at v3**. That
+is what a bare citation surviving a revision looks like, and it is worth one line
+because the [S-EMBER case](#s-ember) shows what it looks like when one does not.
+**193 URLs** checked; **38 non-2xx**, of which **35 are the proxy's blanket 403 on
+`github.com`** and 🔴 **three are real — up from two, for the first time in five
+passes**:
+[H-Tac's printed page](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual)
+(**404, tenth consecutive**), **ENIGMA-360's** (**403 for the eighth time
+running** — ten failures, last eight identical, stays **gone**), and 🔴 **new this
+pass: `nexdata.ai/datasets/embodied-ai/2145`, the vendor catalogue page for the
+"10000-Hour Egocentric Full-Body Multimodal Dataset", now returns 404** while the
+category page above it and the site root both return 200. **The listing was
+withdrawn; the advertisement was not** — see
+[§12](#the-other-thing-that-happened-to-hours-they-went-on-sale).
+
+📅 **The dated commitments, checked on schedule.** [EgoScale](#egoscale)'s
+*"Coming Soon"* page is now **214 days** old. [HumanTouch](#touchsight-and-humantouch--a-fifth-position-and-a-licence-that-lives-on-another-platform)
+promised **1,000 hours by the end of September**; nine days out, its scale badge
+still reads **~100 小时** and the Hugging Face copy is unchanged since 6 Sep,
+though the ModelScope copy was touched on 20 Sep. **Not yet due, not yet
+delivered, and recorded at the interim rather than only at the deadline.**
+
+⚠️ **And its ModelScope counter is now evidence rather than a caveat.** That copy
+went **2,584,370 → 2,616,769 in about twenty-four hours — +32,399** — while the
+*same corpus's* Hugging Face counter **fell, 12,285 → 11,104**, over the same
+interval. **A corpus with one like does not acquire thirty-two thousand
+downloaders in a day**; across **88,085 files**, file-level counting explains it
+and nothing else needs to. The two columns measure different things, and this is
+the reading that shows it instead of asserting it.
+
+*(The previous full pass, 19 Sep: 63 IDs, 43 at cited version, 18 bare
+multi-version, 1 pinned; 185 URLs, 2 real failures.)* Earlier still, the audit
+found **the same two for the fourth pass running**:
 [H-Tac's printed `beingbeyond.github.io/TTP/`](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual)
 (**404, ninth consecutive**) and **ENIGMA-360's project page** — **403 for the
 seventh time running**, while `iplab.dmi.unict.it/` itself returns **200**. **Nine
@@ -5082,11 +5110,11 @@ read straight off the cards.
 > **Second, the ratio has since collapsed.** Re-read at the dataset cards this
 > sweep, like for like:
 >
-> | Card | 1st | 2nd | 3rd | 4th | 5th | 6th | 7th | **8th** | Res. |
-> |---|---|---|---|---|---|---|---|---|---|
-> | Egocentric-100K | **164,868** | **158,934** | **156,632** | **145,830** | **124,711** | **123,111** | **119,683** | **119,604** | 456×256 |
-> | Egocentric-10K | **34,519** | **30,087** | **34,587** | **40,875** | **39,248** | **69,216** | **73,594** | **71,219** | 1080p |
-> | *ratio* | *4.8:1* | *5.3:1* | *4.5:1* | *3.6:1* | *3.2:1* | *1.8:1* | *1.6:1* | ***1.7:1*** | |
+> | Card | 1st | 2nd | 3rd | 4th | 5th | 6th | 7th | 8th | **9th** | Res. |
+> |---|---|---|---|---|---|---|---|---|---|---|
+> | Egocentric-100K | **164,868** | **158,934** | **156,632** | **145,830** | **124,711** | **123,111** | **119,683** | **119,604** | **123,659** | 456×256 |
+> | Egocentric-10K | **34,519** | **30,087** | **34,587** | **40,875** | **39,248** | **69,216** | **73,594** | **71,219** | **70,302** | 1080p |
+> | *ratio* | *4.8:1* | *5.3:1* | *4.5:1* | *3.6:1* | *3.2:1* | *1.8:1* | *1.6:1* | *1.7:1* | ***1.8:1*** | |
 >
 > That is **single digits**, not 470:1.
 >
@@ -5182,6 +5210,37 @@ read straight off the cards.
 > readings gave a band and were stable-looking rather than right. A fourth turned
 > the band into a trend. A sixth offered the best number this repo's argument has
 > ever had — **and the test set up to check it said no.**
+>
+> 🟢 **The ninth reading holds the plateau — and comes with the thing this series
+> has always lacked: a control.** 1080p reads **70,302**, a fourth consecutive
+> value in the seventy-thousand band (69,216 → 73,594 → 71,219 → 70,302), so the
+> burst signature is now four readings deep rather than three. 256p reads
+> **123,659**, and the ratio is **1.8:1**.
+>
+> **But the useful part of this reading is methodological.** Eighteen counters
+> were read the same morning, not two, and **fourteen of the eighteen fell** —
+> `facebook/ego-1k` −5.6%, `UniHand_Preview` −27.6%, `egoscaler-v2` −8.8%,
+> `Xspark-HumanTouch` −9.6%, `PRISM-100K` −11.8%, `stereo-550` −1.3%,
+> `OpenAoE-2000h` −2.1%, and on. **Median movement across the basket: about
+> −1.3%.** Against that baseline:
+>
+> | Card | Move | Against the basket |
+> |---|---|---|
+> | **Egocentric-100K (256p)** | **+3.4%** | 🔴 **rose while the field fell** — second-largest gain of eighteen |
+> | Egocentric-10K (1080p) | −1.3% | exactly at the median: **indistinguishable from platform drift** |
+>
+> 🔴 **This changes how the mid-October test has to be read, and it is better to
+> notice that now than after the number arrives.** The test as stated was *"the
+> 1080p counter should fall sharply around mid-October if the jump was a
+> burst."* But an **absolute** fall is not evidence when the whole portfolio
+> drifts — and this reading shows it drifting. **A ratio is robust to that and a
+> level is not**, because platform-wide drift divides out of the numerator and
+> denominator together. **So the test is restated: the burst is confirmed only if
+> the 1080p counter falls sharply *relative to the basket median*, not merely in
+> absolute terms.** The basket is now read every staleness pass for exactly this
+> purpose. *(A tenth reading a day apart would have shown 256p up 3.4% and been
+> written up as demand; the control is the only reason that sentence is not in
+> this document.)*
 >
 > ⚠️ **And the publisher's two surfaces disagree.** The organisation listing
 > shows **1.95 M** for Egocentric-100K against the card's 164,868, while
@@ -5551,7 +5610,7 @@ others, most with *"sample"* in the name. Five were read in full:
 
 | Card | What the name says | What is in it |
 |---|---|---|
-| 🔴 `Nexdata-AI/10000-Hour-Egocentric-Video-Dataset` | 10,000 hours | **three files.** `.gitattributes`, `README.md`, and a `meta.json` describing **one 59.68-second recording** — whose video file is **not in the repo**. No licence field. Ungated, 60 downloads |
+| 🔴 `Nexdata-AI/10000-Hour-Egocentric-Video-Dataset` | 10,000 hours | **three files.** `.gitattributes`, `README.md`, and a `meta.json` describing **one 59.68-second recording** — whose video file is **not in the repo**. No licence field. Ungated, 60 downloads (**46** at the 21 Sep reading) — and its **vendor catalogue page now 404s** |
 | `UniDataPro/egocentric-video` | a dataset | one `.mp4`, one `.csv`, one tracking `.txt` — and **`CC BY-ND 4.0`** |
 | `humyn-labs/APAC-Egocentric-Stereo-Labeled` | labelled stereo | annotation JSONLs, `n<1K`, **CC BY 4.0** — a genuine, tiny sample |
 | `Worlddatalabs/egocentric-manufacturing` | manufacturing footage | `license: other`, **manually gated**, scene-segmentation JSON |
@@ -5568,6 +5627,27 @@ two-files-no-data not because it is emptier but because it is *deliberate*: a
 stub is an abandonment, a listing is a product. *(A small internal
 inconsistency, since this document collects them: the README advertises 30 fps;
 the single `meta.json` records 24.999.)*
+
+🔴 **And on 21 Sep the product went away while the advertisement stayed.** The
+vendor catalogue page this entry cites —
+`nexdata.ai/datasets/embodied-ai/2145` — now returns **404**, checked twice,
+while the category page above it and the site root both return **200**, so it is
+a withdrawn listing rather than a site outage. **The Hugging Face repo is
+untouched**: same three files, no licence field, last modified 12 Aug, and still
+named `10000-Hour-Egocentric-Video-Dataset`.
+
+> **This is a shape worth naming because it inverts the usual failure.** The
+> survey's standing complaint is that artefacts outlive their documentation —
+> stale cards, dead project pages, licences that survive only in an unversioned
+> README. **Here the documentation outlived the artefact's own sales listing.**
+> The one surface that could have told a reader what the ten thousand hours cost,
+> who may buy them, and on what terms is the surface that vanished; what remains
+> is the name and the 76-point pose spec. A reader arriving at the Hub today sees
+> a live repository advertising a corpus whose vendor no longer lists it, with
+> **no licence field to fall back on and nothing but *"available upon request"*
+> to act on.** *Nothing here implies the corpus is gone* — vendors reorganise
+> catalogues constantly. **The point is that it cannot be checked, and that the
+> artefact which remains is the one that never carried the information.**
 
 ⚠️ **One licence in that table deserves separate notice, because it is a shape
 this document has not recorded before: `CC BY-ND 4.0`.** Every restrictive
@@ -5988,7 +6068,7 @@ attention to the text, and this one cannot.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Thirty-eight of them are
+index, not a summary, and each row links to the working. **Thirty-nine of them are
 this document's own errors** *(counted by the marker itself this sweep rather than
 by eye: the previous revision said twenty-nine, which was one short even before
 this round's four were added — the count of the count was also drifting)* — marked *(this document…)* in the left column and
@@ -6062,7 +6142,7 @@ trust the rest of it.
 | **A paper that says "we release X" has released X** | [MINT](#mint--camera-alignment-at-scale-and-a-release-sentence-with-no-address) states *"We release the model, training and inference code, labeling pipeline, and a curated 1,021-hour egocentric trajectory dataset"* and **contains no URL anywhere, in v1 or v2** — no repo, no project page, no card, and nothing findable on Hugging Face. **A new shape: a release in the present tense with nowhere to go.** Recorded as *not locatable*, which is not the same as *not released* | [§4](#mint--camera-alignment-at-scale-and-a-release-sentence-with-no-address), [§11](#11-the-licence-trap) |
 | **"Open" in a project's name never survives checking** *(the shape this survey had caught three times)* | ✅ [OpenWAM](#openwam--the-first-project-here-whose-open-survives-being-checked) survives it: **46 Apache-2.0 model repos (20 when first counted, re-counted 19 Sep 2026), 6 datasets, Apache-2.0 code, and all three surfaces its paper names resolve.** The control row the trap catalogue needed — though **3 of its 6 datasets carry no licence tag**, and **its ~6,400 h pretraining corpus is not among them** | [§2](#openwam--the-first-project-here-whose-open-survives-being-checked) |
 | **H-Tac has nothing released** *(this document, which reclassified it there on purpose)* | `BeingBeyond/H-Tac_Sample` has existed since **6 July 2026**: **98 episodes, 35,982 frames, 98 videos**, a **MIT `LICENSE`**, ungated, 234 downloads. The checks that produced *not released* were run against the paper and its printed project page — both still say nothing, and the page still 404s. **The release was in a namespace neither points at.** An absence of evidence in the two places a paper sends you is not evidence of absence | [§2](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) |
-| **A search for EgoScale's missing dataset finds EgoScale's dataset** | It finds **EgoScaler's** — a different paper by different authors at different institutions (2509.21986 vs 2602.16710). EgoScale's artefact has been *"Coming Soon"* for seven months; `Biscue5/egoscaler-v2` is **Apache-2.0, ungated, 27,912 downloads**. The only thing tying that card to its own paper is an `arxiv:` tag | [§2](#egoscaler--one-letter-from-the-entry-above-and-the-first-route-that-needs-only-rgb) |
+| **A search for EgoScale's missing dataset finds EgoScale's dataset** | It finds **EgoScaler's** — a different paper by different authors at different institutions (2509.21986 vs 2602.16710). EgoScale's artefact has been *"Coming Soon"* for **214 days**; `Biscue5/egoscaler-v2` is **Apache-2.0, ungated, 27,912 downloads (20,313 at the 21 Sep reading)**. The only thing tying that card to its own paper is an `arxiv:` tag | [§2](#egoscaler--one-letter-from-the-entry-above-and-the-first-route-that-needs-only-rgb) |
 | **DreamDojo's model terms are unstated** | The *video* terms still are. The **weights** carry **`nvidia-open-model-license`** on `nvidia/DreamDojo` — a bespoke licence, found at the artefact after the paper had been read three times | [§11](#11-the-licence-trap) |
 | **DROID is an open dataset with terms you can look up** | **It states none.** Not the project page, not the documentation site, and the data repo `droid-dataset/droid` has **no `LICENSE`** — only the separate `droid_policy_learning` repo does, **MIT**, over code. The loudest answer is a third party's: [`cadene/droid`](https://huggingface.co/datasets/cadene/droid), a LeRobot conversion in a personal namespace, stamped **`apache-2.0`**, ungated, **104,783 downloads** (91,575 at the 20 Sep reading). **Fourth instance of an uploader's licence field standing in for a publisher's silence — and larger than the other three together** | [§1](#the-robot-native-denominator) |
 | **AgiBotWorld-Beta is contact-gated** *(this document)* | It is a **click-through**, `gated: auto` — name, affiliation, accept the agreement, immediate access; **86,157 downloads**. Its CC BY-NC-SA 4.0 is still the most restrictive combination in this survey, which is the point: **most-restrictive licence, near-frictionless access**, the same access cell as Apache-2.0 Egocentric-10K | [§1](#the-robot-native-denominator) |
@@ -6091,6 +6171,9 @@ trust the rest of it.
 | Action100M has 100 M instances | **147 M** temporally localised segments from 1.2 M instructional videos | [§10](#action100m) |
 | cosmos-curate and NeMo Curator are rival tools | Cosmos-Xenna is **NeMo Curator's production executor** | [§9](#cosmos-curate) |
 | A tracker lists Egocentric-10K as gated, so it isn't Apache 2.0 | Both are true — **licence and access are separate axes** | [§11](#11-the-licence-trap) |
+| **The mid-October test is "does the 1080p counter fall sharply"** *(this document, setting its own test three sweeps ago)* | **An absolute fall is not evidence, because the whole portfolio drifts.** Eighteen counters read the same morning: **fourteen fell**, median about **−1.3%**. Against that basket the 1080p corpus moved **−1.3% — exactly the median, indistinguishable from platform drift** — while **256p rose +3.4%**, second-largest gain of eighteen. **A ratio survives platform-wide drift; a level does not.** The test is restated: the burst is confirmed only if 1080p falls sharply **relative to the basket median**. *A tenth reading a day apart would have shown 256p up 3.4% and been written up as demand; the control is the only reason that sentence is not in this document* | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
+| **A vendor's advertisement outlives its documentation** *(the survey's standing complaint — stale cards, dead project pages)* | **Here it inverted.** `nexdata.ai/datasets/embodied-ai/2145`, the catalogue listing for the "10000-Hour Egocentric Full-Body Multimodal Dataset", now **404s** while the category page above it and the site root return **200** — a withdrawn listing, not an outage. **The Hugging Face repo is untouched**: three files, no video, **no licence field**, still named for ten thousand hours. **The one surface that could have said what the hours cost and on what terms is the one that vanished** | [§12](#the-other-thing-that-happened-to-hours-they-went-on-sale) |
+| **Two hub counters can be compared if you caveat them** | **They cannot, and here is the reading that shows it rather than asserting it.** `Xspark-HumanTouch` on ModelScope went **2,584,370 → 2,616,769 in about twenty-four hours (+32,399)** while the **same corpus's** Hugging Face counter **fell, 12,285 → 11,104**, over the same interval. A corpus with **one like** does not gain thirty-two thousand downloaders in a day; across **88,085 files**, file-level counting explains it and nothing else needs to | [§2](#touchsight-and-humantouch--a-fifth-position-and-a-licence-that-lives-on-another-platform) |
 | **DROID has 86 tasks** *(this document, from the project page)* | **The paper says 84, at both v1 and v2.** The project page says 86. Same team, two surfaces published a year apart, and this document took the one that was not the paper. Small in magnitude and exactly the *cite the figure with its sentence* discipline [Ego-Exo4D](#ego-exo4d) already forced — corrected to 84 with the discrepancy left visible rather than one silently chosen | [§1](#droid--the-denominator-this-survey-leans-on-and-the-eleven-answers-other-people-give-for-it) |
 | **The most-cited robot corpus in this survey has an entry** *(this document, for eighty-two sweeps)* | **It had a table row.** DROID is named **thirty times**, is the denominator the 23× scarcity claim divides by, and had no write-up at all. **A survey should not run its central comparison against a corpus it never opened** — now written up from source: 76 k trajectories / 350 h, 564 scenes, 50 collectors, 13 institutions, 12 months, 1,417 calibrated viewpoints, language on **95% of successful episodes** where successful is **75 k of 76 k** | [§1](#droid--the-denominator-this-survey-leans-on-and-the-eleven-answers-other-people-give-for-it) |
 | **DROID states no terms, so the field is simply empty** | **Eleven other parties have filled it, with at least five different licences** — `apache-2.0` (`cadene/droid` 91,575; `lerobot/droid_1.0.1`; `allenai/MolmoAct2-DROID-Dataset`), `mit` (`Salesforce/3d_optical_flow_droid`, 86,562), **`openmdw-1.1`** (`nvidia/Cosmos3-DROID`, a licence family appearing nowhere else here), `other`, and **four copies with no licence field at all**. `droid-dataset/droid` has **no `LICENSE`** — the raw URL 404s. **A team that pulls "DROID" gets one of five licences depending which of eleven artefacts they clicked** | [§1](#droid--the-denominator-this-survey-leans-on-and-the-eleven-answers-other-people-give-for-it) |
@@ -6232,7 +6315,7 @@ trust the rest of it.
 - NVIDIA. *cosmos-curate.* (code Apache 2.0) https://github.com/nvidia-cosmos/cosmos-curate
 - *Action100M.* (dataset **`fair-noncommercial-research-license`** on `facebook/action100m-preview`, a *preview* subset; the CC BY 4.0 is the arXiv listing's) https://arxiv.org/html/2601.10592v1
 - Microsoft. *VLM-Video-Action-Localization.* https://microsoft.github.io/VLM-Video-Action-Localization/
-- Nexdata. *10000-Hour Egocentric Full-Body Multimodal Dataset.* (**no licence field**; the Hugging Face repo holds three files and no video — *"available upon request"*) https://huggingface.co/datasets/Nexdata-AI/10000-Hour-Egocentric-Video-Dataset · https://www.nexdata.ai/datasets/embodied-ai/2145
+- Nexdata. *10000-Hour Egocentric Full-Body Multimodal Dataset.* (**no licence field**; the Hugging Face repo holds three files and no video — *"available upon request"* — and 🔴 **the vendor catalogue page below now returns 404 as of 21 Sep 2026**, while the category page above it and the site root return 200) https://huggingface.co/datasets/Nexdata-AI/10000-Hour-Egocentric-Video-Dataset · ~~https://www.nexdata.ai/datasets/embodied-ai/2145~~
 - UniDataPro. *Egocentric video dataset.* (**CC BY-ND 4.0** — commercial use permitted, **derivatives forbidden**) https://huggingface.co/datasets/UniDataPro/egocentric-video
 - Humyn Labs. *APAC/LATAM Egocentric sample sets.* (CC BY 4.0, ungated, `n<1K`) https://huggingface.co/datasets/humyn-labs/APAC-Egocentric-Stereo-Labeled
 - World Data Labs. *Egocentric Manufacturing.* (`license: other`, manually gated) https://huggingface.co/datasets/Worlddatalabs/egocentric-manufacturing
