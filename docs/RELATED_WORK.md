@@ -4241,7 +4241,7 @@ Reading the licences across this document produces the wider pattern:
 | **EgoLive** | 🔴 **no dataset licence stated anywhere** — the only licence string in the paper is the **arXiv listing's CC BY 4.0**, and distribution runs through a commercial data marketplace (`robotdata-market.jdcloud.com`) whose terms are not the paper's | ⚠️ **unresolved** — previously recorded here as CC BY 4.0 |
 | **MobileEgo Anywhere** — `fpvlabs/stera-10m` | **`license: other`**, gated, **401 unauthenticated** — the same bespoke posture as its sibling Stereo-550 *(this document previously recorded **CC BY 4.0**, which is the **arXiv paper's** licence)* | ⚠️ **unclassifiable** — unreadable before agreeing |
 | NeMo Curator | Apache 2.0 | ✅ |
-| **Ropedia Xperience-10M** | **"other" — gated, DocuSign, research only** | ❌ non-commercial |
+| **Ropedia Xperience-10M** | **"other" — manual review **plus** an off-platform DocuSign signature (requests stay *pending* until signed), research only. 🔴 An **ungated `xperience-10m-sample` under CC BY-NC 4.0** exists beside it, unmentioned here for dozens of sweeps; three further `ropedia-ai` artefacts carry **no licence field** | ❌ non-commercial, and **partially released** |
 | EgoKit | toolkit only, no dataset | n/a — paper carries the arXiv licence |
 | VLM-Video-Action-Localization | MIT | ✅ |
 | **InternVid** | **CC BY-NC-SA 4.0**, gated *(resolved on re-check; previously recorded as unstated)* | ❌ non-commercial **and** share-alike |
@@ -5317,14 +5317,67 @@ maps, SLAM camera pose, two-hand MANO mocap, **full-body mocap**, IMU, and
 hierarchical language annotations at five levels: task → subtask → action →
 interaction → objects.
 
+✅ **All eleven figures above re-verified at the card, 21 Sep 2026** — 10 M
+experiences, 10,000 h, 2.88 B RGB frames, 720 M depth frames, 7.2 B IMU frames,
+~1 PB, 16 M caption sentences, 6 K vocabulary, six streams, five annotation
+levels, two-hand MANO plus full-body mocap: **every one holds.** Three further
+figures the entry did not carry: **576 M pose-and-mocap frames**, **200 M caption
+words**, and **350 K objects**. The episode layout confirms the stream count
+concretely — `fisheye_cam0..3.mp4` plus the two rectified stereo views — and the
+mocap fields are explicitly MANO (`left_mano_hand_pose`, `..._global_orient`,
+`..._betas`), which puts this corpus inside the
+[MANO chokepoint](#wilor--the-chokepoint-read-at-source) as well.
+
 🔴 **It is not free hours.** The card's licence field reads **"other"**: access
 is **gated behind manual review**, restricted to **research and non-commercial
-use**, and requires completing a **DocuSign agreement**. On consent it states the
-data "was collected and processed under appropriate consent and review
-procedures", names privacy and downstream misuse as open questions, and
-prohibits identity recognition, person re-identification, biometric profiling
+use**, and requires completing a **DocuSign agreement** — and the gate is **two
+stage**, which the entry had flattened. The card carries its own warning: *"If
+you have already submitted an access request but have not completed the required
+DocuSign agreement, your request will remain **pending**."* So a Hugging Face
+approval is not access; the binding instrument is signed **off-platform**, at a
+`docsend.com` URL, and nothing on the Hub records whether you signed it. On
+consent it states the data "was collected and processed under appropriate consent
+and review procedures", names privacy and downstream misuse as open questions,
+and prohibits identity recognition, person re-identification, biometric profiling
 and surveillance. That is a markedly more careful posture than Egocentric-10K's —
 and a markedly less available dataset.
+
+🔴 **And there is a sample this entry never mentioned, which makes this the sixth
+*partially released* case.**
+[`ropedia-ai/xperience-10m-sample`](https://huggingface.co/datasets/ropedia-ai/xperience-10m-sample)
+is **CC BY-NC 4.0, ungated, eleven files, `n<1K`**, published 16 March 2026 — a
+real, standard, quotable licence with no gate at all, beside a parent that is
+`other` behind manual review and a signature. **Same structure as
+[SABER](#saber--commissioned-egoexo-capture-in-a-domain-the-internet-is-full-of)**
+— restrictive-but-stated terms on the part you can have, bespoke terms on the
+part you cannot — **except that SABER's subset was itself gated and this one is
+not**, which is one more datapoint for licence and access being independent axes.
+*(A small inconsistency, since this document collects them: the sample's own tags
+read `xperience-10k`, not `-10m`.)* The org holds **five artefacts** in total, and
+**three of them — `SpatialBenchmark`, `DA-Next-5M`, `ropedia-data-sample` — carry
+no licence field at all.**
+
+🔴 **The finding that generalises beyond this entry: gate strength does not
+predict the pull, and within this one publisher it inverts.** Five artefacts read
+the same morning:
+
+| Artefact | Gate | Downloads | Likes |
+|---|---|---|---|
+| **`ropedia-ai/xperience-10m`** | **manual review + off-platform DocuSign** — the strongest gate in this survey | **102,655** | **249** |
+| `agibot-world/AgiBotWorld-Beta` | auto click-through | 105,300 | 77 |
+| `ropedia-ai/xperience-10m-sample` | **none** | **472** | 14 |
+| `OpenGVLab/InternVid` | auto click-through | **206** | 100 |
+| [`DreamVu/SABER-10K`](#saber--commissioned-egoexo-capture-in-a-domain-the-internet-is-full-of) | auto, four fields | **18** | 0 |
+
+> **Two identical auto gates produce 105,300 and 206.** The heaviest gate here
+> produces the second-highest count and **the highest like-count of any artefact
+> in this document**. And the decisive pair is *within one publisher*:
+> **Ropedia's ungated sample is pulled 217× less than its manually-reviewed,
+> DocuSign-bound parent.** **Friction is not the variable; wanting the thing
+> is.** That settles, on a five-point spread with an inverted within-publisher
+> pair, what [sweep 79 could only settle with one sibling control](#saber--commissioned-egoexo-capture-in-a-domain-the-internet-is-full-of):
+> **a low counter on a gated dataset is not explained by the gate**, and this
+> document should stop reaching for that explanation — including for SABER's 18.
 
 **The public critique, and why it belongs here.** A
 [July 2026 analysis](https://technologies.org/ropedia-raises-30-million-for-physical-ai-training-data-but-the-dataset-math-doesnt-hold-up/)
@@ -6068,7 +6121,7 @@ attention to the text, and this one cannot.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Thirty-nine of them are
+index, not a summary, and each row links to the working. **Forty-one of them are
 this document's own errors** *(counted by the marker itself this sweep rather than
 by eye: the previous revision said twenty-nine, which was one short even before
 this round's four were added — the count of the count was also drifting)* — marked *(this document…)* in the left column and
@@ -6164,13 +6217,16 @@ trust the rest of it.
 | EgoExoLearn / EgoHumanoid are openly licensed datasets | Their **MIT and Apache 2.0 licences cover the code**; neither states dataset terms | [§1](#egoexolearn), [§2](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator) |
 | Ego-1K is ~1,000 hours of egocentric video | **956 videos of ~8–10 seconds** from a 16-camera rig, for novel-view synthesis | [§1](#ego-1k) |
 | Open X-Embodiment is an openly licensed pooled corpus | **No overall licence stated**, and no position on whether its 60 components keep their own | [§2](#the-robot-native-denominator) |
-| The high-fidelity corpora are free too | Xperience-10M **gated, non-commercial**; AgiBotWorld-Beta **CC BY-NC-SA**; EgoScale **unreleased**; SABER **a quarter released, CC BY-NC, and that quarter gated** | [§11](#11-the-licence-trap) |
+| The high-fidelity corpora are free too | Xperience-10M **manual-gated + DocuSign, non-commercial** (with an ungated CC BY-NC 4.0 sample beside it); AgiBotWorld-Beta **CC BY-NC-SA**; EgoScale **unreleased**; SABER **a quarter released, CC BY-NC, and that quarter gated** | [§11](#11-the-licence-trap) |
 | EgoInfinity processed 142 M clips / 14.6 years | Its abstract makes **no** scale claim; those are Action100M's figures, and EgoInfinity's curated set is **106 videos** | [§8](#egoinfinity--lift-to-4d-then-reproject) |
 | HumanNet: 1,000 h ego video *beat* 100 h robot data | "**matched or modestly surpassed**" — and that 100 h is ~a third of all of DROID | [§2](#humannet) |
 | LAION-BVD is a ready 1.3 B-URL pool | **Research use only**, downloads still marked *coming soon* | [§7](#laion-bvd) |
 | Action100M has 100 M instances | **147 M** temporally localised segments from 1.2 M instructional videos | [§10](#action100m) |
 | cosmos-curate and NeMo Curator are rival tools | Cosmos-Xenna is **NeMo Curator's production executor** | [§9](#cosmos-curate) |
 | A tracker lists Egocentric-10K as gated, so it isn't Apache 2.0 | Both are true — **licence and access are separate axes** | [§11](#11-the-licence-trap) |
+| **A gated dataset's low download count is explained by the gate** *(the reading this document reached for at SABER, then ruled out with a single sibling control)* | **Ruled out properly now, on five points with an inverted within-publisher pair.** `ropedia-ai/xperience-10m` has the **strongest gate in this survey — manual review plus an off-platform DocuSign** — and **102,655 downloads with 249 likes**, the highest like-count here. Two *identical* auto gates give **105,300** (AgiBotWorld-Beta) and **206** (InternVid). And Ropedia's **ungated** sample is pulled **472 times against its gated parent's 102,655 — 217× less.** **Friction is not the variable; wanting the thing is** — including for SABER's 18 | [§12](#ropedia-xperience-10m--the-fidelity-wings-extreme-and-a-caution-about-reading-press-releases-as-availability) |
+| **Xperience-10M is gated, full stop** *(this document, for dozens of sweeps)* | **It is *partially released*, the sixth such case, and the entry never said so.** [`ropedia-ai/xperience-10m-sample`](https://huggingface.co/datasets/ropedia-ai/xperience-10m-sample) is **CC BY-NC 4.0, ungated, eleven files** — a standard, quotable licence beside a parent that is `other` behind manual review and a signature. Same structure as SABER, **except SABER's subset was itself gated and this one is not.** The org holds five artefacts and **three carry no licence field at all** | [§12](#ropedia-xperience-10m--the-fidelity-wings-extreme-and-a-caution-about-reading-press-releases-as-availability) |
+| **Xperience-10M's gate is a manual review** *(this document, flattening two steps into one)* | **Two instruments, one off-platform.** The card warns that an approved Hugging Face request *"will remain **pending**"* until a **DocuSign agreement** is signed at a `docsend.com` URL. **The binding document is not on the Hub and the Hub records nothing about it** — so "gated: manual" understates by one whole instrument, and a manifest field that records only the platform's gate state would be wrong | [§12](#ropedia-xperience-10m--the-fidelity-wings-extreme-and-a-caution-about-reading-press-releases-as-availability) |
 | **The mid-October test is "does the 1080p counter fall sharply"** *(this document, setting its own test three sweeps ago)* | **An absolute fall is not evidence, because the whole portfolio drifts.** Eighteen counters read the same morning: **fourteen fell**, median about **−1.3%**. Against that basket the 1080p corpus moved **−1.3% — exactly the median, indistinguishable from platform drift** — while **256p rose +3.4%**, second-largest gain of eighteen. **A ratio survives platform-wide drift; a level does not.** The test is restated: the burst is confirmed only if 1080p falls sharply **relative to the basket median**. *A tenth reading a day apart would have shown 256p up 3.4% and been written up as demand; the control is the only reason that sentence is not in this document* | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 | **A vendor's advertisement outlives its documentation** *(the survey's standing complaint — stale cards, dead project pages)* | **Here it inverted.** `nexdata.ai/datasets/embodied-ai/2145`, the catalogue listing for the "10000-Hour Egocentric Full-Body Multimodal Dataset", now **404s** while the category page above it and the site root return **200** — a withdrawn listing, not an outage. **The Hugging Face repo is untouched**: three files, no video, **no licence field**, still named for ten thousand hours. **The one surface that could have said what the hours cost and on what terms is the one that vanished** | [§12](#the-other-thing-that-happened-to-hours-they-went-on-sale) |
 | **Two hub counters can be compared if you caveat them** | **They cannot, and here is the reading that shows it rather than asserting it.** `Xspark-HumanTouch` on ModelScope went **2,584,370 → 2,616,769 in about twenty-four hours (+32,399)** while the **same corpus's** Hugging Face counter **fell, 12,285 → 11,104**, over the same interval. A corpus with **one like** does not gain thirty-two thousand downloaders in a day; across **88,085 files**, file-level counting explains it and nothing else needs to | [§2](#touchsight-and-humantouch--a-fifth-position-and-a-licence-that-lives-on-another-platform) |

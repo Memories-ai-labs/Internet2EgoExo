@@ -228,6 +228,14 @@ counterpart **AgiBotWorld-Beta** (2,976.4 h, CC BY-NC-SA 4.0 — non-commercial
 *and* share-alike) sits behind a **click-through, not a contact form**: 86,157
 downloads have passed through it. Most-restrictive terms, near-frictionless
 access. **The gate tells you nothing about the licence in either direction.**
+🔴 **And it tells you nothing about demand either, which is the reading this
+README had been reaching for.** Five artefacts read on 21 September:
+`ropedia-ai/xperience-10m` carries **the strongest gate in the survey — manual
+review plus an off-platform DocuSign** — and **102,655 downloads with 249 likes**;
+two *identical* auto gates give **105,300** (AgiBotWorld-Beta) and **206**
+(InternVid); and Ropedia's own **ungated** sample is pulled **472 times against
+its gated parent's 102,655 — 217× less.** **Friction is not the variable; wanting
+the thing is.**
 
 Two neighbours are worth calling out directly:
 
