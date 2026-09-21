@@ -71,6 +71,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [H-Tac](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual)
   - [The wristband](#the-wristband--tactile-measured-without-instrumenting-the-hand-and-a-fourth-position)
   - [TouchSight and HumanTouch — a fifth tactile position](#touchsight-and-humantouch--a-fifth-position-and-a-licence-that-lives-on-another-platform)
+  - [AtomEgo — a provenance table that restates four corpora at once](#atomego--a-provenance-table-that-restates-four-corpora-at-once)
   - [The UMI family](#the-umi-family--capture-without-a-robot-and-the-blind-spot-this-survey-had)
   - [OmniViTac](#omnivitac--tactile-on-the-robot-side-27810-downloads-and-a-card-that-says-only-its-licence)
   - [Open-AoE](#open-aoe)
@@ -844,6 +845,7 @@ side actually is, and the answer is smaller than the rhetoric suggests.
 | **[AgiBotWorld-Beta](https://huggingface.co/datasets/agibot-world/AgiBotWorld-Beta)** | **2,976.4 hours**, 1 M+ trajectories, 200+ task types, 87 atomic skills | **100 robots** — mobile dual-arm, 6-DoF dexterous hands, visual-tactile sensors; video, depth, joint positions/velocities/forces, end-effector state, odometry | 🔴 **CC BY-NC-SA 4.0**, **click-through gated (auto-approved)** — **102,027** downloads |
 | **[Open X-Embodiment](https://robotics-transformer-x.github.io/)** | 1 M+ trajectories, **22 embodiments**, 527 skills, 160,266 tasks — **hours not stated** | **60 existing datasets pooled** from 34 labs across 21 institutions; single arms through bimanual robots and quadrupeds | 🔴 **No overall licence stated on the project page**, and no statement of whether the 60 components retain their own |
 | **[RoboCOIN](https://huggingface.co/RoboCOIN)** *(Wu et al., arXiv:2511.17441)* | **956 hours**, **15 embodiments** — 2.7× DROID | Real-robot teleoperation, shipped as **100+ separate per-task Hugging Face datasets**, every one `gated: auto`; **59,642 monthly downloads in aggregate** | ⚠️ **`license: apache-2.0` — plus obligations the gate adds** (see below) |
+| **[RoboMIND](https://huggingface.co/datasets/x-humanoid-robomind/RoboMIND)** *(Wu et al., arXiv:2412.13877)* | **107,000 trajectories**, 479 tasks, 96 object classes, **four embodiments** (Franka Panda, UR5e, AgileX dual-arm, a dual-dexterous-hand humanoid), plus **5,000 failure demonstrations with stated causes** — 🔴 **hours are not stated by the publisher**; [AtomEgo](#atomego--a-provenance-table-that-restates-four-corpora-at-once) counts **221.7 h across 83,152 of those episodes**, which extrapolates to **~285 h** *(derived here, not published — flagged as such)* | Human teleoperation on a unified platform and standardised protocol, plus an Isaac Sim digital twin | 🟢 **Apache-2.0**, `gated: auto`, 57,305 downloads — **the largest permissively-licensed real-robot corpus in this table**, and it was missing from it until sweep 86 |
 | **[InternData-A1](https://huggingface.co/datasets/InternRobotics/InternData-A1)** *(Tian et al., arXiv:2511.16651)* | **2,904 hours**, 4 embodiments — **simulation** | Synthetic manipulation across single-arm and bimanual skills under environmental variation | 🔴 **CC BY-NC-SA 4.0 — stated *only inside the gate prompt*.** The card carries **no `license:` tag**; 90,872 downloads |
 | 🔴 **[FastUMI-100K](#the-umi-family--capture-without-a-robot-and-the-blind-spot-this-survey-had)** *(UMI-style, no robot)* | **100 K+ trajectories**, 54 tasks — **more trajectories than DROID** | A **hand-held gripper with a GoPro**; multi-view wrist fisheye plus high-frequency end-effector states, LeRobot v2.1 | 🔴 **none stated** — ungated, **269,342 downloads** |
 | Human ego, for scale | [Egocentric-100K](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) 100,405 h · [DreamDojo](#dreamdojo--and-the-strongest-evidence-in-this-document-for-13) 44,711 h | Crowdsourced / commissioned capture | Apache 2.0 / unstated |
@@ -920,6 +922,21 @@ total is now roughly **350 + 2,976 + 956 ≈ 4,300 hours**, against
 Egocentric-100K's 100,405. **The scarcity claim survives at 23× rather than
 287×**, which is the honest number to argue from, and stating it that way is
 worth more than the larger one.
+
+🟢 **The denominator grew a fourth time at sweep 86, and the claim held — which
+is the point of recomputing rather than defending.** [AtomEgo](#atomego--a-provenance-table-that-restates-four-corpora-at-once)'s
+mixture named **RoboMIND**, a **107,000-trajectory, four-embodiment, Apache-2.0**
+real-robot corpus this document had never opened — **the largest permissively
+licensed one in the table.** 🔴 **Its publisher states no hours at all**, so it
+cannot be added to an hours-based denominator without inventing a number:
+AtomEgo counts **221.7 h across 83,152 of its episodes**, which extrapolates to
+**~285 h for the full 107 k** *(derived here, and flagged as derived)*. On that
+estimate the open real-robot total is **≈ 4,585 h** and Egocentric-100K is
+**≈ 22×** it, against 23×. **The multiple has now survived two enlargements of
+its own denominator**, having collapsed from 287× on the first. *And the fact
+that the newest, largest, most permissive entrant reports trajectories and not
+hours is itself the [unit problem](#atomego--a-provenance-table-that-restates-four-corpora-at-once)
+arriving inside the denominator.*
 
 ⚠️ **RoboCOIN carries a licence shape this document has not recorded: a
 permissive tag with obligations bolted on at the gate.** The card says
@@ -2724,6 +2741,101 @@ about Hugging Face, GitHub and the paper's own pages, and say nothing about
 ModelScope, OpenDataLab, BAAI, or any other hub.* Stated as a limit rather than
 fixed in one sweep, because fixing it means re-running every *not released*
 classification against a second index, and that is a pass of its own.
+
+### AtomEgo — a provenance table that restates four corpora at once
+
+**[arXiv 2609.21461](https://arxiv.org/abs/2609.21461)** (v1, 18 Sep 2026) —
+*"a systematic study of ego–robot co-training supported by a curated corpus of
+approximately 2,659 hours and a scalable data processing pipeline."* Read three
+days after posting, and it lands on three threads at once.
+
+**Mechanism.** Three co-training paradigms compared under matched data and
+compute: **Atom-DH** (joint co-training with domain-specific action heads),
+**Atom-CL** (progressive ego-to-robot transfer through explicit embodiment
+alignment), and **Atom-WAM** (joint video–action modelling). Everything maps into
+a single **80-dimensional state–action space** covering both arms, both
+end-effectors, grippers, **twelve hand joints per hand**, leg joints, head and
+waist — whole-body, and wide enough that the ego and robot sides are literally
+the same vector with different slots filled.
+
+🟢 **Its headline is the fourth independent statement of this survey's mixing
+result, and the most compact.** *"Data Scale × Alignment Quality → Capability
+Gain"*, with **Takeaway 1: "Effective alignment requires more than direct data
+mixing."** [ReWeight](#reweight--the-control-simdex-did-not-run) showed it with
+selection (39% → 44% → 57%), [OpenWAM](#openwam--the-first-project-here-whose-open-survives-being-checked)
+at a fixed hour budget, [UMI-Bridge](#simdex) with an intermediate domain, and
+AtomEgo now states it as a product rather than a comparison: **scale that is not
+aligned does not multiply into anything.**
+
+🔴 **But Table 1 is the reason this entry exists, and it is the strongest
+evidence in this document that an hour is not a fixed unit.** The paper prints a
+full provenance table — source, episodes, hours, proportion — for a corpus this
+survey already knows every row of:
+
+| Group | Source | Episodes | Hours **as AtomEgo counts them** | The publisher's own figure |
+|---|---|---|---|---|
+| Robot | Piper (in-house) | 5,829 | 25.5 | — |
+| Robot | [AgiBot World Beta](#the-robot-native-denominator) | 21,837 | **314.0** | **2,976.4** |
+| Robot | [DROID](#droid--the-denominator-this-survey-leans-on-and-the-eleven-answers-other-people-give-for-it) | 64,124 | **343.0** | **350** *(and 1,285 in OpenWAM)* |
+| Robot | [RoboCOIN](#the-robot-native-denominator) | 93,352 | **655.7** | **956** |
+| Robot | **RoboMIND** *(new to this document)* | 83,152 | 221.7 | **hours not stated** |
+| Ego | [EgoVerse](#egoverse) | 64,464 | **1,079.5** | **1,362** *(v2; 954 as Ego2Robot cites it)* |
+| Alignment | in-house aligned ego–robot | 1,296 | ~20.0 | — |
+| **Total** | | **334,054** | **~2,659.5** | |
+
+> 🔴 **Four corpora, four restatements, and you cannot tell from the numbers
+> which kind each is.** DROID at **343.0** against its own **350** looks like
+> light filtering. AgiBotWorld-Beta at **314.0** against **2,976.4** is a **9.5×
+> gap** and must be a subset. RoboCOIN at **655.7** against **956** is 69%.
+> EgoVerse at **1,079.5** is a *third* value for a corpus already carrying two.
+> And [OpenWAM's DROID at 1,285](#the-robot-native-denominator) is a restatement
+> in the other direction, almost certainly camera-hours. **Same corpus, same
+> field, and the printed hour-count can be smaller because of filtering, smaller
+> because of subsetting, or larger because of a different unit — with nothing in
+> the table distinguishing the three.** This is the survey's cleanest case for
+> the rule it keeps arriving at: **a corpus name plus an hour-count is not a
+> citation. The citation is the name, the count, and what was counted.**
+
+⚠️ **The ego side is one corpus, and it is the one with no stated licence.**
+EgoVerse supplies **all** of AtomEgo's egocentric data — 19.3% of episodes but
+**40.6% of the hours** — and [EgoVerse states no dataset terms anywhere](#egoverse),
+re-verified at v2, with access running through the authors' own EgoDB/S3 sync. So
+a systematic, carefully controlled study of ego–robot co-training rests, on the
+ego side, **entirely on a corpus whose terms cannot be read.** The robot side is
+better: AgiBotWorld-Beta is CC BY-NC-SA 4.0, RoboMIND is **Apache-2.0**, RoboCOIN
+Apache-2.0 behind a gate that adds obligations, and DROID says nothing at all.
+**Of six external sources, exactly one — RoboMIND — is permissively licensed and
+says so plainly.**
+
+✅ **A stated acceptance rate, which this document collects.** *"Starting from
+approximately **3,033 hours** of robot and egocentric data, our quality filtering
+pipeline retains about **2,659 hours**"* — a **12.3% discard**, against three
+state–action consistency checks adapted from Qwen-Manip. Far gentler than
+[EgoScaler's 64%](#egoscaler--one-letter-from-the-entry-above-and-the-first-route-that-needs-only-rgb),
+which is what you would expect: filtering already-curated robot corpora for
+corruption is a different job from deciding whether a found clip is usable at
+all.
+
+⚠️ **Release status, stated precisely.** The paper contains **one** external URL,
+[`github.com/Agentic-Intelligence-Lab/Atom-0`](https://github.com/Agentic-Intelligence-Lab/Atom-0),
+and **no sentence beginning "we release" or "we will release" anywhere** — every
+occurrence of *"open-source"* in the text refers to **other people's** data. So
+it names a surface without making a release claim, and **the 2,659-hour recipe
+and the "scalable data processing pipeline" are not said to be published**. The
+repo could not be read from this environment (the proxy 403s `github.com`), so
+this is recorded as *a named surface with no release statement*, not as released
+or unreleased. **For [§13](#13-why-no-open-source-project-does-exactly-this)'s
+prospective count, that is a third distinct outcome** alongside *names a surface
+and ships* (TouchSight) and *names nothing* (BinoGen, and the 15–16 September
+four).
+
+**Bearing here.** AtomEgo is the closest thing yet to a controlled experiment on
+the question this repo exists to serve, and its answer is the one the manifest is
+designed around: **hours only convert into capability through alignment, and
+alignment is a property you have to know about a clip before you mix it in.**
+What it does not do — and says it does not — is source any of those hours from
+the open web. Every one of its 2,659 comes from a corpus somebody else already
+commissioned.
 
 ### The UMI family — capture without a robot, and the blind spot this survey had
 
@@ -5810,6 +5922,19 @@ propose data machinery, and they split:
 | **[TouchSight](#touchsight-and-humantouch--a-fifth-position-and-a-licence-that-lives-on-another-platform)** (2609.20414) | glove-supervised dense contact force, with the glove **generatively removed** from the training pixels | ✅ **a project page that resolves, and a corpus that is actually downloadable** — ~100 hours on two hubs, ungated, today |
 
 **So this week is one out of two, and the streak is over at five out of six.**
+🟢 **And the 18 September reading adds a third outcome the two-way count could
+not express.** [AtomEgo](#atomego--a-provenance-table-that-restates-four-corpora-at-once)
+— a curated 2,659-hour ego–robot corpus **and a "scalable data processing
+pipeline"**, which is precisely this section's layer — **names exactly one
+external URL** (`github.com/Agentic-Intelligence-Lab/Atom-0`) and contains **no
+sentence beginning "we release" or "we will release" anywhere**; every use of
+*"open-source"* in it refers to other people's data. **That is neither *ships*
+nor *names nothing*: it is a surface with no release claim attached**, and the
+repo could not be read from this environment to settle which. The count is
+therefore recorded as **three outcomes, not two** — ships (TouchSight), names
+nothing (BinoGen and the 15–16 September four), and **names a surface without
+claiming a release** (AtomEgo) — because collapsing the third into either of the
+others is how a base rate starts flattering whoever keeps it.
 That is recorded prominently rather than buried, because **a prospective test
 whose reported base rate only ever goes one way is not being run, it is being
 quoted.** The counter-example is also the strongest kind: not a paper that
@@ -6121,7 +6246,7 @@ attention to the text, and this one cannot.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Forty-one of them are
+index, not a summary, and each row links to the working. **Forty-two of them are
 this document's own errors** *(counted by the marker itself this sweep rather than
 by eye: the previous revision said twenty-nine, which was one short even before
 this round's four were added — the count of the count was also drifting)* — marked *(this document…)* in the left column and
@@ -6224,6 +6349,9 @@ trust the rest of it.
 | Action100M has 100 M instances | **147 M** temporally localised segments from 1.2 M instructional videos | [§10](#action100m) |
 | cosmos-curate and NeMo Curator are rival tools | Cosmos-Xenna is **NeMo Curator's production executor** | [§9](#cosmos-curate) |
 | A tracker lists Egocentric-10K as gated, so it isn't Apache 2.0 | Both are true — **licence and access are separate axes** | [§11](#11-the-licence-trap) |
+| **Two publications disagreeing on a corpus's hours means one of them changed the unit** *(this document's reading of DROID at 350 vs OpenWAM's 1,285)* | **There are at least three causes and the number cannot tell you which.** [AtomEgo](#atomego--a-provenance-table-that-restates-four-corpora-at-once)'s Table 1 restates **four corpora at once**: DROID at **343.0** against **350** (filtering), AgiBotWorld-Beta at **314.0** against **2,976.4** (a **9.5×** subset), RoboCOIN at **655.7** against **956**, EgoVerse at **1,079.5** against a paper that says **1,362** and a citation that says 954. Add OpenWAM's DROID at **1,285** and the same corpus appears at 343, 350 and 1,285. **Smaller by filtering, smaller by subsetting, larger by unit — and nothing in any table distinguishes them.** A corpus name plus an hour-count is not a citation | [§2](#atomego--a-provenance-table-that-restates-four-corpora-at-once), [§1](#the-robot-native-denominator) |
+| **The open real-robot denominator is ~4,300 h, so the multiple is 23×** | **A fourth corpus was missing: RoboMIND** — 107,000 trajectories, 479 tasks, four embodiments, **Apache-2.0**, 57,305 downloads, **the largest permissively licensed real-robot set in this survey** — found inside AtomEgo's mixture, never opened here. 🔴 **Its publisher states no hours at all**, so adding it requires deriving one (~285 h on AtomEgo's per-episode rate, flagged as derived): total **≈4,585 h**, multiple **≈22×**. **The claim has now survived two enlargements of its own denominator**, having collapsed from 287× at the first | [§1](#the-robot-native-denominator) |
+| **A paper either names a release surface or it does not** *(the two-way count §13's prospective base rate was keeping)* | **AtomEgo is a third thing.** It names **one** external URL and contains **no sentence beginning "we release" or "we will release"** — every *"open-source"* in it describes **other people's** data — so its 2,659-hour recipe and its *"scalable data processing pipeline"* are neither claimed as published nor said to be withheld. **Recorded as a third outcome rather than folded into either**, because collapsing it is how a base rate starts flattering whoever keeps it | [§13](#13-why-no-open-source-project-does-exactly-this) |
 | **A gated dataset's low download count is explained by the gate** *(the reading this document reached for at SABER, then ruled out with a single sibling control)* | **Ruled out properly now, on five points with an inverted within-publisher pair.** `ropedia-ai/xperience-10m` has the **strongest gate in this survey — manual review plus an off-platform DocuSign** — and **102,655 downloads with 249 likes**, the highest like-count here. Two *identical* auto gates give **105,300** (AgiBotWorld-Beta) and **206** (InternVid). And Ropedia's **ungated** sample is pulled **472 times against its gated parent's 102,655 — 217× less.** **Friction is not the variable; wanting the thing is** — including for SABER's 18 | [§12](#ropedia-xperience-10m--the-fidelity-wings-extreme-and-a-caution-about-reading-press-releases-as-availability) |
 | **Xperience-10M is gated, full stop** *(this document, for dozens of sweeps)* | **It is *partially released*, the sixth such case, and the entry never said so.** [`ropedia-ai/xperience-10m-sample`](https://huggingface.co/datasets/ropedia-ai/xperience-10m-sample) is **CC BY-NC 4.0, ungated, eleven files** — a standard, quotable licence beside a parent that is `other` behind manual review and a signature. Same structure as SABER, **except SABER's subset was itself gated and this one is not.** The org holds five artefacts and **three carry no licence field at all** | [§12](#ropedia-xperience-10m--the-fidelity-wings-extreme-and-a-caution-about-reading-press-releases-as-availability) |
 | **Xperience-10M's gate is a manual review** *(this document, flattening two steps into one)* | **Two instruments, one off-platform.** The card warns that an approved Hugging Face request *"will remain **pending**"* until a **DocuSign agreement** is signed at a `docsend.com` URL. **The binding document is not on the Hub and the Hub records nothing about it** — so "gated: manual" understates by one whole instrument, and a manifest field that records only the platform's gate state would be wrong | [§12](#ropedia-xperience-10m--the-fidelity-wings-extreme-and-a-caution-about-reading-press-releases-as-availability) |

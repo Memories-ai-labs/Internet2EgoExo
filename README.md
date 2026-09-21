@@ -202,7 +202,13 @@ is not merely expensive per hour; there is almost none of it by comparison —
 though the honest multiple is smaller than DROID alone suggests. Adding the two
 corpora the survey opened this week, **RoboCOIN (956 h, 15 embodiments)** and
 AgiBotWorld-Beta (2,976 h), the open real-robot total is roughly **4,300 hours**,
-so Egocentric-100K is **23× the robot side**, not 287×. That is the number worth
+so Egocentric-100K is **23× the robot side**, not 287×. 🟢 A fourth corpus turned
+up on 21 September inside AtomEgo's mixture — **RoboMIND, 107,000 trajectories,
+four embodiments, Apache-2.0**, the largest permissively licensed real-robot set
+the survey has found, and never opened before. 🔴 **Its publisher states no
+hours**, so adding it means deriving one: on AtomEgo's per-episode rate it is
+**~285 h**, taking the total to **≈4,585 h** and the multiple to **≈22×**. **The
+claim has now survived two enlargements of its own denominator.** That is the number worth
 arguing from. But
 those 350 hours carry **language annotations on 95% of successful episodes**,
 which is the trade the whole substitution literature is arguing about: 350
