@@ -552,6 +552,18 @@ them:
   ungated, at ~6,000 downloads a month. A rights record has to survive being
   copied, which is why provenance belongs in the manifest travelling with each
   clip and not only in the release posture of whoever published first.
+  🔴 **And the survey now has a cause for that, not just a catalogue of
+  instances.** Ego4D's own page says: *"once approved your access credentials
+  will **expire in 14 days** — you're expected to **download the data locally**,
+  not to consume it from AWS."* The steady state that design produces is
+  thousands of individually-signed researchers each holding a private copy of a
+  3,670-hour corpus, with **no technical tie back to the agreement they signed**.
+  This README had been treating third-party re-uploads as uploader carelessness;
+  at least part of it is a predictable response to an official route that
+  expires. *No criticism of the consent design is intended — expiring credentials
+  are reasonable for a corpus of consented faces.* **The narrow point is that
+  when the authoritative copy is hard to hold, the copy people actually use is
+  one whose terms nobody recorded.**
 - **Hours are being commoditised — but pixels are not.** Build AI went from
   [Egocentric-10K](https://www.humanoidsdaily.com/news/build-ai-open-sources-10-000-hours-of-factory-worker-video-to-scale-robot-learning)
   (10,000 h, 1080p) to

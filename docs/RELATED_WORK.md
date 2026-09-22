@@ -37,7 +37,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [EPIC-KITCHENS-100](#epic-kitchens-100)
   - [HD-EPIC](#hd-epic--41-hours-and-the-densest-annotation-in-this-document)
   - [Nymeria](#nymeria--264-consented-participants-called-in-the-wild)
-  - [Ego4D](#ego4d)
+  - [Ego4D — sixty mentions, and the access design that manufactures re-uploads](#ego4d--sixty-mentions-and-the-access-design-that-manufactures-re-uploads)
   - [Ego-Exo4D](#ego-exo4d)
   - [EgoExoLearn](#egoexolearn)
   - [HOI4D](#hoi4d)
@@ -289,12 +289,85 @@ homes were recorded in, plus automated de-identification applied before release.
 > non-permissive parents**, and unlike ViTRA's it has *zero* permissive parents
 > rather than merely unstated ones.
 
-### Ego4D
+### Ego4D — sixty mentions, and the access design that manufactures re-uploads
 
-**[ego4d-data.org](https://ego4d-data.org/)** — 3,670+ hours of daily-life egocentric
-video with a benchmark suite (episodic memory, forecasting, hand–object
-interaction). Still the default pretraining corpus, and the base that
-[EgoVid-5M](#egovid-5m) and much else is derived from.
+**[ego4d-data.org](https://ego4d-data.org/)** — 🔴 **named sixty times in this
+document and, until sweep 87, given five lines.** It is the parent of
+[EgoVid-5M](#egovid-5m), **77.6% of [ViTRA](#vitra--12-m-episodes-of-mano-over-four-other-peoples-corpora-stamped-mit)'s
+input**, a component of [EgoScaler](#egoscaler--one-letter-from-the-entry-above-and-the-first-route-that-needs-only-rgb)
+and [OpenMMEgo](#openmmego--open-weights-and-data-half-kept)'s OME10M, and the corpus this survey calls a
+*"signed-agreement"* source every time a licence chain bottoms out. **A survey
+should not describe an instrument sixty times without reading it**, which is the
+same gap [DROID](#droid--the-denominator-this-survey-leans-on-and-the-eleven-answers-other-people-give-for-it)
+had at thirty.
+
+**Scale, read at the project page 22 Sep 2026.** **3,670 hours** of daily-life
+egocentric video from **923 unique participants** across **74 worldwide
+locations in 9 countries**, assembled by **88 researchers** in an international
+consortium, with a benchmark suite spanning episodic memory, forecasting and
+hand–object interaction. **v2.0** is the current release. Still the default
+pretraining corpus in this literature by a wide margin.
+
+**Consent, stated and better than most here.** *"The collecting partner holds
+consent forms and/or release forms for all videos. Only when consent has been
+collected from participants, the data will contain faces and other identifying
+information. For the majority of videos, data has been de-identified
+pre-release."* That is a two-tier posture — consent gates whether faces survive
+at all — and it belongs beside [Nymeria](#nymeria--264-consented-participants-called-in-the-wild)
+and [Open-AoE](#open-aoe) in the short list of corpora that say anything about
+this.
+
+⚠️ **The licence, more precisely than this document has been putting it.** The
+survey's shorthand has been *"unpublished agreement."* Checked at source that is
+**not quite right and the difference matters**: there is a named instrument, the
+**Ego4D License Agreement**, the page offers *"a draft of the licenses"* to
+**review before signing**, and execution happens at a separate site
+(`ego4d.dev/request/ego4d`) with approval in **~48 hours**. You may sign **as an
+individual or on behalf of an institution**, and the page notes that
+institutional signature *"typically"* requires a **director- or
+executive-level signatory** — a real barrier for a team that wants organisational
+cover rather than one researcher's personal undertaking. *(The signing site
+itself returned **HTTP 429** from this environment on 22 Sep, so the executed
+text was not read this pass; that is stated rather than glossed.)* **So: terms
+previewable in draft, binding text executed elsewhere, per-signatory.** Closer to
+[Xperience-10M's two-instrument gate](#ropedia-xperience-10m--the-fidelity-wings-extreme-and-a-caution-about-reading-press-releases-as-availability)
+than to anything with a `license:` field.
+
+🔴 **And the access design is the finding, because it explains a pattern this
+document has been cataloguing without a cause.** From the same page:
+
+> *"once approved your access credentials will **expire in 14 days** — you're
+> expected to **download the data locally, not to consume it from AWS**."*
+
+**Access to Ego4D is time-boxed, and the publisher explicitly instructs you to
+take a local copy.** Renewal is available, but the steady state the design
+produces is thousands of individually-signed researchers each holding their own
+copy of a 3,670-hour corpus, with no technical tie back to the agreement they
+signed.
+
+> **That is a re-upload generator, and the survey's re-upload findings are
+> downstream of it.** [`simon055/EgoVid_frames`](#egovid-5m) — 722 shards of
+> extracted Ego4D-derived frames, no card, no licence, no attribution — is what
+> this design makes easy, and the [EgoDex](#the-second-index-queried-at-last--and-the-strongest-uploader-stamp-case-yet)
+> and [DROID](#droid--the-denominator-this-survey-leans-on-and-the-eleven-answers-other-people-give-for-it)
+> re-upload clusters are the same shape around corpora with the same friction.
+> **This document has been treating third-party copies as a failure of
+> uploader diligence. At least part of it is a predictable response to an
+> official route that expires.** *No criticism of the consent design is intended
+> — expiring credentials are a reasonable control for a corpus of consented
+> faces.* The point is narrower and it is the one the manifest cares about:
+> **when the authoritative copy is hard to hold, the copy people actually use
+> will be one whose terms nobody recorded** — which is exactly why provenance has
+> to travel with the clip rather than live at the publisher.
+
+**Bearing here.** Ego4D is the single largest reason this survey's licence chains
+bottom out in *"signed agreement, terms not reproducible."* Its footage cannot be
+redistributed, so everything built on it must ship annotations only — which
+[OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly),
+[EgoVid-5M](#egovid-5m) and [ViTRA](#vitra--12-m-episodes-of-mano-over-four-other-peoples-corpora-stamped-mit)
+all do correctly and none of their cards explains. **For a found-footage pipeline
+the lesson is the inverse of the usual one: Ego4D is not a competitor, it is the
+reason the competitor's outputs are encumbered.**
 
 ### Ego-Exo4D
 
@@ -4022,7 +4095,7 @@ that section — the third time the same trap has been avoided only by going to
 the source.
 
 🔴 **And now that the upstream is nameable, the licensing reads worse, not
-better.** Those citations include **[Ego4D](#ego4d)** (signed agreement, terms
+better.** Those citations include **[Ego4D](#ego4d--sixty-mentions-and-the-access-design-that-manufactures-re-uploads)** (signed agreement, terms
 not published), **[EPIC-KITCHENS](#epic-kitchens-100)** (CC BY-NC 4.0,
 explicitly non-commercial) and **[EgoVid-5M](#egovid-5m)** (inherits Ego4D's
 terms). The paper states **no licence for the assembled 12 M-video dataset**,
@@ -6246,7 +6319,7 @@ attention to the text, and this one cannot.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Forty-two of them are
+index, not a summary, and each row links to the working. **Forty-five of them are
 this document's own errors** *(counted by the marker itself this sweep rather than
 by eye: the previous revision said twenty-nine, which was one short even before
 this round's four were added — the count of the count was also drifting)* — marked *(this document…)* in the left column and
@@ -6349,6 +6422,9 @@ trust the rest of it.
 | Action100M has 100 M instances | **147 M** temporally localised segments from 1.2 M instructional videos | [§10](#action100m) |
 | cosmos-curate and NeMo Curator are rival tools | Cosmos-Xenna is **NeMo Curator's production executor** | [§9](#cosmos-curate) |
 | A tracker lists Egocentric-10K as gated, so it isn't Apache 2.0 | Both are true — **licence and access are separate axes** | [§11](#11-the-licence-trap) |
+| **Ego4D's terms are an "unpublished agreement"** *(this document's shorthand across sixty mentions)* | **Not quite.** There is a named **Ego4D License Agreement**, the project page offers **a draft to review before signing**, execution happens at a separate site with **~48 h approval**, and you sign **as an individual or — needing a director-level signatory — for an institution**. **Terms previewable in draft, binding text executed elsewhere, per-signatory** — closer to Xperience-10M's two-instrument gate than to anything with a `license:` field. *(The signing site returned **429** from this environment, so the executed text was not read.)* | [§1](#ego4d--sixty-mentions-and-the-access-design-that-manufactures-re-uploads) |
+| **Third-party re-uploads are a failure of uploader diligence** *(this document's framing across five catalogued uploader-stamp cases)* | **At least partly they are a predictable response to an official route that expires.** Ego4D's own page: *"once approved your access credentials will **expire in 14 days** — you're expected to **download the data locally**, not to consume it from AWS."* The steady state that produces is thousands of individually-signed holders of private copies, with **no technical tie back to the agreement they signed** — and `simon055/EgoVid_frames` (722 shards, no card, no licence, no attribution) is what it makes easy. *No criticism of the consent design is intended; expiring credentials are reasonable for a corpus of consented faces.* **The narrow point is that when the authoritative copy is hard to hold, the copy people use is one whose terms nobody recorded** | [§1](#ego4d--sixty-mentions-and-the-access-design-that-manufactures-re-uploads), [§11](#11-the-licence-trap) |
+| **The corpus underneath most of this literature has an entry** *(this document, for eighty-six sweeps)* | **It had five lines.** Ego4D is named **sixty times**, is EgoVid-5M's parent, **77.6% of ViTRA's input** and a component of EgoScaler and OME10M — and carried no licence, no participant count and no access description. Now written up from source: **3,670 h, 923 participants, 74 locations, 9 countries, 88 researchers, v2.0**, with a stated two-tier consent posture. **Second time a scan by mention count has found the survey's own foundations unread**, after DROID at thirty | [§1](#ego4d--sixty-mentions-and-the-access-design-that-manufactures-re-uploads) |
 | **Two publications disagreeing on a corpus's hours means one of them changed the unit** *(this document's reading of DROID at 350 vs OpenWAM's 1,285)* | **There are at least three causes and the number cannot tell you which.** [AtomEgo](#atomego--a-provenance-table-that-restates-four-corpora-at-once)'s Table 1 restates **four corpora at once**: DROID at **343.0** against **350** (filtering), AgiBotWorld-Beta at **314.0** against **2,976.4** (a **9.5×** subset), RoboCOIN at **655.7** against **956**, EgoVerse at **1,079.5** against a paper that says **1,362** and a citation that says 954. Add OpenWAM's DROID at **1,285** and the same corpus appears at 343, 350 and 1,285. **Smaller by filtering, smaller by subsetting, larger by unit — and nothing in any table distinguishes them.** A corpus name plus an hour-count is not a citation | [§2](#atomego--a-provenance-table-that-restates-four-corpora-at-once), [§1](#the-robot-native-denominator) |
 | **The open real-robot denominator is ~4,300 h, so the multiple is 23×** | **A fourth corpus was missing: RoboMIND** — 107,000 trajectories, 479 tasks, four embodiments, **Apache-2.0**, 57,305 downloads, **the largest permissively licensed real-robot set in this survey** — found inside AtomEgo's mixture, never opened here. 🔴 **Its publisher states no hours at all**, so adding it requires deriving one (~285 h on AtomEgo's per-episode rate, flagged as derived): total **≈4,585 h**, multiple **≈22×**. **The claim has now survived two enlargements of its own denominator**, having collapsed from 287× at the first | [§1](#the-robot-native-denominator) |
 | **A paper either names a release surface or it does not** *(the two-way count §13's prospective base rate was keeping)* | **AtomEgo is a third thing.** It names **one** external URL and contains **no sentence beginning "we release" or "we will release"** — every *"open-source"* in it describes **other people's** data — so its 2,659-hour recipe and its *"scalable data processing pipeline"* are neither claimed as published nor said to be withheld. **Recorded as a third outcome rather than folded into either**, because collapsing it is how a base rate starts flattering whoever keeps it | [§13](#13-why-no-open-source-project-does-exactly-this) |
