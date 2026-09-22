@@ -578,9 +578,16 @@ them:
   (100,405 h, 10.8 B frames, **456×256**), both Apache 2.0. Note what scaling
   cost: a 17× drop in pixels per frame, in a domain where finger articulation is
   the payload. And note how it landed — the publisher's own listing shows
-  the 256p corpus pulled **123,659** times last month against the 1080p corpus's
-  **70,302** — **1.8:1**. Nine readings run **4.8 → 5.3 → 4.5 → 3.6 → 3.2 → 1.8
-  → 1.6 → 1.7 → 1.8**. ⚠️ The last four are recorded rather than used. The sixth
+  the 256p corpus pulled **132,555** times last month against the 1080p corpus's
+  **69,927** — **1.9:1**. Ten readings run **4.8 → 5.3 → 4.5 → 3.6 → 3.2 → 1.8
+  → 1.6 → 1.7 → 1.8 → 1.9**. 🔴 **The trend reversed at the seventh reading and
+  this README's directional claim is withdrawn.** Against a basket of nineteen
+  counters read the same morning (median **−0.9%**, thirteen of nineteen down),
+  **256p rose +7.2%** — third-largest gain of nineteen, and its second
+  consecutive rise against a falling field — while **1080p sat at the median**.
+  **The low-resolution corpus is gaining; the high-resolution one is drifting.**
+  The five-reading fall from 4.8 to 1.6 was real and stands; what is retracted is
+  the present tense. ⚠️ The last four are recorded rather than used. The sixth
   was a **+76% jump on the 1080p corpus in about a day**; the test set up to tell
   a burst from real demand was *does it keep climbing or plateau* — **it
   plateaued**, now four readings in a narrow band around seventy thousand. That

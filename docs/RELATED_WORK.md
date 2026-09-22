@@ -4696,7 +4696,29 @@ citation of a claim that has been reframed is not stale, exactly; it is
 **quietly correct about a different sentence than the one you read**, which is
 harder to notice than being wrong.
 
-✅ **Re-run in full again 21 Sep 2026.** All **66** arXiv IDs resolved — **46 at
+✅ **Re-run in full again 22 Sep 2026.** All **69** arXiv IDs resolved — **47 at
+their cited version**, **21 bare against multi-version papers**, **1 deliberately
+pinned behind** (EgoDex), **zero errors**. **200 URLs** checked; **38 non-2xx**,
+of which **36 are the proxy's blanket 403 on `github.com`** and **2 are real**:
+[H-Tac's printed page](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual)
+(**404, eleventh consecutive**) and **ENIGMA-360's**.
+
+🔴 **Two corrections to this document's own link findings, both from this pass.**
+The **Nexdata 404 has reverted to 200** and is
+[retracted in full](#the-other-thing-that-happened-to-hours-they-went-on-sale)
+— a transient outage written up, one sweep ago, as a withdrawn listing. And
+**ENIGMA-360 now returns 500, not 403**, on two checks. The entry stays
+classified **gone** — eleven failures over months, and the lab root still
+returns 200 — but **the specific reasoning has weakened and should be said so**:
+that classification rested on *"four identical 403s in a row is not a flapping
+server; it is a settled block on that path."* **They are no longer identical.**
+A 500 is what a flapping server looks like, so the inference this document drew
+from the uniformity of the codes no longer holds even though the conclusion it
+reached does. *Recorded because a conclusion that survives the loss of its stated
+reason is a conclusion now resting on something the document has not written
+down.*
+
+*(The previous full pass, 21 Sep:)* All **66** arXiv IDs resolved — **46 at
 their cited version**, **19 bare against multi-version papers**, **1 deliberately
 pinned behind** (EgoDex). One paper moved and was re-read because of it:
 [OmniViTac](#omnivitac--tactile-on-the-robot-side-27810-downloads-and-a-card-that-says-only-its-licence)
@@ -5381,11 +5403,11 @@ read straight off the cards.
 > **Second, the ratio has since collapsed.** Re-read at the dataset cards this
 > sweep, like for like:
 >
-> | Card | 1st | 2nd | 3rd | 4th | 5th | 6th | 7th | 8th | **9th** | Res. |
-> |---|---|---|---|---|---|---|---|---|---|---|
-> | Egocentric-100K | **164,868** | **158,934** | **156,632** | **145,830** | **124,711** | **123,111** | **119,683** | **119,604** | **123,659** | 456×256 |
-> | Egocentric-10K | **34,519** | **30,087** | **34,587** | **40,875** | **39,248** | **69,216** | **73,594** | **71,219** | **70,302** | 1080p |
-> | *ratio* | *4.8:1* | *5.3:1* | *4.5:1* | *3.6:1* | *3.2:1* | *1.8:1* | *1.6:1* | *1.7:1* | ***1.8:1*** | |
+> | Card | 1st | 2nd | 3rd | 4th | 5th | 6th | 7th | 8th | 9th | **10th** | Res. |
+> |---|---|---|---|---|---|---|---|---|---|---|---|
+> | Egocentric-100K | **164,868** | **158,934** | **156,632** | **145,830** | **124,711** | **123,111** | **119,683** | **119,604** | **123,659** | **132,555** | 456×256 |
+> | Egocentric-10K | **34,519** | **30,087** | **34,587** | **40,875** | **39,248** | **69,216** | **73,594** | **71,219** | **70,302** | **69,927** | 1080p |
+> | *ratio* | *4.8:1* | *5.3:1* | *4.5:1* | *3.6:1* | *3.2:1* | *1.8:1* | *1.6:1* | *1.7:1* | *1.8:1* | ***1.9:1*** | |
 >
 > That is **single digits**, not 470:1.
 >
@@ -5482,8 +5504,38 @@ read straight off the cards.
 > the band into a trend. A sixth offered the best number this repo's argument has
 > ever had — **and the test set up to check it said no.**
 >
-> 🟢 **The ninth reading holds the plateau — and comes with the thing this series
-> has always lacked: a control.** 1080p reads **70,302**, a fourth consecutive
+> 🔴 **The tenth reading ends the trend, and the control says it is real.**
+> **1.9:1** — and the ratio has now risen for **three consecutive readings**
+> (1.6 → 1.7 → 1.8 → 1.9) after falling for five. The minimum was the seventh.
+> **The driver is not the 1080p corpus fading; it is the 256p corpus growing.**
+> Against a basket of nineteen counters read the same morning, **median −0.9%,
+> thirteen of nineteen down**:
+>
+> | Card | Move | Against the basket |
+> |---|---|---|
+> | **Egocentric-100K (256p)** | **+7.2%** | 🔴 **third-largest gain of nineteen**, and the second consecutive reading where it rose against a falling field (+3.4% against −1.3% the day before) |
+> | Egocentric-10K (1080p) | **−0.5%** | at the median again — **indistinguishable from drift for the second reading running** |
+>
+> 🔴 **So the directional claim has to be withdrawn, not just qualified.** This
+> document has said since the fourth reading that *"the field's pull is shifting
+> toward the high-resolution corpus"* and that *"the direction still runs with
+> this repo's bet."* **Two readings with a control now say the opposite**: the
+> high-resolution corpus is flat-to-drifting and **the low-resolution one is
+> gaining, twice, measurably against its own field.** The five-reading fall from
+> 4.8 to 1.6 was real and is not being retracted; **what is retracted is the
+> present tense.** The ratio stopped closing at the seventh reading and has been
+> widening since, and **the control basket — added one sweep ago precisely to
+> stop platform drift being read as signal — is what makes the reversal legible
+> rather than deniable.** It was built expecting to defend the trend. It did the
+> other thing.
+>
+> *The mid-October test is unaffected in form and more interesting in substance:
+> the question was whether the 1080p corpus falls off a cliff when the September
+> burst ages out. It is still the question. But the ratio it feeds into is now
+> moving for a different reason than this document assumed.*
+>
+> 🟢 **The ninth reading held the plateau — and came with the thing this series
+> had always lacked: a control.** 1080p reads **70,302**, a fourth consecutive
 > value in the seventy-thousand band (69,216 → 73,594 → 71,219 → 70,302), so the
 > burst signature is now four readings deep rather than three. 256p reads
 > **123,659**, and the ratio is **1.8:1**.
@@ -5952,26 +6004,38 @@ stub is an abandonment, a listing is a product. *(A small internal
 inconsistency, since this document collects them: the README advertises 30 fps;
 the single `meta.json` records 24.999.)*
 
-🔴 **And on 21 Sep the product went away while the advertisement stayed.** The
-vendor catalogue page this entry cites —
-`nexdata.ai/datasets/embodied-ai/2145` — now returns **404**, checked twice,
-while the category page above it and the site root both return **200**, so it is
-a withdrawn listing rather than a site outage. **The Hugging Face repo is
-untouched**: same three files, no licence field, last modified 12 Aug, and still
-named `10000-Hour-Egocentric-Video-Dataset`.
+🔴❌ **A retraction, one sweep old.** On 21 Sep the vendor catalogue page this
+entry cites — `nexdata.ai/datasets/embodied-ai/2145` — returned **404** on two
+checks, while the category page above it and the site root returned **200**.
+This document wrote that up as *"a withdrawn listing rather than a site
+outage"*, and built a framing on it: *the advertisement outlived the product.*
+**On 22 Sep it returns 200, twice. It was a transient outage and the framing was
+wrong.**
 
-> **This is a shape worth naming because it inverts the usual failure.** The
-> survey's standing complaint is that artefacts outlive their documentation —
-> stale cards, dead project pages, licences that survive only in an unversioned
-> README. **Here the documentation outlived the artefact's own sales listing.**
-> The one surface that could have told a reader what the ten thousand hours cost,
-> who may buy them, and on what terms is the surface that vanished; what remains
-> is the name and the 76-point pose spec. A reader arriving at the Hub today sees
-> a live repository advertising a corpus whose vendor no longer lists it, with
-> **no licence field to fall back on and nothing but *"available upon request"*
-> to act on.** *Nothing here implies the corpus is gone* — vendors reorganise
-> catalogues constantly. **The point is that it cannot be checked, and that the
-> artefact which remains is the one that never carried the information.**
+> **The mistake was not the reading; it was the threshold.** This survey has a
+> stated standard for calling a URL dead, set on
+> [ENIGMA-360](#enigma-360): *"four identical 403s in a row is not a flapping
+> server; it is a settled block on that path"* — and even then it took **ten
+> failures over months** before the entry was reclassified. **Nexdata got two
+> checks inside one day and a conclusion.** The difference between the two cases
+> is not the evidence, it is that the Nexdata reading produced an interesting
+> sentence and the ENIGMA one did not. **A survey that sets an evidentiary bar
+> and then clears a lower one for its better findings is not applying a
+> standard, it is decorating one** — and that is worth more attention than the
+>404 ever was. *The standing rule is now explicit: no link is reclassified on
+> fewer than three failures spanning more than one sweep.*
+
+**What survives is the part that never depended on the 404**: the Hugging Face
+repo is untouched — same three files, no video, **no licence field**, last
+modified 12 Aug, still named `10000-Hour-Egocentric-Video-Dataset` — and the
+vendor page it points to has always been the only place terms could have been
+found.
+
+> **The one claim that stands.** A reader arriving at the Hub sees a live
+> repository named for ten thousand hours, with **no licence field** and nothing
+> but *"available upon request"* to act on, and must go to the vendor's site to
+> learn anything about terms. That was true before the outage and is true after
+> it. **The 404 added nothing except a sentence this document liked too much.**
 
 ⚠️ **One licence in that table deserves separate notice, because it is a shape
 this document has not recorded before: `CC BY-ND 4.0`.** Every restrictive
@@ -6405,7 +6469,7 @@ attention to the text, and this one cannot.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Forty-eight of them are
+index, not a summary, and each row links to the working. **Fifty-one of them are
 this document's own errors** *(counted by the marker itself this sweep rather than
 by eye: the previous revision said twenty-nine, which was one short even before
 this round's four were added — the count of the count was also drifting)* — marked *(this document…)* in the left column and
@@ -6508,6 +6572,9 @@ trust the rest of it.
 | Action100M has 100 M instances | **147 M** temporally localised segments from 1.2 M instructional videos | [§10](#action100m) |
 | cosmos-curate and NeMo Curator are rival tools | Cosmos-Xenna is **NeMo Curator's production executor** | [§9](#cosmos-curate) |
 | A tracker lists Egocentric-10K as gated, so it isn't Apache 2.0 | Both are true — **licence and access are separate axes** | [§11](#11-the-licence-trap) |
+| **The field's pull is shifting toward the high-resolution corpus** *(this document, since the fourth reading, in the present tense)* | 🔴 **Withdrawn.** The ratio stopped closing at the seventh reading and has **widened for three consecutive readings** — 1.6 → 1.7 → 1.8 → **1.9** — and the control basket says the driver is real: **256p rose +3.4% then +7.2% against basket medians of −1.3% and −0.9%**, while **1080p sat at the median both times**. **The low-resolution corpus is gaining; the high-resolution one is drifting.** The five-reading fall from 4.8 to 1.6 was real and stands; **what is retracted is the present tense**. *The basket was added one sweep earlier to stop drift being read as signal, and expecting to defend the trend. It did the other thing* | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
+| **Nexdata's vendor listing was withdrawn while its advertisement stayed up** *(this document, one sweep ago, on two checks inside a single day)* | 🔴 **Retracted — it returns 200 again.** A transient outage written up as a withdrawal, with a framing built on top of it. **The mistake was the threshold, not the reading.** This survey's stated bar, set on ENIGMA-360, is *"four identical 403s in a row is not a flapping server"* — and even that entry took **ten failures over months**. Nexdata got two checks and a conclusion, because the reading produced an interesting sentence. **A survey that sets an evidentiary bar and clears a lower one for its better findings is decorating a standard, not applying one.** New rule: **no link is reclassified on fewer than three failures spanning more than one sweep** | [§12](#the-other-thing-that-happened-to-hours-they-went-on-sale) |
+| **ENIGMA-360 is gone, because four identical 403s are a settled block rather than a flapping server** *(this document's stated reasoning)* | **The conclusion holds; the reason does not.** On 22 Sep it returns **500**, twice — **the codes are no longer identical**, and a 500 is what a flapping server looks like. Eleven failures over months, and the lab root still returns 200, so the entry stays **gone** — but **it now rests on something this document has not written down**, which is worth saying rather than leaving the old sentence in place | [§1](#enigma-360) |
 | **AgiBotWorld-Beta's licence field says CC BY-NC-SA 4.0** *(this document, quoting it for dozens of sweeps as the denominator's most restrictive licence)* | **It has no `license:` tag at all** — not in its Hub tags, not in `cardData` — so the hub files the most-propagating licence in this survey as **unlicensed**. The CC BY-NC-SA 4.0 lives inside **`extra_gated_prompt`**. Not *terms unstated* (a gate prompt is readable before you accept) but **terms mislocated**, which defeats anyone filtering a hub by licence rather than opening cards. 🔴 And the agreement inside the **Beta** repo is headed *"AgiBot World **Alpha** Release Date: December 30, 2024"* — **copied forward and not re-dated** | [§1](#agibotworld--twenty-three-mentions-and-the-licence-is-inside-the-gate) |
 | **AgiBotWorld-Beta is the example of most-restrictive-licence, near-frictionless access** *(this document's standing illustration that the two axes are independent)* | **The axes point is right; the illustration was wrong.** Its `extra_gated_fields` are **First Name, Last Name, Email, Country, Affiliation, Phone, Job title, Research interest and geo** — **a telephone number, which no other card in this survey asks for.** Still `gated: auto`, so access is immediate and unreviewed. **Automatic is not the same as light**, and this document had been conflating them | [§1](#agibotworld--twenty-three-mentions-and-the-licence-is-inside-the-gate) |
 | **A publisher ships half a card; which half varies between publishers** | **It varies *within* one publisher.** `AgiBotWorld-Beta` has the terms (inside its gate) and no readable scale; `AgiBotWorld2026` — **ungated, `cc-by-nc-sa-4.0` correctly tagged, 256,104 downloads against Beta's 104,421** — has the licence and **states no scale anywhere**, its README being a format and download guide. **Two halves, one namespace, and the ungated scale-less one is pulled 2.5× more.** Across the org, **eight of twelve datasets carry no `license:` tag**, including both flagship corpora | [§1](#agibotworld--twenty-three-mentions-and-the-licence-is-inside-the-gate) |
