@@ -49,6 +49,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
 - [2. Scaling human video for robot learning](#2-scaling-human-video-for-robot-learning)
   - [DROID — the denominator, and the eleven answers other people give for it](#droid--the-denominator-this-survey-leans-on-and-the-eleven-answers-other-people-give-for-it)
   - [The robot-native denominator](#the-robot-native-denominator)
+  - [AgiBotWorld — twenty-three mentions, and the licence is inside the gate](#agibotworld--twenty-three-mentions-and-the-licence-is-inside-the-gate)
   - [EgoDex](#egodex)
   - [EgoScale](#egoscale)
   - [EgoScaler](#egoscaler--one-letter-from-the-entry-above-and-the-first-route-that-needs-only-rgb)
@@ -915,7 +916,7 @@ side actually is, and the answer is smaller than the rhetoric suggests.
 | Corpus | Scale | How it was made | Licence |
 |---|---|---|---|
 | **[DROID](#droid--the-denominator-this-survey-leans-on-and-the-eleven-answers-other-people-give-for-it)** | **350 hours**, 76,000 trajectories, 564 scenes, **84 tasks** *(the paper, at both versions; **the project page says 86**, and this document carried 86)*, 1,417 camera viewpoints | Teleoperation on a standardised rig (Franka Panda 7-DoF, two Zed 2 stereo + wrist Zed Mini, Quest 2 controllers), **13 institutions, 50 collectors, 12 months** | Open dataset; terms not stated on the project page |
-| **[AgiBotWorld-Beta](https://huggingface.co/datasets/agibot-world/AgiBotWorld-Beta)** | **2,976.4 hours**, 1 M+ trajectories, 200+ task types, 87 atomic skills | **100 robots** — mobile dual-arm, 6-DoF dexterous hands, visual-tactile sensors; video, depth, joint positions/velocities/forces, end-effector state, odometry | 🔴 **CC BY-NC-SA 4.0**, **click-through gated (auto-approved)** — **102,027** downloads |
+| **[AgiBotWorld-Beta](#agibotworld--twenty-three-mentions-and-the-licence-is-inside-the-gate)** | **2,976.4 hours** *(not re-verifiable 22 Sep — card 401s)*, **1 M+ trajectories, 217 tasks**, 87 atomic skills | **100 robots** — mobile dual-arm, 6-DoF dexterous hands, visual-tactile sensors; video, depth, joint positions/velocities/forces, end-effector state, odometry | 🔴 **CC BY-NC-SA 4.0**, **click-through gated (auto-approved)** — **102,027** downloads |
 | **[Open X-Embodiment](https://robotics-transformer-x.github.io/)** | 1 M+ trajectories, **22 embodiments**, 527 skills, 160,266 tasks — **hours not stated** | **60 existing datasets pooled** from 34 labs across 21 institutions; single arms through bimanual robots and quadrupeds | 🔴 **No overall licence stated on the project page**, and no statement of whether the 60 components retain their own |
 | **[RoboCOIN](https://huggingface.co/RoboCOIN)** *(Wu et al., arXiv:2511.17441)* | **956 hours**, **15 embodiments** — 2.7× DROID | Real-robot teleoperation, shipped as **100+ separate per-task Hugging Face datasets**, every one `gated: auto`; **59,642 monthly downloads in aggregate** | ⚠️ **`license: apache-2.0` — plus obligations the gate adds** (see below) |
 | **[RoboMIND](https://huggingface.co/datasets/x-humanoid-robomind/RoboMIND)** *(Wu et al., arXiv:2412.13877)* | **107,000 trajectories**, 479 tasks, 96 object classes, **four embodiments** (Franka Panda, UR5e, AgileX dual-arm, a dual-dexterous-hand humanoid), plus **5,000 failure demonstrations with stated causes** — 🔴 **hours are not stated by the publisher**; [AtomEgo](#atomego--a-provenance-table-that-restates-four-corpora-at-once) counts **221.7 h across 83,152 of those episodes**, which extrapolates to **~285 h** *(derived here, not published — flagged as such)* | Human teleoperation on a unified platform and standardised protocol, plus an Isaac Sim digital twin | 🟢 **Apache-2.0**, `gated: auto`, 57,305 downloads — **the largest permissively-licensed real-robot corpus in this table**, and it was missing from it until sweep 86 |
@@ -1071,6 +1072,91 @@ later.
 > [Xperience-10M critique](#ropedia-xperience-10m--the-fidelity-wings-extreme-and-a-caution-about-reading-press-releases-as-availability)
 > identifies from the other direction. **A unit count means nothing until you say
 > what a unit contains.**
+
+### AgiBotWorld — twenty-three mentions, and the licence is inside the gate
+
+**[arXiv 2503.06669](https://arxiv.org/abs/2503.06669)** (*AgiBot World Colosseo*,
+v4) · [`agibot-world`](https://huggingface.co/agibot-world) — 🔴 **named
+twenty-three times here and never written up**, the third case a mention-count
+scan has surfaced after [DROID](#droid--the-denominator-this-survey-leans-on-and-the-eleven-answers-other-people-give-for-it)
+at thirty and [Ego4D](#ego4d--sixty-mentions-and-the-access-design-that-manufactures-re-uploads)
+at sixty. It carries two of this survey's standing examples — *the most
+restrictive licence in the denominator* and *the near-frictionless gate* — and
+**checked at source, the second one is wrong and the first is not where this
+document said it was.**
+
+**Mechanism and scale, from the paper.** *"Over **1 million trajectories** across
+**217 tasks** in five deployment scenarios"*, on a standardized collection
+pipeline with **human-in-the-loop verification**, on a platform *"extensible from
+grippers to **dexterous hands and visuo-tactile sensors**."* The 2026 release is
+collected on the **AGIBOT G2** platform in a **free-form collection mode**, and a
+**1:1 digital twin** of each scene is built in simulation and open-sourced
+separately as **GenieSim**. ⚠️ *This document records **217 tasks** from here on;
+it had **"200+"**. And its **2,976.4 hours** stands from an earlier reading and
+**could not be re-verified this pass** — the Beta card returns **401** to an
+unauthenticated fetch, so the figure is flagged rather than re-confirmed.*
+
+🔴 **The licence is not in the licence field. It is inside the gate agreement.**
+`agibot-world/AgiBotWorld-Beta` has **no `license:` tag at all** — not in its
+Hub tags, not in `cardData` — so the Hub's licence facet files the most-cited
+restrictive corpus in this survey as **unlicensed**. The CC BY-NC-SA 4.0 that
+this document has quoted for dozens of sweeps lives in **`extra_gated_prompt`**:
+
+> *"### AgiBot World COMMUNITY LICENSE AGREEMENT — AgiBot World **Alpha** Release
+> Date: December 30, 2024. All the data and code within this repo are under
+> [CC BY-NC-SA 4.0]."*
+
+**Two things about that.** The terms are *readable* — a gate prompt is shown
+before you accept — so this is not a *terms unstated* case; it is a **terms
+mislocated** one, and the difference matters to anyone filtering a hub by
+licence rather than opening cards. And the agreement inside the **Beta** repo is
+headed with the **Alpha** release date: **the instrument was copied forward and
+not re-dated**, which is the same template-reuse this document found in the
+[RoboCOIN and InternVid gate texts](#the-robot-native-denominator), here applied
+by a publisher to itself.
+
+🔴 **And the gate is not "name, affiliation, immediate access."** This document
+has used AgiBotWorld-Beta as its example of *most-restrictive licence, minimal
+friction*. The actual `extra_gated_fields` are **First Name, Last Name, Email,
+Country, Affiliation, Phone, Job title** (a select: Student / Research Graduate /
+AI researcher / AI developer-engineer / Reporter / Other), **Research interest**,
+and a geo field. **A telephone number is the most intrusive thing any gate in
+this survey asks for**, and no other card here requests one. It remains
+`gated: auto` — nobody reviews it — so access is still immediate; **what was
+wrong was calling it minimal.** *Automatic is not the same as light.*
+
+🟢 **The sibling nobody here had noticed, and it inverts the pair.**
+[`agibot-world/AgiBotWorld2026`](https://huggingface.co/datasets/agibot-world/AgiBotWorld2026)
+— created 11 Mar 2026, **ungated**, **`license: cc-by-nc-sa-4.0` properly
+tagged**, **256,104 downloads** against Beta's **104,421**:
+
+| | AgiBotWorld-Beta | AgiBotWorld2026 |
+|---|---|---|
+| Licence field | 🔴 **none** — terms only inside the gate prompt | ✅ `cc-by-nc-sa-4.0` |
+| Access | `gated: auto`, **nine fields including a phone number** | **ungated** |
+| Scale on the card | *(card is 401 unauthenticated)* | 🔴 **none stated anywhere** — the README is a format and download guide |
+| Downloads | 104,421 | **256,104** |
+
+> **One sibling has the terms and not the scale; the other has the scale and not
+> the terms.** That is the [half-a-card pattern](#omnivitac--tactile-on-the-robot-side-27810-downloads-and-a-card-that-says-only-its-licence)
+> appearing **within a single publisher's own namespace**, which is a stronger
+> version of it than two unrelated publishers each shipping a different half.
+> **And the ungated, properly-labelled, scale-less one is pulled 2.5× more.**
+
+**Across the org, eight of twelve datasets carry no `license:` tag** — including
+both flagship corpora, Alpha and Beta. The four that do are the 2026 release,
+EWMBench, and the 2025 and 2026 challenge sets.
+
+**Bearing here.** AgiBotWorld is the largest real-robot corpus in the
+[denominator](#the-robot-native-denominator) and the one whose terms propagate
+hardest: **CC BY-NC-SA is non-commercial *and* share-alike**, so anything trained
+on it inherits both, and [OpenWAM's 18.6% mixture share](#openwam--the-first-project-here-whose-open-survives-being-checked)
+carries that into Apache-2.0-stamped weights. **The lesson this entry adds is
+about where to look**: a pipeline that reads licence metadata would mark the most
+propagating licence in this survey as absent, and a pipeline that reads gate
+prompts would find it. **The manifest field has to be "terms, and where they were
+found" — because on the corpus that matters most, the answer is "in the
+agreement, not the metadata."**
 
 ### EgoDex
 
@@ -6319,7 +6405,7 @@ attention to the text, and this one cannot.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Forty-five of them are
+index, not a summary, and each row links to the working. **Forty-eight of them are
 this document's own errors** *(counted by the marker itself this sweep rather than
 by eye: the previous revision said twenty-nine, which was one short even before
 this round's four were added — the count of the count was also drifting)* — marked *(this document…)* in the left column and
@@ -6422,6 +6508,10 @@ trust the rest of it.
 | Action100M has 100 M instances | **147 M** temporally localised segments from 1.2 M instructional videos | [§10](#action100m) |
 | cosmos-curate and NeMo Curator are rival tools | Cosmos-Xenna is **NeMo Curator's production executor** | [§9](#cosmos-curate) |
 | A tracker lists Egocentric-10K as gated, so it isn't Apache 2.0 | Both are true — **licence and access are separate axes** | [§11](#11-the-licence-trap) |
+| **AgiBotWorld-Beta's licence field says CC BY-NC-SA 4.0** *(this document, quoting it for dozens of sweeps as the denominator's most restrictive licence)* | **It has no `license:` tag at all** — not in its Hub tags, not in `cardData` — so the hub files the most-propagating licence in this survey as **unlicensed**. The CC BY-NC-SA 4.0 lives inside **`extra_gated_prompt`**. Not *terms unstated* (a gate prompt is readable before you accept) but **terms mislocated**, which defeats anyone filtering a hub by licence rather than opening cards. 🔴 And the agreement inside the **Beta** repo is headed *"AgiBot World **Alpha** Release Date: December 30, 2024"* — **copied forward and not re-dated** | [§1](#agibotworld--twenty-three-mentions-and-the-licence-is-inside-the-gate) |
+| **AgiBotWorld-Beta is the example of most-restrictive-licence, near-frictionless access** *(this document's standing illustration that the two axes are independent)* | **The axes point is right; the illustration was wrong.** Its `extra_gated_fields` are **First Name, Last Name, Email, Country, Affiliation, Phone, Job title, Research interest and geo** — **a telephone number, which no other card in this survey asks for.** Still `gated: auto`, so access is immediate and unreviewed. **Automatic is not the same as light**, and this document had been conflating them | [§1](#agibotworld--twenty-three-mentions-and-the-licence-is-inside-the-gate) |
+| **A publisher ships half a card; which half varies between publishers** | **It varies *within* one publisher.** `AgiBotWorld-Beta` has the terms (inside its gate) and no readable scale; `AgiBotWorld2026` — **ungated, `cc-by-nc-sa-4.0` correctly tagged, 256,104 downloads against Beta's 104,421** — has the licence and **states no scale anywhere**, its README being a format and download guide. **Two halves, one namespace, and the ungated scale-less one is pulled 2.5× more.** Across the org, **eight of twelve datasets carry no `license:` tag**, including both flagship corpora | [§1](#agibotworld--twenty-three-mentions-and-the-licence-is-inside-the-gate) |
+| **AgiBotWorld is "200+ task types"** *(this document)* | **217 tasks**, per the paper, across five deployment scenarios and over 1 M trajectories. Small, and corrected because the survey's own rule is to cite the figure the source states | [§1](#agibotworld--twenty-three-mentions-and-the-licence-is-inside-the-gate) |
 | **Ego4D's terms are an "unpublished agreement"** *(this document's shorthand across sixty mentions)* | **Not quite.** There is a named **Ego4D License Agreement**, the project page offers **a draft to review before signing**, execution happens at a separate site with **~48 h approval**, and you sign **as an individual or — needing a director-level signatory — for an institution**. **Terms previewable in draft, binding text executed elsewhere, per-signatory** — closer to Xperience-10M's two-instrument gate than to anything with a `license:` field. *(The signing site returned **429** from this environment, so the executed text was not read.)* | [§1](#ego4d--sixty-mentions-and-the-access-design-that-manufactures-re-uploads) |
 | **Third-party re-uploads are a failure of uploader diligence** *(this document's framing across five catalogued uploader-stamp cases)* | **At least partly they are a predictable response to an official route that expires.** Ego4D's own page: *"once approved your access credentials will **expire in 14 days** — you're expected to **download the data locally**, not to consume it from AWS."* The steady state that produces is thousands of individually-signed holders of private copies, with **no technical tie back to the agreement they signed** — and `simon055/EgoVid_frames` (722 shards, no card, no licence, no attribution) is what it makes easy. *No criticism of the consent design is intended; expiring credentials are reasonable for a corpus of consented faces.* **The narrow point is that when the authoritative copy is hard to hold, the copy people use is one whose terms nobody recorded** | [§1](#ego4d--sixty-mentions-and-the-access-design-that-manufactures-re-uploads), [§11](#11-the-licence-trap) |
 | **The corpus underneath most of this literature has an entry** *(this document, for eighty-six sweeps)* | **It had five lines.** Ego4D is named **sixty times**, is EgoVid-5M's parent, **77.6% of ViTRA's input** and a component of EgoScaler and OME10M — and carried no licence, no participant count and no access description. Now written up from source: **3,670 h, 923 participants, 74 locations, 9 countries, 88 researchers, v2.0**, with a stated two-tier consent posture. **Second time a scan by mention count has found the survey's own foundations unread**, after DROID at thirty | [§1](#ego4d--sixty-mentions-and-the-access-design-that-manufactures-re-uploads) |

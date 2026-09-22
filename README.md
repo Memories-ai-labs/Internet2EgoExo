@@ -232,7 +232,14 @@ said nothing that would settle it** — which is the cleanest case in the survey
 for storing the resolved source URL beside the terms, not just the terms. Its
 counterpart **AgiBotWorld-Beta** (2,976.4 h, CC BY-NC-SA 4.0 — non-commercial
 *and* share-alike) sits behind a **click-through, not a contact form**: 86,157
-downloads have passed through it. Most-restrictive terms, near-frictionless
+downloads have passed through it. 🔴 **Two corrections to that sentence, both
+found on 22 September.** `AgiBotWorld-Beta` **has no `license:` tag at all** —
+the CC BY-NC-SA 4.0 this README quotes lives inside its **gate agreement**, so a
+hub filtered by licence files the most-propagating terms in the survey as
+*unlicensed*. Not unstated — **mislocated**. And the click-through asks for
+**nine fields including a telephone number**, which no other card here requests:
+it is `gated: auto`, so access is immediate and unreviewed, but **automatic is
+not the same as light.** Most-restrictive terms, near-frictionless
 access. **The gate tells you nothing about the licence in either direction.**
 🔴 **And it tells you nothing about demand either, which is the reading this
 README had been reaching for.** Five artefacts read on 21 September:
