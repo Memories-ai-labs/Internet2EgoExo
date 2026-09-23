@@ -344,6 +344,20 @@ capture downloadable today**. **One out of two; the streak ends at five out of
 six**, and that is recorded up front — a prospective test whose base rate only
 ever goes one way is not being run, it is being quoted.
 
+🟢 **And on 23 September the substitution finally got a price.**
+[Zeva-Ego](https://arxiv.org/abs/2609.24411) takes RoboTwin success from
+**63.8% to 75.3% with 10K hours of egocentric video**, against **74.7% from 2K
+hours of robot demonstrations** on the same initialisation — **an empirical
+ratio of roughly 4–5 ego hours per robot hour.** Nothing else in the survey
+states one; every other result compares mixtures without converting. ⚠️ One
+benchmark, one initialisation — a measurement, not a law. 🔴 **And it is a named
+consumer of the free ten thousand hours, which discarded more than half of
+them**: *"We use 4,439 hours [of Egocentric-10K] selected through task-stratified
+sampling. The source release does not include frame-aligned hand poses or action
+trajectories."* **At 4–5:1 with 55.6% discarded, ten free hours buy about one
+robot hour** — the honest version of the moat argument, and a weaker one than
+"hours are abundant" implies.
+
 **And the competition is not the one we had been naming.** This survey spent
 seventy-six sweeps comparing found footage against **teleoperation** — DROID's
 350 hours, thirteen institutions, a Franka each. The cheaper rival is

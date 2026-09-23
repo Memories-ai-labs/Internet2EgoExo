@@ -59,6 +59,8 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [EgoEngine](#egoengine)
   - [EgoMimic](#egomimic)
   - [EgoAVFlow](#egoavflow--no-robot-demonstrations-still-means-a-board-in-every-scene)
+  - [Zeva-Ego — the first published exchange rate](#zeva-ego--the-first-published-exchange-rate-and-a-named-consumer-of-the-free-ten-thousand-hours)
+  - [EgoWild2Dex — a ninth "in the wild"](#egowild2dex--a-ninth-in-the-wild-and-the-first-measured-number-for-why-it-is-hard)
   - [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean)
   - [OpenWAM](#openwam--the-first-project-here-whose-open-survives-being-checked)
   - [EgoHumanoid](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator)
@@ -1830,6 +1832,141 @@ video has neither and can never be made to have them retroactively. The
 strategy list in this section is now four deep and the conclusion has not
 moved: for footage you found rather than shot, the viable operations remain
 filter, clip, annotate.
+
+### Zeva-Ego — the first published exchange rate, and a named consumer of the free ten thousand hours
+
+**[arXiv 2609.24411](https://arxiv.org/abs/2609.24411)** (v2, 22 Sep 2026;
+CC BY 4.0 listing; AIR @ Tsinghua + Z-Trans AI) ·
+[project page](https://air-embodied-brain.github.io/Zeva-Ego/) — read three days
+after posting, and it supplies the number every entry in this section has been
+circling without stating.
+
+🟢 **An ego-to-robot exchange rate, published as a ratio.** *"Scaling Ego data to
+10K hours improves RoboTwin success from **63.8% to 75.3%**, matching **2K hours
+of robot demonstrations (74.7%)**, corresponding to an empirical data ratio of
+roughly **4–5 : 1**."* Same π₀.₅ initialisation on both arms of the comparison.
+
+> **Nothing else in this survey states one.** [HumanNet](#humannet) gives 1,000 h
+> ego against 100 h robot, [HumanScale](#humannet) gives 5,000 against 5,000 at
+> matched scale, [OpenWAM](#openwam--the-first-project-here-whose-open-survives-being-checked)
+> fixes a 600-hour budget and splits it, [ReWeight](#reweight--the-control-simdex-did-not-run)
+> and [UMI-Bridge](#simdex) compare mixtures, and
+> [AtomEgo](#atomego--a-provenance-table-that-restates-four-corpora-at-once)
+> gives a product with no units. **Zeva-Ego prices the substitution**, and a
+> price is what a found-footage pipeline actually needs: it converts "an hour of
+> web video is worth something" into **"you need four to five of them to stand in
+> for one teleoperated hour."** ⚠️ *Read it at its own scope — one benchmark
+> (RoboTwin), one initialisation, one mixture. It is a measurement, not a law,
+> and this document has been burned by treating a single well-constructed number
+> as one.*
+
+**And the second result is the one that changes deployment economics.**
+**In-Context Causal Learning** encodes executed actions and their observed
+effects as causal evidence, retrieves phase-relevant prior experience, and
+conditions low-level generation on it — *"parameter-free adaptation from
+action-effect feedback at deployment."* Reported: **58% → 89% within four
+attempts, with model parameters frozen.** If the offline prior is what hours buy,
+this is the argument that the *last* few points are bought at runtime instead.
+
+🔴 **Now the part that belongs to [§12](#12-free-hours-and-what-they-do-to-the-moat):
+Zeva-Ego is a named, published consumer of [Egocentric-10K](#egocentric-10k), and
+it threw away more than half of it.** The paper's data section:
+
+> *"Egocentric-10K records real factory work through wearable monocular cameras.
+> The public release totals **10,000 hours, 192,900 clips, and 1.08 billion
+> frames at 30 Hz** … **We use 4,439 hours selected through task-stratified
+> sampling.** The source release does not include **frame-aligned hand poses or
+> action trajectories**."
+
+**A 55.6% discard on a corpus that cost nothing.** This document's §12 has argued
+that free hours set the floor price of an undifferentiated hour at zero and that
+selection is where the value sits; **here is a team doing exactly that, in
+print, on the specific corpus the section is about** — and stating, in one
+clause, precisely what the free release lacks. That last sentence is the
+**acceptance specification written by a consumer**, the third this survey has
+found after [Being-H0.5's](#being-h05--the-mano-action-space-at-35000-hours-and-a-preview-subset-with-no-terms) *"accurate depth, stable camera alignment,
+temporally precise interaction events"* and
+[ReWeight's](#reweight--the-control-simdex-did-not-run) selection result.
+*(Note the arithmetic that follows from it: if 4–5 ego hours substitute for one
+robot hour and 55.6% of a free corpus is discarded before use, then **ten free
+hours buy roughly one robot hour** — which is the honest version of the moat
+argument, and a weaker one than "hours are abundant" implies.)*
+
+⚠️ **Release**: the project page names
+[`github.com/air-embodied-brain/Zeva`](https://github.com/air-embodied-brain/Zeva)
+— unreadable from this environment, which 403s `github.com` — and **no dataset**;
+the mixture is other people's corpora. Both standing artefact checks (the
+`arxiv:`-tag query on Hugging Face, and ModelScope) **return nothing** for
+`2609.24411`.
+
+### EgoWild2Dex — a ninth "in the wild", and the first measured number for why it is hard
+
+**[arXiv 2609.23755](https://arxiv.org/abs/2609.23755)** (v1, 20 Sep 2026;
+HKU MMLab + Kinetix AI) ·
+[project page](https://mmlab.hk/egowild2dex/) — the title makes the claim this
+document tests every time it appears, and **the answer is the same for the ninth
+time.**
+
+**What its *in the wild* means.** *"Unlike prior approaches that often collect
+such data in constrained or specially constructed environments, we collect
+in-the-wild egocentric demonstrations in real-world settings, including **homes,
+factories, and pharmacies**, etc., where **people perform their ordinary tasks
+while wearing head-mounted cameras**."* So: **commissioned capture, of ordinary
+work, in venues nobody controlled.** A real and useful axis — and **not found
+footage.** [§13](#13-why-no-open-source-project-does-exactly-this) survives a
+ninth naming test, and the sense is the same one
+[SABER](#saber--commissioned-egoexo-capture-in-a-domain-the-internet-is-full-of)
+turned out to have after its own correction: *instrument the people already doing
+the job.*
+
+🟢 **And it supplies something this survey has wanted and never had: a measured
+number for why uncontrolled egocentric video is hard.** *"Visually challenging
+observations due to scene clutter and head-motion-induced viewpoint changes (**a
+mean cumulative rotation of 15.93°/s**)."* Every entry here that addresses camera
+instability — [MINT](#mint--camera-alignment-at-scale-and-a-release-sentence-with-no-address)'s
+alignment, [MEgoVista](#mint--camera-alignment-at-scale-and-a-release-sentence-with-no-address)'s
+metric depth, EgoWAM's reliance on Aria VIO poses — addresses it qualitatively.
+**15.93°/s is the first figure putting a size on the problem**, and it is the
+kind of number a viewpoint-acceptance gate can be calibrated against.
+
+**Mechanism.** **GeoFormer**, a differentiable geometric transformer that *warps
+noisy human observations toward robot observations*, plus a progressive
+human→robot training scheme. Reported **96.7% average success across three
+long-horizon bimanual dexterous tasks.**
+
+**The corpus, and one figure in it is an outlier.** *"We release **EgoWild**, a
+**538.9-hour** in-the-wild egocentric human dataset comprising **179,049
+episodes**, **125,961 unique task descriptions**, and **1,282 object
+categories**."* 🔴 **125,961 unique task descriptions is, by a wide margin, the
+largest task vocabulary in this survey** — against
+[DreamDojo's GPT-estimated 6,015](#dreamdojo--and-the-strongest-evidence-in-this-document-for-13),
+[AgiBotWorld's 217](#agibotworld--twenty-three-mentions-and-the-licence-is-inside-the-gate)
+and [DROID's 84](#droid--the-denominator-this-survey-leans-on-and-the-eleven-answers-other-people-give-for-it).
+⚠️ **Treat it as a different unit rather than a bigger number**: 125,961
+*descriptions* across 179,049 *episodes* is roughly **0.7 per episode**, which is
+a free-text caption count, not an enumerated task taxonomy. **It is the
+[unit problem](#atomego--a-provenance-table-that-restates-four-corpora-at-once)
+again, and this time the unit is the interesting part** — a long-tailed
+description space is exactly what a found-footage corpus would also produce, and
+exactly what a 217-task taxonomy cannot represent.
+
+🔴 **Release: a present-tense claim, a live page, and no artefact.** The paper
+says *"we release EgoWild."* The project page **resolves** and describes the
+dataset — *"538.9 hours of unscripted ego-human behaviour in homes,
+factories…"* — and links to the arXiv PDF, the lab and the company, **and to no
+download anywhere**. Both standing checks come back empty: **no Hugging Face
+artefact tagged `arxiv:2609.23755`, nothing under the name on either hub, nothing
+on ModelScope.** **No licence is stated for the data anywhere**, and the arXiv
+listing carries the bare *"perpetual non-exclusive license"*, not CC BY.
+
+> **This is the [MINT](#mint--camera-alignment-at-scale-and-a-release-sentence-with-no-address)
+> shape with one part added.** MINT said *"we release"* and named **no URL at
+> all**. EgoWild2Dex says *"we release"* and names **a page that exists, loads,
+> and describes the thing — without carrying it.** A reader who checks whether
+> the paper names a surface gets *yes*; a reader who follows it gets nothing.
+> **For §13's prospective tally that is the sharpest argument yet for counting
+> *"does the artefact exist"* rather than *"is a surface named"***, because the
+> two now come apart in a case where the surface is real.
 
 ### EgoWAM — and what "in-the-wild" turns out to mean
 
@@ -6516,7 +6653,7 @@ attention to the text, and this one cannot.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Fifty-two of them are
+index, not a summary, and each row links to the working. **Fifty-four of them are
 this document's own errors** *(counted by the marker itself this sweep rather than
 by eye: the previous revision said twenty-nine, which was one short even before
 this round's four were added — the count of the count was also drifting)* — marked *(this document…)* in the left column and
@@ -6619,6 +6756,10 @@ trust the rest of it.
 | Action100M has 100 M instances | **147 M** temporally localised segments from 1.2 M instructional videos | [§10](#action100m) |
 | cosmos-curate and NeMo Curator are rival tools | Cosmos-Xenna is **NeMo Curator's production executor** | [§9](#cosmos-curate) |
 | A tracker lists Egocentric-10K as gated, so it isn't Apache 2.0 | Both are true — **licence and access are separate axes** | [§11](#11-the-licence-trap) |
+| **Human video substitutes for robot data, but nobody has priced it** | [Zeva-Ego](#zeva-ego--the-first-published-exchange-rate-and-a-named-consumer-of-the-free-ten-thousand-hours) **prices it: roughly 4–5 ego hours per robot hour.** 10K ego hours take RoboTwin from **63.8% → 75.3%**, against **74.7% from 2K robot hours**, same π₀.₅ initialisation. Nothing else here states a ratio — HumanNet, HumanScale, OpenWAM, ReWeight, UMI-Bridge and AtomEgo all compare mixtures without converting. ⚠️ One benchmark, one initialisation: **a measurement, not a law** | [§2](#zeva-ego--the-first-published-exchange-rate-and-a-named-consumer-of-the-free-ten-thousand-hours) |
+| **The free 10,000-hour drop is a corpus with no named consumers** *(this document, tracking its download counter for ten readings without finding one)* | **Zeva-Ego is one, in print — and it discarded 55.6% of it.** *"The public release totals 10,000 hours, 192,900 clips, and 1.08 billion frames at 30 Hz … **We use 4,439 hours selected through task-stratified sampling.** The source release does not include frame-aligned hand poses or action trajectories."* **A published acceptance rate on the specific corpus §12 is about**, plus a one-clause statement of what it lacks — the third consumer-written acceptance specification here. *And the arithmetic that follows is the honest version of the moat argument: at 4–5:1 with 55.6% discarded, **ten free hours buy about one robot hour*** | [§12](#egocentric-10k), [§2](#zeva-ego--the-first-published-exchange-rate-and-a-named-consumer-of-the-free-ten-thousand-hours) |
+| **"In the wild" in this literature never means off the open web** *(this document, across eight senses)* | ✅ **Ninth test, same answer.** [EgoWild2Dex](#egowild2dex--a-ninth-in-the-wild-and-the-first-measured-number-for-why-it-is-hard)'s is *"homes, factories, and pharmacies… where people perform their ordinary tasks while wearing head-mounted cameras"* — **commissioned capture of ordinary work in venues nobody controlled.** The same sense SABER turned out to have after its own correction. 🟢 It also supplies the first **measured** number for why uncontrolled ego video is hard: **a mean cumulative rotation of 15.93°/s** — where MINT, MEgoVista and EgoWAM all address camera instability qualitatively | [§2](#egowild2dex--a-ninth-in-the-wild-and-the-first-measured-number-for-why-it-is-hard) |
+| **Checking whether a paper names a release surface is a good proxy for whether the artefact exists** *(the test §13's prospective tally has been running)* | **The two come apart, and EgoWild2Dex is the clean case.** It says *"we release EgoWild"* (538.9 h, 179,049 episodes), its project page **resolves and describes the dataset** — and links to the PDF, the lab and the company, **and to no download**. Both standing checks return nothing: **no Hugging Face artefact tagged `arxiv:2609.23755`, nothing under the name, nothing on ModelScope**, no licence stated. **A reader who asks "is a surface named" gets yes; a reader who follows it gets nothing** — so the tally should count *does the artefact exist* | [§13](#13-why-no-open-source-project-does-exactly-this), [§2](#egowild2dex--a-ninth-in-the-wild-and-the-first-measured-number-for-why-it-is-hard) |
 | **DreamDojo has 2,000× more scenes than the previously largest world-model dataset** | **That multiple uses a scene count the same paper replaces one page later.** Table 1 lists DreamDojo-HV at **1,135k trajectories and 1,135k scenes — identical**, i.e. every trajectory counted as its own scene; **1,135,000 ÷ DROID's 564 = 2,013×.** The prose says *"more than **9,869 unique scenes**"*, which gives **17.5×**. Both are in the paper and it never reconciles them. *No error alleged* — but **the large number is printed in the comparison and the small one in the description**, which is precisely the vanity-metric objection this document endorses against Xperience-10M, **found here in the paper it calls its strongest §13 evidence** | [§4](#dreamdojo--and-the-strongest-evidence-in-this-document-for-13) |
 | **DreamDojo's 6,015 tasks is a counted figure** *(this document, reproducing it without its footnote)* | The table marks it **"† Estimated by GPT based on the global language annotations."** **LLM-estimated, not enumerated** — a reason to label it, not to discard it. *And it strengthens the EgoScale double-count inference it feeds*: two papers independently reporting **the same GPT-estimated 6,015** is less likely to be coincidence than two reporting the same counted integer | [§4](#dreamdojo--and-the-strongest-evidence-in-this-document-for-13), [§2](#egoscale) |
 | **DROID has 86 skills** *(DreamDojo's Table 1, and a third publication to say so)* | **DROID's own paper says 84 tasks at both versions**; 86 is the *project page's* figure. DreamDojo, this document, and the page all carry 86; the paper carries 84. **This is how a figure becomes consensus without ever being re-derived** — and it is the same corpus already appearing at 343, 350 and 1,285 hours across three publications | [§1](#droid--the-denominator-this-survey-leans-on-and-the-eleven-answers-other-people-give-for-it), [§4](#dreamdojo--and-the-strongest-evidence-in-this-document-for-13) |
