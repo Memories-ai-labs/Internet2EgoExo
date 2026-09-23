@@ -102,7 +102,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
 
 - [7. Crawl: URL → video](#7-crawl-url--video)
   - [video2dataset](#video2dataset)
-  - [LAION-BVD](#laion-bvd)
+  - [LAION-BVD — it shipped, and this document said it hadn't](#laion-bvd--it-shipped-and-this-document-said-it-hadnt)
   - [yt-fts](#yt-fts)
   - [YT_crawler](#yt_crawler)
   - [HowTo100M and HD-VILA-100M](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago)
@@ -4175,20 +4175,82 @@ de-facto standard, and still the right answer for bulk fetch.
 - **Limits**: non-tar file output degrades past ~1 M samples on ordinary
   filesystems; TFRecord supports fewer backends (local, HDFS, S3, GCS).
 
-### LAION-BVD
+### LAION-BVD — it shipped, and this document said it hadn't
 
-**[LAION-AI/BVD](https://github.com/LAION-AI/BVD)** — **1.3 billion video URLs
-mined from CommonCrawl**, of which 80 M are downloaded (~10 M hours), yielding
-55 M annotated clips and 300 M extracted frames, with synthetic VLM-generated
-video and audio captions after content-aware scene detection.
+**[LAION-AI/BVD](https://github.com/LAION-AI/BVD)** ·
+[`laion/BVD-URLs`](https://huggingface.co/datasets/laion/BVD-URLs) — **1.3 billion
+video URLs mined from CommonCrawl**, of which **80 M were downloaded (~10 M
+hours)**, yielding **55 M scene-level clips with captions and timestamps**,
+**300 M keyframes** and **10 M audio clips**, after content-aware scene detection
+with synthetic VLM-generated video and audio captions.
 
-> 🔴 **Correction to a common reading.** This is frequently cited as "the URL
-> list, ready to go." It is released **for research purposes only, not for
-> commercial use**, and the paper, project page and download links are marked
-> *coming soon* — it documents a work in progress. The authors also flag bias and
-> uneven representation across languages, regions and topics. It is a strong
-> signal that web-scale video URL mining is tractable; it is not a resource a
-> commercial collection effort can currently build on.
+🔴 **Two corrections, and the first is the largest miss in this document's §7.**
+This entry said *"the paper, project page and download links are marked **coming
+soon** — it documents a work in progress… **not a resource a commercial
+collection effort can currently build on**."* Checked at the artefacts on 23 Sep
+2026, **it has been released since 3 May 2026** — nearly five months — and is
+**actively maintained** (`BVD-V-55M` was modified on **20 September**). Nine
+artefacts exist, and they are split cleanly in two:
+
+| Artefact | Licence | Access | Scale | Downloads |
+|---|---|---|---|---|
+| **`laion/BVD-URLs`** | 🟢 **CC BY 4.0** | **ungated** | **1.3 B URLs** | 6,156 |
+| `laion/BVD-V-55M-URLs` | 🟢 **CC BY 4.0** | **ungated** | 55 M clips | **18,731** |
+| `laion/BVD-A-10M-URLs` | 🟢 **CC BY 4.0** | **ungated** | 10 M audio | 9,056 |
+| `laion/BVD-A-1.7M-URLs` | 🟢 **CC BY 4.0** | **ungated** | 1.7 M audio | 2,604 |
+| `laion/BVD-V-55M` *(payload)* | 🔴 **none** | **gated: manual** | 55 M clips | 1,562 |
+| `laion/BVD-I-300M` *(payload)* | 🔴 **none** | **gated: manual** | 300 M keyframes | 695 |
+| `laion/BVD-A-10M`, `BVD-A-1.7M` *(payloads)* | 🔴 **none** | **gated: manual** | — | 54, 72 |
+| `laion/BVD-RAW-Index` | — | index only | the ~80 M downloaded videos | *(media by request)* |
+
+🔴 **So the licence claim was wrong in one direction and unsupported in the
+other.** *"Research purposes only, not for commercial use"* is **false for the
+URL lists** — **CC BY 4.0 permits commercial use** — and **unstated for the
+payloads**, whose cards carry **no `license:` field at all**. What the card
+actually says is the access rule, not a licence: *"BVD-RAW itself — the raw pool
+of 80 M videos totalling 10 M hours — is not distributed through Hugging Face.
+The gated subsets and BVD-RAW are available to **academic and non-commercial
+researchers** through a single central **access request form**."* **A Google
+Form, and no terms on the artefacts it gates.** *The restriction is real; it
+simply is not where this document said it was, and it does not reach the part
+that matters most.*
+
+🟢 **And the part that matters most is the posture: this is the fourth
+URLs-only-under-a-named-licence release in this survey, and by a wide margin the
+largest.** After [HD-VILA-100M](#howto100m-and-hd-vila-100m--the-crawl-already-happened-twice-years-ago)
+(103 M clips, Open Use of Data Agreement, 2022),
+[OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly)
+(per-source attribution) and [EgoVid-5M](#egovid-5m) (three CSVs and poses, no
+video) — **LAION-BVD ships 1.3 billion URLs under CC BY 4.0 with no gate.** The
+schema is three columns: **`url`, `platform`** (YouTube, Vimeo, Dailymotion) and
+**`crawl` — the CommonCrawl snapshot each URL came from.** *That last column is
+per-URL provenance*, which is a real piece of what this repo's manifest is for,
+shipped by someone else, permissively, at a billion rows.
+
+> 🔴 **Read the download split, because it is the argument.** The four permissive
+> URL lists have **36,547 downloads between them**; the four gated payloads have
+> **2,383**. **Fifteen times more people take the pointers than the bytes** —
+> from the same publisher, on the same day, for the same corpus. That is the
+> strongest evidence in this document that **URLs-only-under-a-licence is not a
+> compromise release, it is the one people want**, and it is the posture §11 has
+> been arguing for on principle.
+
+⚠️ **What this does to [§13](#13-why-no-open-source-project-does-exactly-this),
+stated plainly and before anyone else has to.** §7 has said *"the crawl already
+happened, twice."* **It happened three times, and the third is a billion URLs you
+may use commercially.** But a pool is not the machine: BVD has **no viewpoint
+labels, no ego/exo split, no hand-visibility gate, no per-clip rights resolution
+beyond the snapshot it came from, and no notion of collecting against a stated
+requirement.** Its 10 M hours are *"video"*, not *egocentric* video, and nothing
+in the release says which fraction is first-person. **§13 narrows again and
+survives** — the same narrowing [HumanNet](#humannet) and HD-VILA-100M forced —
+but the honest version is now: *the crawl stage is solved, published and
+permissively licensed at web scale; what is missing is everything between a URL
+and an accepted clip.* **A survey that had this entry marked "coming soon" for
+months was not in a position to say that, which is the real cost of the error.**
+
+**The authors also flag bias and uneven representation across languages, regions
+and topics** — which remains true and is more useful now that the thing exists.
 
 ### yt-fts
 
@@ -4716,7 +4778,7 @@ Reading the licences across this document produces the wider pattern:
 | **EgoTac** | **nothing released** — no repo, no card, no project page, and no *"we release"* anywhere in the body | 🔴 reclassified from *terms unstated* to **not released**: there is nothing to attach terms to |
 | 🔴 **H-Tac / TTP** (BeingBeyond) | **partially released** — the printed project page `beingbeyond.github.io/TTP/` still returns **404**, but `BeingBeyond/H-Tac_Sample` on Hugging Face holds **98 episodes / 35,982 frames / 98 videos** under a **MIT** `LICENSE`, ungated, 234 downloads | 🔴 **corrected again**: this table said *not released* for several sweeps. The release was in a namespace neither the paper nor the project URL points at. **HOI-Tac — the 106 h over eleven other datasets — is still not in it** |
 | ⚠️ **Open X-Embodiment, third-party mirror** | `jxu124/OpenX-Embodiment` self-describes as *"an unofficial Dataset Repo"* and carries **`license: cc-by-4.0`** over a 55-in-1 aggregation whose official position states **no overall licence**. **between 12,000 and 20,235 monthly pulls across five readings** — most recently 19,447 | 🔴 **do not rely on it** — an uploader's licence field is an assertion, not a finding, and this one is being relied on more each month |
-| **LAION-BVD** | **research only** | ❌ |
+| **LAION-BVD** | 🟢 **CC BY 4.0, ungated, on the four URL-list artefacts** (1.3 B URLs among them) · 🔴 **no licence field at all** on the four gated payloads, whose card says only that they go to *"academic and non-commercial researchers"* via a Google Form | ✅ **for the pointers**, ⚠️ unstated for the bytes |
 | **EgoInfinity (as a whole)** | MIT code, encumbered deps | ❌ until deps are swapped |
 | **Ego4D / Ego-Exo4D** | **signed agreement, terms not public** | ⚠️ unknowable until you sign — do not assume |
 | EgoVerse | no dataset licence stated (**re-checked at v2, 7 Jul 2026; still none** — zero occurrences of "CC BY" or "Apache" in the body, and the figures 1,362 h / 80 k episodes / 1,965 tasks / 240 scenes / 2,087 demonstrators all hold — only the arXiv listing's, and access runs through the authors' EgoDB/S3 sync) | ⚠️ ask before use |
@@ -6453,7 +6515,7 @@ open web*. **A survey that read those titles at face value would conclude the
 opposite of what this section finds.**
 
 **Acquisition from the web is the hole between them.** The tools that touch the
-internet — [video2dataset](#video2dataset), [LAION-BVD](#laion-bvd) — are
+internet — [video2dataset](#video2dataset), [LAION-BVD](#laion-bvd--it-shipped-and-this-document-said-it-hadnt) — are
 viewpoint-blind by design: they fetch and package whatever URLs you hand them,
 and have no concept of "egocentric," "hands visible," or "licensed for reuse."
 Published guidance for sourcing ego footage from the web still describes the
@@ -6487,8 +6549,13 @@ footage is awkward to hand out even when nobody is selling anything, which
 folds back into reason 3.
 
 **3. Legal exposure lands on the maintainer, and it is asymmetric.** A dataset
-release can be framed as research; LAION-BVD does exactly that ("research
-purposes only"). A general-purpose tool that automates *search → download →
+release can be framed as research, and that was this document's reading of
+LAION-BVD until sweep 92 — 🔴 **wrongly: its 1.3 B-URL list is CC BY 4.0 and
+ungated**, and only the derived payloads are restricted to *"academic and
+non-commercial researchers"*, with no licence stated on them at all. **The
+asymmetry argument survives the correction and is sharpened by it**: LAION split
+the release precisely along this line, putting the permissive licence on the
+*pointers* and the access form on the *bytes*. A general-purpose tool that automates *search → download →
 licence filtering → redistribution* invites terms-of-service, portrait-rights
 and privacy questions that fall on whoever's name is on the repository.
 [YT_crawler](#yt_crawler) is 6 stars with an educational-use disclaimer; that is
@@ -6653,7 +6720,7 @@ attention to the text, and this one cannot.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Fifty-four of them are
+index, not a summary, and each row links to the working. **Fifty-five of them are
 this document's own errors** *(counted by the marker itself this sweep rather than
 by eye: the previous revision said twenty-nine, which was one short even before
 this round's four were added — the count of the count was also drifting)* — marked *(this document…)* in the left column and
@@ -6752,7 +6819,7 @@ trust the rest of it.
 | The high-fidelity corpora are free too | Xperience-10M **manual-gated + DocuSign, non-commercial** (with an ungated CC BY-NC 4.0 sample beside it); AgiBotWorld-Beta **CC BY-NC-SA**; EgoScale **unreleased**; SABER **a quarter released, CC BY-NC, and that quarter gated** | [§11](#11-the-licence-trap) |
 | EgoInfinity processed 142 M clips / 14.6 years | Its abstract makes **no** scale claim; those are Action100M's figures, and EgoInfinity's curated set is **106 videos** | [§8](#egoinfinity--lift-to-4d-then-reproject) |
 | HumanNet: 1,000 h ego video *beat* 100 h robot data | "**matched or modestly surpassed**" — and that 100 h is ~a third of all of DROID | [§2](#humannet) |
-| LAION-BVD is a ready 1.3 B-URL pool | **Research use only**, downloads still marked *coming soon* | [§7](#laion-bvd) |
+| **LAION-BVD is unreleased — downloads marked *coming soon* — and research-use-only** *(this document, for months)* | 🔴 **Wrong twice.** It has been **released since 3 May 2026** and is actively maintained (`BVD-V-55M` modified **20 Sep**). And the terms split: the **four URL lists are `cc-by-4.0` and ungated** — **CC BY 4.0 permits commercial use** — while the **four payloads carry no `license:` field at all** and go to *"academic and non-commercial researchers"* through a Google Form. 🟢 It is the **fourth and largest URLs-only-under-a-named-licence release** here, after HD-VILA-100M, OpenEgo and EgoVid-5M — **1.3 billion URLs, three columns, one of them the CommonCrawl snapshot each came from.** And **the pointers are pulled 15× more than the bytes** (36,547 vs 2,383), which is the strongest evidence here that URLs-only is **not a compromise release** | [§7](#laion-bvd--it-shipped-and-this-document-said-it-hadnt) |
 | Action100M has 100 M instances | **147 M** temporally localised segments from 1.2 M instructional videos | [§10](#action100m) |
 | cosmos-curate and NeMo Curator are rival tools | Cosmos-Xenna is **NeMo Curator's production executor** | [§9](#cosmos-curate) |
 | A tracker lists Egocentric-10K as gated, so it isn't Apache 2.0 | Both are true — **licence and access are separate axes** | [§11](#11-the-licence-trap) |

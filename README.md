@@ -566,7 +566,20 @@ them:
   attribution, rather than one blanket licence over three million third-party
   uploads. A third instance turned up on the next sweep: **EgoVid-5M**'s release
   is three CSVs and a `poses.zip` under Apache 2.0 — **no video** — with the
-  footage left to be fetched from Ego4D under Ego4D's own agreement. The posture
+  footage left to be fetched from Ego4D under Ego4D's own agreement. 🔴 **And a
+  fourth, far larger one this survey had recorded as unreleased: LAION-BVD.** It
+  has shipped since **3 May 2026** — the README said *"downloads still marked
+  coming soon"* for months — and its terms split exactly along the line this
+  section argues for: **four URL-list artefacts at `cc-by-4.0`, ungated,
+  1.3 billion URLs among them** (columns: `url`, `platform`, and the
+  **CommonCrawl snapshot each came from**), against **four derived payloads with
+  no `license:` field at all**, released to *"academic and non-commercial
+  researchers"* through a Google Form. **CC BY 4.0 permits commercial use**, so
+  the survey's *"research use only"* was wrong about the half that matters most.
+  🔴 **And the download split is the argument**: the permissive pointers have
+  **36,547 pulls against the gated payloads' 2,383 — fifteen to one.**
+  **URLs-only-under-a-licence is not a compromise release; it is the one people
+  take.** The posture
   is common; the per-source attribution is the rare part. And the limit of the
   posture is visible right beside it: a third party has re-uploaded **722 shards
   of extracted EgoVid frames** with no card, no licence and no attribution,
