@@ -3781,6 +3781,53 @@ The composition is the part that matters here:
 > ([§13](#13-why-no-open-source-project-does-exactly-this)) were easy, or even
 > merely tractable, this is the project that would have used it.
 
+✅ **Every figure in this entry re-verified at the paper, 23 Sep 2026** — 44,711 h,
+43,827 h crowdsourced, 829 h EgoDex, 55 h in-lab, 9,869 scenes, 6,015 tasks,
+43,237 objects, Manus gloves with Vive Ultimate Tracker retargeted to **GR-1**
+robot actions, 15×/96×/2,000×. **All present as stated.** And both of this
+entry's *what-it-does-not-say* claims verified exactly: the string **"filter"
+appears zero times** in the body, and **"licen" appears zero times** — the
+CC BY 4.0 on the listing covers the manuscript. *(Two artefacts of the check
+worth keeping: the paper's own numbers turned out to need the reading below, and
+the 96× skills figure is **not reproducible from Table 1** against either
+baseline the paper names — 6,015 against DROID's 86 or AgiBot-World's 87 is ~70×.
+Recorded as unreproduced rather than wrong.)*
+
+🔴 **But the headline diversity claim is computed on a scene count the same paper
+replaces one page later with a number 115× smaller.** Table 1 lists DreamDojo-HV
+at **1,135k trajectories and 1,135k scenes** — *identical*, i.e. **every
+trajectory counted as its own scene.** The prose says *"more than **9,869 unique
+scenes**."* The caption's **"2,000× more scenes than the previously largest
+dataset"** only works with the first: **1,135,000 ÷ DROID's 564 = 2,013×**. Using
+the paper's own *unique* count gives **9,869 ÷ 564 = 17.5×.**
+
+> **Both numbers are in the paper and it never reconciles them.** *No error is
+> alleged* — "scene" plausibly means the recording context for the table and a
+> deduplicated location in the prose. **The point is that the 2,000× is the
+> per-clip count and the 9,869 is the deduplicated one, and the paper prints the
+> large one in the comparison and the small one in the description.** That is
+> exactly the objection this document endorses against
+> [Xperience-10M](#ropedia-xperience-10m--the-fidelity-wings-extreme-and-a-caution-about-reading-press-releases-as-availability):
+> *a count of hours, frames or streams is a vanity metric unless you say what
+> each unit contains.* **Found here, in the paper this document calls its
+> strongest evidence for §13** — which is where the objection is worth the most,
+> because it costs something to make it.
+
+⚠️ **And the 6,015 tasks carry a dagger this entry had not reproduced: *"†
+Estimated by GPT based on the global language annotations."*** The skill count —
+which feeds the 96× claim **and** the double-count inference below — is
+**LLM-estimated, not enumerated**. That is not a reason to discard it; it is a
+reason to label it. *It also strengthens the inference it feeds:* two papers
+independently reporting **the same GPT-estimated 6,015** is less likely to be
+coincidence than two papers reporting the same counted integer.
+
+📌 **One more row worth lifting out of Table 1**, because this document is
+collecting them: DreamDojo cites **DROID at 350 hours, 76k trajectories, 86
+skills, 564 scenes** — the **86** being the *project page's* figure, where
+[DROID's own paper says 84](#droid--the-denominator-this-survey-leans-on-and-the-eleven-answers-other-people-give-for-it).
+**A third publication has now propagated the page's number rather than the
+paper's**, which is how a figure becomes consensus without ever being re-derived.
+
 🔴 **And a third thing it does not say: that [EgoScale](#egoscale) is reporting
 the same corpus.** Both papers give **9,869 scenes, 6,015 tasks and 43,237
 objects**, both include the same **829 hours of EgoDex**, both name the same
@@ -6469,7 +6516,7 @@ attention to the text, and this one cannot.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Fifty-one of them are
+index, not a summary, and each row links to the working. **Fifty-two of them are
 this document's own errors** *(counted by the marker itself this sweep rather than
 by eye: the previous revision said twenty-nine, which was one short even before
 this round's four were added — the count of the count was also drifting)* — marked *(this document…)* in the left column and
@@ -6572,6 +6619,9 @@ trust the rest of it.
 | Action100M has 100 M instances | **147 M** temporally localised segments from 1.2 M instructional videos | [§10](#action100m) |
 | cosmos-curate and NeMo Curator are rival tools | Cosmos-Xenna is **NeMo Curator's production executor** | [§9](#cosmos-curate) |
 | A tracker lists Egocentric-10K as gated, so it isn't Apache 2.0 | Both are true — **licence and access are separate axes** | [§11](#11-the-licence-trap) |
+| **DreamDojo has 2,000× more scenes than the previously largest world-model dataset** | **That multiple uses a scene count the same paper replaces one page later.** Table 1 lists DreamDojo-HV at **1,135k trajectories and 1,135k scenes — identical**, i.e. every trajectory counted as its own scene; **1,135,000 ÷ DROID's 564 = 2,013×.** The prose says *"more than **9,869 unique scenes**"*, which gives **17.5×**. Both are in the paper and it never reconciles them. *No error alleged* — but **the large number is printed in the comparison and the small one in the description**, which is precisely the vanity-metric objection this document endorses against Xperience-10M, **found here in the paper it calls its strongest §13 evidence** | [§4](#dreamdojo--and-the-strongest-evidence-in-this-document-for-13) |
+| **DreamDojo's 6,015 tasks is a counted figure** *(this document, reproducing it without its footnote)* | The table marks it **"† Estimated by GPT based on the global language annotations."** **LLM-estimated, not enumerated** — a reason to label it, not to discard it. *And it strengthens the EgoScale double-count inference it feeds*: two papers independently reporting **the same GPT-estimated 6,015** is less likely to be coincidence than two reporting the same counted integer | [§4](#dreamdojo--and-the-strongest-evidence-in-this-document-for-13), [§2](#egoscale) |
+| **DROID has 86 skills** *(DreamDojo's Table 1, and a third publication to say so)* | **DROID's own paper says 84 tasks at both versions**; 86 is the *project page's* figure. DreamDojo, this document, and the page all carry 86; the paper carries 84. **This is how a figure becomes consensus without ever being re-derived** — and it is the same corpus already appearing at 343, 350 and 1,285 hours across three publications | [§1](#droid--the-denominator-this-survey-leans-on-and-the-eleven-answers-other-people-give-for-it), [§4](#dreamdojo--and-the-strongest-evidence-in-this-document-for-13) |
 | **The field's pull is shifting toward the high-resolution corpus** *(this document, since the fourth reading, in the present tense)* | 🔴 **Withdrawn.** The ratio stopped closing at the seventh reading and has **widened for three consecutive readings** — 1.6 → 1.7 → 1.8 → **1.9** — and the control basket says the driver is real: **256p rose +3.4% then +7.2% against basket medians of −1.3% and −0.9%**, while **1080p sat at the median both times**. **The low-resolution corpus is gaining; the high-resolution one is drifting.** The five-reading fall from 4.8 to 1.6 was real and stands; **what is retracted is the present tense**. *The basket was added one sweep earlier to stop drift being read as signal, and expecting to defend the trend. It did the other thing* | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 | **Nexdata's vendor listing was withdrawn while its advertisement stayed up** *(this document, one sweep ago, on two checks inside a single day)* | 🔴 **Retracted — it returns 200 again.** A transient outage written up as a withdrawal, with a framing built on top of it. **The mistake was the threshold, not the reading.** This survey's stated bar, set on ENIGMA-360, is *"four identical 403s in a row is not a flapping server"* — and even that entry took **ten failures over months**. Nexdata got two checks and a conclusion, because the reading produced an interesting sentence. **A survey that sets an evidentiary bar and clears a lower one for its better findings is decorating a standard, not applying one.** New rule: **no link is reclassified on fewer than three failures spanning more than one sweep** | [§12](#the-other-thing-that-happened-to-hours-they-went-on-sale) |
 | **ENIGMA-360 is gone, because four identical 403s are a settled block rather than a flapping server** *(this document's stated reasoning)* | **The conclusion holds; the reason does not.** On 22 Sep it returns **500**, twice — **the codes are no longer identical**, and a 500 is what a flapping server looks like. Eleven failures over months, and the lab root still returns 200, so the entry stays **gone** — but **it now rests on something this document has not written down**, which is worth saying rather than leaving the old sentence in place | [§1](#enigma-360) |

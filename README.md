@@ -719,14 +719,25 @@ thing a custom licence requires, reading it, cannot happen before you agree.)
 When NVIDIA needed the largest egocentric corpus ever assembled for a world model
 — [DreamDojo](https://arxiv.org/html/2602.06949), 44,711 hours — it
 **crowdsourced 43,827 of them**, took 829 from EgoDex and shot 55 in-lab. Not one
-hour is described as found footage. The company that also ships the world-model
+hour is described as found footage. (All four figures re-verified at the paper on
+23 September, along with both of the survey's *what-it-does-not-say* claims: the
+strings **"filter" and "licen" each appear zero times** in the body. 🔴 One thing
+did not survive the read — the paper's **"2,000× more scenes"** is computed on a
+Table 1 entry where **scenes equal trajectories exactly, 1,135k of each**, while
+its own prose says **"more than 9,869 unique scenes"**, which would give 17.5×.
+Both numbers are in the paper and it never reconciles them.) The company that also ships the world-model
 platform, the curation substrate and the largest ego VLA still paid for capture
 rather than mining the web.
 
 And the four positions rest on fewer than four acquisitions. DreamDojo and
 [EgoScale](https://arxiv.org/abs/2602.16710) report **identical scene, task and
 object counts** — 9,869 / 6,015 / 43,237 — and the same 829-hour EgoDex
-component, in two papers from the same lab that never cite each other. So the
+component, in two papers from the same lab that never cite each other. *(Read at
+source on 23 September, the 6,015 carries a footnote — **"estimated by GPT based
+on the global language annotations"** — which is worth labelling, and which makes
+the coincidence more telling rather than less: two papers landing on the same
+LLM-estimated figure is harder to explain by chance than two landing on the same
+counted one.)* So the
 corpus behind the world model and the corpus behind the VLA are, on the face of
 it, one corpus. Which sharpens the point rather than softening it: the
 best-resourced actor in the field bought its hours **once** and built everything
