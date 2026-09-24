@@ -304,6 +304,12 @@ should not describe an instrument sixty times without reading it**, which is the
 same gap [DROID](#droid--the-denominator-this-survey-leans-on-and-the-eleven-answers-other-people-give-for-it)
 had at thirty.
 
+⚠️ **And the CLI it tells you to install is itself static.** The start-here page's
+flow is *"Download the CLI … `pip install ego4d`"*; PyPI gives **`ego4d` v1.7.3,
+last uploaded 8 June 2024** — over two years. Not a criticism of a released
+corpus, whose bytes do not rot; **it is a fact about the tool a new user is sent
+to**, and one that pairs badly with credentials that expire in fourteen days.
+
 **Scale, read at the project page 22 Sep 2026.** **3,670 hours** of daily-life
 egocentric video from **923 unique participants** across **74 worldwide
 locations in 9 countries**, assembled by **88 researchers** in an international
@@ -4175,6 +4181,39 @@ de-facto standard, and still the right answer for bulk fetch.
 - **Limits**: non-tar file output degrades past ~1 M samples on ordinary
   filesystems; TFRecord supports fewer backends (local, HDFS, S3, GCS).
 
+🔴 **And a limit this document never checked, because it never had a way to:
+the package has not shipped a release in thirty-one months.** PyPI gives
+`video2dataset` **four releases in its whole history** — 1.0.0 (Nov 2022),
+1.1.0 (Mar 2023), 1.2.0 (Jul 2023), **1.3.0 on 8 February 2024** — and nothing
+since. This entry calls it *"the de-facto standard, and still the right answer
+for bulk fetch"*, and [§14](#14-build-vs-reuse-per-stage)'s table says **Reuse**, with no
+word about whether it is maintained.
+
+> 🔴 **The contrast that makes it operational rather than cosmetic.** This tool's
+> entire reach — *"anything yt-dlp supports — 1000+ sites"* — is inherited from
+> **`yt-dlp`, which has shipped 639 releases and was last updated on 16 September
+> 2026**, eight days before this reading. Site extractors break continuously;
+> that is why yt-dlp ships weekly. **A wrapper pinned to a February-2024
+> understanding of that surface is not a stable dependency, it is a stale one**,
+> and the 74 open issues recorded above sit against a codebase that has not cut a
+> release since. *The recommendation stands — there is still nothing better for
+> bulk fetch — but it now reads: **reuse it, expect to patch it, and pin yt-dlp
+> yourself.*** 🟢 The rest of the lineage is alive, which is what makes this
+> specific: `img2dataset` last shipped **Aug 2025** (89 releases),
+> `webdataset` **Jun 2025** (79), and NVIDIA's `nemo-curator` **Jul 2026** (23).
+
+⚠️ **The reason this went unnoticed for ninety-three sweeps is worth recording,
+because it is the third instance of the same shape.** The proxy this survey runs
+behind **403s `github.com`**, so commits, releases and activity have been
+invisible throughout — and the document filled the gap with a **star count read
+once**, which it already flags as its weakest number. **PyPI was never queried.**
+After [ModelScope](#the-second-index-queried-at-last--and-the-strongest-uploader-stamp-case-yet)
+and the [`arxiv:`-tag Hub query](#awesome-egocentric-atlas--somebody-else-is-keeping-this-index-and-its-licence-column-is-empty-four-times-in-five),
+**this is the third time the fix has been *ask a different index*** — and the
+first where the missing index bears on a **recommendation** rather than a fact.
+*PyPI is now part of the staleness pass for every tool this document tells a
+reader to reuse.*
+
 ### LAION-BVD — it shipped, and this document said it hadn't
 
 **[LAION-AI/BVD](https://github.com/LAION-AI/BVD)** ·
@@ -5078,7 +5117,7 @@ described here as **20 Apache-2.0 model repos**; the namespace now holds **46**,
 alongside the same **6 datasets, 3 of them still with no licence tag**. The
 control row for *"open survives checking"* got more open, and the survey was
 quoting a five-sweep-old count. `yt-fts` still says, in its own README,
-*"This project is **abandoned** until unemployment inevitably finds me again."*
+*"This project is **abandoned** until unemployment inevitably finds me again."* 🟢 **Corroborated from a second index on 24 Sep 2026**: PyPI shows `yt-fts` at **v0.1.62, last uploaded 4 July 2025**, after 54 releases — **fourteen months silent**, which is what an abandoned tool looks like from outside its README.
 *(The ID count has grown from 45 to **62** over seven sweeps as entries were
 added — HD-EPIC, ReWeight, MINT, OpenWAM, ViTRA, EgoScaler, RoboCOIN,
 InternData-A1, the Meta wristband, Project Kitchen, MEgoVista, UMI-Bridge,
@@ -6627,7 +6666,7 @@ records.
 | Requirement → query | *(nothing)* | **Build** | Slot extraction, volume goals, binding-constraint reporting |
 | Search → URL manifest | *(gap; ad-hoc scrapers)* | **Build** | YouTube Data API, Exa, Apify, open web; CC filter at search time |
 | Moment-level targeting | yt-fts pattern (abandoned) | **Copy, don't depend** | Subtitle/caption search before download |
-| Bulk fetch | `video2dataset` (MIT) | **Reuse** | yt-dlp path with per-clip provenance retained |
+| Bulk fetch | `video2dataset` (MIT) | **Reuse — with a maintenance caveat** | yt-dlp path with per-clip provenance retained. 🔴 **No PyPI release since 1.3.0, 8 Feb 2024 (four releases ever)**, while its own `yt-dlp` dependency has shipped **639** and was last updated **16 Sep 2026**. Reuse it, expect to patch it, **pin yt-dlp yourself** |
 | Viewpoint decision | RynnVLA-001 face/hand rule | **Reuse the rule** | Same rule, plus cited cues written to the manifest |
 | Exo → ego conversion | Exo2Ego-V | **Reject** | Needs a 4-view 360° rig; the web has none |
 | 4D lift / any-view | EgoInfinity, EgoEngine | **Defer** | Both need capture conditions you controlled — a static camera, or object meshes plus calibration |
@@ -6720,7 +6759,7 @@ attention to the text, and this one cannot.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Fifty-five of them are
+index, not a summary, and each row links to the working. **Fifty-six of them are
 this document's own errors** *(counted by the marker itself this sweep rather than
 by eye: the previous revision said twenty-nine, which was one short even before
 this round's four were added — the count of the count was also drifting)* — marked *(this document…)* in the left column and
@@ -6823,6 +6862,9 @@ trust the rest of it.
 | Action100M has 100 M instances | **147 M** temporally localised segments from 1.2 M instructional videos | [§10](#action100m) |
 | cosmos-curate and NeMo Curator are rival tools | Cosmos-Xenna is **NeMo Curator's production executor** | [§9](#cosmos-curate) |
 | A tracker lists Egocentric-10K as gated, so it isn't Apache 2.0 | Both are true — **licence and access are separate axes** | [§11](#11-the-licence-trap) |
+| **`video2dataset` is "the de-facto standard, and still the right answer for bulk fetch"** *(this document, recommending **Reuse** in §14 with no maintenance note)* | **It has not shipped a release in thirty-one months** — four releases ever, the last **1.3.0 on 8 Feb 2024** — while the `yt-dlp` it wraps has shipped **639** and was last updated **16 Sep 2026**. Site extractors break continuously; **a wrapper pinned to a February-2024 view of that surface is stale, not stable.** The recommendation stands and now reads *reuse it, expect to patch it, pin yt-dlp yourself*. 🟢 The lineage is otherwise alive — `img2dataset` Aug 2025, `webdataset` Jun 2025, `nemo-curator` Jul 2026 — which is what makes this specific | [§7](#video2dataset), [§14](#14-build-vs-reuse-per-stage) |
+| **This survey can see whether the tools it recommends are maintained** *(implicitly, for ninety-three sweeps)* | **It could not, and never said so.** The proxy **403s `github.com`**, so commits, releases and activity have been invisible throughout, and the gap was filled with a **star count read once** — already flagged as the document's weakest number. **PyPI was never queried.** After ModelScope and the `arxiv:`-tag Hub query, **this is the third time the fix is *ask a different index*** — and **the first where the missing index bears on a recommendation rather than a fact** | [§7](#video2dataset) |
+| **`ego4d`, the CLI Ego4D's own start-here page sends you to, is current** | **v1.7.3, last uploaded 8 June 2024** — over two years. The corpus does not rot, but **the tool a new user is told to `pip install` does**, and it pairs badly with credentials that expire in fourteen days | [§1](#ego4d--sixty-mentions-and-the-access-design-that-manufactures-re-uploads) |
 | **Human video substitutes for robot data, but nobody has priced it** | [Zeva-Ego](#zeva-ego--the-first-published-exchange-rate-and-a-named-consumer-of-the-free-ten-thousand-hours) **prices it: roughly 4–5 ego hours per robot hour.** 10K ego hours take RoboTwin from **63.8% → 75.3%**, against **74.7% from 2K robot hours**, same π₀.₅ initialisation. Nothing else here states a ratio — HumanNet, HumanScale, OpenWAM, ReWeight, UMI-Bridge and AtomEgo all compare mixtures without converting. ⚠️ One benchmark, one initialisation: **a measurement, not a law** | [§2](#zeva-ego--the-first-published-exchange-rate-and-a-named-consumer-of-the-free-ten-thousand-hours) |
 | **The free 10,000-hour drop is a corpus with no named consumers** *(this document, tracking its download counter for ten readings without finding one)* | **Zeva-Ego is one, in print — and it discarded 55.6% of it.** *"The public release totals 10,000 hours, 192,900 clips, and 1.08 billion frames at 30 Hz … **We use 4,439 hours selected through task-stratified sampling.** The source release does not include frame-aligned hand poses or action trajectories."* **A published acceptance rate on the specific corpus §12 is about**, plus a one-clause statement of what it lacks — the third consumer-written acceptance specification here. *And the arithmetic that follows is the honest version of the moat argument: at 4–5:1 with 55.6% discarded, **ten free hours buy about one robot hour*** | [§12](#egocentric-10k), [§2](#zeva-ego--the-first-published-exchange-rate-and-a-named-consumer-of-the-free-ten-thousand-hours) |
 | **"In the wild" in this literature never means off the open web** *(this document, across eight senses)* | ✅ **Ninth test, same answer.** [EgoWild2Dex](#egowild2dex--a-ninth-in-the-wild-and-the-first-measured-number-for-why-it-is-hard)'s is *"homes, factories, and pharmacies… where people perform their ordinary tasks while wearing head-mounted cameras"* — **commissioned capture of ordinary work in venues nobody controlled.** The same sense SABER turned out to have after its own correction. 🟢 It also supplies the first **measured** number for why uncontrolled ego video is hard: **a mean cumulative rotation of 15.93°/s** — where MINT, MEgoVista and EgoWAM all address camera instability qualitatively | [§2](#egowild2dex--a-ninth-in-the-wild-and-the-first-measured-number-for-why-it-is-hard) |

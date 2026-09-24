@@ -442,7 +442,16 @@ stage as downloadable code, and the survey maps each one:
 [Panda-70M](https://github.com/snap-research/Panda-70M)'s `splitting/` for
 semantic cuts, [`cosmos-curate`](https://github.com/nvidia-cosmos/cosmos-curate)
 as an industrial skeleton. Three things are worth knowing before planning around
-them:
+them — and 🔴 **a fourth the survey could not see until it queried PyPI on
+24 September**: **`video2dataset` has not shipped a release in thirty-one
+months** (four releases ever, the last **1.3.0 on 8 Feb 2024**), while the
+`yt-dlp` it wraps has shipped **639** and was last updated **16 September 2026**.
+Site extractors break continuously, so a wrapper pinned to a February-2024 view
+of them is **stale, not stable**. The recommendation stands — there is still
+nothing better for bulk fetch — but it reads *reuse it, expect to patch it, pin
+yt-dlp yourself*. **The proxy this survey runs behind 403s `github.com`, so
+maintenance state had been invisible throughout and the gap was filled with a
+star count read once**; PyPI is now checked for every tool recommended here.
 
 - **Generative exo → ego does not scale.** [Exo2Ego-V](https://github.com/showlab/Exo2Ego-V)
   needs four synchronised 360°-surround views with known poses; the web has none.
