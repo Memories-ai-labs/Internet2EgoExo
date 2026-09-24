@@ -2455,6 +2455,14 @@ nothing; it is one that delivered exactly the half that costs least to give away
 > intent, not a licence** — and `Open` in a project name is not evidence of
 > anything.
 >
+> ⚠️ **Two corrections to the paragraph above, both this document's.** WIYH's
+> v3 title was *"A Large-Scale **and Open-Source Ecosystem** for…"*, so it said it
+> in the title too and the contrast as drawn was too clean. And **v4 has since
+> removed it from both** — title and body — which is the strongest possible
+> demonstration of the asymmetry this note was reaching for: *OpenMMEgo cannot
+> take its claim back without renaming the project; WIYH did it in one
+> resubmission.* The ranking survives; the reason given for it did not.
+>
 > ⚠️ **And note what was available to release cheaply and was not.** OME10M is
 > **8.2 M QA pairs synthesised from Ego4D** — that is *annotations over someone
 > else's video*, the exact shape [EgoVid-5M](#egovid-5m) and
@@ -2509,13 +2517,67 @@ Being-H0.5 and Being-H0.7**.
 
 ### World In Your Hands — the instrumentation ceiling, and a third "in the wild"
 
-**[arXiv 2512.24310v3](https://arxiv.org/html/2512.24310v3)** — the most heavily
-instrumented human-manipulation capture effort in this document, and useful here
-as the upper bound on what *recording* can buy that *finding* cannot.
+**[arXiv 2512.24310](https://arxiv.org/abs/2512.24310)** (**v4, 21 Sep 2026**;
+this document had cited **[v3](https://arxiv.org/html/2512.24310v3)** since this
+entry was written) — the most heavily instrumented human-manipulation capture effort in this
+document, and useful here as the upper bound on what *recording* can buy that
+*finding* cannot.
+
+🔴 **v4 landed three days ago and it is a retreat, which is not the direction a
+new version is assumed to go.** Read side by side against v3, the paper did not
+announce a release — **it deleted the promise of one**:
+
+| | **v3** (15 Mar 2026) | **v4** (21 Sep 2026) |
+|---|---|---|
+| Title | *"A Large-Scale **and Open-Source Ecosystem** for Learning Human-Centric Manipulation in the Wild"* | *"A Large-scale **Ego-centric Dataset** for Learning Robotic Manipulation In the Wild"* |
+| `open-source` in the body | **6** — of which **4 are the project's own claims** | **1**, and it is a bibliography entry for OpenVLA |
+| *"All data and hardware design will be open-source"* | present, in the abstract | **gone** |
+| *"we will open-source the whole dataset and hardware design"* | present, in the conclusion | **gone** |
+| Project Page URL on the title page | `https://wiyh.tars-ai.com` | **gone** |
+| Code URL on the title page | `https://github.com/tars-robotics/World-In-Your-Hands` | **gone** |
+
+**Every sentence in which this project promised to open-source itself has been
+removed from the paper, along with both of the URLs where that would have
+happened.** The word *open-source* survives in the work only as the name of
+somebody else's model in the reference list.
+
+⚠️ **And the arXiv listing has not caught up, so the promise is still on the
+abstract page.** `arxiv.org/abs/2512.24310` today serves **v3's title and v3's
+abstract** — *"a large-scale open-source ecosystem… All data and hardware design
+will be open-source"* — above a submission history whose newest entry is v4.
+Metadata and source are updated separately on arXiv and these authors updated
+only the source. **A reader who checks the landing page sees a commitment the
+paper no longer makes**, and this document is one of the places that quoted it
+from there.
 
 **Scale.** **1,045 hours**, **125,400 clips**, **over 100 human skills**, **over
 40 tasks** across **10 scenarios** — banquet, laundry, logistics, hotel,
 department, office, supermarket, industry, cleaning, candlelight.
+
+🔴 **And a second number, new in v4, that the headline hides: the annotation
+covers 600 of those hours.** *"We provide a multi-stage annotation and validation
+pipeline that produces **600 hours, or 100K episodes**, of atomic action
+instructions."* Against 1,045 hours captured, that is **57%** — and v4's own
+comparison table marks WIYH's VLM-annotation column **`Subset`**, the same mark
+it gives Ego4D. The hours that carry the language supervision this document cares
+about are **600, not 1,045**, and the difference is not stated as a limitation
+anywhere; it has to be got by subtracting one section from another. Filed beside
+[AtomEgo](#atomego--a-provenance-table-that-restates-four-corpora-at-once), which
+made the same point about other people's corpora: **a corpus can restate *itself*
+at two sizes without ever contradicting itself.**
+
+📐 **What it costs to record, in the paper's own figures** — worth having
+because [§14](#14-build-vs-reuse-per-stage) prices commissioned capture mostly from
+[SABER](#saber--commissioned-egoexo-capture-in-a-domain-the-internet-is-full-of) and
+[Zeva-Ego](#zeva-ego--the-first-published-exchange-rate-and-a-named-consumer-of-the-free-ten-thousand-hours).
+WIYH reports
+**a single collector at 8 hours/day producing ≈1.8 TB of valid multimodal data**,
+and **100 collectors over 30 days yielding ≈5.4 PB raw**. Its throughput
+comparison, on the rose-insertion task at a fixed 8 hours of collection time:
+**teleoperation ≈150 clips, DexUMI-style UMI ≈400, Oracle Suite 720, VR ≈800.**
+⚠️ **Read as a ranking, not a rate** — it is the vendor of the third option
+scoring all four, and VR beats it on the very axis being measured, with the
+paper's answer being quality (VR gives 2D skeletons only) rather than speed.
 
 **The instrument, which is the contribution.** The **Oracle Suite**, a wearable
 rig in three parts: **H-FPVHive**, chest-mounted, with two fisheye cameras, two
@@ -2531,44 +2593,146 @@ insertion, gift packing — from **15% to 70%**; separately, co-training a
 robot-only policy with human data took cluttered-scene success from **8% to
 60%**.
 
-**Licence — and a correction to how this is being summarised.** Secondary
-coverage describes the dataset as research-only with commercial use restricted.
-**The paper states no licence.** What it says is *"All data and hardware design
-will be open-source"* — a promise, not a grant, and the arXiv listing carries
-only the standard arXiv perpetual non-exclusive licence, which governs the
-*paper*. This document therefore records WIYH under [§11](#11-the-licence-trap)'s
-second failure mode — **terms unstated** — and not under the first. Anyone
-planning against it should get the actual dataset licence in writing.
+🔴 **Licence — and this document had it wrong, because it did not read far
+enough.** Since it was written this entry has said: *secondary coverage describes the
+dataset as research-only with commercial use restricted; **the paper states no
+licence***. The first half is right. **The second half is not, and the refutation
+is in the paper — it was in v3 as well, so this was never a v4 change.**
+Appendix E, *Ethics and Privacy Statement*, under the heading **Data Usage and
+Licensing**:
 
-🔴 **And the promise has now been checked, twice, and has not landed.** A later
-sweep looked for the release: **no repository, no Hugging Face dataset, no
-download location and no licence** surfaced for WIYH or the Oracle Suite, months
-after the paper. The only findable artefact remains the arXiv entry. As with
-[Egocentric-1M](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost), this
-document does not claim the release will not happen — it claims the narrower,
-checkable thing: **"will be open-source" has not yet become anything a reader
-can obtain, and the gap is now measured in months rather than asserted.** That
-is the difference between the second failure mode and the third, and WIYH is
-drifting from one to the other.
+> *"The released dataset is intended **exclusively for research** on embodied AI,
+> manipulation, perception, and VLA learning. **Redistribution or commercial use
+> is restricted** according to the licence accompanying the dataset."*
 
-🟡 **A fourth look found a strong candidate, and it is recorded as a candidate.**
+and, two sentences later, *"a licence that explicitly forbids re-identification,
+face recognition, or surveillance-related uses."* **That is precisely what the
+secondary coverage said**, and this document treated the coverage as unsourced
+embellishment when it was a faithful summary of an appendix the document had not
+opened. The correction is method, not wording: **this survey's licence checks
+read the abstract, the front matter and the card — and this paper put its terms
+in the ethics appendix**, which is a place nothing in the pipeline was looking.
+Whether that is a pattern or one paper is not yet known; it is recorded as a
+place to look, not as a trend, because one instance is one instance.
+
+⚠️ **What survives of the original reading, stated precisely.** The paper states
+**terms** and names no **instrument**: no CC, no Apache, no bespoke text — only
+*"the licence accompanying the dataset"*, a licence that is not reproduced in the
+paper, not linked from it, and not attached to anything a stranger can download.
+So WIYH stays under [§11](#11-the-licence-trap)'s second failure mode, but for a
+narrower reason than before: **not *terms unstated* — terms stated and the
+instrument deferred to an artefact.** It is a near relative of the
+[cross-platform pointer](#touchsight-and-humantouch--a-fifth-position-and-a-licence-that-lives-on-another-platform)
+found two sweeps ago, and worse in one respect: HumanTouch points at another
+platform where the licence **is**; WIYH points at a file that accompanies a
+download most readers cannot yet obtain. **Anyone planning against it still needs
+the instrument in writing** — but they should ask for it knowing the publisher
+has already written down what it intends the terms to be.
+
+🔴 **"No repository, no download location" — this document said that four times,
+and the URLs were on the paper's own title page the whole time.** Earlier sweeps
+recorded: *no repository, no Hugging Face dataset, no download location and no
+licence surfaced for WIYH or the Oracle Suite; the only findable artefact remains
+the arXiv entry.* **v3's title page carries, directly under the author list:**
+
+> *"† Project Page: `https://wiyh.tars-ai.com` · Code:
+> `https://github.com/tars-robotics/World-In-Your-Hands` · Affiliation: TARS
+> Robotics"*
+
+**Four looks for a release location, and the release location was in the header
+block of the document being looked at.** The failure is legible in hindsight: the
+searches went to the hubs and to the paper's *body*, and a dagger footnote
+rendered between the author list and the abstract is exactly the region a
+keyword-driven read skips. It is the same lesson as the last three sweeps in a
+new costume — *ask a different index* — except that here **the index not being
+asked was the source itself**.
+
+⚠️ **The GitHub URL cannot be checked from here and is not claimed to resolve.**
+This environment's proxy returns **403 for every `github.com` URL** — 37 of them
+in this document's own link check this morning, all 403 — so whether
+`tars-robotics/World-In-Your-Hands` exists, is empty, or is private is **unknown
+to this survey**, exactly as [§14's maintenance blind spot](#14-build-vs-reuse-per-stage)
+was until PyPI was queried. What is verified is that **the paper cites it**, and
+that **v4 removed the citation from the body while the arXiv metadata comment
+still carries it** (*"Github: this https URL"*).
+
+🟢 **The project page resolves, and it settles the candidate this document has
+been declining to accept.** `https://wiyh.tars-ai.com` returns
+**200** — a single-page app whose `<title>` still reads *"Large-Scale and
+Open-source Ecosystem…"*, months after the paper stopped saying it, and whose
+favicon is `/tarslogo.svg`. Its bundle names three outside links —
+`arxiv.org/abs/2512.24310`, `github.com/tars-robotics/World-In-Your-Hands`, and
+`github.com/OpenDriveLab/Agibot-World` — **and no Hugging Face URL at all**, so
+the page does not hand over the tie directly. **Its API does.** The public
+preview endpoint `/api/v1/dp/wiyh/sampelDate/list` returns records keyed
+`worldcodeName`, the first of them:
+
+> `worldcode_HS-2-1423225026718_2025-10-29-16-08-42_4_s0_vlta_reorg_sample_1-2`
+
+**The Hugging Face card's worked example is the same string with different
+digits** — `worldcode_HS-2-1420125020208_2025-10-21-14-50-09_3_s0_vlta_reorg_sample_1-2.json`
+— same prefix, same `HS-2` site code, same timestamp slot, same
+`_s0_vlta_reorg_sample_1-2` tail. And `vlta` is **the paper's own coinage**, from
+the arXiv comment field: *"vision, language, tactile sensing, and action
+(VLTA)"*. Three further agreements point the same way: the HF README's camera
+names, `lf_chest_fisheye` and `ldr_hand_fisheye`, are the Oracle Suite's
+chest-mounted and per-glove fisheyes; the schema it specifies — `worldcode_name`,
+`subtasks`, `camera_calibration`, per-frame `chest_poses` and `hand_states` — is
+the schema the publisher's own service emits; and the account name matches the
+repository the paper cites.
+
+**So `tars-robotics/WIYH` is WIYH, and this document now says so.** The rule it
+was held against — *one tag is the difference between an artefact and a
+coincidence*, applied to [ACE-Ego-0](#ace-ego-0) — was the right rule and is
+kept. What it asked for was *a tag, a README sentence, or a link from the paper*;
+what settled it was none of the three, but **the publisher's own API emitting the
+bespoke identifier format the card documents**. The lesson is not that the bar was
+too high. It is that **the bar was set in terms of three specific signals, and
+the evidence arrived as a fourth** — so the bar should be stated as what it was
+always for: *evidence the publisher couldn't have produced by accident.*
+
+📌 **Current state of the artefact, read today:**
 [`tars-robotics/WIYH`](https://huggingface.co/datasets/tars-robotics/WIYH) —
-**CC BY-NC 4.0, ungated, `size_categories: n>1T`, 15,855 downloads**, created
-25 Mar 2026, tagged `ego-centric`, `robotic manipulation`, `world model`,
-`vision-language-action model`, `pretty_name: WIYH`. **Everything about it fits**
-— the initials, the domain, the scale class, and a release date three months
-after the paper.
+**CC BY-NC 4.0**, ungated, `size_categories: n>1T`, **14,807 downloads, 3 likes**,
+created 25 Mar 2026, **last modified 5 May 2026**, still **no `arxiv:` tag**.
+So the instrument the paper deferred to *does* exist, on Hugging Face, and it is
+**CC BY-NC 4.0** — consistent with Appendix E's *research-only, commercial use
+restricted*, and the first time this entry has had a licence to name.
 
-**What it does not have is the one thing this document requires: a tie.** The
-card carries **no arXiv tag**, and its README is not a dataset card at all — it
-is a *"WorldCode Exported JSON Field Specification"*, describing `worldcode_name`,
-`subtasks`, `camera_calibration` and per-frame fields. **The words "World In Your
-Hands" do not appear in it.** By the rule this document applied to
-[ACE-Ego-0](#ace-ego-0) two sweeps ago — *one tag is the difference between an
-artefact and a coincidence* — **this stays unresolved**, and it would be resolved
-by a single `arxiv:2512.24310` tag, a sentence in the README, or a link from the
-paper. **Recording it is still worth doing**: a later sweep that finds this card
-cold should know it was already examined and why it was not accepted.
+🔴 **The catch, and it is a real one: the exported schema zeroes the paper's
+headline contribution.** WIYH's central claim is **wrist pose at under 5 mm**.
+The HF card's field table says, of `wrist_poses`: ***"Placeholder zero poses for
+the left and right end-effectors."*** The pose information is carried instead by
+`chest_poses` — *"poses of the left and right end-effectors in the current
+frame's `chest` coordinate system"* — so the data is not missing, it is in a
+different frame under a different key, **and the field a reader would reach for
+first contains zeros.** Anyone pulling this corpus and reading `wrist_poses`
+literally gets a silent, well-formed, entirely wrong answer.
+
+⚠️ **And the download is gated — by an account, which no sweep had recorded.**
+The project page ships a two-tier download UI: **`Mini`**, listed, and
+**`Full`**, whose description is the string **`"Coming soon"`**. Downloading runs
+through `/api/v1/auth/register` and `/api/v1/auth/login`, stores a
+`dataset_license_accepted` flag, and fails closed — `/api/v1/dp/wiyh/downloadDate/list`
+answers **`{"code":401,"msg":"未授权"}`** to an anonymous request, while the
+preview endpoint beside it answers 200. So the access shape is: **previews open,
+bulk download behind registration plus a licence click, full corpus not yet
+released.** One detail is worth *not* over-reading: the page probes an
+Alibaba-internal OSS host (`…oss-cn-shanghai-internal.aliyuncs.com`) with a
+500 ms timeout and, on failure, **rewrites the hostname to the public
+`oss-cn-shanghai.aliyuncs.com`**. That is a cache optimisation for users inside
+the publisher's VPC, **not** a private distribution path — checked, because the
+interesting reading was the wrong one.
+
+**Net, after all of that.** WIYH is no longer *a promise with nothing behind it*.
+It is **a partially released, account-gated, CC BY-NC 4.0 corpus whose public
+tier is a `Mini` subset, whose full 1,045 hours are "Coming soon", and whose
+paper has just deleted the word "open-source" from its title.** As with
+[Egocentric-1M](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost), this
+document does not claim the full release will not happen. It claims the narrower,
+checkable thing — and the narrow claim has now changed twice in one sweep, in
+both directions, which is the honest outcome of looking properly rather than
+again.
 
 ⚠️ **And its publisher shows the shape at scale.** `tars-robotics` ships **four
 datasets — WIYH, OmniViTac, OmniViTac_Samples and Libero — every one CC BY-NC
@@ -4812,7 +4976,7 @@ Reading the licences across this document produces the wider pattern:
 | **Ego-OSCAR** — hardware + software | **Apache 2.0** (verified at the repo's `LICENSE`) | ✅ |
 | **Ego-OSCAR** — Stereo-550 dataset | **`fpvlabs-license`**, bespoke: "research use", but "commercial usage allowed"; gated, **and the licence text itself is behind the gate** | ⚠️ **unclassifiable** — the one thing a custom licence needs is a reading, and it cannot be read before agreeing |
 | **EgoCS-400K** | 🔴 **no dataset licence stated** — only the **arXiv listing's CC BY 4.0**; no repository, no card, no download location named in the paper | ⚠️ **unresolved** — previously recorded here as CC BY 4.0 (rendered gameplay, not real-world footage) |
-| **World In Your Hands** | **none stated in the paper; "will be open-source"** — 🟡 a strong candidate artefact exists (`tars-robotics/WIYH`, **CC BY-NC 4.0**, ungated, >1 TB, 15,855 downloads) but **carries no arXiv tag and never names the project** | ⚠️ **still unresolved** — one tag would settle it |
+| **World In Your Hands** | **CC BY-NC 4.0**, at the artefact — 🟢 **resolved this sweep.** The paper names no instrument, but Appendix E states the terms (*research only; redistribution and commercial use restricted*) and defers the licence to *"the licence accompanying the dataset"*; that artefact is [`tars-robotics/WIYH`](https://huggingface.co/datasets/tars-robotics/WIYH), tied to the paper by the publisher's own API emitting the card's bespoke `worldcode_…_vlta_reorg_sample` identifier format | ⚠️ **still no `arxiv:` tag**, and the **`Full` tier is *"Coming soon"*** behind account registration — the public tier is `Mini` |
 | **EgoTactile** | **CC BY-NC 4.0**, ungated (plus `EgoTactile-OXT` on the same terms) | ❌ non-commercial — but stated, which neither EgoTac nor H-Tac manages |
 | **EgoTac** | **nothing released** — no repo, no card, no project page, and no *"we release"* anywhere in the body | 🔴 reclassified from *terms unstated* to **not released**: there is nothing to attach terms to |
 | 🔴 **H-Tac / TTP** (BeingBeyond) | **partially released** — the printed project page `beingbeyond.github.io/TTP/` still returns **404**, but `BeingBeyond/H-Tac_Sample` on Hugging Face holds **98 episodes / 35,982 frames / 98 videos** under a **MIT** `LICENSE`, ungated, 234 downloads | 🔴 **corrected again**: this table said *not released* for several sweeps. The release was in a namespace neither the paper nor the project URL points at. **HOI-Tac — the 106 h over eleven other datasets — is still not in it** |
@@ -4981,6 +5145,65 @@ citation of a claim that has been reframed is not stale, exactly; it is
 **quietly correct about a different sentence than the one you read**, which is
 harder to notice than being wrong.
 
+🔴 **Re-run in full again 24 Sep 2026, and the version audit finally earned its
+keep.** **71** arXiv IDs now cited, all resolved — **47 at their cited version**,
+**22 bare against multi-version papers**, **zero errors**, and **two pinned
+behind** — one of which was not deliberate and should not have been there:
+🔴 **World In Your Hands, cited at v3 against a v4 posted three days earlier.**
+That is the whole reason this audit exists, and the first time it has caught
+something that changed the document's argument rather than its footnotes:
+**v4 deletes every open-source promise in the paper**, and this survey had been
+quoting one of them as a live commitment. See
+[§2](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild).
+📌 **Note for the next run**: the entry now cites **both** v3 and v4 on purpose —
+v3 for the sentences v4 removed, v4 for the paper as it stands — so this ID will
+keep reporting `STALE` and should be read the way [EgoDex](#egodex)'s v1 pin is
+read. **Two deliberate pins-behind, zero accidental ones.**
+**193 URLs** checked; **42 non-2xx**, of which **36 are the proxy's blanket 403
+on `github.com`** and **six are everything else**. Of those six, **two are real**
+— [H-Tac's printed page](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual)
+`beingbeyond.github.io/TTP/` at **404, twelfth consecutive**, and **ENIGMA-360**,
+now **500 where it was 403** — a third distinct error code across months of
+failures, with the classification **gone** unchanged and the reasoning no
+stronger than it was when [the threshold was last tightened](#the-other-thing-that-happened-to-hours-they-went-on-sale).
+🔴 **The other four were this document's extractor, not the web.** Three URLs
+were swept up with the Markdown around them — two trailing backticks and a pair
+of strikethrough tildes — and **all three return 200 once the markup is
+stripped**; the fourth, a `humanoidsdaily.com` article, refuses `HEAD` and
+answers the range-`GET` fallback with 200, which is what that fallback is for.
+**A link checker that reports its own quoting as four dead links is manufacturing
+findings**, and one of the three — `nexdata.ai/…/2145` — is a page this survey
+has already written up once as withdrawn and
+[retracted](#the-other-thing-that-happened-to-hours-they-went-on-sale). The
+extractor now strips trailing backticks, tildes and emphasis marks — and the
+whole check was re-run against it: **196 URLs, 40 non-2xx, 37 of them the
+`github.com` 403, and the three remaining are the two real failures above plus
+the `HEAD`-refusing article.** ✅ **Zero manufactured findings on the second
+pass**, which is the only way to report a fix to one's own instrument.
+⚠️ **And a distinction worth fixing in place, because the two look identical in
+a results table**: `github.io` **is not** `github.com` here. A 404 from a GitHub
+Pages site is served by GitHub and is a genuine reading; a 403 from `github.com`
+is served by this environment's proxy and is a reading about the proxy. The
+twelve-times-404 above is real precisely because it is a Pages URL.
+
+📅 **The dated commitments, 24 Sep 2026 — six days to go and nothing has moved.**
+[HumanTouch](#touchsight-and-humantouch--a-fifth-position-and-a-licence-that-lives-on-another-platform)'s
+project page still carries the sentence *"We plan to expand the public release to
+1,000 hours by the end of September 2026"*, and both copies of the corpus still
+carry the badge **`规模-约100小时`**. The Hugging Face copy is **unchanged since
+6 Sep**; ModelScope still reads **CC-BY-NC-4.0**. **Not yet due, not yet
+delivered, and now recorded twice at the interim** — which is the point of a
+dated promise: someone has to be standing there on the date, and the interim
+readings are what make the final one mean something.
+⚠️ **The two counters behaved as predicted, which is the only useful thing about
+them.** ModelScope **2,616,769 → 2,703,845** (**+87,076** in four days) while
+Hugging Face went **11,104 → 10,329** (**−775**) — the same corpus, the same
+period, one counter adding eighty-seven thousand and the other shedding
+seven hundred. Across **88,085 files**, file-level counting still explains it and
+nothing else needs to. **Recorded as two numbers this document read, not as
+demand.**
+[EgoScale](#egoscale)'s *"Coming Soon"* page is now **216 days** old.
+
 ✅ **Re-run in full again 22 Sep 2026.** All **69** arXiv IDs resolved — **47 at
 their cited version**, **21 bare against multi-version papers**, **1 deliberately
 pinned behind** (EgoDex), **zero errors**. **200 URLs** checked; **38 non-2xx**,
@@ -5093,10 +5316,19 @@ first time on 19 Sep 2026 over all 63 IDs, it:
   SiMDex and EgoTac return **no Hub artefact carrying their arXiv ID**. Those
   entries had been classified *not released* by looking where the paper points;
   they are now classified that way by asking the index what exists. **A negative
-  from the right query is worth more than a negative from three page-loads**, and
-  World In Your Hands in particular is now doubly settled: the
-  [`tars-robotics/WIYH` candidate](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild) still carries **no
-  arXiv tag**, which is exactly why this query does not find it.
+  from the right query is worth more than a negative from three page-loads.**
+  🔴 **One of the eight has since been overturned, and it is the one this bullet
+  singled out.** World In Your Hands was called *"doubly settled"* here on the
+  grounds that the [`tars-robotics/WIYH` candidate](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild)
+  *"still carries no arXiv tag, which is exactly why this query does not find
+  it."* **That sentence contains its own refutation and the document printed it
+  anyway**: a query keyed on a tag cannot settle anything about a publisher that
+  does not tag, and saying so in the same breath as *settled* is the reasoning
+  going backwards. The card is WIYH — tied [in §2](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild)
+  by the publisher's own API — and the corpus is partially released. **The
+  `arxiv:`-tag query remains the best instrument this survey has for finding
+  artefacts; it is worth nothing as an instrument for concluding they are
+  absent**, and the seven other negatives above inherit that caveat.
 
 🔴 **Counters that did move**, re-read the same day: `facebook/ego-1k`
 **61,932 → 56,664**, `inclusionAI/OpenAoE-2000h` **539,829 → 520,848**,
@@ -6461,6 +6693,21 @@ the only one that cannot be falsified**, and it is worth saying that a reader
 should treat it as the weakest available assurance rather than the most
 procedural-sounding one.
 
+🔴 **A sixth shape arrived on 21 September 2026, and it is the one none of the
+five anticipated: the promise can be *withdrawn*.** This passage has used
+[World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild)'s
+*"will be open-source"* as the undated-commitment case since it was written.
+**v4 of that paper deletes the sentence, deletes the matching sentence in the
+conclusion, deletes "Open-Source Ecosystem" from the title, and deletes both the
+project-page and code URLs from the title page.** Nothing was broken: an undated
+promise that is removed was never due. **The whole family — *soon*, *coming
+soon*, *we release*, *will be open-source*, *upon publication* — shares an
+assumption this document had not noticed it was making, that the promise stays
+put long enough to be checked against.** A reader tracking a release has to pin
+the version they are tracking, because **the text they are holding the publisher
+to can stop existing while the arXiv landing page still shows it** — which, for
+this paper today, is exactly what has happened.
+
 **So what actually survives, stated as narrowly as the evidence allows.** Not
 *nobody built one* — somebody did. What is missing is the layer as **open,
 auditable, reusable infrastructure**:
@@ -6759,10 +7006,10 @@ attention to the text, and this one cannot.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Fifty-six of them are
-this document's own errors** *(counted by the marker itself this sweep rather than
-by eye: the previous revision said twenty-nine, which was one short even before
-this round's four were added — the count of the count was also drifting)* — marked *(this document…)* in the left column and
+index, not a summary, and each row links to the working. **Sixty-one of them are
+this document's own errors** *(counted by the marker itself every sweep rather than
+by eye: an earlier revision said twenty-nine, which was one short even before
+that round's four were added — the count of the count was also drifting)* — marked *(this document…)* in the left column and
 counted honestly, because an earlier revision of this preamble said "three" long
 after the count had passed it, which is the same failure the table exists to
 record. They are kept visible rather than quietly amended: a
@@ -6851,7 +7098,7 @@ trust the rest of it.
 | Build AI released ~1 M hours (Egocentric-1M) | **Not findable at the publisher across five attempts** spread over months, the last being the complete API index rather than a search. The only artefact of that name anywhere is an **empty third-party repo** — two files, a 21-byte README, no data | [§12](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost) |
 | EgoWAM trains on in-the-wild internet video | Its in-the-wild data is **EgoVerse on Project Aria**, flow from Aria VIO poses | [§2](#egowam--and-what-in-the-wild-turns-out-to-mean) |
 | EgoAVFlow needs no special capture, since it needs no robot demos | **Head-mounted RealSense D435 RGBD, plus a ChArUco board in every scene** | [§2](#egoavflow--no-robot-demonstrations-still-means-a-board-in-every-scene) |
-| World In Your Hands is research-only, commercial restricted | **No dataset licence is stated.** "Will be open-source" is a promise, not a grant | [§2](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild) |
+| ~~World In Your Hands is research-only, commercial restricted~~ → **this document's own correction of that, which was itself wrong** | 🔴 **Retracted.** This row said *"no dataset licence is stated; 'will be open-source' is a promise, not a grant"* and treated the secondary coverage as embellishment. **The paper's Appendix E says, in v3 and v4 alike: *"intended exclusively for research… redistribution or commercial use is restricted."*** The coverage was a faithful summary of an appendix this survey had not opened. What survives is narrower: the paper states **terms** and names no **instrument**, deferring to *"the licence accompanying the dataset"* — which turns out to be **CC BY-NC 4.0** at the artefact | [§2](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild) |
 | EgoExoLearn / EgoHumanoid are openly licensed datasets | Their **MIT and Apache 2.0 licences cover the code**; neither states dataset terms | [§1](#egoexolearn), [§2](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator) |
 | Ego-1K is ~1,000 hours of egocentric video | **956 videos of ~8–10 seconds** from a 16-camera rig, for novel-view synthesis | [§1](#ego-1k) |
 | Open X-Embodiment is an openly licensed pooled corpus | **No overall licence stated**, and no position on whether its 60 components keep their own | [§2](#the-robot-native-denominator) |
@@ -6911,6 +7158,12 @@ trust the rest of it.
 | **SABER's grocery footage was staged — a team "sent actors into stores with GoPros"** *(this document, for dozens of sweeps, as a load-bearing §13 example)* | The paper says the opposite and says it three times: *"human workers performing everyday retail tasks… in fully operational store conditions"*, *"all captured **without staging, scripting**, or teleoperation overhead"*, *"during natural shopping activity"* — and the vendor's page agrees (*"Every clip was recorded in a working environment"*, *"a head-mounted camera on the worker"*). The trigger was the paper's **"primary actors"**, used in the scene sense throughout. **The correction cuts against this document**: instrumenting people already doing the work is far cheaper than staging, so commissioned capture is cheaper than recorded here. What survives is the part that was never about cost — the purchase was the **synchronised second viewpoint**, not the footage | [§1](#saber--commissioned-egoexo-capture-in-a-domain-the-internet-is-full-of), [§13](#13-why-no-open-source-project-does-exactly-this) |
 | **SABER's 10 K subset is "released publicly", so the restrictive licence is at least on something you can have** *(this document, quoting the paper rather than checking the artefact)* | `DreamVu/SABER-10K` is **`gated: auto`** behind four fields, its README is unreadable unauthenticated and its files **401**. **19 downloads, 0 likes** in five and a half months. The control rules the gate out as the cause: the same publisher's `PRISM-100K`, created eleven days earlier with the **same licence, same gate and same domain**, reads **360 downloads and 7 likes**. Both halves of a "partially released" corpus were gated, at different strengths | [§1](#saber--commissioned-egoexo-capture-in-a-domain-the-internet-is-full-of), [§11](#11-the-licence-trap) |
 | **A paper that prints a URL for its dataset has told you where the dataset is** | SABER's *"The dataset can be accessed via the following link"* points at `dreamvu.ai/saber`, which **308s to a path that does not exist and lands on the vendor's homepage** — a page about a different corpus, where SABER appears once as a link back to the arXiv paper. **HTTP 200 throughout.** A 404 would have said the route was gone; a 200 on the front page says nothing is wrong. The corpus it was meant to reach is *"available under NDA"*. New shape, adjacent to [MINT](#mint--camera-alignment-at-scale-and-a-release-sentence-with-no-address)'s release sentence with no address: **an address that resolves, to the wrong thing** | [§1](#saber--commissioned-egoexo-capture-in-a-domain-the-internet-is-full-of), [§11](#11-the-licence-trap) |
+| **World In Your Hands has no repository and no download location; the only findable artefact is the arXiv entry** *(this document, four separate looks)* | 🔴 **Both URLs were on the paper's own title page.** v3 prints, under the author list: *"Project Page: `wiyh.tars-ai.com` · Code: `github.com/tars-robotics/World-In-Your-Hands`"*. The searches went to the hubs and to the paper's **body**; a `\thanks` footnote between the authors and the abstract is exactly what a keyword-driven read skips. **The index not being asked was the source itself** | [§2](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild) |
+| **`tars-robotics/WIYH` is an untied candidate — one arXiv tag, one README sentence or one link from the paper would settle it** *(this document's ACE-Ego-0 rule, held for three sweeps)* | 🟢 **Settled by a fourth thing the rule did not list.** The publisher's own public API returns records named `worldcode_HS-2-…_s0_vlta_reorg_sample_1-2`; the Hugging Face card's worked example is that string with different digits, and `vlta` is the paper's own coinage. Add the camera names (`lf_chest_fisheye`, `ldr_hand_fisheye` — the Oracle Suite's optics) and the account matching the repo the paper cites. **The bar was right; it was written as three signals when what it is for is evidence a publisher could not have produced by accident** | [§2](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild) |
+| **World In Your Hands is "doubly settled" as not-released, because the `arxiv:`-tag query finds nothing and the candidate card carries no tag** *(this document, sweep 80)* | 🔴 **That sentence contains its own refutation and was printed anyway.** A query keyed on a tag cannot establish absence for a publisher that does not tag. The corpus is partially released and the card is its. **The tag query stays the best instrument here for *finding* artefacts and is worth nothing for concluding they are absent** — a caveat the other seven negatives in that bullet now inherit | [§11](#the-second-index-queried-at-last--and-the-strongest-uploader-stamp-case-yet) |
+| **A release promise is a fixed thing you can come back and check against** *(assumed by all five shapes in §13's promise family)* | 🔴 **It can be withdrawn.** WIYH **v4 (21 Sep 2026)** deletes *"All data and hardware design will be open-source"*, deletes the matching conclusion sentence, deletes **"Open-Source Ecosystem" from the title**, and deletes both URLs from the title page. Nothing was broken — an undated promise that is removed was never due. ⚠️ **And arXiv still serves v3's title and abstract on the landing page**, so the commitment is visible at the address a reader checks and absent from the paper | [§13](#13-why-no-open-source-project-does-exactly-this) |
+| **OpenMMEgo outranks WIYH as the promise example because WIYH said it in the body and OpenMMEgo said it in the title** *(this document)* | **WIYH said it in the title too** — v3 was *"A Large-Scale **and Open-Source Ecosystem** for…"*. The ranking survives on a better reason than the one given: **OpenMMEgo cannot retract without renaming the project; WIYH did it in one resubmission** | [§2](#openmmego--open-weights-and-data-half-kept) |
+| **Four dead links found this pass** *(this document's own link checker, 24 Sep)* | **Three were its own quoting** — two trailing backticks and a pair of strikethrough tildes swept into the URL, all 200 once stripped — and the fourth refuses `HEAD` and answers the range-`GET` fallback 200. **Two real failures, not six.** One of the three, `nexdata.ai/…/2145`, is a page this survey already wrote up once as withdrawn and retracted. The extractor now strips trailing markup | [§11](#11-the-licence-trap) |
 
 > **The pattern in the left column is worth naming.** Almost every row is a
 > *scale* or a *licence* claim, and almost every one fails in the same
@@ -6977,7 +7230,7 @@ trust the rest of it.
 - *EgoAVFlow: Robot Policy Learning with Active Vision from Human Egocentric Videos via 3D Flow.* (CC BY 4.0; head-mounted RealSense D435 RGBD plus a ChArUco board per scene; 150 videos × 4 tasks; no dataset release stated) https://arxiv.org/html/2602.22461v1
 - *EgoWAM: World Action Models Beyond Pixels with In-the-Wild Egocentric Human Data.* (CC BY 4.0; "in-the-wild" = EgoVerse on Project Aria, flow from Aria VIO poses) https://arxiv.org/abs/2607.08436
 - *EgoHumanoid: humanoid loco-manipulation from egocentric human demonstrations.* RSS 2026. (code **Apache 2.0**; dataset terms not stated; PICO VR headset + 5 body trackers + ZED Mini depth) https://github.com/OpenDriveLab/EgoHumanoid
-- *World In Your Hands: A Large-Scale and Open-Source Ecosystem for Learning Human-Centric Manipulation in the Wild.* (1,045 h; Oracle Suite wearable; **no dataset licence stated — "will be open-source"**; 🟡 candidate artefact `tars-robotics/WIYH`, CC BY-NC 4.0, ungated, **untied to the paper**) https://arxiv.org/html/2512.24310v3
+- *World In Your Hands: A Large-scale Ego-centric Dataset for Learning Robotic Manipulation In the Wild.* (1,045 h captured, **600 h annotated**; Oracle Suite wearable; paper states **terms** — research only, commercial use restricted, Appendix E — and **no instrument**; artefact `tars-robotics/WIYH`, **CC BY-NC 4.0**, ungated, **tied to the paper this sweep**; project page gated by registration, `Full` tier *"Coming soon"*) https://arxiv.org/abs/2512.24310 — **current version is v4 (21 Sep 2026), which dropped "Open-Source Ecosystem" from the title and every open-source promise from the body; the arXiv metadata still serves v3's title and abstract**: https://arxiv.org/html/2512.24310v4
 - *OpenEgo: A Large-Scale Multimodal Egocentric Dataset for Dexterous Manipulation.* (1,107 h unifying six public datasets; **annotations only, per-source licence and attribution shipped as `ATTRIBUTION.md`**; code MIT, data release in progress) https://arxiv.org/html/2509.05513v1 · https://www.openegocentric.com · https://github.com/ahadjawaid/openego
 - *EgoCS-400K: An Egocentric Gameplay Dataset for World Models.* (**dataset terms not stated** — CC BY 4.0 is the arXiv listing's; 400 K+ videos / 10,000+ h rendered from public HLTV match demos) https://arxiv.org/html/2606.18180v1 · https://EgoCS-400K.github.io
 - *ACE-Ego-0: Unifying Egocentric Human and Robotic Data for VLA Pretraining.* https://arxiv.org/html/2606.17200v1 (the project URL printed in the paper 404s)

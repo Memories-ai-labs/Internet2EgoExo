@@ -799,6 +799,21 @@ shape that could have shipped without redistributing a frame. **The half of a
 promise that gets kept is the half that costs least**, and a claim of openness in
 a title travels into every citation while nothing verifies it.
 
+🔴 **And on 21 September 2026 a paper showed that the promise need not even be
+kept around to be broken.** **World In Your Hands** — 1,045 hours on a wearable
+tactile suit, the most heavily instrumented capture effort in the survey — had
+been the standing example of an undated commitment: *"All data and hardware
+design will be open-source."* Its **v4 deletes that sentence, deletes the
+matching one in the conclusion, deletes "Open-Source Ecosystem" from the title,
+and deletes both the project-page and code URLs from the title page.** Nothing
+was broken, because an undated promise that is removed was never due — and
+**arXiv's landing page still serves the old title and the old abstract**, so the
+commitment is still visible at the address a reader checks and gone from the
+paper they would download. The survey had been quoting it from the landing page.
+Details, along with the corpus's actual state — partially released, CC BY-NC 4.0,
+account-gated, full tier *"coming soon"* — are in
+[the entry](docs/RELATED_WORK.md#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild).
+
 **The newest work keeps confirming it, in two ways.** By instrumenting what the
 web already holds: [SABER](https://arxiv.org/html/2605.09613v1) needed ~100 hours
 of grocery stocking and shelf retrieval — among the most abundantly filmed
