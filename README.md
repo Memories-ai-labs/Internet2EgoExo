@@ -358,6 +358,38 @@ trajectories."* **At 4–5:1 with 55.6% discarded, ten free hours buy about one
 robot hour** — the honest version of the moat argument, and a weaker one than
 "hours are abundant" implies.
 
+🔴 **Read that last figure as one lab's, not the field's — a second consumer
+broke the discard term, and it is a much bigger one.** **EgoSteer** (PKU,
+[arXiv 2607.09701](https://arxiv.org/abs/2607.09701)) open-sources **EgoSmith**,
+a pipeline that curated **9,606 hours** of egocentric pre-training data across
+twelve corpora — **8,049 of them (83.8%) Egocentric-100K, with Egocentric-10K
+supplying 288 more, so 86.8% of the corpus is Build AI's free hours.** It then
+published the scaling curve: models pre-trained on 3 K, 6 K and 9.6 K of those
+hours, post-trained identically, improve monotonically on ten real-robot tasks.
+**8% of a hundred thousand free hours was enough to train a working dexterous
+VLA.** ⚠️ **But EgoSmith keeps 288 of the same 10,000 hours Zeva kept 4,439 of
+— 2.9% against 44.4%, a fifteen-fold difference on identical input**, because
+one is subsampling for redundancy and the other selecting for task coverage.
+**The usable fraction of a free corpus is a property of the selection objective,
+not of the corpus**, so the ten-to-one figure above is Zeva's exchange rate and
+should not be read as a constant.
+
+🟢 **And EgoSteer is the strongest counter-example this survey has to its own
+central claim.** It released the pipeline, **342.9 M frames of hand-motion
+labels with a per-source licence table and a rehydration script**, **192 hours
+of Apache-2.0 real-robot teleoperation**, and **two Apache-2.0 VLA
+checkpoints** — pipeline, data, models and training code, all permissive, all
+ungated. The paper is from June 2026 and **this survey had no entry for it until
+its ninety-fifth sweep**, which is recorded in the corrections as a shape none of
+the earlier own-errors covers: not a source misread, but **a counter-example
+never cited at all**. What survives the concession is narrow and still decisive:
+**EgoSmith's input is twelve corpora already known to be egocentric.** Nothing in
+it decides whether an arbitrary internet video is first-person, or clears rights
+on a clip nobody licensed. With the crawl stage solved by LAION-BVD and the
+annotate stage solved here, **the two ends are published and permissively
+licensed, and the join is not.** See
+[the entry](docs/RELATED_WORK.md#egosteer-and-egosmith--the-annotate-stage-released-with-a-per-source-licence-table).
+
 **And the competition is not the one we had been naming.** This survey spent
 seventy-six sweeps comparing found footage against **teleoperation** — DROID's
 350 hours, thirteen institutions, a Franka each. The cheaper rival is

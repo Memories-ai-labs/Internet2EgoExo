@@ -60,6 +60,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [EgoMimic](#egomimic)
   - [EgoAVFlow](#egoavflow--no-robot-demonstrations-still-means-a-board-in-every-scene)
   - [Zeva-Ego — the first published exchange rate](#zeva-ego--the-first-published-exchange-rate-and-a-named-consumer-of-the-free-ten-thousand-hours)
+  - [EgoSteer and EgoSmith — the annotate stage, released](#egosteer-and-egosmith--the-annotate-stage-released-with-a-per-source-licence-table)
   - [EgoWild2Dex — a ninth "in the wild"](#egowild2dex--a-ninth-in-the-wild-and-the-first-measured-number-for-why-it-is-hard)
   - [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean)
   - [OpenWAM](#openwam--the-first-project-here-whose-open-survives-being-checked)
@@ -1898,12 +1899,205 @@ robot hour and 55.6% of a free corpus is discarded before use, then **ten free
 hours buy roughly one robot hour** — which is the honest version of the moat
 argument, and a weaker one than "hours are abundant" implies.)*
 
+🔴 **Read that arithmetic as Zeva's, not as a constant — the next entry breaks
+the discard term.** [EgoSmith](#egosteer-and-egosmith--the-annotate-stage-released-with-a-per-source-licence-table)
+keeps **288 of the same 10,000 hours (2.9%)** where Zeva keeps 4,439 (44.4%) —
+**a fifteen-fold difference on identical input**, and the publisher says why:
+*"to filter out highly repetitive videos, we subsample."* **The usable fraction
+of a free corpus is a property of the selection objective, not of the corpus**,
+so *ten free hours per robot hour* is one lab's exchange rate under one lab's
+objective and this document should not have printed it as though it were the
+field's.
+
 ⚠️ **Release**: the project page names
 [`github.com/air-embodied-brain/Zeva`](https://github.com/air-embodied-brain/Zeva)
 — unreadable from this environment, which 403s `github.com` — and **no dataset**;
 the mixture is other people's corpora. Both standing artefact checks (the
 `arxiv:`-tag query on Hugging Face, and ModelScope) **return nothing** for
 `2609.24411`.
+
+### EgoSteer and EgoSmith — the annotate stage, released, with a per-source licence table
+
+🔴 **This is the most directly relevant project in the survey and it had no entry
+until the ninety-fifth sweep.** The paper is three months old, the artefacts are
+Apache-2.0 and ungated, and every standing check this document runs would have
+found them; none was pointed here. Recorded first, because the finding about the
+survey is larger than any single number below.
+
+**[arXiv 2607.09701](https://arxiv.org/abs/2607.09701)** (v1, 21 Jun 2026) —
+*EgoSteer: A Full-Stack System Towards Steerable Dexterous Manipulation from
+Egocentric Videos*, from PKU's Institute for AI and the PKU–PsiBot Joint Lab.
+Project page [`egosteer.github.io`](https://egosteer.github.io/). **It
+open-sources the pipeline, the labels, the real-robot data, the models and the
+training code** — the combination [§13](#13-why-no-open-source-project-does-exactly-this)
+keeps reporting that nobody ships.
+
+**What exists, all read at the artefact:**
+
+| Artefact | What | Licence | Access | Counter |
+|---|---|---|---|---|
+| [`EgoSteer/EgoSteer-Egocentric`](https://huggingface.co/datasets/EgoSteer/EgoSteer-Egocentric) | **labels only** — wrist pose, fingertips, camera pose over 8 source corpora; **no images, no video** | 🟢 **per-source, tabulated** (see below) | **ungated** | 285 |
+| [`EgoSteer/EgoSteer-RealWorld`](https://huggingface.co/datasets/EgoSteer/EgoSteer-RealWorld) | **54,454 teleoperated episodes, 192 h, 20.75 M frames, 193 tasks**, bimanual RealMan + two dexterous hands, head and chest RGB-D, free-form English per episode, LeRobot v3 | 🟢 **Apache-2.0** | **ungated** | **7,527**, 8 likes |
+| [`EgoSteer/EgoSteer-3B-Base`](https://huggingface.co/EgoSteer/EgoSteer-3B-Base) | world-model-enhanced VLA on Qwen3-VL-2B + DINOv3, pre-trained on the 9.6 K egocentric hours | 🟢 **Apache-2.0** | ungated | 23, 9 likes |
+| `EgoSteer/EgoSteer-3B-RealMan` | the same model grounded on the real-robot set | 🟢 **Apache-2.0** | ungated | 23 |
+| `github.com/egosteer/{egosmith, robot-stack, egosteer}` | pipeline, teleop/deploy stack, model and training | — | ⚠️ **unreadable here** — the proxy 403s `github.com` | — |
+
+🟢 **The licence table is the thing this document has been asking for, and
+somebody shipped it.** `EgoSteer-Egocentric` carries `license: other`,
+`license_name: per-dataset-see-readme`, and then a README table with **two
+licence columns** — the source's and the labels' — plus a vendored
+`LICENSES/<source>/LICENSE.txt` and `NOTICE.txt` in every folder:
+
+| folder | source licence | labels licence | episodes | frames |
+|---|---|---|---|---|
+| `taco/` | CC-BY-SA-4.0 | CC-BY-SA-4.0 | 1,977 | 304,054 |
+| `oakink2/` | CC-BY-SA-4.0 | CC-BY-SA-4.0 | 887 | 169,881 |
+| `egodex/` | **CC-BY-NC-ND-4.0** | **CC-BY-NC-4.0** | 147,588 | 37,061,953 |
+| `holoassist/` | CDLA-Permissive-2.0 | CC-BY-4.0 | 11,426 | 1,148,545 |
+| `epic_kitchens/` | CC-BY-NC-4.0 | CC-BY-NC-4.0 | 108,077 | 4,936,621 |
+| `ego4d/` | custom (signed agreement) | CC-BY-NC-4.0 | 584,042 | 13,770,599 |
+| `egocentric_10k/` | Apache-2.0 | **CC-BY-4.0** | 194,225 | 47,860,714 |
+| `egocentric_100k/` | Apache-2.0 | **CC-BY-4.0** | 496,357 | 237,603,974 |
+| **total** | | | **1,544,579** | **342,856,341** |
+
+**Compare that with every other row in [§11](#11-the-licence-trap).**
+ShareAlike propagates where it should, on both CC-BY-SA sources; **both
+non-commercial sources keep NC**; and the Ego4D labels are released **NC even
+though Ego4D's licence is a bilateral agreement that says nothing at all about
+derived labels** — the one row where the publisher had the most room to claim
+whatever it liked, and took the narrow reading.
+
+⚠️ **One cell is a claim rather than a reading, and it is the interesting one:
+`egodex/` drops the ND.** [EgoDex](#egodex) is **CC-BY-NC-ND-4.0** — *No
+Derivatives* — and 37.1 M frames of hand poses estimated from that video are
+released as **CC-BY-NC-4.0**, which permits derivatives. Either estimated pose
+labels are not a derivative work of the video, or the relicensing does not
+follow. **This document does not resolve that** — it is a question for a lawyer,
+not a sweep — but it records that the most carefully licensed artefact in the
+survey still contains one step that has to be argued rather than read. *A
+provenance table is not a permission.*
+
+🟢 **And the pixels are re-attachable, with a shipped tool rather than a
+promise.** Every frame names its source recording and frame number, and
+`rehydrate.py` (20 KB, in the repo) lists the source files a folder needs, pulls
+the indexed frames from **your** copy of the source dataset, applies the
+undistortion and resize, and writes a complete LeRobot dataset. The README is
+blunt about why it cannot do more: *"The source datasets need registration or a
+signed agreement, so they cannot be fetched automatically."* **This is the
+URLs-only pattern applied to annotations** — the shape
+[LAION-BVD](#laion-bvd--it-shipped-and-this-document-said-it-hadnt) and [OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly)
+use for video, here used for labels, and it is the correct answer to the rights
+problem [§11](#11-the-licence-trap) spends a section on.
+
+> ⚠️ **One detail in that tool is worth lifting out**, because it is the kind of
+> thing that silently corrupts a corpus: `source_frame_index` is *"frame number
+> counted in decode order from the start of the media; **never convert it from
+> time**."* HoloAssist's media is variable-frame-rate at 27.5–30 fps, and
+> EPIC-KITCHENS is native 50/59.94. **Anyone building this stage themselves will
+> reach for a timestamp**, and on two of these eight sources that silently
+> misaligns the labels. It is recorded here as a build-vs-reuse argument of its
+> own.
+
+🔴 **The composition of the 9.6 K hours is the strongest number
+[§12](#12-free-hours-and-what-they-do-to-the-moat) has, and it is not close.**
+The paper tabulates all twelve sources:
+
+| Source | Hours | % | Episodes |
+|---|---|---|---|
+| **[Egocentric-100K](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost)** | **8,049** | **83.8** | 1,795,731 |
+| [EgoVerse](#egowam--and-what-in-the-wild-turns-out-to-mean) | 690 | 7.2 | 35,175 |
+| [EgoDex](#egodex) | 370 | 3.9 | 147,588 |
+| **[Egocentric-10K](#egocentric-10k)** | **288** | **3.0** | 194,915 |
+| [Ego4D](#ego4d--sixty-mentions-and-the-access-design-that-manufactures-re-uploads) | 138 | 1.4 | 74,505 |
+| EPIC-KITCHENS | 49 | 0.5 | 26,454 |
+| HoloAssist | 11.5 | 0.1 | 11,426 |
+| HOT3D | 4.5 | 0.05 | 1,105 |
+| TACO | 3.0 | 0.03 | 1,558 |
+| OakInk-v2 | 1.7 | 0.02 | 891 |
+| H2O | 1.0 | 0.01 | 935 |
+| FPHA | 0.5 | 0.01 | 578 |
+| **Total** | **9,606** | 100 | **2,290,861** |
+
+**86.8% of the hours that pre-trained this model are Build AI's two free
+Apache-2.0 corpora.** Not a supplement, not a control — **the corpus is the free
+hours, and everything else is the remaining 13%.** And the scaling curve is
+published: models pre-trained on **3 K / 6 K / 9.6 K hours** plus a
+from-scratch baseline, post-trained identically and evaluated on ten real-robot
+tasks, show pre-training loss converging lower and real-world success and
+progress rising monotonically with the free hours, *"with expanding pre-training
+data, the policy exhibits the emergence of failure recovery, enhanced
+instruction-following."* [Zeva-Ego](#zeva-ego--the-first-published-exchange-rate-and-a-named-consumer-of-the-free-ten-thousand-hours)
+gave one point and a ratio. **This gives four points and a direction**, and it is
+the second named consumer of the free corpus in three sweeps.
+
+🔴 **Which forces a correction to a number this document derived.** §12 says, from
+Zeva-Ego, that *ten free hours buy roughly one robot hour*, computed on
+Zeva's **55.6% discard** of Egocentric-10K. **EgoSmith keeps 288 of the same
+10,000 hours — 2.9%** — and **8,049 of Egocentric-100K's 100,405 — 8.0%.** Two
+published cuts of the same free corpus, **44.4% and 2.9% retained, a fifteen-fold
+difference.** The cause is stated by the publisher and is not quality:
+*"to filter out highly repetitive videos, we subsample Egocentric-10K and
+Egocentric-100K."* **So the usable fraction of a free corpus is not a property of
+the corpus.** It is a property of what you are selecting for, and this document's
+ten-to-one figure should be read as *Zeva's* exchange rate under *Zeva's*
+objective, not as a constant. The moat argument survives — it gets stronger, not
+weaker, when 8% of a free corpus trains a working VLA — but the tidy number does
+not.
+
+⚠️ **The released labels are not the paper's corpus, and nothing says so.** Put
+the two tables side by side and they disagree on every shared row but two:
+
+| Source | paper's corpus (episodes) | released labels (episodes) |
+|---|---|---|
+| Egocentric-100K | 1,795,731 | **496,357** |
+| Ego4D | 74,505 | **584,042** |
+| EPIC-KITCHENS | 26,454 | **108,077** |
+| Egocentric-10K | 194,915 | 194,225 |
+| EgoDex | 147,588 | 147,588 ✅ |
+| HoloAssist | 11,426 | 11,426 ✅ |
+| TACO | 1,558 | 1,977 |
+| OakInk-v2 | 891 | 887 |
+
+**Ego4D is nearly 8× larger in the release; Egocentric-100K is a quarter the
+size; EgoVerse, HOT3D, H2O and FPHA are absent from the release entirely.** The
+paper reports **1.04 B frames**; the release holds **342.9 M**. Neither artefact
+claims to be the other, and this is not alleged as an error — **but a reader who
+downloads `EgoSteer-Egocentric` expecting "the 9.6 K-hour corpus" has a different
+cut in their hands**, heavier on the corpus with the strictest access terms and
+lighter on the one that supplied five sixths of the hours. **Count artefacts, not
+papers** is the same rule [EgoWild2Dex](#egowild2dex--a-ninth-in-the-wild-and-the-first-measured-number-for-why-it-is-hard)
+produced, applied to a project that did release.
+
+⚠️ **Two internal figures disagree, in the paper and across the card.** The paper's
+prose says the pipeline *"yields a fully-annotated egocentric dataset comprising
+9.60 K hours, **2.09 M episodes**, and 1.04 B frames"*; its own composition table
+totals **2,290,861 episodes** — a 200 K gap between a sentence and the table two
+pages later. And the real-robot set is **187 hours** in the paper's contribution
+list and **192 hours** on the Hugging Face card, at the same 193 tasks. Both are
+small; both are recorded, because this survey's standing finding is that the
+circulating number and the artefact's number differ more often than not, and it
+holds even for the most carefully documented release in it.
+
+📌 **A tenth "in the wild", and for once the meaning is pinned by the publisher
+rather than inferred.** EgoSmith *"curates in-the-wild egocentric videos"* — and
+because the labels release enumerates its sources with frame counts, the phrase
+can be resolved exactly: **twelve existing research and vendor corpora, zero
+found footage.** Same answer as the previous nine, arrived at from the artefact
+instead of from a reading of the prose.
+
+**Bearing on this repo, and it is the sharpest yet.** EgoSteer is what the
+*annotate* stage looks like when somebody finishes it: an open pipeline, 342.9 M
+frames of labels with per-source rights, a rehydration tool, and an Apache-2.0
+model that demonstrably improves as the free hours scale. **What it is not is a
+route from internet video to egocentric video** — EgoSmith's input is already
+egocentric and already curated, twelve datasets that somebody else recorded. So
+[§13](#13-why-no-open-source-project-does-exactly-this) survives, narrowed for
+the fourth time: **the crawl stage is solved and permissively licensed
+([LAION-BVD](#laion-bvd--it-shipped-and-this-document-said-it-hadnt)); the annotate stage is now solved and permissively
+licensed (EgoSteer); what is still missing is the middle — deciding which
+internet video is egocentric, and clearing the rights on it clip by clip.** That
+middle is smaller than it was three sweeps ago, and it is still the whole
+proposition.
 
 ### EgoWild2Dex — a ninth "in the wild", and the first measured number for why it is hard
 
@@ -5825,6 +6019,20 @@ frames**, 2,010,759 clips, 24.79 TB, 30 fps H.265, monocular head-mounted
 **fisheye** Build AI Gen 1, per-worker calibrated camera intrinsics, mean 7.06
 hours per worker, Apache 2.0, access gated behind sharing contact information.
 
+🔴 **And as of this sweep it has a named consumer that used it as the whole
+corpus.** [EgoSmith](#egosteer-and-egosmith--the-annotate-stage-released-with-a-per-source-licence-table)
+curated a **9,606-hour** egocentric pre-training set across twelve datasets, and
+**8,049 of those hours — 83.8% — are Egocentric-100K**, with Egocentric-10K
+supplying another 288. **86.8% of the corpus behind an open, Apache-2.0
+dexterous VLA is Build AI's free hours**, and the paper publishes the scaling
+curve: models pre-trained on 3 K, 6 K and 9.6 K of them, post-trained
+identically, improve monotonically on ten real-robot tasks against a
+from-scratch baseline. **This is the clearest evidence in the document that the
+free drop functions as a pre-training corpus and not merely as a headline** —
+and the conversion rate is the other half of it: **8,049 hours kept from
+100,405, or 8.0%.** *A hundred thousand free hours bought eight thousand usable
+ones, and eight thousand usable ones were enough.*
+
 🔴 **Egocentric-1M could not be found at the publisher, across five separate
 attempts.** In order: its Hugging Face card returns 401 to an unauthenticated
 fetch; it does not surface in dataset search, where the 100K and 10K-Evaluation
@@ -6509,6 +6717,29 @@ others, most with *"sample"* in the name. Five were read in full:
 | `Worlddatalabs/egocentric-manufacturing` | manufacturing footage | `license: other`, **manually gated**, scene-segmentation JSON |
 | `egxodata/egxo-household-egocentric-video-evaluation` | a household evaluation set | `license_name:` **`egxo-controlled-commercial-access`**, manually gated, shipping an `ACCESS_TERMS.md` and a catalogue CSV |
 
+📌 **Re-run 24 Sep 2026: the market is still arriving, and the licence field is
+where it shows.** Three more vendor cards were created in the thirteen days to
+23 September, **each under a bespoke licence that exists nowhere outside its own
+repository**:
+
+| Card | Created | What is actually in it | Licence | Counter |
+|---|---|---|---|---|
+| `ExylosAi/egocentric-vr-capture-20h-multimodal-sample` | 22 Sep | **195 episodes, 2,283,482 frames, 21.14 "delivered hours"** — consumer-VR egocentric RGB + audio with head, body and hand tracking, LeRobot v3-style, genuinely substantial | `license_name:` **`exylos-proprietary-evaluation`** | **744 in two days** |
+| `60base/korea-household-egocentric-samples` | 20 Sep | **16 clips × 20 s — five minutes twenty seconds, ~94 MB.** Korean household tasks, bilingual metadata, per-file SHA-256 | `license_name:` **`60base-sample-evaluation-1.0`** | 108 |
+| 🔴 `Nexdata-kr/1000-Segments-6-camera-Egocentric-Embodied-AI-Dataset` | 10 Sep | 32 files, one scene folder — calibration JSONs, SLAM trajectories, `states.hdf5`, a gesture preview | 🔴 **none — `cardData: null`, no tags but `region:us`** | 101 |
+
+⚠️ **Three vendors, three licence names, zero standard instruments** — and this
+is now the dominant licence shape in the vendor tier, not an exception. The two
+that name terms are candid about the purpose: Exylos's sample exists *"before a
+larger commercial delivery"*, 60BASE's *"to discuss a full-recording request or
+a custom collection brief"*. ✅ **And credit where it is due: neither inflates.**
+60BASE's card says five minutes twenty seconds and means it; Exylos publishes a
+frame count that checks out against its file list. **The naming problem this
+section documents is Nexdata's, not the tier's** — which matters, because a
+survey that files every vendor under *advertisement* stops being able to see the
+one that is lying. 🔴 The Nexdata copy is the one with **no licence at all**,
+in a second national namespace, two sweeps after the first was written up.
+
 🔴 **The Nexdata card is the sharpest instance in this document of a dataset
 named for its size.** Its README is a good one: PICO 4 Ultra head-mounted stereo,
 4096×1536, 76-point full-body pose (24 torso + 52 hand joints), wrist and ankle
@@ -6619,8 +6850,8 @@ rather than deleted, because it still holds for the *egocentric* demand
 specifically — which is genuinely recent — and not for web-video acquisition in
 general.
 
-🔴 **This section has now narrowed three times, and the third one is the
-serious one. Read the narrowings before the argument.**
+🔴 **This section has now narrowed four times. Read the narrowings before the
+argument.**
 
 **Round one** claimed nobody sources ego data from the internet at scale.
 [EgoCS-400K](#egocs-400k--10000-free-hours-sourced-from-the-internet-and-why-13-survives-it)
@@ -6639,6 +6870,28 @@ acquisition layer does not exist is false, and this document asserted it for
 twenty-five sweeps while carrying the refutation in §2.** That is recorded here
 rather than quietly repaired, because how a survey handles its own strongest
 counterexample is the only real test of it.
+
+🔴 **Round four is [EgoSteer](#egosteer-and-egosmith--the-annotate-stage-released-with-a-per-source-licence-table),
+and it takes the *annotate* stage off the table.** A June 2026 paper from PKU
+open-sources **EgoSmith**, a pipeline that turns egocentric video into
+fully-annotated training data; **342.9 M frames of the labels it produced, with a
+per-source licence table and a rehydration script**; **192 hours of Apache-2.0
+real-robot teleoperation**; and **two Apache-2.0 VLA checkpoints** whose
+real-robot success rises monotonically with the volume of pre-training hours.
+Pipeline, data, models and training code, all released under permissive terms.
+**Whatever reason 1 says about the citable unit being a corpus rather than a
+machine, this group published the machine.**
+
+> **What that leaves, stated precisely, because the temptation is to over-concede.**
+> EgoSmith's *input* is twelve existing egocentric corpora — Ego4D,
+> EPIC-KITCHENS, Egocentric-10K/100K, EgoDex and eight more — recorded by other
+> people and already known to be first-person. **Nothing in it decides whether an
+> arbitrary internet video is egocentric, and nothing in it resolves rights on a
+> clip nobody has licensed.** Combined with [LAION-BVD](#laion-bvd--it-shipped-and-this-document-said-it-hadnt)
+> at the crawl end, the shape of the gap is now unusually legible: **the two ends
+> are solved, published and permissively licensed, and the join is not.** That is
+> a much smaller claim than this section opened with, and it is the one that is
+> still true.
 
 🔴 **One week's worth of evidence, gathered without looking for it.** The sweep
 of 18 Sep read **four** papers posted 15–16 Sep 2026 — [the Meta wristband](#the-wristband--tactile-measured-without-instrumenting-the-hand-and-a-fourth-position),
@@ -6975,7 +7228,7 @@ that failed.
 
 | The phrase | What a reader assumes | What it denotes | Where |
 |---|---|---|---|
-| **"in the wild"** | found on the internet | *outside the robot's lab* — captured by the authors on their own hardware, **or lifted from existing research corpora**, **or captured from 264 recruited participants under signed consent**, **or — in one sentence of [Being-H0.5](#being-h05--the-mano-action-space-at-35000-hours-and-a-preview-subset-with-no-terms) — *"in-the-wild egocentric videos from large-scale public repositories, including Ego4D, EPIC-KITCHENS, Egocentric-10K"***, where the phrase and its denial share a clause | [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean) (EgoVerse on Aria), [World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild) (own wearable suit), and the term's general use across [§2](#2-scaling-human-video-for-robot-learning). 🔴 **And a variant that is not authors' own capture at all**: [ViTRA](#vitra--12-m-episodes-of-mano-over-four-other-peoples-corpora-stamped-mit)'s *"'in-the-wild' egocentric human videos without any annotations"* are **Ego4D, EPIC-KITCHENS, Ego-Exo4D and Something-Something V2** — the phrase covering both *not-a-lab-capture* and *not-ours* in one document. ✅ **One honest exception**: [EgoTac](#egotac--tactile-predicted-from-ordinary-video-and-a-ceiling-that-moved)'s in-the-wild inference really does run on found corpora |
+| **"in the wild"** | found on the internet | *outside the robot's lab* — captured by the authors on their own hardware, **or lifted from existing research corpora**, **or captured from 264 recruited participants under signed consent**, **or — in one sentence of [Being-H0.5](#being-h05--the-mano-action-space-at-35000-hours-and-a-preview-subset-with-no-terms) — *"in-the-wild egocentric videos from large-scale public repositories, including Ego4D, EPIC-KITCHENS, Egocentric-10K"***, where the phrase and its denial share a clause | [EgoWAM](#egowam--and-what-in-the-wild-turns-out-to-mean) (EgoVerse on Aria), [World In Your Hands](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild) (own wearable suit), and the term's general use across [§2](#2-scaling-human-video-for-robot-learning). 🔴 **And a variant that is not authors' own capture at all**: [ViTRA](#vitra--12-m-episodes-of-mano-over-four-other-peoples-corpora-stamped-mit)'s *"'in-the-wild' egocentric human videos without any annotations"* are **Ego4D, EPIC-KITCHENS, Ego-Exo4D and Something-Something V2** — the phrase covering both *not-a-lab-capture* and *not-ours* in one document. ✅ **One honest exception**: [EgoTac](#egotac--tactile-predicted-from-ordinary-video-and-a-ceiling-that-moved)'s in-the-wild inference really does run on found corpora. 📌 **And a tenth instance where the meaning is pinned rather than inferred**: [EgoSmith](#egosteer-and-egosmith--the-annotate-stage-released-with-a-per-source-licence-table) *"curates in-the-wild egocentric videos"*, and because its labels release enumerates every source with frame counts, the phrase resolves to **twelve existing research and vendor corpora, zero found footage** — the same answer as the nine before it, reached from the artefact instead of the prose |
 | **"from existing web sources"** | crawled from the internet | *from existing public research datasets* — Ego4D, EPIC-KITCHENS, HowTo100M, Something-Something | [RynnVLA-001](#rynnvla-001--filter-dont-convert) |
 | **a licence on the paper / the code / the repo** | the terms of the **data** | the terms of that adjacent artefact only — the dataset's terms are separate, and often absent | [EgoScale](#egoscale) (arXiv CC BY 4.0), [NIMBLE](#wilor--the-chokepoint-read-at-source) (repo MIT, paper CC BY), [EgoExoLearn](#egoexolearn) and [EgoHumanoid](#egohumanoid--whole-body-transfer-and-a-vr-rig-on-the-demonstrator) (code MIT / Apache 2.0), and — **committed by this document itself** — [MobileEgo Anywhere](#mobileego-anywhere), recorded as CC BY 4.0 for dozens of sweeps when that was the arXiv listing's licence and the dataset is gated `license: other` |
 | **a dataset named for its size** | that many hours of the thing you want | often a different unit, a different viewpoint, a different corpus entirely — or no corpus at all | [Ego-1K](#ego-1k) — 956 clips of 8–10 s, not 1,000 hours; [Ego-Exo4D](#ego-exo4d) — 1,286 h of which **221 are egocentric**; **`easpeeder/Egocentric-1M`** — a public, MIT-tagged repo containing [two files and no data](#egocentric-100k-and-egocentric-1m--and-what-scaling-cost); and **`Nexdata-AI/10000-Hour-Egocentric-Video-Dataset`** — three files, one of them the metadata of a [59-second recording it does not contain](#the-other-thing-that-happened-to-hours-they-went-on-sale) |
@@ -7006,7 +7259,7 @@ attention to the text, and this one cannot.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Sixty-one of them are
+index, not a summary, and each row links to the working. **Sixty-three of them are
 this document's own errors** *(counted by the marker itself every sweep rather than
 by eye: an earlier revision said twenty-nine, which was one short even before
 that round's four were added — the count of the count was also drifting)* — marked *(this document…)* in the left column and
@@ -7026,6 +7279,22 @@ trust the rest of it.
 > [`arxiv:` tag check](#awesome-egocentric-atlas--somebody-else-is-keeping-this-index-and-its-licence-column-is-empty-four-times-in-five),
 > which found the same class of miss in an independent index built by someone
 > else.
+
+> 🔴 **And this sweep supplies a shape none of the above covers: the
+> counterexample that was never cited at all.**
+> [EgoSteer](#egosteer-and-egosmith--the-annotate-stage-released-with-a-per-source-licence-table)
+> was posted in **June 2026** and open-sources the pipeline, the labels, the
+> real-robot data and the models — the exact combination
+> [§13](#13-why-no-open-source-project-does-exactly-this) spends a section saying
+> nobody ships. It appears **nowhere in ninety-four sweeps**: not in the body,
+> not in the references, not in a table row. **Every other own-error in this
+> table was a source read wrongly, read partially, or read once and left to go
+> stale — all of them recoverable by re-reading something the document already
+> held.** This one is not: there was nothing to re-read. It was found by asking a
+> hub for artefacts created in the last fortnight, which is a search the rotation
+> runs as *check 4* and which had not, until now, turned up anything that moved
+> the argument. **A survey's own pages cannot tell it what it never looked for**,
+> and the only defence is a query whose results the survey does not choose.
 
 > **Two of the four earlier own-errors are not misreadings, and that is the
 > interesting part.** One entry stated a number that appears in no version of its
@@ -7164,6 +7433,10 @@ trust the rest of it.
 | **A release promise is a fixed thing you can come back and check against** *(assumed by all five shapes in §13's promise family)* | 🔴 **It can be withdrawn.** WIYH **v4 (21 Sep 2026)** deletes *"All data and hardware design will be open-source"*, deletes the matching conclusion sentence, deletes **"Open-Source Ecosystem" from the title**, and deletes both URLs from the title page. Nothing was broken — an undated promise that is removed was never due. ⚠️ **And arXiv still serves v3's title and abstract on the landing page**, so the commitment is visible at the address a reader checks and absent from the paper | [§13](#13-why-no-open-source-project-does-exactly-this) |
 | **OpenMMEgo outranks WIYH as the promise example because WIYH said it in the body and OpenMMEgo said it in the title** *(this document)* | **WIYH said it in the title too** — v3 was *"A Large-Scale **and Open-Source Ecosystem** for…"*. The ranking survives on a better reason than the one given: **OpenMMEgo cannot retract without renaming the project; WIYH did it in one resubmission** | [§2](#openmmego--open-weights-and-data-half-kept) |
 | **Four dead links found this pass** *(this document's own link checker, 24 Sep)* | **Three were its own quoting** — two trailing backticks and a pair of strikethrough tildes swept into the URL, all 200 once stripped — and the fourth refuses `HEAD` and answers the range-`GET` fallback 200. **Two real failures, not six.** One of the three, `nexdata.ai/…/2145`, is a page this survey already wrote up once as withdrawn and retracted. The extractor now strips trailing markup | [§11](#11-the-licence-trap) |
+| **The acquisition-and-annotation layer for egocentric data is not published** *(this section's claim, narrowed three times and still standing)* | 🔴 **Round four: [EgoSteer](#egosteer-and-egosmith--the-annotate-stage-released-with-a-per-source-licence-table) published the annotate stage in June 2026 and this survey found it in September.** EgoSmith the pipeline, **342.9 M frames of labels with a per-source licence table and a rehydration script**, **192 h of Apache-2.0 real-robot teleoperation**, and **two Apache-2.0 VLA checkpoints**. Every standing check would have found it; none was pointed there. What survives is the join: EgoSmith's input is twelve corpora *already known to be egocentric* | [§13](#13-why-no-open-source-project-does-exactly-this) |
+| **Ten free hours buy about one robot hour** *(this document, deriving a constant from Zeva-Ego's single cut)* | 🔴 **The discard term is not a constant.** EgoSmith keeps **288 of the same 10,000 hours (2.9%)** where Zeva keeps **4,439 (44.4%)** — **fifteen-fold**, on identical input, because the objectives differ (*"to filter out highly repetitive videos, we subsample"*). **The usable fraction of a free corpus is a property of the selection, not the corpus**, and this figure should have been printed as Zeva's exchange rate rather than the field's | [§12](#egocentric-10k), [§2](#egosteer-and-egosmith--the-annotate-stage-released-with-a-per-source-licence-table) |
+| **A per-source licence column is what a derived corpus ought to ship, and nobody does** *(this document's §11, implicitly, across seven catalogued failure modes)* | 🟢 **`EgoSteer/EgoSteer-Egocentric` ships two** — source licence *and* labels licence, per folder, with `LICENSES/<source>/LICENSE.txt` and `NOTICE.txt` vendored alongside. ShareAlike propagates, both NC sources stay NC, and Ego4D-derived labels are NC against a source licence that is a bilateral agreement. **The first artefact here that answers §11 rather than illustrating it** — ⚠️ with one cell that is an argument, not a reading: `egodex/` releases **CC-BY-NC-4.0** labels estimated from **CC-BY-NC-ND-4.0** video | [§11](#11-the-licence-trap), [§2](#egosteer-and-egosmith--the-annotate-stage-released-with-a-per-source-licence-table) |
+| **A project's released artefact is the corpus its paper describes** | **Not here, and neither document says otherwise.** EgoSteer's paper reports **1.04 B frames** over 12 sources; its labels release holds **342.9 M** over 8, with **Ego4D nearly 8× larger** in the release and **Egocentric-100K a quarter the size**. Not alleged as an error — recorded because *"count artefacts, not papers"* applies to projects that **did** release, not only to ones that did not | [§2](#egosteer-and-egosmith--the-annotate-stage-released-with-a-per-source-licence-table) |
 
 > **The pattern in the left column is worth naming.** Almost every row is a
 > *scale* or a *licence* claim, and almost every one fails in the same
@@ -7230,6 +7503,7 @@ trust the rest of it.
 - *EgoAVFlow: Robot Policy Learning with Active Vision from Human Egocentric Videos via 3D Flow.* (CC BY 4.0; head-mounted RealSense D435 RGBD plus a ChArUco board per scene; 150 videos × 4 tasks; no dataset release stated) https://arxiv.org/html/2602.22461v1
 - *EgoWAM: World Action Models Beyond Pixels with In-the-Wild Egocentric Human Data.* (CC BY 4.0; "in-the-wild" = EgoVerse on Project Aria, flow from Aria VIO poses) https://arxiv.org/abs/2607.08436
 - *EgoHumanoid: humanoid loco-manipulation from egocentric human demonstrations.* RSS 2026. (code **Apache 2.0**; dataset terms not stated; PICO VR headset + 5 body trackers + ZED Mini depth) https://github.com/OpenDriveLab/EgoHumanoid
+- *EgoSteer: A Full-Stack System Towards Steerable Dexterous Manipulation from Egocentric Videos.* (v1, 21 Jun 2026; PKU Institute for AI + PKU–PsiBot Joint Lab. **EgoSmith** pipeline → **9,606 h / 2,290,861 episodes / 1.04 B frames** across 12 corpora, **83.8% Egocentric-100K, 86.8% Build AI's free hours**; 🟢 **everything permissive and ungated** — labels `EgoSteer/EgoSteer-Egocentric` under a **per-source licence table**, real-robot `EgoSteer/EgoSteer-RealWorld` **Apache-2.0, 192 h / 54,454 episodes / 193 tasks**, models `EgoSteer-3B-Base` and `-3B-RealMan` **Apache-2.0**; ⚠️ the released labels are a **different cut** from the paper's corpus, and `egodex/` labels drop the source's **ND**) https://arxiv.org/abs/2607.09701 · https://egosteer.github.io/
 - *World In Your Hands: A Large-scale Ego-centric Dataset for Learning Robotic Manipulation In the Wild.* (1,045 h captured, **600 h annotated**; Oracle Suite wearable; paper states **terms** — research only, commercial use restricted, Appendix E — and **no instrument**; artefact `tars-robotics/WIYH`, **CC BY-NC 4.0**, ungated, **tied to the paper this sweep**; project page gated by registration, `Full` tier *"Coming soon"*) https://arxiv.org/abs/2512.24310 — **current version is v4 (21 Sep 2026), which dropped "Open-Source Ecosystem" from the title and every open-source promise from the body; the arXiv metadata still serves v3's title and abstract**: https://arxiv.org/html/2512.24310v4
 - *OpenEgo: A Large-Scale Multimodal Egocentric Dataset for Dexterous Manipulation.* (1,107 h unifying six public datasets; **annotations only, per-source licence and attribution shipped as `ATTRIBUTION.md`**; code MIT, data release in progress) https://arxiv.org/html/2509.05513v1 · https://www.openegocentric.com · https://github.com/ahadjawaid/openego
 - *EgoCS-400K: An Egocentric Gameplay Dataset for World Models.* (**dataset terms not stated** — CC BY 4.0 is the arXiv listing's; 400 K+ videos / 10,000+ h rendered from public HLTV match demos) https://arxiv.org/html/2606.18180v1 · https://EgoCS-400K.github.io
