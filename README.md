@@ -620,7 +620,16 @@ star count read once**; PyPI is now checked for every tool recommended here.
   🔴 **And the download split is the argument**: the permissive pointers have
   **36,547 pulls against the gated payloads' 2,383 — fifteen to one.**
   **URLs-only-under-a-licence is not a compromise release; it is the one people
-  take.** The posture
+  take.** 🟢 **And a fifth instance applies the posture to *annotations*, which
+  is the half that matters for this repo:**
+  [EgoSteer-Egocentric](docs/RELATED_WORK.md#egosteer-and-egosmith--the-annotate-stage-released-with-a-per-source-licence-table)
+  ships **342.9 M frames of hand-motion labels and no pixels at all**, with a
+  README table carrying **two licence columns per source — the source's and the
+  labels' — `LICENSES/<source>/LICENSE.txt` vendored in every folder**, and a
+  `rehydrate.py` that re-attaches frames from *your* copy of each source because
+  *"the source datasets need registration or a signed agreement, so they cannot
+  be fetched automatically."* That is OpenEgo's rare half, done at three hundred
+  times the scale. The posture
   is common; the per-source attribution is the rare part. And the limit of the
   posture is visible right beside it: a third party has re-uploaded **722 shards
   of extracted EgoVid frames** with no card, no licence and no attribution,

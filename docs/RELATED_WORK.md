@@ -119,6 +119,7 @@ downloadable code, stage by stage, with what is safe to reuse and what is not.
   - [Panda-70M's select-don't-generate design](#panda-70ms-select-dont-generate-design)
   - [Action100M](#action100m)
   - [VLM-Video-Action-Localization](#vlm-video-action-localization)
+  - [LeRobot — the format every artefact here lands in](#lerobot--the-format-every-artefact-here-lands-in-and-nobody-wrote-it-down)
 - [11. The licence trap](#11-the-licence-trap)
   - [WiLoR — the chokepoint, read at source](#wilor--the-chokepoint-read-at-source)
   - [Awesome Egocentric Atlas — the index somebody else is keeping](#awesome-egocentric-atlas--somebody-else-is-keeping-this-index-and-its-licence-column-is-empty-four-times-in-five)
@@ -3136,8 +3137,8 @@ more than the correction.** A release exists:
 [`BeingBeyond/H-Tac_Sample`](https://huggingface.co/datasets/BeingBeyond/H-Tac_Sample),
 in the authors' **own** namespace, created **6 July 2026**, ungated, **234
 downloads** — and it is not a stub. Its README tabulates **98 complete episodes,
-35,982 frames and 98 top-view videos** across four subsets, in a LeRobot v2.1
-episode layout with H-Tac metadata:
+35,982 frames and 98 top-view videos** across four subsets, in a LeRobot-shaped
+episode layout with H-Tac metadata — ⚠️ **corrected [below](#lerobot--the-format-every-artefact-here-lands-in-and-nobody-wrote-it-down): it is not v2.1.** Read at `meta/`, the subsets carry no `info.json` at all, and the `dataset_info.json` that stands in for it sets `codebase_version` to **`h_tac_desktask_tac_v1`** — a project name where a spec version belongs. The v2.1 reading came from the README:
 
 | Directory | What it is | Episodes | Frames |
 |---|---|---|---|
@@ -5012,6 +5013,97 @@ model chosen by whoever deploys it. The sample invocation is
 approaches.** That is exactly what makes it useful: zero training cost and no
 labelled data, so it is the honest floor any trained localiser in this pipeline
 must clear before it earns its complexity.
+
+### LeRobot — the format every artefact here lands in, and nobody wrote it down
+
+🔴 **Named thirteen times across this document and never given an entry.** It is
+the container `EgoSteer`, `HumanTouch`, `FastUMI-100K`, `H-Tac`, `InternData-A1`,
+`cadene/droid` and the Exylos sample all ship in; §14 recommends tools without
+ever naming the one thing they all write to. This is a
+[check-1 miss](#corrections-in-one-table) of the plainest kind — **the
+infrastructure is invisible precisely because it is everywhere.**
+
+**What it is.** Hugging Face's robot-learning library, and, more consequentially
+here, **its on-disk dataset spec**: `data/` parquet, `videos/` mp4, and a `meta/`
+directory whose `info.json` carries a **`codebase_version`** field naming the
+spec the files conform to.
+
+**Read at the source, 25 Sep 2026:**
+
+| | |
+|---|---|
+| PyPI `lerobot` | **0.6.1, uploaded 3 Aug 2026** — seven weeks old, **alive** |
+| Licence | 🟢 **Apache-2.0** |
+| Python floor | ⚠️ **`requires_python >=3.12`** |
+| Releases | **12**, first `0.1.0` on **9 Mar 2024** |
+| Docs served for | `main`, `v0.6.1`, `v0.5.1`, `v0.4.4` |
+| Datasets carrying the `LeRobot` tag on the Hub | 🔴 **77,775** — enumerated to exhaustion over 78 pages, not estimated |
+| Source | `github.com/huggingface/lerobot` — ⚠️ **unreadable here**, the proxy 403s `github.com` |
+
+⚠️ **And its release history corrects, in the useful direction, how this document
+read PyPI two sweeps ago.** LeRobot published `0.1.0` in **March 2024** and then
+**nothing for seventeen months**, until `0.3.2` on **1 August 2025** — during
+which it was one of the most active repositories in robotics. Since then it has
+shipped ten releases in thirteen months. **A gap on PyPI is evidence about
+publishing, not about development**, and
+[the `video2dataset` finding](#14-build-vs-reuse-per-stage) was careful to say so
+— *"recorded as unreleased-since-Feb-2024, not as unmaintained"*. **That caveat
+was doing real work and here is the case that proves it**: the same instrument,
+pointed at LeRobot in July 2025, would have produced the same shape of reading
+and been badly wrong.
+
+🔴 **The catch is a version split, and it runs through this survey's own source
+list.** `codebase_version`, read at `meta/info.json` in each artefact rather than
+from anybody's prose:
+
+| Artefact | `codebase_version` | fps |
+|---|---|---|
+| [`EgoSteer/EgoSteer-RealWorld`](#egosteer-and-egosmith--the-annotate-stage-released-with-a-per-source-licence-table) | `v3.0` | 30 |
+| `EgoSteer/EgoSteer-Egocentric` (`ego4d/`) | `v3.0` | 30 |
+| `griffinlabs/InternData-A1-LeRobot-v3.0…` (`genie1/`) | `v3.0` | 30 |
+| `lerobot/droid_100` | `v3.0` | 15 |
+| `lerobot/libero` | `v3.0` | 10 |
+| `ExylosAi/egocentric-vr-capture-20h…` | `v3.0` | 30 |
+| [`cadene/droid`](#the-robot-native-denominator) | 🟡 **`v2.1`** | 15 |
+| [`chuqiaoLyu/Xspark-HumanTouch`](#touchsight-and-humantouch--a-fifth-position-and-a-licence-that-lives-on-another-platform) (`X001/`) | 🟡 **`v2.1`** | **60** |
+| [`IPEC-COMMUNITY/FastUMI_100k_lerobot`](#the-umi-family--capture-without-a-robot-and-the-blind-spot-this-survey-had) | 🟡 **`v2.1`** | 20 |
+| [`BeingBeyond/H-Tac_Sample`](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) | 🔴 **`h_tac_desktask_tac_v1`** | 30 |
+| [`gatech/EgoMimic`](#egomimic) | ❌ **not LeRobot** — six raw `.hdf5` at the repo root | — |
+| [`tars-robotics/WIYH`](#world-in-your-hands--the-instrumentation-ceiling-and-a-third-in-the-wild) | ❌ **not LeRobot** — its own WorldCode JSON spec | — |
+
+**Six at v3.0, three still at v2.1, one private string, two not LeRobot at all**
+— and frame rates from **10 to 60** across ten artefacts in one nominal format.
+*"LeRobot format"* on a dataset card is not a statement that two datasets can be
+loaded by the same code.
+
+🔴 **The H-Tac row is the one worth dwelling on.** Its meta directory holds
+`dataset_info.json` — **not** the `info.json` a loader looks for — and inside it:
+
+> `"dataset_type": "lerobot_episode_dataset"`, `"codebase_version": "h_tac_desktask_tac_v1"`
+
+**The field whose entire purpose is to tell a reader which spec applies has been
+filled with the publisher's own project name.** Not a wrong version: no version.
+A generic loader finds no `info.json`, and a tolerant one that finds
+`dataset_info.json` gets a string matching no released spec and has to guess.
+This is the [licence-field failure mode](#11-the-licence-trap) transposed onto a
+format field — **a slot that exists to be machine-read, filled with something
+only a human can interpret** — and it is the second such finding in this
+document about the same publisher's artefacts. ⚠️ *It also corrects this
+document, which recorded H-Tac as shipping "in a LeRobot v2.1 episode layout".
+It does not; that was read from the README rather than from `meta/`.*
+
+**Bearing here.** Standardising on LeRobot is the obvious call — **77,775
+datasets is not a choice, it is a fact about the ecosystem** — and it is
+Apache-2.0, actively released, and the format the newest and best-documented
+artefact in this survey ([EgoSteer](#egosteer-and-egosmith--the-annotate-stage-released-with-a-per-source-licence-table))
+already writes. **What it is not is a guarantee of interoperability.** Any ingest
+here has to read `codebase_version` from `meta/info.json` **per subset, not per
+repository** — four of the artefacts above nest one to three directories deep,
+one dataset per leaf — support **both v2.1 and v3.0**, and **fail loudly rather
+than guess** when the field holds something else. Budget that as pipeline work,
+not as configuration. ⚠️ And note the **Python 3.12 floor** before assuming the
+library drops into an existing environment.
+
 
 ## 11. The licence trap
 
@@ -7177,10 +7269,12 @@ records.
 | Curation / scoring | cosmos-curate filters | **Build** | Quality gates as code, four hour measures, cost per hour |
 | Rights — deciding | *(mostly ignored)* | **Build** | Licence per clip; unmeasured ⇒ excluded, not assumed |
 | Rights — recording | **[OpenEgo](#openego--somebody-does-this-properly-and-it-should-be-said-plainly)'s `ATTRIBUTION.md`** | **Reuse the format** | Per-source authors, paper, licence *with canonical URL*, and a ready-to-paste attribution line — shipped as a file, not asserted in prose |
+| **Output format** | **[LeRobot](#lerobot--the-format-every-artefact-here-lands-in-and-nobody-wrote-it-down)** (Apache-2.0, `0.6.1` 3 Aug 2026, **77,775 tagged datasets**) | 🟢 **Reuse — it is not really a choice** | Write LeRobot v3.0. ⚠️ **Read `codebase_version` from `meta/info.json` per *subset*, not per repository**, support **v2.1 and v3.0** on ingest, and **fail loudly** on anything else — three of this survey's own sources are still v2.1, one fills the field with a project name, and frame rates run 10–60. ⚠️ Python **≥3.12** |
+| **Annotation release shape** | **[EgoSteer-Egocentric](#egosteer-and-egosmith--the-annotate-stage-released-with-a-per-source-licence-table)** — labels-only, per-source licence table, `rehydrate.py` | 🟢 **Reuse the whole pattern** | Ship labels and provenance, never the restricted bytes; two licence columns per source; a script that re-attaches pixels from the reader's own copy |
 | Rights — redistributing | **OpenEgo's annotations-only rule** | **Reuse the rule** | Never re-ship restricted bytes; point at the official source and carry the terms alongside |
 
 **The short version:** skeleton from `cosmos-curate`; clipping design from
-Panda-70M; viewpoint rule from RynnVLA-001, independently corroborated;
+Panda-70M; output format and annotation-release shape from LeRobot and EgoSteer; viewpoint rule from RynnVLA-001, independently corroborated;
 annotation hierarchy from Action100M with Panda-70M's selection discipline; 4D as
 a later upgrade only after the non-commercial dependencies are replaced *and*
 the static-camera assumption is dealt with. **The front and the back of the chain
@@ -7259,7 +7353,7 @@ attention to the text, and this one cannot.
 ## Corrections, in one table
 
 Every correction below is argued in place in the entry it belongs to; this is an
-index, not a summary, and each row links to the working. **Sixty-three of them are
+index, not a summary, and each row links to the working. **Sixty-five of them are
 this document's own errors** *(counted by the marker itself every sweep rather than
 by eye: an earlier revision said twenty-nine, which was one short even before
 that round's four were added — the count of the count was also drifting)* — marked *(this document…)* in the left column and
@@ -7437,6 +7531,10 @@ trust the rest of it.
 | **Ten free hours buy about one robot hour** *(this document, deriving a constant from Zeva-Ego's single cut)* | 🔴 **The discard term is not a constant.** EgoSmith keeps **288 of the same 10,000 hours (2.9%)** where Zeva keeps **4,439 (44.4%)** — **fifteen-fold**, on identical input, because the objectives differ (*"to filter out highly repetitive videos, we subsample"*). **The usable fraction of a free corpus is a property of the selection, not the corpus**, and this figure should have been printed as Zeva's exchange rate rather than the field's | [§12](#egocentric-10k), [§2](#egosteer-and-egosmith--the-annotate-stage-released-with-a-per-source-licence-table) |
 | **A per-source licence column is what a derived corpus ought to ship, and nobody does** *(this document's §11, implicitly, across seven catalogued failure modes)* | 🟢 **`EgoSteer/EgoSteer-Egocentric` ships two** — source licence *and* labels licence, per folder, with `LICENSES/<source>/LICENSE.txt` and `NOTICE.txt` vendored alongside. ShareAlike propagates, both NC sources stay NC, and Ego4D-derived labels are NC against a source licence that is a bilateral agreement. **The first artefact here that answers §11 rather than illustrating it** — ⚠️ with one cell that is an argument, not a reading: `egodex/` releases **CC-BY-NC-4.0** labels estimated from **CC-BY-NC-ND-4.0** video | [§11](#11-the-licence-trap), [§2](#egosteer-and-egosmith--the-annotate-stage-released-with-a-per-source-licence-table) |
 | **A project's released artefact is the corpus its paper describes** | **Not here, and neither document says otherwise.** EgoSteer's paper reports **1.04 B frames** over 12 sources; its labels release holds **342.9 M** over 8, with **Ego4D nearly 8× larger** in the release and **Egocentric-100K a quarter the size**. Not alleged as an error — recorded because *"count artefacts, not papers"* applies to projects that **did** release, not only to ones that did not | [§2](#egosteer-and-egosmith--the-annotate-stage-released-with-a-per-source-licence-table) |
+| **The format every artefact in this survey ships in has an entry** *(this document, ninety-five sweeps, naming it thirteen times)* | **It had none.** [LeRobot](#lerobot--the-format-every-artefact-here-lands-in-and-nobody-wrote-it-down) is what EgoSteer, HumanTouch, FastUMI-100K, H-Tac, InternData-A1, `cadene/droid` and the Exylos sample all write to, and §14 recommended tools without naming the thing they all output. **77,775 datasets on the Hub carry its tag**, enumerated to exhaustion. *The infrastructure was invisible because it is everywhere* | [§10](#lerobot--the-format-every-artefact-here-lands-in-and-nobody-wrote-it-down), [§14](#14-build-vs-reuse-per-stage) |
+| **"LeRobot format" on a card means two datasets load with the same code** | **It does not.** Read at `meta/info.json` rather than from prose: **six of this survey's artefacts are `v3.0`, three are still `v2.1`**, frame rates run **10 to 60**, two labelled LeRobot-adjacent are **not LeRobot at all** (`gatech/EgoMimic` is raw `.hdf5`; `tars-robotics/WIYH` has its own spec), and four nest one dataset per leaf directory so the version must be read **per subset, not per repository** | [§10](#lerobot--the-format-every-artefact-here-lands-in-and-nobody-wrote-it-down) |
+| **H-Tac ships in a LeRobot v2.1 episode layout** *(this document, read from the README)* | 🔴 **Read at `meta/`, it ships neither v2.1 nor v3.0.** The subsets carry **no `info.json`**; the `dataset_info.json` standing in for it declares `"dataset_type": "lerobot_episode_dataset"` and then **`"codebase_version": "h_tac_desktask_tac_v1"`** — the publisher's project name in the field whose only purpose is to tell a loader which spec applies. **The licence-field failure mode, transposed onto a format field** | [§10](#lerobot--the-format-every-artefact-here-lands-in-and-nobody-wrote-it-down), [§2](#h-tac--tactile-derived-rather-than-predicted-and-the-openego-counterfactual) |
+| **A long PyPI silence is evidence a tool has stopped moving** *(the shape of two sweeps ago's `video2dataset` reading, whose own wording was careful not to say this)* | 🟢 **The caveat was load-bearing, and here is the case that proves it.** LeRobot published `0.1.0` in **March 2024** and nothing for **seventeen months** — while being among the most active repositories in robotics — then ten releases in the thirteen months since. **A gap on PyPI is evidence about publishing, not development.** The `video2dataset` row stands as written (*unreleased since Feb 2024, not unmaintained*); what changes is that the distinction is now demonstrated rather than merely stated | [§10](#lerobot--the-format-every-artefact-here-lands-in-and-nobody-wrote-it-down), [§14](#14-build-vs-reuse-per-stage) |
 
 > **The pattern in the left column is worth naming.** Almost every row is a
 > *scale* or a *licence* claim, and almost every one fails in the same
